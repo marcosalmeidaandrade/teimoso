@@ -51,7 +51,7 @@
 </head>
 <body class="min-h-screen flex flex-col pb-12 select-none">
 
-  <!-- CABEÇALHO COM LOGO E MODO ADMIN -->
+  <!-- CABEÇALHO COM LOGO, CRÉDITOS E MODO ADMIN -->
   <header class="bg-gradient-to-b from-brand-darkgreen to-brand-dark border-b border-brand-border sticky top-0 z-40 shadow-lg">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       
@@ -67,6 +67,9 @@
           <p class="text-xs text-emerald-400 font-semibold flex items-center gap-1">
             <i class="fa-solid fa-location-dot text-red-400"></i> Local: AABB
           </p>
+          <p class="text-[10px] text-slate-300 font-medium italic">
+            Desenvolvido por Marcos Almeida®
+          </p>
         </div>
       </div>
 
@@ -80,15 +83,19 @@
     </div>
 
     <!-- NAVEGAÇÃO DE ABAS -->
-    <div class="max-w-4xl mx-auto px-4 flex border-t border-slate-800/80">
-      <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-3 text-center text-xs sm:text-sm font-bold border-b-2 border-brand-green text-brand-green transition flex items-center justify-center gap-2">
+    <div class="max-w-4xl mx-auto px-4 flex border-t border-slate-800/80 overflow-x-auto custom-scrollbar">
+      <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-brand-green text-brand-green transition flex items-center justify-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-list-check"></i> Presença
       </button>
-      <button onclick="switchTab('teams')" id="tab-teams" class="flex-1 py-3 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2">
+      <button onclick="switchTab('teams')" id="tab-teams" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-people-group"></i> Sorteio
       </button>
-      <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-3 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2">
+      <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-chart-pie"></i> Relatórios
+      </button>
+      <!-- Aba Financeiro (Exclusiva Admin) -->
+      <button id="tab-financial" onclick="switchTab('financial')" class="hidden flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-sack-dollar text-amber-400"></i> Financeiro
       </button>
     </div>
   </header>
@@ -138,7 +145,6 @@
 
     <!-- ABA 1: PRESENÇA -->
     <section id="sec-presence" class="space-y-4">
-      
       <!-- CARDS DE RESUMO -->
       <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
         <div class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center">
@@ -184,7 +190,6 @@
         </button>
       </div>
 
-      <!-- LISTA DE ATLETAS -->
       <div id="athletesList" class="space-y-2">
         <!-- RENDERIZADO VIA JAVASCRIPT -->
       </div>
@@ -225,7 +230,6 @@
         </div>
       </div>
 
-      <!-- EXIBIÇÃO DOS TIMES SORTEADOS -->
       <div id="drawResults" class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <!-- Renderizado dinamicamente -->
       </div>
@@ -257,6 +261,52 @@
               </tr>
             </thead>
             <tbody id="tblReportsBody" class="divide-y divide-slate-700/50">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 4: FINANCEIRO (EXCLUSIVA ADMIN) -->
+    <section id="sec-financial" class="hidden space-y-4">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-sack-dollar text-amber-400"></i> Gestão Financeira de Mensalidades
+            </h2>
+            <p class="text-[10px] text-slate-400">Vencimento: Todo dia 15 | Juros de R$ 1,00/dia após o vencimento | Valores sugeridos com juros acumulados</p>
+          </div>
+
+          <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Relatório (CSV)
+          </button>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-300 whitespace-nowrap">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="p-2 sticky left-0 bg-slate-900 z-10 border-r border-slate-800">Atleta (55)</th>
+                <th class="p-2 text-center text-amber-400 bg-slate-900/90 border-r border-slate-800">Mensalidade</th>
+                <th class="p-1.5 text-center">JAN</th>
+                <th class="p-1.5 text-center">FEV</th>
+                <th class="p-1.5 text-center">MAR</th>
+                <th class="p-1.5 text-center">ABR</th>
+                <th class="p-1.5 text-center">MAI</th>
+                <th class="p-1.5 text-center">JUN</th>
+                <th class="p-1.5 text-center">JUL</th>
+                <th class="p-1.5 text-center">AGO</th>
+                <th class="p-1.5 text-center">SET</th>
+                <th class="p-1.5 text-center">OUT</th>
+                <th class="p-1.5 text-center">NOV</th>
+                <th class="p-2 text-center text-emerald-400 bg-slate-900/90">Total Pago</th>
+                <th class="p-2 text-center text-amber-400 bg-slate-900/90">Juros/Multa</th>
+                <th class="p-2 text-center text-rose-400 bg-slate-900/90">Valor Devido</th>
+              </tr>
+            </thead>
+            <tbody id="tblFinancialBody" class="divide-y divide-slate-700/50">
               <!-- Renderizado via JS -->
             </tbody>
           </table>
@@ -314,6 +364,11 @@
       </div>
 
       <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Mensalidade Personalizada (R$)</label>
+        <input type="number" id="newAthleteMonthlyFee" value="110" min="0" placeholder="110.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-amber-400 font-bold focus:outline-none focus:border-brand-green" />
+      </div>
+
+      <div>
         <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Qualidade (1 a 5 Estrelas)</label>
         <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl p-2 justify-center">
           <button type="button" onclick="setNewAthleteStars(1)" class="text-amber-400 text-lg hover:scale-110 transition"><i id="star-1" class="fa-solid fa-star"></i></button>
@@ -366,70 +421,68 @@
     };
 
     const defaultAthletes = [
-      { id: 1, name: "ADALBERTO", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 2, name: "ALEXANDRE ALEIXO", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 3, name: "ALEXANDRE BOECHAT", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 4, name: "ARTHUR", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 5, name: "BRASIL", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 6, name: "BRAULINHO", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 7, name: "BRUNO MONTEIRO", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 8, name: "BRUNO ALVES", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 9, name: "BRUNO", position: "Goleiro", isKeeper: true, stars: 5 },
-      { id: 10, name: "CARLINHOS", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 11, name: "CASCOLA", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 12, name: "CELINHO", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 13, name: "CHATUBA", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 14, name: "CLÁUDIO", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 15, name: "COPINHO", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 16, name: "CRIS", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 17, name: "DAVI", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 18, name: "DEIVID", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 19, name: "DIBOI", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 20, name: "DIDI", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 21, name: "DIEGO", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 22, name: "EDMAR", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 23, name: "MONTANHA", position: "Goleiro", isKeeper: true, stars: 5 },
-      { id: 24, name: "FEIJÃO", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 25, name: "FELIPE MACACO", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 26, name: "RANIERI", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 27, name: "JOSÉ AMÉRICO", position: "EXTRA", isKeeper: false, stars: 5 },
-      { id: 28, name: "JOSÉ ANTÔNIO", position: "EXTRA", isKeeper: false, stars: 5 },
-      { id: 29, name: "JONILSON", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 30, name: "JUNINHO", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 31, name: "JÚLIO", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 32, name: "LAMIADO", position: "Goleiro", isKeeper: true, stars: 5 },
-      { id: 33, name: "LUAN", position: "Goleiro", isKeeper: true, stars: 5 },
-      { id: 34, name: "LUIZ FERNANDO", position: "Goleiro", isKeeper: true, stars: 5 },
-      { id: 35, name: "LUCAS LOPES", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 36, name: "MANINHO", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 37, name: "MARCÃO", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 38, name: "ALBINOS", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 39, name: "MATEUS MARTINS", position: "EXTRA", isKeeper: false, stars: 5 },
-      { id: 40, name: "ONOFRE", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 41, name: "NANDI", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 42, name: "PABLO PADILHA", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 43, name: "PABLO PICANÇO", position: "EXTRA", isKeeper: false, stars: 5 },
-      { id: 44, name: "BRITO", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 45, name: "CORUJA", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 46, name: "TODINHO", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 47, name: "RICARDO", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 48, name: "SANDRO", position: "Zagueiro", isKeeper: false, stars: 5 },
-      { id: 49, name: "SAPÃO", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 50, name: "SILZIMAR", position: "Atacante", isKeeper: false, stars: 5 },
-      { id: 51, name: "TIAGO CONECTA", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 52, name: "TIAGO BOQUETE", position: "Meia", isKeeper: false, stars: 5 },
-      { id: 53, name: "TIAGO SERRA", position: "Volante", isKeeper: false, stars: 5 },
-      { id: 54, name: "WALLACE", position: "Lateral", isKeeper: false, stars: 5 },
-      { id: 55, name: "ZIEL", position: "Meia", isKeeper: false, stars: 5 }
+      { id: 1, name: "ADALBERTO", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 2, name: "ALEXANDRE ALEIXO", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 3, name: "ALEXANDRE BOECHAT", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 4, name: "ARTHUR", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 5, name: "BRASIL", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 6, name: "BRAULINHO", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 7, name: "BRUNO MONTEIRO", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 8, name: "BRUNO ALVES", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 9, name: "BRUNO", position: "Goleiro", isKeeper: true, stars: 5, monthlyFee: 110 },
+      { id: 10, name: "CARLINHOS", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 11, name: "CASCOLA", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 12, name: "CELINHO", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 13, name: "CHATUBA", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 14, name: "CLÁUDIO", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 15, name: "COPINHO", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 16, name: "CRIS", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 17, name: "DAVI", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 18, name: "DEIVID", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 19, name: "DIBOI", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 20, name: "DIDI", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 21, name: "DIEGO", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 22, name: "EDMAR", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 23, name: "MONTANHA", position: "Goleiro", isKeeper: true, stars: 5, monthlyFee: 110 },
+      { id: 24, name: "FEIJÃO", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 25, name: "FELIPE MACACO", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 26, name: "RANIERI", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 27, name: "JOSÉ AMÉRICO", position: "EXTRA", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 28, name: "JOSÉ ANTÔNIO", position: "EXTRA", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 29, name: "JONILSON", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 30, name: "JUNINHO", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 31, name: "JÚLIO", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 32, name: "LAMIADO", position: "Goleiro", isKeeper: true, stars: 5, monthlyFee: 110 },
+      { id: 33, name: "LUAN", position: "Goleiro", isKeeper: true, stars: 5, monthlyFee: 110 },
+      { id: 34, name: "LUIZ FERNANDO", position: "Goleiro", isKeeper: true, stars: 5, monthlyFee: 110 },
+      { id: 35, name: "LUCAS LOPES", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 36, name: "MANINHO", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 37, name: "MARCÃO", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 38, name: "ALBINOS", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 39, name: "MATEUS MARTINS", position: "EXTRA", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 40, name: "ONOFRE", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 41, name: "NANDI", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 42, name: "PABLO PADILHA", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 43, name: "PABLO PICANÇO", position: "EXTRA", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 44, name: "BRITO", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 45, name: "CORUJA", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 46, name: "TODINHO", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 47, name: "RICARDO", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 48, name: "SANDRO", position: "Zagueiro", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 49, name: "SAPÃO", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 50, name: "SILZIMAR", position: "Atacante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 51, name: "TIAGO CONECTA", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 52, name: "TIAGO BOQUETE", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 53, name: "TIAGO SERRA", position: "Volante", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 54, name: "WALLACE", position: "Lateral", isKeeper: false, stars: 5, monthlyFee: 110 },
+      { id: 55, name: "ZIEL", position: "Meia", isKeeper: false, stars: 5, monthlyFee: 110 }
     ];
 
-    // Domingos até 29/11/2026 ordenados cronologicamente (Próxima data em destaque)
     const generatedSundays = ["2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29"];
 
     let datesList = JSON.parse(localStorage.getItem('teimoso_dates')) || generatedSundays;
     datesList.sort();
     
-    // Selecionar automaticamente a próxima data cronológica a partir de hoje
     let todayStr = new Date().toISOString().split('T')[0];
     let defaultCurrentDate = datesList.find(d => d >= todayStr) || datesList[0];
     let currentDate = localStorage.getItem('teimoso_currentDate') || defaultCurrentDate;
@@ -437,12 +490,16 @@
     let eventTimes = JSON.parse(localStorage.getItem('teimoso_times')) || {};
     let athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || defaultAthletes;
     let presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
+    let financialPayments = JSON.parse(localStorage.getItem('teimoso_financial')) || {};
+
+    const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov"];
 
     window.addEventListener('DOMContentLoaded', () => {
       populateDateSelect();
       updateCurrentTimeUI();
       renderAthletesList();
       renderReports();
+      renderFinancial();
     });
 
     function saveData() {
@@ -451,6 +508,7 @@
       localStorage.setItem('teimoso_times', JSON.stringify(eventTimes));
       localStorage.setItem('teimoso_athletes', JSON.stringify(athletes));
       localStorage.setItem('teimoso_presences', JSON.stringify(presences));
+      localStorage.setItem('teimoso_financial', JSON.stringify(financialPayments));
     }
 
     function handleAdminToggle() {
@@ -465,7 +523,9 @@
           document.getElementById('btnEditDate').classList.remove('hidden');
           document.getElementById('btnDeleteDate').classList.remove('hidden');
           document.getElementById('btnAddAthlete').classList.remove('hidden');
+          document.getElementById('tab-financial').classList.remove('hidden');
           renderAthletesList();
+          renderFinancial();
         } else if (pin !== null) {
           alert("PIN Incorreto!");
         }
@@ -478,15 +538,19 @@
         document.getElementById('btnEditDate').classList.add('hidden');
         document.getElementById('btnDeleteDate').classList.add('hidden');
         document.getElementById('btnAddAthlete').classList.add('hidden');
+        document.getElementById('tab-financial').classList.add('hidden');
+        if (activeTab === 'financial') switchTab('presence');
         renderAthletesList();
       }
     }
 
     function switchTab(tab) {
+      if (tab === 'financial' && !isAdmin) return;
       activeTab = tab;
-      ['presence', 'teams', 'reports'].forEach(t => {
+      ['presence', 'teams', 'reports', 'financial'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         const sec = document.getElementById(`sec-${t}`);
+        if (!btn || !sec) return;
         if (t === tab) {
           btn.classList.add('border-brand-green', 'text-brand-green');
           btn.classList.remove('border-transparent', 'text-slate-400');
@@ -498,6 +562,7 @@
         }
       });
       if (tab === 'reports') renderReports();
+      if (tab === 'financial') renderFinancial();
     }
 
     function populateDateSelect() {
@@ -532,6 +597,7 @@
       updateCurrentTimeUI();
       saveData();
       renderAthletesList();
+      renderFinancial();
     }
 
     function changeTime(newTime) {
@@ -716,6 +782,7 @@
       document.getElementById('modalAthleteTitle').innerHTML = `<i class="fa-solid fa-user-plus text-brand-green"></i> Cadastrar Novo Atleta`;
       document.getElementById('newAthleteName').value = '';
       document.getElementById('newAthletePosition').value = 'Meia';
+      document.getElementById('newAthleteMonthlyFee').value = '110';
       setNewAthleteStars(5);
       document.getElementById('modalAddAthlete').classList.remove('hidden');
     }
@@ -728,6 +795,7 @@
       document.getElementById('modalAthleteTitle').innerHTML = `<i class="fa-solid fa-user-pen text-amber-400"></i> Editar Atleta`;
       document.getElementById('newAthleteName').value = ath.name;
       document.getElementById('newAthletePosition').value = ath.position || (ath.isKeeper ? "Goleiro" : "Meia");
+      document.getElementById('newAthleteMonthlyFee').value = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
       setNewAthleteStars(ath.stars || 5);
       document.getElementById('modalAddAthlete').classList.remove('hidden');
     }
@@ -752,6 +820,8 @@
       const editId = document.getElementById('editAthleteId').value;
       const name = document.getElementById('newAthleteName').value.trim().toUpperCase();
       const position = document.getElementById('newAthletePosition').value;
+      const feeVal = parseFloat(document.getElementById('newAthleteMonthlyFee').value);
+      const monthlyFee = isNaN(feeVal) ? 110 : feeVal;
 
       if (!name) {
         alert("Por favor, digite o nome do jogador.");
@@ -768,7 +838,8 @@
             name,
             position,
             isKeeper,
-            stars: selectedStarsForNewAthlete
+            stars: selectedStarsForNewAthlete,
+            monthlyFee
           };
         }
       } else {
@@ -777,7 +848,8 @@
           name,
           position,
           isKeeper,
-          stars: selectedStarsForNewAthlete
+          stars: selectedStarsForNewAthlete,
+          monthlyFee
         };
         athletes.push(newAth);
       }
@@ -785,6 +857,7 @@
       saveData();
       closeAddAthleteModal();
       renderAthletesList();
+      renderFinancial();
     }
 
     function renderAthletesList() {
@@ -916,6 +989,7 @@
         athletes = athletes.filter(a => a.id !== id);
         saveData();
         renderAthletesList();
+        renderFinancial();
       }
     }
 
@@ -1174,6 +1248,143 @@
       const link = document.createElement('a');
       link.setAttribute('href', url);
       link.setAttribute('download', `Teimoso_FCC_Relatorio_${currentDate || 'Geral'}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function updatePayment(athleteId, monthKey, val) {
+      if (!financialPayments[athleteId]) financialPayments[athleteId] = {};
+      financialPayments[athleteId][monthKey] = parseFloat(val) || 0;
+      saveData();
+      renderFinancial();
+    }
+
+    function renderFinancial() {
+      const tbody = document.getElementById('tblFinancialBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const now = new Date(currentDate || new Date());
+      const currentYear = now.getFullYear();
+
+      sortedAthletes.forEach(ath => {
+        const athPay = financialPayments[ath.id] || {};
+        const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
+        let totalPaid = 0;
+        let totalInterest = 0;
+        let totalDue = 0;
+
+        let monthCells = '';
+
+        months.forEach((m, idx) => {
+          const hasCustomVal = athPay[m] !== undefined;
+          let paid = hasCustomVal ? athPay[m] : 0;
+
+          const dueDate = new Date(currentYear, idx, 15);
+          let interest = 0;
+
+          if (now > dueDate && paid < athFee) {
+            const diffTime = Math.abs(now - dueDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            interest = diffDays * 1; // R$ 1,00/dia
+          }
+
+          let suggestedVal = athFee + interest;
+          let displayVal = hasCustomVal ? paid : (now > dueDate ? suggestedVal : 0);
+
+          totalPaid += paid;
+          totalInterest += interest;
+          
+          const debtMonth = Math.max(0, (athFee + interest) - paid);
+          totalDue += debtMonth;
+
+          const isOverdue = debtMonth > 0 && now > dueDate;
+
+          monthCells += `
+            <td class="p-1 text-center">
+              <input type="number" value="${displayVal}" min="0" onchange="updatePayment(${ath.id}, '${m}', this.value)" 
+                placeholder="${suggestedVal}"
+                title="Mensalidade: R$ ${athFee.toFixed(2)} | Juros: R$ ${interest.toFixed(2)}"
+                class="w-16 bg-slate-900 border ${isOverdue ? 'border-rose-500/50 text-rose-300' : 'border-slate-700 text-slate-200'} text-xs font-bold rounded p-1 text-center focus:outline-none focus:border-amber-400" />
+            </td>
+          `;
+        });
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-700/30 transition";
+        tr.innerHTML = `
+          <td class="p-2 font-bold text-white sticky left-0 bg-slate-800 z-10 border-r border-slate-700">${ath.name}</td>
+          <td class="p-2 text-center font-bold text-amber-400 bg-slate-900/40 border-r border-slate-800">R$ ${athFee.toFixed(2)}</td>
+          ${monthCells}
+          <td class="p-2 text-center font-extrabold text-emerald-400 bg-slate-900/40">R$ ${totalPaid.toFixed(2)}</td>
+          <td class="p-2 text-center font-extrabold text-amber-400 bg-slate-900/40">R$ ${totalInterest.toFixed(2)}</td>
+          <td class="p-2 text-center font-extrabold ${totalDue > 0 ? 'text-rose-400' : 'text-slate-400'} bg-slate-900/40">R$ ${totalDue.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportFinancialCSV() {
+      if (!isAdmin) return;
+
+      let csv = "Atleta,Mensalidade Base,JAN,FEV,MAR,ABR,MAI,JUN,JUL,AGO,SET,OUT,NOV,Total Pago,Juros/Multa,Valor Devido\n";
+      
+      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const now = new Date(currentDate || new Date());
+      const currentYear = now.getFullYear();
+
+      let grandTotalPaid = 0;
+      let grandTotalInterest = 0;
+      let grandTotalDue = 0;
+
+      sortedAthletes.forEach(ath => {
+        const athPay = financialPayments[ath.id] || {};
+        const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
+        let totalPaid = 0;
+        let totalInterest = 0;
+        let totalDue = 0;
+
+        let monthValuesCSV = [];
+
+        months.forEach((m, idx) => {
+          const hasCustomVal = athPay[m] !== undefined;
+          let paid = hasCustomVal ? athPay[m] : 0;
+
+          const dueDate = new Date(currentYear, idx, 15);
+          let interest = 0;
+
+          if (now > dueDate && paid < athFee) {
+            const diffTime = Math.abs(now - dueDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            interest = diffDays * 1;
+          }
+
+          totalPaid += paid;
+          totalInterest += interest;
+          
+          const debtMonth = Math.max(0, (athFee + interest) - paid);
+          totalDue += debtMonth;
+
+          monthValuesCSV.push(paid.toFixed(2));
+        });
+
+        grandTotalPaid += totalPaid;
+        grandTotalInterest += totalInterest;
+        grandTotalDue += totalDue;
+
+        csv += `"${ath.name}",${athFee.toFixed(2)},${monthValuesCSV.join(',')},${totalPaid.toFixed(2)},${totalInterest.toFixed(2)},${totalDue.toFixed(2)}\n`;
+      });
+
+      // Linha de Total Geral do Grupo
+      csv += `\n"TOTAL GERAL DO GRUPO",-,-,-,-,-,-,-,-,-,-,-,-,${grandTotalPaid.toFixed(2)},${grandTotalInterest.toFixed(2)},${grandTotalDue.toFixed(2)}\n`;
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Teimoso_FCC_Relatorio_Financeiro_${currentDate || 'Temporada'}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
