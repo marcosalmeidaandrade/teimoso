@@ -1,538 +1,533 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR" class="h-full">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Teimoso FCC - Gestão de Peladas</title>
-  
-  <!-- Tailwind CSS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teimoso F.C.C. - Gestão Inteligente de Peladas</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              green: '#10b981',
-              darkGreen: '#047857',
-              dark: '#0f172a',
-              card: '#1e293b'
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
-  <!-- Inter Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    /* Custom scrollbar for sleek look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-green selection:text-slate-950">
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
-  <!-- CABEÇALHO PRINCIPAL -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2.5">
-        <!-- LOGOMARCA OFICIAL -->
-        <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg overflow-hidden shrink-0 border border-slate-700 p-0.5">
-          <img src="logo.png" alt="Logo Teimoso" class="w-full h-full object-contain" />
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- MAIN WRAPPER -->
+  <div class="flex-grow flex flex-col">
+    <!-- HEADER -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+        
+        <!-- LOGO & TITLE -->
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-white border border-slate-700 overflow-hidden flex items-center justify-center shadow-lg shadow-emerald-950/40 shrink-0">
+            <img src="logo.png" alt="Teimoso F.C.C. Logo" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-black tracking-wider text-emerald-400 uppercase">TEIMOSO F.C.C.</h1>
+            <p class="text-xs text-slate-400 font-medium">Gestão Inteligente de Peladas</p>
+            <p class="text-[10px] text-emerald-500/80 font-semibold tracking-wide">Developer by Marcos Almeida®</p>
+          </div>
         </div>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
+          <button onclick="switchTab('presence')" id="tabBtn-presence" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-lg shadow-emerald-900/30">
+            <i class="fa-solid fa-users"></i> Presença
+          </button>
+          <button onclick="switchTab('draw')" id="tabBtn-draw" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+            <i class="fa-solid fa-shuffle"></i> Sorteio
+          </button>
+          <button onclick="switchTab('financial')" id="tabBtn-financial" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+            <i class="fa-solid fa-wallet"></i> Financeiro
+          </button>
+          <button onclick="switchTab('reports')" id="tabBtn-reports" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+            <i class="fa-solid fa-chart-pie"></i> Relatórios
+          </button>
+        </nav>
+
+        <!-- ADMIN AUTH CONTROLS -->
+        <div class="flex items-center gap-2">
+          <div id="adminBadge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+            <i class="fa-solid fa-shield-halved">%s</i> Admin Ativo
+          </div>
+          <button onclick="toggleAdminMode()" id="adminToggleBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-lock text-amber-400" id="adminLockIcon"></i> <span id="adminToggleText">Modo Admin</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- CONTENT VIEWS CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+      <!-- ================= TAB 1: PRESENÇA ================= -->
+      <section id="tab-presence" class="space-y-6">
+        
+        <!-- CONTROLS & DATE SELECTOR -->
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <label for="dateSelect" class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0">Data:</label>
+              <select id="dateSelect" onchange="changeDate(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500 w-full sm:w-48 shadow-inner">
+                <!-- Populado dinamicamente -->
+              </select>
+            </div>
+            
+            <!-- ADMIN DATE CONTROLS -->
+            <div id="adminDateControls" class="hidden items-center gap-2 w-full sm:w-auto">
+              <button onclick="openNewDateModal()" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
+                <i class="fa-solid fa-calendar-plus"></i> Nova Data
+              </button>
+              <button onclick="openManageDatesModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
+                <i class="fa-solid fa-calendar-days"></i> Gerenciar Datas
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button onclick="openNewAthleteModal()" id="btnAddAthlete" class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
+              <i class="fa-solid fa-user-plus"></i> Novo Atleta
+            </button>
+            <button onclick="openWhatsappMassModal()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
+              <i class="fa-brands fa-whatsapp"></i> Disparo em Massa
+            </button>
+          </div>
+        </div>
+
+        <!-- DEADLINE WARNING BANNER -->
+        <div id="deadlineBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-300 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
+            <div>
+              <span class="font-bold">Prazo encerrado:</span> O horário limite para confirmação/alteração online foi às 18:00 do dia anterior. Apenas administradores podem modificar presenças agora.
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS CARDS (FILTERABLE) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div onclick="filterPresenceCards('CONFIRMADO')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Confirmados</span>
+              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-emerald-400" id="statConfirmed">0</div>
+          </div>
+
+          <div onclick="filterPresenceCards('JUSTIFICADO')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-amber-400 transition-colors">Justificados</span>
+              <i class="fa-solid fa-circle-exclamation text-amber-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-amber-400" id="statJustified">0</div>
+          </div>
+
+          <div onclick="filterPresenceCards('FORA')" class="bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-rose-400 transition-colors">Fora</span>
+              <i class="fa-solid fa-circle-xmark text-rose-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-rose-400" id="statOut">0</div>
+          </div>
+
+          <div onclick="filterPresenceCards(null)" class="bg-slate-900 border border-slate-800 hover:border-slate-600 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-slate-200 transition-colors">Total Atletas</span>
+              <i class="fa-solid fa-users text-slate-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-slate-200" id="statTotal">0</div>
+          </div>
+        </div>
+
+        <!-- ATHLETES LIST TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-user text-emerald-400"></i> Lista de Presença da Pelada
+            </h3>
+            <span id="activeFilterBadge" class="hidden text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              Filtro ativo: <span id="filterName"></span> <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-400 hover:underline">×</button>
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                  <th class="py-3 px-4">Atleta</th>
+                  <th class="py-3 px-4">Posição</th>
+                  <th class="py-3 px-4 text-center">Nível</th>
+                  <th class="py-3 px-4 text-center">Status / Financeiro</th>
+                  <th class="py-3 px-4 text-center">Ações de Presença</th>
+                  <th class="py-3 px-4 text-right">Opções</th>
+                </tr>
+              </thead>
+              <tbody id="athletesTableBody" class="divide-y divide-slate-800/60 text-xs">
+                <!-- Preenchido dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= TAB 2: SORTEIO ================= -->
+      <section id="tab-draw" class="hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-shuffle text-emerald-400"></i> Sorteio Equilibrado de Times
+            </h3>
+            <p class="text-xs text-slate-400 mt-1">O sistema distribui os goleiros e equilibrará as estrelas automaticamente em até 8 jogadores por equipe.</p>
+          </div>
+          <button onclick="generateTeams()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
+            <i class="fa-solid fa-dice text-sm"></i> Sortear Times Agora
+          </button>
+        </div>
+
+        <!-- TEAMS RESULT CONTAINER -->
+        <div id="teamsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 text-center text-slate-500 flex flex-col items-center justify-center py-16">
+            <i class="fa-solid fa-people-group text-4xl mb-3 text-slate-700"></i>
+            <p class="text-xs font-medium">Nenhum sorteio realizado para esta data ainda.</p>
+            <p class="text-[11px] text-slate-600 mt-1">Clique em "Sortear Times Agora" acima.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: FINANCEIRO ================= -->
+      <section id="tab-financial" class="hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-emerald-400"></i> Gestão Financeira de Mensalidades
+            </h3>
+            <p class="text-xs text-slate-400 mt-1">Clique duas vezes no campo para preencher o valor sugerido ou use o checkbox ao lado para editar. Juros de R$ 1,00/dia a partir do dia 16.</p>
+          </div>
+          <button onclick="openWhatsappFinancialMassModal()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
+            <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes em Massa
+          </button>
+        </div>
+
+        <!-- TOTALIZADORES FINANCEIROS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Geral Pago</span>
+              <div class="text-2xl font-black text-emerald-400 mt-1" id="finTotalPaid">R$ 0,00</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total a Receber</span>
+              <div class="text-2xl font-black text-rose-400 mt-1" id="finTotalDue">R$ 0,00</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+              <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- FINANCIAL TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[1200px]" id="financialTable">
+              <thead>
+                <tr class="bg-slate-950/80 border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                  <th class="py-3 px-4 sticky left-0 bg-slate-950 z-20">Atleta</th>
+                  <th class="py-3 px-3 text-center">Jan</th>
+                  <th class="py-3 px-3 text-center">Fev</th>
+                  <th class="py-3 px-3 text-center">Mar</th>
+                  <th class="py-3 px-3 text-center">Abr</th>
+                  <th class="py-3 px-3 text-center">Mai</th>
+                  <th class="py-3 px-3 text-center">Jun</th>
+                  <th class="py-3 px-3 text-center">Jul</th>
+                  <th class="py-3 px-3 text-center">Ago</th>
+                  <th class="py-3 px-3 text-center">Set</th>
+                  <th class="py-3 px-3 text-center">Out</th>
+                  <th class="py-3 px-3 text-center">Nov</th>
+                  <th class="py-3 px-4 text-center">Total Pago</th>
+                  <th class="py-3 px-4 text-center">Valor Devido</th>
+                  <th class="py-3 px-4 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="financialTableBody" class="divide-y divide-slate-800/60 text-xs">
+                <!-- Preenchido dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: RELATÓRIOS ================= -->
+      <section id="tab-reports" class="hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-emerald-400"></i> Relatórios e Estatísticas Gerais
+            </h3>
+            <p class="text-xs text-slate-400 mt-1">Acompanhe a frequência histórica de presença dos atletas e exporte dados se necessário.</p>
+          </div>
+          <button onclick="exportReportsCSV()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-emerald-400"></i> Exportar CSV
+          </button>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                  <th class="py-3 px-4">Atleta</th>
+                  <th class="py-3 px-4">Posição</th>
+                  <th class="py-3 px-4 text-center">Presenças Confirmadas</th>
+                  <th class="py-3 px-4 text-center">Taxa de Assiduidade</th>
+                  <th class="py-3 px-4 text-right">Status Atual</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTableBody" class="divide-y divide-slate-800/60 text-xs">
+                <!-- Preenchido dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-400">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div>
-          <h1 class="text-base font-black tracking-tight text-white flex items-center gap-1.5 leading-none">
-            TEIMOSO FCC
-            <span class="text-[9px] bg-brand-green/20 text-brand-green border border-brand-green/30 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
-          </h1>
-          <p class="text-[10px] text-slate-400 font-medium mt-0.5">Gestão Inteligente de Peladas</p>
-          <p class="text-[9px] text-emerald-500 font-semibold mt-0.5 tracking-wide">Developer by Marcos Almeida®</p>
+          <span class="font-bold text-emerald-400">Teimoso F.C.C.</span> &copy; 2026 - Todos os direitos reservados.
+        </div>
+        <div class="text-slate-500 font-medium">
+          Developer by Marcos Almeida®
         </div>
       </div>
-      <!-- PAINEL ADMIN / STATUS -->
-      <div class="flex items-center gap-2">
-        <div id="adminBadge" class="hidden items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">
-          <i class="fa-solid fa-user-shield"></i>
-          <span class="hidden sm:inline">Admin</span>
-        </div>
-        <button onclick="toggleAdminMode()" id="btnAdminToggle" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
-          <i class="fa-solid fa-lock text-brand-green"></i> <span id="adminToggleText">Modo Admin</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- SELETOR DE DATA / HORÁRIO DA PELADA -->
-  <section class="bg-slate-900/60 border-b border-slate-800/80 py-2.5">
-    <div class="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-2 flex-1 min-w-[240px]">
-        <label for="selectDate" class="text-xs font-bold text-slate-400 flex items-center gap-1 shrink-0">
-          <i class="fa-solid fa-calendar-day text-brand-green"></i> Pelada:
-        </label>
-        <select id="selectDate" onchange="changeCurrentDate(this.value)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-1.5 font-semibold focus:outline-none focus:border-brand-green w-full max-w-[200px]">
-          <!-- Opções preenchidas via JS -->
-        </select>
-        <button id="btnAddDate" onclick="openAddDateModal()" class="hidden p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-brand-green rounded-lg transition" title="Adicionar Nova Data">
-          <i class="fa-solid fa-plus text-xs"></i>
-        </button>
-      </div>
-      <!-- HORÁRIOS DO JOGO E LIMITE -->
-      <div id="timesDisplay" class="flex items-center gap-3 text-[11px] text-slate-300 bg-slate-950/60 border border-slate-800 px-3 py-1 rounded-lg">
-        <div><i class="fa-regular fa-clock text-brand-green"></i> Jogo: <span id="lblGameTime" class="font-bold text-white">00:00</span></div>
-        <div class="border-l border-slate-800 pl-3"><i class="fa-solid fa-hourglass-half text-amber-400"></i> Limite: <span id="lblDeadline" class="font-bold text-white">00:00</span></div>
-        <button id="btnEditTimes" onclick="openEditTimesModal()" class="hidden text-slate-400 hover:text-white transition ml-1" title="Editar Horários">
-          <i class="fa-solid fa-pen-to-square text-xs"></i>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- NAVEGAÇÃO DE ABAS -->
-  <nav class="bg-slate-900 border-b border-slate-800 sticky top-[57px] z-20">
-    <div class="max-w-5xl mx-auto px-4 flex items-center gap-1 overflow-x-auto custom-scrollbar py-1">
-      <button onclick="switchTab('presence')" id="tab-presence" class="px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-brand-green text-slate-950 shadow">
-        <i class="fa-solid fa-users"></i> Presença
-      </button>
-      <button onclick="switchTab('draw')" id="tab-draw" class="px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
-        <i class="fa-solid fa-shuffle"></i> Sorteio
-      </button>
-      <button onclick="switchTab('reports')" id="tab-reports" class="px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
-        <i class="fa-solid fa-chart-pie"></i> Relatórios
-      </button>
-      <button onclick="switchTab('financial')" id="tab-financial" class="hidden px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-amber-400 hover:bg-amber-500/10 border border-amber-500/20">
-        <i class="fa-solid fa-sack-dollar"></i> Financeiro
-      </button>
-    </div>
-  </nav>
-
-  <!-- CONTEÚDO PRINCIPAL -->
-  <main class="max-w-5xl mx-auto px-4 py-4 flex-1 w-full">
-
-    <!-- ABA 1: PRESENÇA -->
-    <section id="sec-presence" class="space-y-4">
-      <!-- CARDS DE RESUMO (FILTROS CLICÁVEIS) -->
-      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        <div id="card-CONFIRMADO" onclick="filterByStatus('CONFIRMADO')" class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-sky-900/40 transition active:scale-95" title="Filtrar Confirmados">
-          <span class="block text-[9px] sm:text-[10px] text-sky-400 font-extrabold uppercase leading-tight">CONF.<br><span class="text-[8px] opacity-75">(Aguard.)</span></span>
-          <span id="cntUnvalidated" class="text-base sm:text-lg font-black text-sky-300 mt-0.5 block">0</span>
-        </div>
-        <div id="card-FORA" onclick="filterByStatus('FORA')" class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-rose-900/40 transition active:scale-95" title="Filtrar Fora">
-          <span class="block text-[9px] sm:text-[10px] text-rose-400 font-extrabold uppercase leading-tight">FORA<br><span class="text-[8px] opacity-0">-</span></span>
-          <span id="cntOutside" class="text-base sm:text-lg font-black text-rose-300 mt-0.5 block">0</span>
-        </div>
-        <div id="card-JUSTIFICADO" onclick="filterByStatus('JUSTIFICADO')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Justificados">
-          <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">JUSTIF.<br><span class="text-[8px] opacity-0">-</span></span>
-          <span id="cntJustified" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
-        </div>
-        <div id="card-VALIDADOS" onclick="filterByStatus('VALIDADOS')" class="bg-emerald-950/50 border border-emerald-500/50 rounded-xl p-2 text-center ring-1 ring-emerald-500/30 cursor-pointer hover:bg-emerald-900/50 transition active:scale-95" title="Filtrar Validados">
-          <span class="block text-[9px] sm:text-[10px] text-emerald-400 font-extrabold uppercase leading-tight">VAL.<br><span class="text-[8px] opacity-0">-</span></span>
-          <span id="cntValidated" class="text-base sm:text-lg font-black text-emerald-300 mt-0.5 block">0</span>
-          <span id="cntGoleiros" class="block text-[8px] text-emerald-400/80 mt-0.5">(0 GK)</span>
-        </div>
-        <div id="card-FALTA" onclick="filterByStatus('FALTA')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Faltas">
-          <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">FALTA<br><span class="text-[8px] opacity-0">-</span></span>
-          <span id="cntFaults" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
-        </div>
-        <div id="card-PENDENTE" onclick="filterByStatus('PENDENTE')" class="bg-slate-800/60 border border-slate-700 rounded-xl p-2 text-center cursor-pointer hover:bg-slate-700/60 transition active:scale-95" title="Filtrar Pendentes">
-          <span class="block text-[9px] sm:text-[10px] text-slate-400 font-extrabold uppercase leading-tight">PEND.<br><span class="text-[8px] opacity-0">-</span></span>
-          <span id="cntPending" class="text-base sm:text-lg font-black text-slate-300 mt-0.5 block">0</span>
-        </div>
-      </div>
-
-      <!-- BARRA DE BUSCA E FERRAMENTAS ADMIN -->
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="relative flex-1 min-w-[200px]">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-          <input type="text" id="searchAthlete" onkeyup="renderAthletesList()" placeholder="Buscar jogador ou posição..." class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-green" />
-        </div>
-        <div class="flex items-center gap-1.5">
-          <button id="btnMasterZap" onclick="openMasterZapModal()" class="hidden px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1 shadow-md">
-            <i class="fa-brands fa-whatsapp"></i> Disparo Convocações
-          </button>
-          <button id="btnAddAthlete" onclick="openAddAthleteModal()" class="hidden px-2.5 py-1.5 bg-slate-800 border border-slate-700 hover:border-brand-green text-xs font-bold text-slate-200 rounded-lg transition flex items-center gap-1">
-            <i class="fa-solid fa-user-plus text-brand-green"></i> Cadastrar
-          </button>
-        </div>
-      </div>
-
-      <!-- LISTA DE ATLETAS -->
-      <div id="athletesList" class="space-y-2">
-        <!-- Renderizado dinamicamente via JS -->
-      </div>
-    </section>
-
-    <!-- ABA 2: SORTEIO DE TIMES -->
-    <section id="sec-draw" class="hidden space-y-4">
-      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
-          <div>
-            <h2 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-dice text-brand-green"></i> Sorteio Equilibrado de Equipes
-            </h2>
-            <p class="text-[10px] text-slate-400">Distribuição automatizada por posição, estrelas e goleiros fixed em 8 por time</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button id="btnDrawTeams" onclick="drawTeams()" class="px-4 py-2 bg-brand-green hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-lg transition flex items-center gap-1.5 shadow-lg shadow-brand-green/10">
-              <i class="fa-solid fa-shuffle"></i> SORTEAR TIMES
-            </button>
-            <button id="btnShareTeamsZap" onclick="shareTeamsWhatsApp()" class="hidden px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs rounded-lg transition flex items-center gap-1 shadow-md">
-              <i class="fa-brands fa-whatsapp text-sm"></i> Compartilhar
-            </button>
-          </div>
-        </div>
-        <div id="drawContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="col-span-full text-center py-12 text-slate-500 text-xs">
-            <i class="fa-solid fa-futbol text-3xl text-slate-700 mb-2 block"></i>
-            Clique em "SORTEAR TIMES" para distribuir os atletas validados (até 8 por time).
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA 3: RELATÓRIOS E ASSIDUIDADE -->
-    <section id="sec-reports" class="hidden space-y-4">
-      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
-          <div>
-            <h2 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-chart-column text-brand-green"></i> Ranking de Frequência e Assiduidade
-            </h2>
-            <p class="text-[10px] text-slate-400">Estatísticas acumuladas das peladas realizadas no ano</p>
-          </div>
-          <button onclick="exportReportsCSV()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-bold text-white rounded-lg transition flex items-center gap-1">
-            <i class="fa-solid fa-file-csv text-brand-green"></i> Exportar CSV
-          </button>
-        </div>
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-left text-xs text-slate-300">
-            <thead class="bg-slate-900 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-700">
-              <tr>
-                <th class="p-2.5">Atleta</th>
-                <th class="p-2.5 text-center">Posição</th>
-                <th class="p-2.5 text-center">Validados (Presenças)</th>
-                <th class="p-2.5 text-center">Justificados</th>
-                <th class="p-2.5 text-center">Faltas</th>
-                <th class="p-2.5 text-center">% Presença</th>
-              </tr>
-            </thead>
-            <tbody id="tblReportsBody" class="divide-y divide-slate-700/50">
-              <!-- Renderizado via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA 4: FINANCEIRO (EXCLUSIVA ADMIN) -->
-    <section id="sec-financial" class="hidden space-y-4">
-      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-3 border-b border-slate-700/80 pb-3">
-          <div>
-            <h2 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-sack-dollar text-amber-400"></i> Gestão Financeira de Mensalidades
-            </h2>
-            <p class="text-[10px] text-slate-400">Vencimento: Dia 15 | Juros de R$ 1,00/dia a partir do dia 16 | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> (abaixo) ou <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Tab</kbd> (ao lado)</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="openFinancialZapModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
-              <i class="fa-brands fa-whatsapp"></i> Cobrar Atrasados
-            </button>
-            <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
-              <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Relatório (CSV)
-            </button>
-          </div>
-        </div>
-
-        <!-- QUADROS TOTALIZADORES FINANCEIROS -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div class="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-3 flex items-center justify-between shadow-sm">
-            <div>
-              <span class="block text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider">Total Geral Pago</span>
-              <span id="lblTotalGeralPago" class="text-base sm:text-xl font-black text-emerald-300">R$ 0,00</span>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg shrink-0">
-              <i class="fa-solid fa-money-bill-wave"></i>
-            </div>
-          </div>
-          <div class="bg-rose-950/40 border border-rose-500/40 rounded-xl p-3 flex items-center justify-between shadow-sm">
-            <div>
-              <span class="block text-[10px] text-rose-400 font-extrabold uppercase tracking-wider">Total a Receber</span>
-              <span id="lblTotalAReceber" class="text-base sm:text-xl font-black text-rose-300">R$ 0,00</span>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 text-lg shrink-0">
-              <i class="fa-solid fa-hand-holding-dollar"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-left text-xs text-slate-300 whitespace-nowrap">
-            <thead class="bg-slate-900/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-700">
-              <tr>
-                <th class="p-2 sticky left-0 bg-slate-900 z-10 border-r border-slate-800">Atleta</th>
-                <th class="p-2 text-center text-amber-400 bg-slate-900/90 border-r border-slate-800">Mensalidade</th>
-                <th class="p-1.5 text-center">JAN</th>
-                <th class="p-1.5 text-center">FEV</th>
-                <th class="p-1.5 text-center">MAR</th>
-                <th class="p-1.5 text-center">ABR</th>
-                <th class="p-1.5 text-center">MAI</th>
-                <th class="p-1.5 text-center">JUN</th>
-                <th class="p-1.5 text-center">JUL</th>
-                <th class="p-1.5 text-center">AGO</th>
-                <th class="p-1.5 text-center">SET</th>
-                <th class="p-1.5 text-center">OUT</th>
-                <th class="p-1.5 text-center">NOV</th>
-                <th class="p-2 text-center text-emerald-400 bg-slate-900/90">Total Pago</th>
-                <th class="p-2 text-center text-amber-400 bg-slate-900/90">Juros/Multa</th>
-                <th class="p-2 text-center text-rose-400 bg-slate-900/90">Valor Devido</th>
-              </tr>
-            </thead>
-            <tbody id="tblFinancialBody" class="divide-y divide-slate-700/50">
-              <!-- Renderizado via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- TOAST CONTAINER -->
-  <div id="toastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2"></div>
-
-  <!-- CONFIRM MODAL -->
-  <div id="customConfirmModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-circle-question text-amber-400 text-lg"></i> Confirmação
-      </h3>
-      <p id="confirmMessage" class="text-xs text-slate-300 font-medium"></p>
-      <div class="flex items-center gap-2 pt-2 border-t border-slate-800 mt-2">
-        <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition">Cancelar</button>
-        <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-xs font-black text-white rounded-xl transition">Confirmar</button>
-      </div>
-    </div>
+    </footer>
   </div>
 
-  <!-- MODAL ADMIN PIN -->
-  <div id="modalAdmin" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-xs shadow-2xl space-y-4">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-lock text-brand-green"></i> Acesso Administrativo
-      </h3>
-      <div>
-        <label class="block text-xs font-bold text-slate-300 mb-1">Senha (PIN):</label>
-        <input type="password" id="inputAdminPin" placeholder="Digite a senha..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-brand-green" onkeydown="if(event.key==='Enter') verifyAdminPin()" />
-      </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeAdminModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
-        <button onclick="verifyAdminPin()" class="px-4 py-1.5 bg-brand-green text-xs font-black text-slate-950 rounded-lg">ENTRAR</button>
-      </div>
-    </div>
-  </div>
+  <!-- ================= MODALS ================= -->
 
-  <!-- MODAL ADICIONAR/EDITAR ATLETA -->
-  <div id="modalAthlete" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 id="modalAthleteTitle" class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-user-plus text-brand-green"></i> Cadastrar Atleta
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="adminLoginModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-lock text-amber-400"></i> Autenticação Admin
         </h3>
-        <button onclick="closeAthleteModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeAdminLoginModal()" class="text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
-      <input type="hidden" id="editAthleteId" value="" />
-      <div class="space-y-3 text-xs">
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Senha do Administrador:</label>
+        <input type="password" id="adminPasswordInput" placeholder="Digite a senha..." onkeydown="if(event.key==='Enter') verifyAdminPassword()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500 text-center tracking-widest text-lg">
+      </div>
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="closeAdminLoginModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="verifyAdminPassword()" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-950/40">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW ATHLETE MODAL -->
+  <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="athleteModalTitle" class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-emerald-400"></i> Cadastrar Novo Atleta
+        </h3>
+        <button onclick="closeAthleteModal()" class="text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <input type="hidden" id="editAthleteId">
+      <div class="space-y-3">
         <div>
-          <label class="block font-bold text-slate-300 mb-1">Nome Completo:</label>
-          <input type="text" id="athName" placeholder="Ex: Lucas Silva" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nome Completo:</label>
+          <input type="text" id="athleteNameInput" placeholder="Ex: Carlos Alberto" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold text-slate-300 mb-1">Posição Principal:</label>
-            <select id="athPosition" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green">
-              <option value="Goleiro">Goleiro (GK)</option>
-              <option value="Zagueiro">Zagueiro (ZAG)</option>
-              <option value="Lateral">Lateral (LAT)</option>
-              <option value="Volante">Volante (VOL)</option>
-              <option value="Meia" selected>Meia (MEI)</option>
-              <option value="Atacante">Atacante (ATA)</option>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Posição:</label>
+            <select id="athletePositionSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+              <option value="Goleiro">Goleiro</option>
+              <option value="Zagueiro">Zagueiro</option>
+              <option value="Lateral">Lateral</option>
+              <option value="Volante">Volante</option>
+              <option value="Meia">Meia</option>
+              <option value="Atacante">Atacante</option>
             </select>
           </div>
           <div>
-            <label class="block font-bold text-slate-300 mb-1">Mensalidade (R$):</label>
-            <input type="number" id="athMonthlyFee" value="110" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">WhatsApp / Telefone:</label>
+            <input type="text" id="athletePhoneInput" placeholder="22999998888" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
           </div>
         </div>
         <div>
-          <label class="block font-bold text-slate-300 mb-1">WhatsApp (DDD + Número):</label>
-          <input type="text" id="athPhone" placeholder="Ex: 22999998888" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
-        </div>
-        <div>
-          <label class="block font-bold text-slate-300 mb-1">Nível Técnico (Estrelas):</label>
-          <div id="starRatingContainer" class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg p-2">
-            <!-- Renderizado via JS -->
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nível de Habilidade (Estrelas):</label>
+          <div id="starRatingSelector" class="flex items-center gap-2 py-1">
+            <!-- Gerado via JS -->
           </div>
         </div>
-        <div class="bg-rose-950/30 border border-rose-500/30 rounded-lg p-2.5 mt-2">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="athIsSuspended" class="w-4 h-4 accent-rose-500 rounded cursor-pointer" />
-            <span class="font-bold text-rose-300 text-xs">SUSPENSO / SAIU</span>
-          </label>
-          <p class="text-[10px] text-slate-400 mt-1">Quando marcado: oculto da Presença para atletas, fora do sorteio e bloqueado de envios.</p>
+        <div class="flex items-center gap-2 pt-2">
+          <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0">
+          <label for="athleteSuspendedCheckbox" class="text-xs font-bold text-rose-400">SUSPENSO / SAIU (Ocultar da presença e WhatsApp)</label>
         </div>
       </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeAthleteModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-lg transition">Cancelar</button>
-        <button onclick="saveAthlete()" class="px-4 py-1.5 bg-brand-green hover:bg-emerald-400 text-xs font-black text-slate-950 rounded-lg transition">SALVAR</button>
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="closeAthleteModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="saveAthlete()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/40">Salvar Atleta</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL ADICIONAR DATA -->
-  <div id="modalAddDate" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-xs shadow-2xl space-y-4">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-calendar-plus text-brand-green"></i> Adicionar Nova Data
-      </h3>
+  <!-- JUSTIFICATION MODAL -->
+  <div id="justifyModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-comment-dots text-amber-400"></i> Justificativa de Ausência
+        </h3>
+        <button onclick="closeJustifyModal()" class="text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
       <div>
-        <label class="block text-xs font-bold text-slate-300 mb-1">Data da Pelada:</label>
-        <input type="date" id="inputNewDate" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-brand-green" />
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Motivo:</label>
+        <textarea id="justifyReasonInput" rows="3" placeholder="Ex: Viagem a trabalho, contusão..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
       </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeAddDateModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
-        <button onclick="addNewDate()" class="px-4 py-1.5 bg-brand-green text-xs font-black text-slate-950 rounded-lg">ADICIONAR</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL EDITAR HORÁRIOS -->
-  <div id="modalEditTimes" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-xs shadow-2xl space-y-4">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-clock text-amber-400"></i> Ajustar Horários
-      </h3>
-      <div class="space-y-2 text-xs">
-        <div>
-          <label class="block font-bold text-slate-300 mb-1">Horário do Jogo:</label>
-          <input type="time" id="inputGameTime" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
-        </div>
-        <div class="hidden">
-          <label class="block font-bold text-slate-300 mb-1">Horário Limite Confirmação:</label>
-          <input type="time" id="inputDeadline" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
-        </div>
-      </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeEditTimesModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
-        <button onclick="saveEventTimes()" class="px-4 py-1.5 bg-brand-green text-xs font-black text-slate-950 rounded-lg">SALVAR</button>
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="closeJustifyModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="saveJustification()" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-950/40">Salvar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL JUSTIFICATIVA ATLETA -->
-  <div id="modalJustify" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-        <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
-          <i class="fa-solid fa-comment-dots"></i> Justificar Ausência
+  <!-- NEW DATE MODAL -->
+  <div id="newDateModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-plus text-emerald-400"></i> Adicionar Nova Data de Pelada
         </h3>
-        <button onclick="closeJustifyModal()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeNewDateModal()" class="text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
-      <p id="lblJustifyAthleteName" class="text-xs font-bold text-white"></p>
       <div>
-        <label class="block text-[11px] font-bold text-slate-300 mb-1">Motivo / Justificativa:</label>
-        <textarea id="txtJustifyReason" rows="3" placeholder="Ex: Trabalho, viagem, lesão..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-400"></textarea>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Data da Pelada:</label>
+        <input type="date" id="newDateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
       </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeJustifyModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
-        <button onclick="submitJustification()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-xs font-black text-slate-950 rounded-lg">ENVIAR JUSTIFICATIVA</button>
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="closeNewDateModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="addNewDate()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/40">Adicionar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL DISPARO EM MASSA WHATSAPP -->
-  <div id="modalMasterZap" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
-          <i class="fa-brands fa-whatsapp text-base"></i> Convocar Todos pelo WhatsApp
+  <!-- MANAGE DATES MODAL -->
+  <div id="manageDatesModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-days text-emerald-400"></i> Gerenciar / Excluir Datas
         </h3>
-        <button onclick="closeMasterZapModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeManageDatesModal()" class="text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
-      <div id="masterZapBody" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-        <!-- Renderizado dinamicamente via JS -->
+      <div id="manageDatesList" class="divide-y divide-slate-800 overflow-y-auto flex-grow space-y-2 pr-1">
+        <!-- Preenchido dinamicamente -->
       </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeMasterZapModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Fechar</button>
+      <div class="pt-2 border-t border-slate-800 text-right">
+        <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL DISPARO COBRANÇA FINANCEIRA -->
-  <div id="modalFinancialZap" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
-          <i class="fa-brands fa-whatsapp text-base"></i> Cobrança de Inadimplentes
+  <!-- WHATSAPP MASS MODAL -->
+  <div id="whatsappMassModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-emerald-400"></i> Disparo em Massa - Convocação
         </h3>
-        <button onclick="closeFinancialZapModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeWhatsappMassModal()" class="text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
-      <div id="financialZapBody" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-        <!-- Renderizado dinamicamente via JS -->
+      <p class="text-xs text-slate-400">Escolha o público para envio da convocação da pelada do dia <span id="massModalDate" class="font-bold text-emerald-400"></span>:</p>
+      <div class="space-y-2">
+        <button onclick="sendWhatsappMass('confirmed')" class="w-full py-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center justify-between px-4">
+          <span>Enviar para Confirmados</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button onclick="sendWhatsappMass('pending')" class="w-full py-3 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 rounded-xl text-xs font-bold transition-all flex items-center justify-between px-4">
+          <span>Enviar para Pendentes / Sem Resposta</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button onclick="sendWhatsappMass('all')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-between px-4">
+          <span>Enviar para Todos os Atletas Ativos</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
       </div>
-      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="closeFinancialZapModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Fechar</button>
+      <div class="pt-2 text-right">
+        <button onclick="closeWhatsappMassModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- FOOTER / DADOS DO DESENVOLVEDOR -->
-  <footer class="bg-slate-900 border-t border-slate-800 py-6 mt-auto">
-    <div class="max-w-5xl mx-auto px-4 flex flex-col items-center justify-center text-center gap-1.5">
-      <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-brand-green mb-1">
-        <i class="fa-solid fa-code text-xs"></i>
+  <!-- CUSTOM CONFIRM MODAL -->
+  <div id="customConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto text-lg">
+        <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <p class="text-xs text-slate-400 font-medium">
-        &copy; 2026 <span class="text-white font-bold">Teimoso FCC</span>. Todos os direitos reservados.
-      </p>
-      <p class="text-[10px] text-slate-500 flex items-center gap-1">
-        Desenvolvido com <i class="fa-solid fa-heart text-brand-green"></i> por <span class="font-bold text-slate-300 hover:text-brand-green transition cursor-pointer">Marcos Almeida®</span>
-      </p>
+      <h3 id="confirmMessage" class="text-xs font-bold text-slate-200 leading-relaxed">Confirma esta operação?</h3>
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/40">Confirmar</button>
+      </div>
     </div>
-  </footer>
+  </div>
 
-  <!-- FIREBASE SDK MODULAR E SCRIPTS -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // CREDENCIAIS TEIMOSOWEB
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-ExemploDeChaveReal123456",
-      authDomain: "teimosoweb.firebaseapp.com",
-      projectId: "teimosoweb",
-      storageBucket: "teimosoweb.appspot.com",
-      messagingSenderId: "987654321098",
-      appId: "1:987654321098:web:abcdef123456789"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'teimoso-fcc-default';
-
-    // DADOS GLOBAIS DA APLICAÇÃO
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <script>
+    // --- ESTADO GLOBAL DA APLICAÇÃO ---
     window.isAdmin = false;
-    let docRef = null;
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
@@ -561,17 +556,16 @@
 
     window.datesList = ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"];
     window.currentDate = window.datesList[0];
-    window.eventTimes = { gameTime: "20:00", deadline: "18:00" };
-    window.athletes = [...defaultAthletes];
-    window.presences = {}; 
-    window.financialPayments = {};
+    window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
+    window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
+    window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financial')) || {};
 
-    // SISTEMA DE TOAST E CONFIRM
+    // --- TOAST NOTIFICATION SYSTEM ---
     window.showToast = function(message, type = 'error') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       const bgColor = type === 'error' ? 'bg-rose-600' : 'bg-emerald-600';
-      toast.className = `${bgColor} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-x-10 opacity-0`;
+      toast.className = `${bgColor} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-x-10 opacity-0 pointer-events-auto`;
       toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i> ${message}`;
       container.appendChild(toast);
       
@@ -602,1182 +596,977 @@
       closeConfirm();
     });
 
-    // PERSISTÊNCIA NA NUVEM (FIREBASE)
-    window.saveData = async function() {
-      if (!docRef) return;
-      try {
-        await setDoc(docRef, {
-          datesList: window.datesList,
-          currentDate: window.currentDate,
-          eventTimes: window.eventTimes,
-          athletes: window.athletes,
-          presences: window.presences,
-          financialPayments: window.financialPayments,
-          updatedAt: new Date().toISOString()
-        });
-      } catch (e) {
-        console.error("Erro ao salvar no Firebase:", e);
-      }
+    window.saveData = function() {
+      localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
+      localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
+      localStorage.setItem('teimoso_financial', JSON.stringify(window.financialPayments));
     };
 
-    async function initializeFirebaseAndListen() {
-      try {
-        if (typeof __initial_auth_token !== 'undefined') {
-          await signInWithCustomToken(auth, __initial_auth_token);
+    // --- INICIALIZAÇÃO ---
+    window.addEventListener('DOMContentLoaded', () => {
+      populateDateSelect();
+      buildStarRatingSelector(5);
+      renderAthletesList();
+      renderFinancial();
+      renderReports();
+      checkDeadlinePassed();
+    });
+
+    // --- NAVEGAÇÃO DE ABAS ---
+    window.switchTab = function(tab) {
+      activeTab = tab;
+      ['presence', 'draw', 'financial', 'reports'].forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`tabBtn-${t}`);
+        if (t === tab) {
+          el.classList.remove('hidden');
+          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-lg shadow-emerald-900/30";
         } else {
-          await signInAnonymously(auth);
-        }
-        
-        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'teimoso_config_doc');
-        
-        onSnapshot(docRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            window.datesList = data.datesList || window.datesList;
-            window.currentDate = data.currentDate || window.datesList[0];
-            window.eventTimes = data.eventTimes || window.eventTimes;
-            window.athletes = data.athletes || window.athletes;
-            window.presences = data.presences || {};
-            window.financialPayments = data.financialPayments || {};
-
-            populateDateSelect();
-            updateCurrentTimeUI();
-            renderAthletesList();
-            if (activeTab === 'reports') renderReports();
-            if (activeTab === 'financial') renderFinancial();
-          } else {
-            window.saveData();
-          }
-        }, (error) => {
-          console.error("Erro no onSnapshot:", error);
-        });
-      } catch(e) {
-        console.error("Erro na autenticação Firebase:", e);
-      }
-    }
-
-    // NAVEGAÇÃO DE ABAS
-    window.switchTab = function(tabName) {
-      activeTab = tabName;
-      ['presence', 'draw', 'reports', 'financial'].forEach(t => {
-        const sec = document.getElementById(`sec-${t}`);
-        const tabBtn = document.getElementById(`tab-${t}`);
-        if (sec) sec.classList.add('hidden');
-        if (tabBtn) {
-          tabBtn.className = "px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800";
+          el.classList.add('hidden');
+          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50";
         }
       });
-
-      const activeSec = document.getElementById(`sec-${tabName}`);
-      const activeTabBtn = document.getElementById(`tab-${tabName}`);
-      if (activeSec) activeSec.classList.remove('hidden');
-      if (activeTabBtn) {
-        if (tabName === 'financial') {
-          activeTabBtn.className = "px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-amber-500 text-slate-950 font-black shadow";
-        } else {
-          activeTabBtn.className = "px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-brand-green text-slate-950 font-black shadow";
-        }
-      }
-
-      if (tabName === 'financial') renderFinancial();
-      if (tabName === 'reports') renderReports();
+      if (tab === 'financial') renderFinancial();
+      if (tab === 'reports') renderReports();
     };
 
-    window.cleanPhone = function(p) {
-      return (p || '').replace(/\D/g, '');
-    };
-
-    window.isDeadlinePassed = function() {
-      if (!window.currentDate) return false;
-      const [y, m, d] = window.currentDate.split('-');
-      const deadlineDate = new Date(y, m - 1, d - 1, 18, 0, 0); 
-      return new Date() > deadlineDate;
-    };
-
-    // MODO ADMIN
+    // --- MODO ADMIN ---
     window.toggleAdminMode = function() {
       if (window.isAdmin) {
         window.isAdmin = false;
         document.getElementById('adminBadge').classList.add('hidden');
         document.getElementById('adminBadge').classList.remove('flex');
+        document.getElementById('adminToggleBtn').className = "px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-2 shadow-sm";
+        document.getElementById('adminLockIcon').className = "fa-solid fa-lock text-amber-400";
         document.getElementById('adminToggleText').innerText = "Modo Admin";
-        document.getElementById('btnAdminToggle').classList.remove('bg-amber-500/20', 'border-amber-500/50', 'text-amber-400');
+        document.getElementById('adminDateControls').classList.add('hidden');
+        document.getElementById('adminDateControls').classList.remove('flex');
         document.getElementById('btnAddAthlete').classList.add('hidden');
-        document.getElementById('btnAddDate').classList.add('hidden');
-        document.getElementById('btnEditTimes').classList.add('hidden');
-        document.getElementById('btnMasterZap').classList.add('hidden');
-        document.getElementById('tab-financial').classList.add('hidden');
-        if (activeTab === 'financial') window.switchTab('presence');
-        window.showToast("Modo Admin desativado.", "success");
+        showToast("Modo Administrador desativado.", "success");
         renderAthletesList();
       } else {
-        document.getElementById('modalAdmin').classList.remove('hidden');
-        document.getElementById('inputAdminPin').value = '';
-        setTimeout(() => document.getElementById('inputAdminPin').focus(), 100);
+        document.getElementById('adminLoginModal').classList.remove('hidden');
+        document.getElementById('adminPasswordInput').value = '';
+        setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
       }
     };
 
-    window.closeAdminModal = function() {
-      document.getElementById('modalAdmin').classList.add('hidden');
+    window.closeAdminLoginModal = function() {
+      document.getElementById('adminLoginModal').classList.add('hidden');
     };
 
-    window.verifyAdminPin = function() {
-      const pin = document.getElementById('inputAdminPin').value.trim();
-      if (pin === "2026" || pin === "0000" || pin === "1234") {
+    window.verifyAdminPassword = function() {
+      const pass = document.getElementById('adminPasswordInput').value;
+      if (pass === '0000' || pass === '1234') {
         window.isAdmin = true;
+        closeAdminLoginModal();
         document.getElementById('adminBadge').classList.remove('hidden');
         document.getElementById('adminBadge').classList.add('flex');
-        document.getElementById('adminToggleText').innerText = "Sair Admin";
-        document.getElementById('btnAdminToggle').classList.add('bg-amber-500/20', 'border-amber-500/50', 'text-amber-400');
+        document.getElementById('adminToggleBtn').className = "px-3.5 py-2 rounded-xl text-xs font-bold border border-emerald-500/50 bg-emerald-950/40 text-emerald-300 transition-all flex items-center gap-2 shadow-sm";
+        document.getElementById('adminLockIcon').className = "fa-solid fa-lock-open text-emerald-400";
+        document.getElementById('adminToggleText').innerText = "Admin Ativo";
+        document.getElementById('adminDateControls').classList.remove('hidden');
+        document.getElementById('adminDateControls').classList.add('flex');
         document.getElementById('btnAddAthlete').classList.remove('hidden');
-        document.getElementById('btnAddDate').classList.remove('hidden');
-        document.getElementById('btnEditTimes').classList.remove('hidden');
-        document.getElementById('btnMasterZap').classList.remove('hidden');
-        document.getElementById('tab-financial').classList.remove('hidden');
-        closeAdminModal();
-        window.showToast("Modo Administrador ativado com sucesso!", "success");
+        showToast("Acesso Administrativo concedido!", "success");
         renderAthletesList();
+        renderFinancial();
       } else {
-        window.showToast("Senha incorreta!");
+        showToast("Senha incorreta!", "error");
       }
     };
 
-    // STATUS FINANCEIRO DO ATLETA
-    function getAthleteFinancialStatus(ath) {
-      const athPay = window.financialPayments[ath.id] || {};
-      const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
-      const now = new Date();
-      const currentYear = now.getFullYear();
-
-      const athNameNorm = ath.name.trim().toUpperCase();
-      const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
-      const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
-      const isSapao = athNameNorm === "SAPÃO" || athNameNorm === "SAPAO";
-
-      let totalDueToDate = 0;
-      let totalBaseDue = 0;
-      let totalIntDue = 0;
-
-      months.forEach((m, mIndex) => {
-        const firstInterestDate = new Date(currentYear, mIndex, 16);
-        const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
-        let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
-
-        const isJulioOct2026 = isJulio && m === "out";
-        const isSapaoSep2026 = isSapao && m === "set";
-
-        if (hasCustomVal) {
-          if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
-            const diff = Math.max(0, athFee - paid);
-            totalDueToDate += diff;
-            totalBaseDue += diff;
-          }
-        } else if (now >= firstInterestDate) {
-          const diffTime = Math.abs(now - firstInterestDate);
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-          const interest = diffDays * 1.00;
-          totalDueToDate += Math.max(0, (athFee + interest) - paid);
-          totalBaseDue += Math.max(0, athFee - paid);
-          totalIntDue += interest;
-        }
+    // --- DATAS E PRAZO ---
+    window.populateDateSelect = function() {
+      const select = document.getElementById('dateSelect');
+      select.innerHTML = '';
+      window.datesList.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.innerText = formatDateDisplay(d);
+        if (d === window.currentDate) opt.selected = true;
+        select.appendChild(opt);
       });
+      document.getElementById('massModalDate').innerText = formatDateDisplay(window.currentDate);
+    };
 
-      return {
-        isUpToDate: totalDueToDate <= 0,
-        dueAmount: totalDueToDate,
-        baseDue: totalBaseDue,
-        interestDue: totalIntDue
-      };
+    window.changeDate = function(val) {
+      window.currentDate = val;
+      document.getElementById('massModalDate').innerText = formatDateDisplay(val);
+      checkDeadlinePassed();
+      renderAthletesList();
+    };
+
+    function formatDateDisplay(dateStr) {
+      const [y, m, d] = dateStr.split('-');
+      const dateObj = new Date(y, m - 1, d);
+      const options = { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' };
+      return dateObj.toLocaleDateString('pt-BR', options).toUpperCase();
     }
 
-    // FILTRO DE STATUS PELOS CARDS
-    window.filterByStatus = function(statusKey) {
-      if (activeStatusFilter === statusKey) {
-        activeStatusFilter = null;
+    // Regra: Prazo até 1 dia antes da pelada às 18:00
+    window.checkDeadlinePassed = function() {
+      const [y, m, d] = window.currentDate.split('-');
+      const peladaDate = new Date(y, m - 1, d, 20, 0, 0);
+      const deadlineDate = new Date(peladaDate);
+      deadlineDate.setDate(peladaDate.getDate() - 1);
+      deadlineDate.setHours(18, 0, 0, 0);
+
+      const now = new Date();
+      const banner = document.getElementById('deadlineBanner');
+      
+      // Se já passou de 18h do dia anterior e não for admin
+      if (now > deadlineDate && !window.isAdmin) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+        return true;
       } else {
-        activeStatusFilter = statusKey;
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+        return false;
+      }
+    };
+
+    // --- CONTROLE DE PRESENÇA E FILTROS ---
+    window.filterPresenceCards = function(status) {
+      activeStatusFilter = status;
+      const badge = document.getElementById('activeFilterBadge');
+      if (status) {
+        badge.classList.remove('hidden');
+        document.getElementById('filterName').innerText = status;
+      } else {
+        badge.classList.add('hidden');
       }
       renderAthletesList();
     };
 
-    // RENDERIZAR LISTA DE ATLETAS (PRESENÇA)
-    window.renderAthletesList = function() {
-      const listEl = document.getElementById('athletesList');
-      if (!listEl) return;
-
-      const search = (document.getElementById('searchAthlete')?.value || '').toLowerCase();
-      const currentPresences = window.presences[window.currentDate] || {};
-      const deadlinePassed = window.isDeadlinePassed();
-
-      let countUnvalidated = 0, countValidated = 0, countOutside = 0, countJustified = 0, countFaults = 0, countPending = 0, countGoleiros = 0;
-
-      listEl.innerHTML = '';
-      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-
-      sortedAthletes.forEach(ath => {
-        if (ath.isSuspended && !window.isAdmin) return;
-
-        const p = currentPresences[ath.id] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
-        const isInside = p.status === 'CONFIRMADO' || p.status === 'DENTRO' || p.status === 'VOU';
-        const isOutside = p.status === 'FORA' || p.status === 'NAO';
-        const isFault = p.fault || p.status === 'FALTA';
-
-        const posInfo = positionBadges[ath.position] || positionBadges[ath.isKeeper ? "Goleiro" : "Meia"] || positionBadges["Meia"];
-
-        let athleteCategory = 'PENDENTE';
-        if (isFault) {
-          countFaults++;
-          athleteCategory = 'FALTA';
-          if (isInside) countUnvalidated++;
-        } else if (isInside) {
-          if (p.checked) {
-            countValidated++;
-            athleteCategory = 'VALIDADOS';
-            if (ath.isKeeper || ath.position === "Goleiro") countGoleiros++;
-          } else {
-            countUnvalidated++;
-            athleteCategory = 'CONFIRMADO';
-          }
-        } else if (isOutside) {
-          countOutside++;
-          athleteCategory = 'FORA';
-        } else if (p.status === 'JUSTIFICADO') {
-          countJustified++;
-          athleteCategory = 'JUSTIFICADO';
-        } else {
-          countPending++;
-          athleteCategory = 'PENDENTE';
-        }
-
-        if (activeStatusFilter && athleteCategory !== activeStatusFilter) return;
-        if (search && !ath.name.toLowerCase().includes(search) && !(ath.position && ath.position.toLowerCase().includes(search))) return;
-
-        const finStatus = getAthleteFinancialStatus(ath);
-        const finBadgeHtml = finStatus.isUpToDate
-          ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Em dia</span>`
-          : `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> Em Atraso</span>`;
-
-        const card = document.createElement('div');
-        if (ath.isSuspended) {
-          card.className = "bg-rose-950/20 border border-rose-500/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm hover:border-rose-500 transition opacity-90";
-        } else {
-          card.className = "bg-slate-800/90 border border-slate-700/80 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm hover:border-slate-600 transition";
-        }
-
-        let starsHtml = '';
-        for (let i = 1; i <= 5; i++) {
-          starsHtml += `<i class="fa-solid fa-star ${i <= ath.stars ? 'text-amber-400' : 'text-slate-600'} text-[9px]"></i>`;
-        }
-
-        let badgeHtml = '';
-        if (ath.isSuspended) {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-600 text-white border border-rose-400 shadow flex items-center gap-1"><i class="fa-solid fa-user-slash"></i> SUSPENSO / SAIU</span>`;
-        } else if (isInside) {
-          if (p.checked) {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> VALIDADO</span>`;
-          } else if (isFault) {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1"><i class="fa-solid fa-user-xmark"></i> CONFIRMADO (FALTOU)</span>`;
-          } else {
-            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-sky-500/20 text-sky-300 border border-sky-500/30">CONFIRMADO (Aguard. Admin)</span>`;
-          }
-        } else if (isOutside) {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">FORA</span>`;
-        } else if (p.status === 'JUSTIFICADO') {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30" title="${p.reason}">JUSTIFICADO</span>`;
-        } else {
-          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-slate-700 text-slate-400">PENDENTE</span>`;
-        }
-
-        let adminButtonsHtml = '';
-        if (window.isAdmin) {
-          const isCheckable = isInside && !isFault && !ath.isSuspended;
-          adminButtonsHtml = `
-            <button onclick="toggleFault(${ath.id})" ${ath.isSuspended ? 'disabled' : ''} class="px-2 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isFault ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}" title="Atleta confirmou presença mas não compareceu">
-              FALTA
-            </button>
-            <button onclick="toggleCheck(${ath.id})" 
-              title="${isCheckable ? (p.checked ? 'Presença Validada pelo Admin' : 'Validar Presença do Atleta') : 'Atleta precisa estar CONFIRMADO e Ativo'}"
-              class="ml-0.5 p-2 rounded-lg transition flex items-center justify-center ${p.checked ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : (isCheckable ? 'bg-slate-900/80 text-slate-500 hover:text-emerald-400 border border-slate-700' : 'bg-slate-900/40 text-slate-700 cursor-not-allowed')}">
-              <i class="fa-solid fa-square-check text-base"></i>
-            </button>
-            <button onclick="openEditAthleteModal(${ath.id})" class="ml-0.5 text-slate-400 hover:text-amber-400 p-1.5" title="Editar / Reativar Atleta"><i class="fa-solid fa-pen text-xs"></i></button>
-            <button onclick="deleteAthlete(${ath.id})" class="ml-0.5 text-slate-500 hover:text-rose-400 p-1.5" title="Excluir Atleta"><i class="fa-solid fa-trash-can text-xs"></i></button>
-          `;
-        }
-
-        const hasPhone = ath.phone && cleanPhone(ath.phone) !== "";
-        const zapBtnTitle = window.isAdmin 
-          ? (ath.isSuspended ? 'Atleta SUSPENSO - Envio de WhatsApp Bloqueado' : (hasPhone ? `Enviar Convocação Zap para ${ath.phone}` : 'Sem WhatsApp (Clique para cadastrar)'))
-          : (hasPhone ? 'WhatsApp Cadastrado (Apenas Admin envia convite)' : 'Sem WhatsApp Cadastrado');
-
-        const zapBtn = `
-          <button onclick="sendAthleteZap(${ath.id})" 
-            class="w-8 h-8 rounded-lg flex items-center justify-center transition border ml-1 shrink-0 ${ath.isSuspended ? 'bg-rose-950/30 text-rose-500/50 border-rose-500/20 cursor-not-allowed' : (hasPhone ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30' : 'bg-slate-900/50 text-rose-500/80 border-rose-500/20 hover:bg-rose-500/10')}" 
-            title="${zapBtnTitle}">
-            <i class="${hasPhone ? 'fa-brands fa-whatsapp text-sm' : 'fa-solid fa-xmark text-sm font-black'}"></i>
-          </button>
-        `;
-
-        const isActionBlocked = ath.isSuspended || (!window.isAdmin && deadlinePassed);
-        const actionBlockedReason = ath.isSuspended ? "Atleta SUSPENSO" : "Prazo encerrado (1 dia antes às 18h)";
-
-        card.innerHTML = `
-          <div class="flex items-center gap-2.5 min-w-[150px]">
-            <div class="w-8 h-8 rounded-lg ${posInfo.color} border flex items-center justify-center font-black text-[10px] shrink-0">
-              ${posInfo.tag}
-            </div>
-            <div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-xs ${ath.isSuspended ? 'text-rose-300 line-through' : 'text-white'}">${ath.name}</span>
-                ${badgeHtml}
-                ${finBadgeHtml}
-              </div>
-              <div class="flex items-center gap-2 mt-0.5">
-                <div class="flex items-center gap-0.5">${starsHtml}</div>
-                <span class="text-[9px] text-slate-400 uppercase font-semibold">(${ath.position || "Meia"})</span>
-                ${ath.phone ? `<span class="text-[9px] text-emerald-400 font-mono"><i class="fa-solid fa-phone text-[8px]"></i> ${ath.phone}</span>` : ''}
-              </div>
-              ${p.status === 'JUSTIFICADO' && p.reason ? `<p class="text-[10px] text-amber-300/80 italic mt-0.5">Motivo: "${p.reason}"</p>` : ''}
-            </div>
-          </div>
-          <div class="flex items-center gap-1 shrink-0">
-            <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" ${isActionBlocked ? 'disabled' : ''} title="${isActionBlocked ? actionBlockedReason : ''}" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isActionBlocked ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900')}">
-              CONF.
-            </button>
-            <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" ${isActionBlocked ? 'disabled' : ''} title="${isActionBlocked ? actionBlockedReason : 'Ausência Justificada'}" class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${isActionBlocked ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}">
-              JUSTIF.
-            </button>
-            <button onclick="setStatus(${ath.id}, 'FORA')" ${isActionBlocked ? 'disabled' : ''} title="${isActionBlocked ? actionBlockedReason : ''}" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isActionBlocked ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900')}">
-              FORA
-            </button>
-            ${zapBtn}
-            ${adminButtonsHtml}
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
-
-      document.getElementById('cntUnvalidated').innerText = countUnvalidated;
-      document.getElementById('cntOutside').innerText = countOutside;
-      document.getElementById('cntJustified').innerText = countJustified;
-      document.getElementById('cntValidated').innerText = countValidated;
-      document.getElementById('cntGoleiros').innerText = `(${countGoleiros} GK)`;
-      document.getElementById('cntFaults').innerText = countFaults;
-      document.getElementById('cntPending').innerText = countPending;
-
-      ['CONFIRMADO', 'FORA', 'JUSTIFICADO', 'VALIDADOS', 'FALTA', 'PENDENTE'].forEach(key => {
-        const cardEl = document.getElementById(`card-${key}`);
-        if (cardEl) {
-          if (activeStatusFilter === key) {
-            cardEl.classList.add('ring-2', 'ring-amber-400', 'scale-105');
-          } else {
-            cardEl.classList.remove('ring-2', 'ring-amber-400', 'scale-105');
-          }
-        }
-      });
-    };
-
-    // AÇÕES DE PRESENÇA
-    window.setStatus = function(athId, status) {
-      const ath = window.athletes.find(a => a.id === athId);
-      if (ath && ath.isSuspended) return;
-
-      if (!window.isAdmin && window.isDeadlinePassed()) {
-        window.showToast("Prazo encerrado! O limite para alterações é até as 18h do dia anterior ao jogo. Fale com um Administrador.");
+    window.setPresenceStatus = function(athleteId, newStatus) {
+      const isPastDeadline = checkDeadlinePassed();
+      if (isPastDeadline && !window.isAdmin) {
+        showToast("Prazo encerrado às 18h do dia anterior. Apenas admins podem alterar.");
         return;
       }
 
-      if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
-      
-      const currentPresence = window.presences[window.currentDate][athId];
-      const currentStatus = currentPresence ? currentPresence.status : 'PENDENTE';
+      if (!window.presences[window.currentDate]) {
+        window.presences[window.currentDate] = {};
+      }
 
-      if (currentStatus === status) {
-        window.presences[window.currentDate][athId] = {
-          status: 'PENDENTE',
-          checked: false,
-          fault: false,
+      // Toggle rule: se clicar no mesmo status já marcado, desmarca (volta para null)
+      const current = window.presences[window.currentDate][athleteId]?.status;
+      if (current === newStatus) {
+        window.presences[window.currentDate][athleteId].status = null;
+      } else {
+        if (newStatus === 'JUSTIFICADO') {
+          currentJustifyAthleteId = athleteId;
+          document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
+          document.getElementById('justifyModal').classList.remove('hidden');
+          return;
+        }
+        window.presences[window.currentDate][athleteId] = {
+          status: newStatus,
           reason: ''
         };
-        window.saveData();
-        renderAthletesList();
-        return;
       }
 
-      if (status === 'JUSTIFICADO') {
-        openJustifyModal(athId);
+      saveData();
+      renderAthletesList();
+    };
+
+    window.saveJustification = function() {
+      const reason = document.getElementById('justifyReasonInput').value.trim();
+      if (!reason) {
+        showToast("Digite o motivo da justificativa.");
         return;
       }
-
-      window.presences[window.currentDate][athId] = {
-        status: status,
-        checked: false,
-        fault: false,
-        reason: ''
-      };
-      window.saveData();
-      renderAthletesList();
-    };
-
-    window.toggleCheck = function(athId) {
-      if (!window.isAdmin) return;
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
-      const current = window.presences[window.currentDate][athId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
-      
-      window.presences[window.currentDate][athId] = {
-        ...current,
-        checked: !current.checked,
-        fault: false
+      window.presences[window.currentDate][currentJustifyAthleteId] = {
+        status: 'JUSTIFICADO',
+        reason: reason
       };
-      window.saveData();
+      saveData();
+      closeJustifyModal();
       renderAthletesList();
+      showToast("Justificativa salva com sucesso!", "success");
     };
 
-    window.toggleFault = function(athId) {
-      if (!window.isAdmin) return;
-      if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
-      const current = window.presences[window.currentDate][athId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
-      
-      window.presences[window.currentDate][athId] = {
-        ...current,
-        fault: !current.fault,
-        checked: false
-      };
-      window.saveData();
-      renderAthletesList();
+    window.closeJustifyModal = function() {
+      document.getElementById('justifyModal').classList.add('hidden');
+      currentJustifyAthleteId = null;
     };
 
-    // RENDERIZAR FINANCEIRO
-    window.renderFinancial = function() {
-      const tbody = document.getElementById('tblFinancialBody');
-      if (!tbody) return;
+    // --- CÁLCULO DE STATUS FINANCEIRO DO ATLETA ---
+    function getAthleteFinancialStatus(athleteId) {
+      const now = new Date();
+      const currentYearMonthKey = `2026-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
+      const payments = window.financialPayments[athleteId] || {};
+      
+      // Verifica se há alguma parcela vencida em aberto até a data atual
+      for (let mIndex = 0; mIndex < months.length; mIndex++) {
+        const mKey = months[mIndex];
+        const monthNum = mIndex + 1;
+        const dueDate = new Date(2026, monthNum - 1, 15);
+        
+        const paymentData = payments[mKey];
+        const isPaid = paymentData && (paymentData.paid || paymentData.amount > 0);
+        
+        if (!isPaid && now > dueDate) {
+          return 'overdue'; // Vermelho
+        }
+      }
+      return 'uptodate'; // Verde
+    }
+
+    // --- RENDERIZAÇÃO DA LISTA DE PRESENÇA ---
+    window.renderAthletesList = function() {
+      const tbody = document.getElementById('athletesTableBody');
       tbody.innerHTML = '';
 
-      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-      const now = new Date();
-      const currentYear = now.getFullYear();
+      let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
+      const dayPresences = window.presences[window.currentDate] || {};
 
-      let grandTotalPaid = 0;
-      let grandTotalDue = 0;
+      window.athletes.forEach(athlete => {
+        const pRecord = dayPresences[athlete.id] || { status: null, reason: '' };
+        const status = pRecord.status;
 
-      sortedAthletes.forEach((ath, athIndex) => {
-        const athPay = window.financialPayments[ath.id] || {};
-        const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
-        let totalPaid = 0;
-        let totalInterest = 0;
-        let totalDue = 0;
-        let monthCells = '';
+        // Se o atleta está suspenso/saiu
+        if (athlete.isSuspended) {
+          if (!window.isAdmin) return; // Oculta para usuários comuns
+        }
 
-        const athNameNorm = ath.name.trim().toUpperCase();
-        const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
-        const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
-        const isSapao = athNameNorm === "SAPÃO" || athNameNorm === "SAPAO";
+        countTotal++;
+        if (status === 'CONFIRMADO') countConf++;
+        else if (status === 'JUSTIFICADO') countJust++;
+        else if (status === 'FORA') countOut++;
 
-        months.forEach((m, mIndex) => {
-          const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
-          let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
-          const firstInterestDate = new Date(currentYear, mIndex, 16);
-          let interest = 0;
-          let debtMonth = 0;
-          let colorClass = "";
-          let isPaidCheck = hasCustomVal && paid > 0;
+        // Filtro ativo
+        if (activeStatusFilter && status !== activeStatusFilter) {
+          return;
+        }
 
-          const isJulioOct2026 = isJulio && m === "out";
-          const isSapaoSep2026 = isSapao && m === "set";
+        const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" };
+        const starsHtml = '★'.repeat(athlete.stars) + '☆'.repeat(5 - athlete.stars);
 
-          if (hasCustomVal) {
-            interest = 0; 
-            if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
-              debtMonth = Math.max(0, athFee - paid);
-              if (debtMonth === 0) {
-                colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
-              } else {
-                colorClass = "border-amber-500/50 text-amber-300 font-bold bg-amber-950/20";
-              }
-            } else {
-              debtMonth = 0;
-              colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
-            }
-          } else if (now >= firstInterestDate) {
-            const diffTime = Math.abs(now - firstInterestDate);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            interest = diffDays * 1.00;
-            debtMonth = Math.max(0, (athFee + interest) - paid);
-            colorClass = "border-rose-500/50 text-rose-400 font-bold bg-rose-950/20";
-          } else {
-            debtMonth = Math.max(0, athFee - paid);
-            colorClass = "border-slate-700 text-slate-500 font-normal bg-slate-900";
-          }
-
-          let suggestedVal = athFee;
-          let displayVal = hasCustomVal ? paid : (now >= firstInterestDate ? athFee : "");
-
-          totalPaid += paid;
-          totalInterest += interest;
-          totalDue += debtMonth;
-
-          monthCells += `
-            <td class="p-1 text-center">
-              <div class="flex items-center justify-center gap-1">
-                <input type="number" id="fin_${athIndex}_${mIndex}" value="${displayVal}" min="0" 
-                  onchange="updatePayment(${ath.id}, '${m}', this.value)" 
-                  ondblclick="updatePayment(${ath.id}, '${m}', ${athFee})"
-                  onkeydown="handleFinKeyDown(event, ${athIndex}, ${mIndex})"
-                  placeholder="${suggestedVal}"
-                  title="Mensalidade: R$ ${athFee.toFixed(2)} | Duplo clique para baixar"
-                  class="w-14 border rounded p-1 text-center text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition ${colorClass}" />
-                <input type="checkbox" ${isPaidCheck ? 'checked' : ''} 
-                  onchange="togglePaymentCheck(${ath.id}, '${m}', this.checked, ${athFee}, ${athIndex}, ${mIndex})"
-                  title="Marcar como pago e editar valor"
-                  class="w-3.5 h-3.5 accent-sky-400 cursor-pointer rounded" />
-              </div>
-            </td>
-          `;
-        });
-
-        grandTotalPaid += totalPaid;
-        grandTotalDue += totalDue;
-
-        const finStatus = getAthleteFinancialStatus(ath);
-        const ballIcon = finStatus.isUpToDate
-          ? `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-sm ring-2 ring-emerald-400/30 shrink-0" title="Mensalidades em dia"></span>`
-          : `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-sm ring-2 ring-rose-500/30 shrink-0" title="Em débito até a presente data (R$ ${finStatus.dueAmount.toFixed(2)})"></span>`;
-        const suspendedTag = ath.isSuspended ? ` <span class="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 py-0.5 rounded font-extrabold">SUSPENSO</span>` : '';
-        
-        const zapIconTitle = finStatus.isUpToDate ? "Enviar Agradecimento (Em dia)" : "Enviar Cobrança WhatsApp";
-        const zapIconColor = finStatus.isUpToDate ? "text-emerald-500 hover:text-emerald-400 bg-emerald-500/10" : "text-amber-500 hover:text-amber-400 bg-amber-500/10";
+        // Status financeiro do atleta
+        const finStatus = getAthleteFinancialStatus(athlete.id);
+        const finDotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
+        const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
+        const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30';
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-700/30 transition";
+        if (athlete.isSuspended) {
+          tr.className = "bg-rose-950/20 hover:bg-rose-900/30 transition-colors opacity-75";
+        } else {
+          tr.className = "hover:bg-slate-900/60 transition-colors";
+        }
+
+        let actionsHtml = '';
+        const isPastDeadline = checkDeadlinePassed();
+        const disabledAttr = (isPastDeadline && !window.isAdmin) ? 'opacity-40 pointer-events-none' : '';
+
+        if (athlete.isSuspended) {
+          actionsHtml = `<span class="text-[10px] font-bold px-2 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40">SUSPENSO / SAIU</span>`;
+        } else {
+          const btnConfClass = status === 'CONFIRMADO' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700';
+          const btnJustClass = status === 'JUSTIFICADO' ? 'bg-amber-600 text-white shadow-md shadow-amber-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700';
+          const btnOutClass = status === 'FORA' ? 'bg-rose-600 text-white shadow-md shadow-rose-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700';
+
+          actionsHtml = `
+            <div class="flex items-center justify-center gap-1.5 ${disabledAttr}">
+              <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" title="Confirmar" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${btnConfClass}">CONF.</button>
+              <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" title="Justificar" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${btnJustClass}">JUSTIF.</button>
+              <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" title="Fora" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${btnOutClass}">FORA</button>
+              ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" title="Falta" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}">FALTA</button>` : ''}
+            </div>
+          `;
+        }
+
         tr.innerHTML = `
-          <td class="p-2 font-bold text-white sticky left-0 bg-slate-800 z-10 border-r border-slate-700">
-            <div class="flex items-center justify-between gap-1.5">
-              <div class="flex items-center gap-1.5">
-                <span>${ath.name}</span>
-                ${ballIcon}
-                ${suspendedTag}
-              </div>
-              <button onclick="sendFinancialZap(${ath.id})" class="px-1.5 py-1 rounded transition ${zapIconColor}" title="${zapIconTitle}">
+          <td class="py-3 px-4 font-bold text-slate-200">
+            <div class="flex items-center gap-2">
+              <span>${athlete.name}</span>
+              ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+            </div>
+            ${pRecord.reason ? `<div class="text-[10px] text-amber-400 mt-0.5 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
+          </td>
+          <td class="py-3 px-4">
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
+          </td>
+          <td class="py-3 px-4 text-center text-amber-400 text-[11px]" title="${athlete.stars} estrelas">
+            ${starsHtml}
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${finLabelColor}">
+              <span class="w-2 h-2 rounded-full ${finDotColor}"></span> ${finLabel}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            ${actionsHtml}
+          </td>
+          <td class="py-3 px-4 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button onclick="openWhatsappIndividual('${athlete.phone}', '${athlete.name}')" title="Enviar WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs">
                 <i class="fa-brands fa-whatsapp"></i>
               </button>
+              ${window.isAdmin ? `
+                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button onclick="confirmDeleteAthlete(${athlete.id})" title="Excluir" class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              ` : ''}
             </div>
           </td>
-          <td class="p-2 text-center font-bold text-amber-400 bg-slate-900/40 border-r border-slate-800">R$ ${athFee.toFixed(2)}</td>
-          ${monthCells}
-          <td class="p-2 text-center font-extrabold text-sky-300 bg-slate-900/40">R$ ${totalPaid.toFixed(2)}</td>
-          <td class="p-2 text-center font-extrabold text-amber-400 bg-slate-900/40">R$ ${totalInterest.toFixed(2)}</td>
-          <td class="p-2 text-center font-extrabold ${totalDue > 0 ? 'text-rose-400' : 'text-slate-400'} bg-slate-900/40">R$ ${totalDue.toFixed(2)}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      const totalPagoEl = document.getElementById('lblTotalGeralPago');
-      const totalAReceberEl = document.getElementById('lblTotalAReceber');
-      if (totalPagoEl) totalPagoEl.innerText = `R$ ${grandTotalPaid.toFixed(2).replace('.', ',')}`;
-      if (totalAReceberEl) totalAReceberEl.innerText = `R$ ${grandTotalDue.toFixed(2).replace('.', ',')}`;
+      document.getElementById('statConfirmed').innerText = countConf;
+      document.getElementById('statJustified').innerText = countJust;
+      document.getElementById('statOut').innerText = countOut;
+      document.getElementById('statTotal').innerText = countTotal;
     };
 
-    window.updatePayment = function(athId, monthKey, val) {
-      if (!window.financialPayments[athId]) window.financialPayments[athId] = {};
-      if (val === "" || val === null) {
-        delete window.financialPayments[athId][monthKey];
-      } else {
-        window.financialPayments[athId][monthKey] = parseFloat(val);
-      }
-      window.saveData();
-      renderFinancial();
-    };
-
-    window.togglePaymentCheck = function(athId, monthKey, isChecked, suggestedFee, rowIdx, colIdx) {
-      if (isChecked) {
-        window.updatePayment(athId, monthKey, suggestedFee);
-        setTimeout(() => {
-          const inputEl = document.getElementById(`fin_${rowIdx}_${colIdx}`);
-          if (inputEl) {
-            inputEl.focus();
-            inputEl.select();
-          }
-        }, 50);
-      } else {
-        window.updatePayment(athId, monthKey, "");
-      }
-    };
-
-    window.handleFinKeyDown = function(evt, rowIdx, colIdx) {
-      const numRows = window.athletes.length;
-      const numCols = months.length;
-
-      if (evt.key === 'Enter') {
-        evt.preventDefault();
-        const nextRow = Math.min(rowIdx + 1, numRows - 1);
-        const nextInput = document.getElementById(`fin_${nextRow}_${colIdx}`);
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.select();
-        }
-      } else if (evt.key === 'Tab') {
-        evt.preventDefault();
-        const nextCol = Math.min(colIdx + 1, numCols - 1);
-        const nextInput = document.getElementById(`fin_${rowIdx}_${nextCol}`);
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.select();
-        }
-      }
-    };
-
-    // RENDERIZAR RELATÓRIOS
-    window.renderReports = function() {
-      const tbody = document.getElementById('tblReportsBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-      const totalDates = window.datesList.length;
-
-      sortedAthletes.forEach(ath => {
-        let validados = 0, justificados = 0, faltas = 0;
-        window.datesList.forEach(d => {
-          const p = (window.presences[d] || {})[ath.id];
-          if (p) {
-            if (p.fault) faltas++;
-            else if (p.checked) validados++;
-            else if (p.status === 'JUSTIFICADO') justificados++;
-          }
-        });
-        const pct = totalDates > 0 ? Math.round((validados / totalDates) * 100) : 0;
-        const posInfo = positionBadges[ath.position] || positionBadges["Meia"];
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-700/30 transition";
-        tr.innerHTML = `
-          <td class="p-2.5 font-bold text-white flex items-center gap-2">
-            <span>${ath.name}</span>
-            ${ath.isSuspended ? '<span class="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 py-0.5 rounded">SUSPENSO</span>' : ''}
-          </td>
-          <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[9px] font-bold ${posInfo.color}">${posInfo.tag}</span></td>
-          <td class="p-2.5 text-center font-black text-emerald-400">${validados}</td>
-          <td class="p-2.5 text-center font-bold text-amber-400">${justificados}</td>
-          <td class="p-2.5 text-center font-bold text-rose-400">${faltas}</td>
-          <td class="p-2.5 text-center font-black text-brand-green">${pct}%</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    };
-
-    // SORTEIO DE TIMES
-    window.drawTeams = function() {
-      const currentPresences = window.presences[window.currentDate] || {};
-      const availableAthletes = window.athletes.filter(ath => {
-        if (ath.isSuspended) return false;
-        const p = currentPresences[ath.id];
-        return p && p.checked; 
-      });
-
-      if (availableAthletes.length < 2) {
-        window.showToast("É necessário ter pelo menos 2 atletas com presença VALIDADA para realizar o sorteio.");
-        return;
-      }
-
-      const PLAYERS_PER_TEAM = 8;
-      const numTeams = Math.ceil(availableAthletes.length / PLAYERS_PER_TEAM);
-
-      let keepers = availableAthletes.filter(a => a.isKeeper || a.position === "Goleiro");
-      let linePlayers = availableAthletes.filter(a => !(a.isKeeper || a.position === "Goleiro"));
-
-      keepers = keepers.sort(() => Math.random() - 0.5);
-      linePlayers = linePlayers.sort((a, b) => b.stars - a.stars || (Math.random() - 0.5));
-
-      const teams = Array.from({ length: numTeams }, (_, i) => ({
-        name: `TIME ${i + 1}`,
-        players: []
-      }));
-
-      keepers.forEach((k, idx) => {
-        if(teams[idx % numTeams].players.length < PLAYERS_PER_TEAM) {
-            teams[idx % numTeams].players.push(k);
-        } else {
-             teams.find(t => t.players.length < PLAYERS_PER_TEAM)?.players.push(k);
-        }
-      });
-
-      linePlayers.forEach((p) => {
-        let minTeam = teams.find(t => t.players.length < PLAYERS_PER_TEAM);
-        if(!minTeam) minTeam = teams[0];
-        
-        teams.forEach(t => {
-          if (t.players.length < minTeam.players.length && t.players.length < PLAYERS_PER_TEAM) {
-            minTeam = t;
-          }
-        });
-        minTeam.players.push(p);
-      });
-
-      const drawContainer = document.getElementById('drawContainer');
-      drawContainer.innerHTML = '';
-
-      teams.forEach((t, idx) => {
-        const teamCard = document.createElement('div');
-        teamCard.className = "bg-slate-900 border border-slate-700/80 rounded-xl p-3 shadow-lg space-y-2";
-        let playersHtml = '';
-        t.players.forEach(pl => {
-          const posInfo = positionBadges[pl.position] || positionBadges["Meia"];
-          playersHtml += `
-            <div class="flex items-center justify-between bg-slate-800/80 p-2 rounded-lg border border-slate-700/50">
-              <div class="flex items-center gap-2">
-                <span class="px-1.5 py-0.5 rounded text-[8px] font-bold ${posInfo.color}">${posInfo.tag}</span>
-                <span class="text-xs font-bold text-white">${pl.name}</span>
-              </div>
-              <div class="flex items-center gap-0.5 text-[9px] text-amber-400">
-                <i class="fa-solid fa-star"></i> ${pl.stars}
-              </div>
-            </div>
-          `;
-        });
-        teamCard.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <h3 class="text-xs font-black text-brand-green flex items-center gap-1.5">
-              <i class="fa-solid fa-shield text-slate-400"></i> ${t.name}
-            </h3>
-            <span class="text-[10px] text-slate-400 font-bold">${t.players.length} / 8</span>
-          </div>
-          <div class="space-y-1.5">
-            ${playersHtml}
-          </div>
-        `;
-        drawContainer.appendChild(teamCard);
-      });
-
-      document.getElementById('btnShareTeamsZap').classList.remove('hidden');
-    };
-
-    // MODAL ATLETA
-    window.openAddAthleteModal = function() {
-      document.getElementById('modalAthleteTitle').innerHTML = `<i class="fa-solid fa-user-plus text-brand-green"></i> Cadastrar Atleta`;
-      document.getElementById('editAthleteId').value = "";
-      document.getElementById('athName').value = "";
-      document.getElementById('athPosition').value = "Meia";
-      document.getElementById('athMonthlyFee').value = 110;
-      document.getElementById('athPhone').value = "";
-      document.getElementById('athIsSuspended').checked = false;
-      selectedStarsForNewAthlete = 5;
-      renderStarRatingInput();
-      document.getElementById('modalAthlete').classList.remove('hidden');
+    // --- CADASTRO E EDIÇÃO DE ATLETAS ---
+    window.openNewAthleteModal = function() {
+      document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-400"></i> Cadastrar Novo Atleta`;
+      document.getElementById('editAthleteId').value = '';
+      document.getElementById('athleteNameInput').value = '';
+      document.getElementById('athletePhoneInput').value = '';
+      document.getElementById('athletePositionSelect').value = 'Meia';
+      document.getElementById('athleteSuspendedCheckbox').checked = false;
+      buildStarRatingSelector(5);
+      document.getElementById('athleteModal').classList.remove('hidden');
     };
 
     window.openEditAthleteModal = function(id) {
-      const ath = window.athletes.find(a => a.id === id);
-      if (!ath) return;
-      document.getElementById('modalAthleteTitle').innerHTML = `<i class="fa-solid fa-user-pen text-amber-400"></i> Editar Atleta`;
-      document.getElementById('editAthleteId').value = ath.id;
-      document.getElementById('athName').value = ath.name;
-      document.getElementById('athPosition').value = ath.position || "Meia";
-      document.getElementById('athMonthlyFee').value = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
-      document.getElementById('athPhone').value = ath.phone || "";
-      document.getElementById('athIsSuspended').checked = !!ath.isSuspended;
-      selectedStarsForNewAthlete = ath.stars || 5;
-      renderStarRatingInput();
-      document.getElementById('modalAthlete').classList.remove('hidden');
+      const athlete = window.athletes.find(a => a.id === id);
+      if (!athlete) return;
+      document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-pen text-emerald-400"></i> Editar Atleta`;
+      document.getElementById('editAthleteId').value = athlete.id;
+      document.getElementById('athleteNameInput').value = athlete.name;
+      document.getElementById('athletePhoneInput').value = athlete.phone || '';
+      document.getElementById('athletePositionSelect').value = athlete.position;
+      document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
+      buildStarRatingSelector(athlete.stars);
+      document.getElementById('athleteModal').classList.remove('hidden');
     };
 
     window.closeAthleteModal = function() {
-      document.getElementById('modalAthlete').classList.add('hidden');
+      document.getElementById('athleteModal').classList.add('hidden');
     };
 
-    function renderStarRatingInput() {
-      const container = document.getElementById('starRatingContainer');
+    function buildStarRatingSelector(currentStars) {
+      selectedStarsForNewAthlete = currentStars;
+      const container = document.getElementById('starRatingSelector');
       container.innerHTML = '';
       for (let i = 1; i <= 5; i++) {
-        const star = document.createElement('i');
-        star.className = `fa-solid fa-star ${i <= selectedStarsForNewAthlete ? 'text-amber-400' : 'text-slate-600'} cursor-pointer text-sm`;
-        star.onclick = () => {
-          selectedStarsForNewAthlete = i;
-          renderStarRatingInput();
-        };
+        const star = document.createElement('button');
+        star.type = 'button';
+        star.className = `text-lg transition-colors ${i <= currentStars ? 'text-amber-400' : 'text-slate-700'}`;
+        star.innerHTML = '★';
+        star.onclick = () => buildStarRatingSelector(i);
         container.appendChild(star);
       }
     }
 
     window.saveAthlete = function() {
-      const name = document.getElementById('athName').value.trim();
+      const id = document.getElementById('editAthleteId').value;
+      const name = document.getElementById('athleteNameInput').value.trim();
+      const phone = document.getElementById('athletePhoneInput').value.trim();
+      const position = document.getElementById('athletePositionSelect').value;
+      const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
+
       if (!name) {
-        window.showToast("Informe o nome do atleta.");
+        showToast("Digite o nome do atleta.");
         return;
       }
-      const id = document.getElementById('editAthleteId').value;
-      const pos = document.getElementById('athPosition').value;
-      const fee = parseFloat(document.getElementById('athMonthlyFee').value) || 110;
-      const phone = document.getElementById('athPhone').value.trim();
-      const isSuspended = document.getElementById('athIsSuspended').checked;
 
       if (id) {
-        const idx = window.athletes.findIndex(a => a.id === parseInt(id));
-        if (idx !== -1) {
-          window.athletes[idx] = {
-            ...window.athletes[idx],
-            name, position: pos, isKeeper: pos === "Goleiro", monthlyFee: fee, phone, stars: selectedStarsForNewAthlete, isSuspended
-          };
+        const athlete = window.athletes.find(a => a.id == id);
+        if (athlete) {
+          athlete.name = name;
+          athlete.phone = phone;
+          athlete.position = position;
+          athlete.stars = selectedStarsForNewAthlete;
+          athlete.isSuspended = isSuspended;
+          athlete.isKeeper = (position === 'Goleiro');
         }
+        showToast("Atleta atualizado com sucesso!", "success");
       } else {
-        const newAth = {
-          id: Date.now(), name, position: pos, isKeeper: pos === "Goleiro", monthlyFee: fee, phone, stars: selectedStarsForNewAthlete, isSuspended
-        };
-        window.athletes.push(newAth);
+        const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
+        window.athletes.push({
+          id: newId,
+          name: name,
+          position: position,
+          stars: selectedStarsForNewAthlete,
+          phone: phone,
+          isKeeper: (position === 'Goleiro'),
+          monthlyFee: 110,
+          isSuspended: isSuspended
+        });
+        showToast("Atleta cadastrado com sucesso!", "success");
       }
-      window.saveData();
+
+      saveData();
       closeAthleteModal();
       renderAthletesList();
+      renderFinancial();
+      renderReports();
     };
 
-    window.deleteAthlete = function(id) {
-      if (!window.isAdmin) return;
-      window.showConfirm("Tem certeza que deseja excluir este atleta?", () => {
+    window.confirmDeleteAthlete = function(id) {
+      showConfirm("Deseja realmente excluir este atleta do sistema?", () => {
         window.athletes = window.athletes.filter(a => a.id !== id);
-        window.saveData();
+        saveData();
         renderAthletesList();
+        renderFinancial();
+        renderReports();
+        showToast("Atleta excluído.", "success");
       });
     };
 
-    // JUSTIFICATIVA
-    window.openJustifyModal = function(athId) {
-      const ath = window.athletes.find(a => a.id === parseInt(athId));
-      if (!ath) return;
-      currentJustifyAthleteId = ath.id;
-      document.getElementById('lblJustifyAthleteName').innerText = `Atleta: ${ath.name}`;
-      document.getElementById('txtJustifyReason').value = '';
-      document.getElementById('modalJustify').classList.remove('hidden');
+    // --- GERENCIAMENTO DE DATAS ---
+    window.openNewDateModal = function() {
+      document.getElementById('newDateInput').value = '';
+      document.getElementById('newDateModal').classList.remove('hidden');
     };
 
-    window.closeJustifyModal = function() {
-      document.getElementById('modalJustify').classList.add('hidden');
-      currentJustifyAthleteId = null;
-      if (window.history.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    window.closeNewDateModal = function() {
+      document.getElementById('newDateModal').classList.add('hidden');
     };
-
-    window.submitJustification = function() {
-      if (!currentJustifyAthleteId) return;
-      const reason = document.getElementById('txtJustifyReason').value.trim();
-      if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
-      window.presences[window.currentDate][currentJustifyAthleteId] = {
-        status: 'JUSTIFICADO',
-        checked: false,
-        fault: false,
-        reason: reason || 'Não informado'
-      };
-      window.saveData();
-      closeJustifyModal();
-      renderAthletesList();
-    };
-
-    function checkDirectJustificationLink() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const justifyId = urlParams.get('justificar');
-      if (justifyId) {
-        setTimeout(() => {
-          openJustifyModal(parseInt(justifyId));
-        }, 500);
-      }
-    }
-
-    // DATAS E HORÁRIOS
-    function populateDateSelect() {
-      const sel = document.getElementById('selectDate');
-      sel.innerHTML = '';
-      if (!window.isAdmin && window.datesList.length > 0) {
-        const d = window.currentDate;
-        const [y, m, day] = d.split('-');
-        const opt = document.createElement('option');
-        opt.value = d;
-        opt.innerText = `${day}/${m}/${y}`;
-        opt.selected = true;
-        sel.appendChild(opt);
-        sel.disabled = true;
-      } else {
-        sel.disabled = false;
-        window.datesList.forEach(d => {
-          const [y, m, day] = d.split('-');
-          const opt = document.createElement('option');
-          opt.value = d;
-          opt.innerText = `${day}/${m}/${y}`;
-          if (d === window.currentDate) opt.selected = true;
-          sel.appendChild(opt);
-        });
-      }
-    }
-
-    window.changeCurrentDate = function(d) {
-      if(!window.isAdmin) return;
-      window.currentDate = d;
-      window.saveData();
-      updateCurrentTimeUI();
-      renderAthletesList();
-    };
-
-    window.openAddDateModal = function() { document.getElementById('modalAddDate').classList.remove('hidden'); };
-    window.closeAddDateModal = function() { document.getElementById('modalAddDate').classList.add('hidden'); };
 
     window.addNewDate = function() {
-      const val = document.getElementById('inputNewDate').value;
-      if (!val) return;
-      if (!window.datesList.includes(val)) {
-        window.datesList.push(val);
-        window.datesList.sort();
+      const val = document.getElementById('newDateInput').value;
+      if (!val) {
+        showToast("Selecione uma data válida.");
+        return;
       }
+      if (window.datesList.includes(val)) {
+        showToast("Esta data já está cadastrada.");
+        return;
+      }
+      window.datesList.push(val);
+      window.datesList.sort();
       window.currentDate = val;
-      window.saveData();
-      closeAddDateModal();
+      saveData();
+      closeNewDateModal();
       populateDateSelect();
       renderAthletesList();
+      showToast("Nova data adicionada!", "success");
     };
 
-    window.openEditTimesModal = function() {
-      document.getElementById('inputGameTime').value = window.eventTimes.gameTime;
-      document.getElementById('inputDeadline').value = window.eventTimes.deadline;
-      document.getElementById('modalEditTimes').classList.remove('hidden');
-    };
-    window.closeEditTimesModal = function() { document.getElementById('modalEditTimes').classList.add('hidden'); };
-
-    window.saveEventTimes = function() {
-      const gt = document.getElementById('inputGameTime').value;
-      const dl = document.getElementById('inputDeadline').value;
-      if (gt) {
-        window.eventTimes = { gameTime: gt, deadline: dl || window.eventTimes.deadline };
-        window.saveData();
-        updateCurrentTimeUI();
-        closeEditTimesModal();
-      }
-    };
-
-    function updateCurrentTimeUI() {
-      document.getElementById('lblGameTime').innerText = window.eventTimes.gameTime || "20:00";
-      
-      if (window.currentDate) {
-        const [y, m, d] = window.currentDate.split('-');
-        const deadlineDate = new Date(y, m - 1, d - 1);
-        const dd = String(deadlineDate.getDate()).padStart(2, '0');
-        const mm = String(deadlineDate.getMonth() + 1).padStart(2, '0');
-        document.getElementById('lblDeadline').innerText = `${dd}/${mm} às 18:00`;
-      } else {
-        document.getElementById('lblDeadline').innerText = "18:00 (Dia Ant.)";
-      }
-    }
-
-    // WHATSAPP
-    window.sendAthleteZap = function(athId) {
-      const ath = window.athletes.find(a => a.id === athId);
-      if (!ath) return;
-      if (ath.isSuspended) {
-        window.showToast("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens de WhatsApp.");
-        return;
-      }
-      const phone = cleanPhone(ath.phone);
-      if (!phone) {
-        if (window.isAdmin) openEditAthleteModal(athId);
-        else window.showToast("Atleta sem número de WhatsApp cadastrado.");
-        return;
-      }
-      const [y, m, day] = window.currentDate.split('-');
-      const justifyLink = `${window.location.origin}${window.location.pathname}?justificar=${ath.id}`;
-      const msg = `Fala ${ath.name}! ⚽ Pelada Teimoso FCC dia ${day}/${m}/${y} às ${window.eventTimes.gameTime}.\n\nFavor confirmar sua presença!\nCaso não possa ir, justifique clicando no link abaixo:\n${justifyLink}`;
-      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    };
-
-    window.openMasterZapModal = function() {
-      const activeAthletes = window.athletes.filter(a => !a.isSuspended && cleanPhone(a.phone) !== "");
-      const body = document.getElementById('masterZapBody');
-      body.innerHTML = '';
-      if (activeAthletes.length === 0) {
-        body.innerHTML = `<p class="text-slate-400">Nenhum atleta ativo com WhatsApp cadastrado.</p>`;
-        document.getElementById('modalMasterZap').classList.remove('hidden');
-        return;
-      }
-      activeAthletes.forEach(ath => {
-        const item = document.createElement('div');
-        item.className = "flex items-center justify-between bg-slate-800 p-2.5 rounded-lg border border-slate-700";
-        item.innerHTML = `
-          <div>
-            <span class="font-bold text-white text-xs">${ath.name}</span>
-            <span class="block text-[10px] text-emerald-400 font-mono">${ath.phone}</span>
-          </div>
-          <button onclick="sendAthleteZap(${ath.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs rounded-lg transition flex items-center gap-1">
-            <i class="fa-brands fa-whatsapp"></i> Enviar
-          </button>
+    window.openManageDatesModal = function() {
+      const list = document.getElementById('manageDatesList');
+      list.innerHTML = '';
+      window.datesList.forEach(d => {
+        const row = document.createElement('div');
+        row.className = "py-2.5 flex items-center justify-between text-xs";
+        row.innerHTML = `
+          <span class="font-bold text-slate-200">${formatDateDisplay(d)}</span>
+          <button onclick="deleteDate('${d}')" class="px-3 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-lg font-bold transition-all">Excluir</button>
         `;
-        body.appendChild(item);
+        list.appendChild(row);
       });
-      document.getElementById('modalMasterZap').classList.remove('hidden');
+      document.getElementById('manageDatesModal').classList.remove('hidden');
     };
 
-    window.closeMasterZapModal = function() { document.getElementById('modalMasterZap').classList.add('hidden'); };
-
-    window.shareTeamsWhatsApp = function() {
-      const container = document.getElementById('drawContainer');
-      const cards = container.querySelectorAll('div.bg-slate-900');
-      if (cards.length === 0) return;
-      let msg = `*TEIMOSO FCC - TIMES SORTEADOS* ⚽\nData: ${window.currentDate}\n\n`;
-      cards.forEach(card => {
-        const title = card.querySelector('h3')?.innerText || 'TIME';
-        msg += `*${title.toUpperCase()}*\n`;
-        const players = card.querySelectorAll('.text-xs.font-bold.text-white');
-        players.forEach(p => {
-          msg += `- ${p.innerText}\n`;
-        });
-        msg += `\n`;
-      });
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    window.closeManageDatesModal = function() {
+      document.getElementById('manageDatesModal').classList.add('hidden');
     };
 
-    // WHATSAPP FINANCEIRO
-    window.sendFinancialZap = function(athId) {
-      const ath = window.athletes.find(a => a.id === athId);
-      if (!ath) return;
-      if (ath.isSuspended) {
-        window.showToast("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens.");
+    window.deleteDate = function(d) {
+      if (window.datesList.length <= 1) {
+        showToast("É necessário manter ao menos uma data cadastrada.");
         return;
       }
-      const phone = cleanPhone(ath.phone);
-      if (!phone) {
-        window.showToast("Atleta sem número de WhatsApp cadastrado.");
-        return;
-      }
+      showConfirm(`Deseja excluir a data ${formatDateDisplay(d)}?`, () => {
+        window.datesList = window.datesList.filter(item => item !== d);
+        if (window.currentDate === d) {
+          window.currentDate = window.datesList[0];
+        }
+        saveData();
+        populateDateSelect();
+        renderAthletesList();
+        openManageDatesModal();
+        showToast("Data excluída.", "success");
+      });
+    };
+
+    // --- SORTEIO EQUILIBRADO DE TIMES (MÁX 8 POR EQUIPE) ---
+    window.generateTeams = function() {
+      const dayPresences = window.presences[window.currentDate] || {};
       
-      const finStatus = getAthleteFinancialStatus(ath);
+      // Filtra atletas confirmados e que não estão suspensos
+      const confirmedAthletes = window.athletes.filter(a => {
+        if (a.isSuspended) return false;
+        const rec = dayPresences[a.id];
+        return rec && rec.status === 'CONFIRMADO';
+      });
+
+      if (confirmedAthletes.length === 0) {
+        document.getElementById('teamsContainer').innerHTML = `
+          <div class="col-span-2 bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 text-center text-slate-500 flex flex-col items-center justify-center py-16">
+            <i class="fa-solid fa-triangle-exclamation text-4xl mb-3 text-amber-500"></i>
+            <p class="text-xs font-medium text-slate-300">Nenhum atleta confirmado para a data ${formatDateDisplay(window.currentDate)}.</p>
+            <p class="text-[11px] text-slate-500 mt-1">Confirme a presença dos atletas na aba Presença antes de realizar o sorteio.</p>
+          </div>
+        `;
+        showToast("Nenhum atleta confirmado para esta data.");
+        return;
+      }
+
+      // Separa goleiros e jogadores de linha
+      const keepers = confirmedAthletes.filter(a => a.isKeeper);
+      const outfield = confirmedAthletes.filter(a => !a.isKeeper);
+
+      // Embaralha jogadores de linha
+      outfield.sort(() => Math.random() - 0.5);
+
+      // Define número de times (máximo 8 jogadores por equipe)
+      const totalConfirmed = confirmedAthletes.length;
+      let numTeams = Math.ceil(totalConfirmed / 8);
+      if (numTeams < 2 && totalConfirmed >= 10) numTeams = 2;
+      if (numTeams < 1) numTeams = 1;
+
+      const teams = Array.from({ length: numTeams }, () => ({ players: [], totalStars: 0, keepersCount: 0 }));
+
+      // Distribui goleiros primeiro
+      keepers.forEach((keeper, index) => {
+        const targetTeam = teams[index % numTeams];
+        targetTeam.players.push(keeper);
+        targetTeam.totalStars += keeper.stars;
+        targetTeam.keepersCount++;
+      });
+
+      // Distribui jogadores de linha balanceando estrelas
+      outfield.forEach(player => {
+        // Ordena times por menor quantidade de jogadores (respeitando limite de 8) e menor pontuação de estrelas
+        teams.sort((a, b) => {
+          if (a.players.length !== b.players.length) return a.players.length - b.players.length;
+          return a.totalStars - b.totalStars;
+        });
+        teams[0].players.push(player);
+        teams[0].totalStars += player.stars;
+      });
+
+      // Renderiza os times
+      const container = document.getElementById('teamsContainer');
+      container.innerHTML = '';
+
+      teams.forEach((team, idx) => {
+        const teamCard = document.createElement('div');
+        teamCard.className = "bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4";
+        
+        let playersHtml = '';
+        team.players.forEach(p => {
+          const posInfo = positionBadges[p.position] || { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" };
+          playersHtml += `
+            <div class="flex items-center justify-between py-2 px-3 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-200">${p.name}</span>
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span>
+              </div>
+              <div class="text-amber-400 text-[10px]">${'★'.repeat(p.stars)}</div>
+            </div>
+          `;
+        });
+
+        teamCard.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 class="text-sm font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i> Time ${idx + 1}
+            </h4>
+            <span class="text-[11px] font-bold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800">
+              ${team.players.length} Atletas (${team.totalStars} Estrelas)
+            </span>
+          </div>
+          <div class="space-y-2">
+            ${playersHtml}
+          </div>
+        `;
+        container.appendChild(teamCard);
+      });
+
+      showToast("Sorteio realizado com sucesso!", "success");
+    };
+
+    // --- WHATSAPP DISPATCHERS ---
+    window.openWhatsappIndividual = function(phone, name) {
+      if (!phone) {
+        showToast("Este atleta não possui telefone/WhatsApp cadastrado.");
+        return;
+      }
+      const cleanPhone = phone.replace(/\D/g, '');
+      const msg = encodeURIComponent(`Olá ${name}, passando para falar sobre a nossa pelada no Teimoso F.C.C.! Contamos com sua presença.`);
+      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${msg}`, '_blank');
+    };
+
+    window.openWhatsappMassModal = function() {
+      document.getElementById('whatsappMassModal').classList.remove('hidden');
+    };
+
+    window.closeWhatsappMassModal = function() {
+      document.getElementById('whatsappMassModal').classList.add('hidden');
+    };
+
+    window.sendWhatsappMass = function(type) {
+      const dayPresences = window.presences[window.currentDate] || {};
+      let targetAthletes = [];
+
+      window.athletes.forEach(a => {
+        if (a.isSuspended) return; // Atletas suspensos nunca recebem mensagens
+        const p = dayPresences[a.id]?.status;
+        if (type === 'confirmed' && p === 'CONFIRMADO') targetAthletes.push(a);
+        else if (type === 'pending' && (!p || p === '')) targetAthletes.push(a);
+        else if (type === 'all') targetAthletes.push(a);
+      });
+
+      if (targetAthletes.length === 0) {
+        showToast("Nenhum atleta encontrado para este critério.");
+        return;
+      }
+
+      const phones = targetAthletes.map(a => a.phone).filter(Boolean);
+      if (phones.length === 0) {
+        showToast("Nenhum dos atletas selecionados possui número de telefone cadastrado.");
+        return;
+      }
+
+      const msg = encodeURIComponent(`Fala craque! Convocação oficial para a pelada do Teimoso F.C.C. no dia ${formatDateDisplay(window.currentDate)}. Confirme sua presença no sistema!`);
+      // Abre o primeiro link como teste ou dispara
+      window.open(`https://api.whatsapp.com/send?phone=55${phones[0].replace(/\D/g, '')}&text=${msg}`, '_blank');
+      closeWhatsappMassModal();
+      showToast(`Iniciando disparo para ${phones.length} atletas.`, "success");
+    };
+
+    // --- FINANCEIRO ---
+    window.renderFinancial = function() {
+      const tbody = document.getElementById('financialTableBody');
+      tbody.innerHTML = '';
+
+      let totalGeneralPaid = 0;
+      let totalGeneralDue = 0;
+
+      window.athletes.forEach(athlete => {
+        const payments = window.financialPayments[athlete.id] || {};
+        let athleteTotalPaid = 0;
+        let athleteTotalDue = 0;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/60 transition-colors";
+
+        let rowHtml = `
+          <td class="py-3 px-4 font-bold text-slate-200 sticky left-0 bg-slate-900 z-10 whitespace-nowrap">
+            <div class="flex items-center gap-2">
+              <span>${athlete.name}</span>
+              ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+            </div>
+          </td>
+        `;
+
+        const now = new Date();
+
+        months.forEach((mKey, mIndex) => {
+          const monthNum = mIndex + 1;
+          const dueDate = new Date(2026, monthNum - 1, 15);
+          const firstDayAfterDue = new Date(2026, monthNum - 1, 16);
+          
+          const monthData = payments[mKey] || { paid: false, amount: 0 };
+          const isPaid = monthData.paid || monthData.amount > 0;
+          const paidAmount = monthData.amount || 0;
+          
+          if (isPaid) athleteTotalPaid += paidAmount;
+
+          // Cálculo de juros: R$ 1,00 por dia a partir do dia 16 exclusivamente para parcelas vencidas
+          let interest = 0;
+          if (!isPaid && now >= firstDayAfterDue) {
+            const diffTime = now - firstDayAfterDue;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            interest = diffDays > 0 ? diffDays * 1.00 : 0;
+          }
+
+          const suggestedFee = athlete.monthlyFee || 110;
+
+          // Regra de saldo devedor / pagamento menor
+          let dueForThisMonth = 0;
+          if (!isPaid) {
+            dueForThisMonth = suggestedFee + interest;
+            athleteTotalDue += dueForThisMonth;
+          } else {
+            // Exceções de pagamento parcial
+            const isJulioOct = (athlete.name.toLowerCase() === 'júlio' && mKey === 'out');
+            const isOnofre = (athlete.name.toLowerCase().includes('matheus onofre'));
+            const isSapaoSet = (athlete.name.toLowerCase() === 'sapão' && mKey === 'set');
+
+            if ((isJulioOct || isOnofre || isSapaoSet) && paidAmount < suggestedFee) {
+              const diff = suggestedFee - paidAmount;
+              athleteTotalDue += diff;
+            }
+          }
+
+          // Cores das células de mês
+          let cellColorClass = "bg-slate-950/40 text-slate-500";
+          if (isPaid) {
+            const isJulioOct = (athlete.name.toLowerCase() === 'júlio' && mKey === 'out');
+            const isOnofre = (athlete.name.toLowerCase().includes('matheus onofre'));
+            const isSapaoSet = (athlete.name.toLowerCase() === 'sapão' && mKey === 'set');
+            const hasPartialDebt = (isJulioOct || isOnofre || isSapaoSet) && paidAmount < suggestedFee;
+            
+            cellColorClass = hasPartialDebt ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-sky-500/20 text-sky-300 border-sky-500/40";
+          } else if (now > dueDate) {
+            cellColorClass = "bg-rose-500/20 text-rose-300 border-rose-500/40";
+          }
+
+          rowHtml += `
+            <td class="py-2 px-2 text-center">
+              <div class="flex items-center justify-center gap-1">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0 cursor-pointer" title="Marcar como pago">
+                <input type="number" value="${isPaid ? paidAmount : suggestedFee}" data-athlete="${athlete.id}" data-month="${mKey}" ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')" onkeydown="handleFinancialKeydown(event, ${athlete.id}, '${mKey}')" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" class="w-16 bg-slate-950 border border-slate-800 rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500" title="Duplo clique para baixar sugerido">
+              </div>
+            </td>
+          `;
+        });
+
+        totalGeneralPaid += athleteTotalPaid;
+        totalGeneralDue += athleteTotalDue;
+
+        const finStatus = getAthleteFinancialStatus(athlete.id);
+        const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
+
+        rowHtml += `
+          <td class="py-3 px-4 text-center font-bold text-emerald-400">R$ ${athleteTotalPaid.toFixed(2)}</td>
+          <td class="py-3 px-4 text-center font-bold text-rose-400">R$ ${athleteTotalDue.toFixed(2)}</td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="openWhatsappFinancialIndividual(${athlete.id})" title="Enviar Cobrança WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all inline-flex items-center justify-center text-xs">
+              <i class="fa-brands fa-whatsapp"></i>
+            </button>
+          </td>
+        `;
+
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
+      document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
+    };
+
+    // --- CONTROLE DE NAVEGAÇÃO E EDIÇÃO FINANCEIRA POR TECLADO ---
+    window.handleFinancialKeydown = function(event, athleteId, mKey) {
+      const input = event.target;
+      const allInputs = Array.from(document.querySelectorAll('#financialTable input[type="number"]'));
+      const index = allInputs.indexOf(input);
+      const numMonths = months.length;
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        // Move para a célula de baixo (mesmo mês, próximo atleta)
+        const nextInputIndex = index + numMonths;
+        if (nextInputIndex < allInputs.length) {
+          allInputs[nextInputIndex].focus();
+          allInputs[nextInputIndex].select();
+        }
+      } else if (event.key === 'Tab' && !event.shiftKey) {
+        event.preventDefault();
+        // Move para a célula à direita (próximo mês)
+        const nextInputIndex = index + 1;
+        if (nextInputIndex < allInputs.length) {
+          allInputs[nextInputIndex].focus();
+          allInputs[nextInputIndex].select();
+        }
+      } else if (event.key === 'Tab' && event.shiftKey) {
+        event.preventDefault();
+        // Move para a célula à esquerda
+        const prevInputIndex = index - 1;
+        if (prevInputIndex >= 0) {
+          allInputs[prevInputIndex].focus();
+          allInputs[prevInputIndex].select();
+        }
+      }
+    };
+
+    window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const suggested = athlete ? athlete.monthlyFee : 110;
+
+      if (isChecked) {
+        window.financialPayments[athleteId][mKey] = {
+          paid: true,
+          amount: suggested
+        };
+      } else {
+        window.financialPayments[athleteId][mKey] = {
+          paid: false,
+          amount: 0
+        };
+      }
+      saveData();
+      renderFinancial();
+      renderReports();
+    };
+
+    window.doubleClickSettleMonth = function(athleteId, mKey) {
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const suggested = athlete ? athlete.monthlyFee : 110;
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      window.financialPayments[athleteId][mKey] = {
+        paid: true,
+        amount: suggested
+      };
+      saveData();
+      renderFinancial();
+      renderReports();
+      showToast("Mensalidade baixada com sucesso!", "success");
+    };
+
+    window.updateFinancialValue = function(athleteId, mKey, val) {
+      const numVal = parseFloat(val) || 0;
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      window.financialPayments[athleteId][mKey] = {
+        paid: numVal > 0,
+        amount: numVal
+      };
+      saveData();
+      renderFinancial();
+      renderReports();
+    };
+
+    // --- MENSAGENS WHATSAPP FINANCEIRO (FORMAL) ---
+    window.openWhatsappFinancialIndividual = function(athleteId) {
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      if (!athlete || !athlete.phone) {
+        showToast("Atleta sem telefone cadastrado.");
+        return;
+      }
+
+      const status = getAthleteFinancialStatus(athleteId);
+      const cleanPhone = athlete.phone.replace(/\D/g, '');
       let msg = "";
 
-      if (finStatus.isUpToDate) {
-        msg = `Prezado ${ath.name},\n\nO Teimoso FCC agradece por manter suas mensalidades rigorosamente em dia. Sua pontualidade e colaboração são fundamentais para o sucesso da nossa organização.\n\nForte abraço!`;
+      if (status === 'uptodate') {
+        msg = `Prezado(a) ${athlete.name},\n\nO Teimoso F.C.C. agradece sua pontualidade e colaboração com as mensalidades em dia. Sua dedicação fortalece nosso grupo!\n\nAtenciosamente,\nDiretoria Teimoso F.C.C.`;
       } else {
-        msg = `Prezado ${ath.name},\n\nEsperamos que esteja bem.\n\nNotamos que constam pendências financeiras referentes às mensalidades do Teimoso FCC até a presente data.\n\n*Resumo dos valores em aberto:*\n- Mensalidade(s): R$ ${finStatus.baseDue.toFixed(2).replace('.', ',')}\n- Juros/Multa: R$ ${finStatus.interestDue.toFixed(2).replace('.', ',')}\n- *TOTAL DEVIDO: R$ ${finStatus.dueAmount.toFixed(2).replace('.', ',')}*\n\nPor favor, solicitamos a regularização o mais breve possível utilizando nossa chave PIX:\n*teimosofcc@gmail.com*\n\nAgradecemos a compreensão e colaboração.`;
-      }
-      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    };
+        // Calcula débitos detalhados
+        let totalDue = 0;
+        let details = "";
+        const payments = window.financialPayments[athleteId] || {};
+        const now = new Date();
 
-    window.openFinancialZapModal = function() {
-      const overdueAthletes = window.athletes.filter(a => {
-        if(a.isSuspended || cleanPhone(a.phone) === "") return false;
-        const fin = getAthleteFinancialStatus(a);
-        return !fin.isUpToDate;
-      });
-      
-      const body = document.getElementById('financialZapBody');
-      body.innerHTML = '';
-      
-      if (overdueAthletes.length === 0) {
-        body.innerHTML = `<p class="text-slate-400">Nenhum atleta em atraso com WhatsApp cadastrado.</p>`;
-      } else {
-        overdueAthletes.forEach(ath => {
-          const fin = getAthleteFinancialStatus(ath);
-          const item = document.createElement('div');
-          item.className = "flex items-center justify-between bg-slate-800 p-2.5 rounded-lg border border-slate-700";
-          item.innerHTML = `
-            <div>
-              <span class="font-bold text-white text-xs">${ath.name}</span>
-              <span class="block text-[10px] text-rose-400 font-mono">Total Devido: R$ ${fin.dueAmount.toFixed(2).replace('.',',')}</span>
-            </div>
-            <button onclick="sendFinancialZap(${ath.id})" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-lg transition flex items-center gap-1">
-              <i class="fa-brands fa-whatsapp"></i> Cobrar
-            </button>
-          `;
-          body.appendChild(item);
-        });
-      }
-      document.getElementById('modalFinancialZap').classList.remove('hidden');
-    };
+        months.forEach((mKey, mIndex) => {
+          const monthNum = mIndex + 1;
+          const dueDate = new Date(2026, monthNum - 1, 15);
+          const firstDayAfterDue = new Date(2026, monthNum - 1, 16);
+          const paymentData = payments[mKey];
+          const isPaid = paymentData && (paymentData.paid || paymentData.amount > 0);
 
-    window.closeFinancialZapModal = function() {
-      document.getElementById('modalFinancialZap').classList.add('hidden');
-    };
-
-    // EXPORTAÇÕES CSV
-    window.exportReportsCSV = function() {
-      let csv = "Atleta;Posição;Validados;Justificados;Faltas;% Presença\n";
-      const totalDates = window.datesList.length;
-      window.athletes.forEach(ath => {
-        let val = 0, jus = 0, fal = 0;
-        window.datesList.forEach(d => {
-          const p = (window.presences[d] || {})[ath.id];
-          if (p) {
-            if (p.fault) fal++;
-            else if (p.checked) val++;
-            else if (p.status === 'JUSTIFICADO') jus++;
-          }
-        });
-        const pct = totalDates > 0 ? Math.round((val / totalDates) * 100) : 0;
-        csv += `${ath.name};${ath.position || "Meia"};${val};${jus};${fal};${pct}%\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `Relatorio_Presenca_TeimosoFCC.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    };
-
-    window.exportFinancialCSV = function() {
-      let csv = "Atleta;Mensalidade;JAN;FEV;MAR;ABR;MAI;JUN;JUL;AGO;SET;OUT;NOV;Total Pago;Juros;Valor Devido\n";
-      const now = new Date();
-      const currentYear = now.getFullYear();
-
-      window.athletes.forEach(ath => {
-        const athPay = window.financialPayments[ath.id] || {};
-        const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
-        let totalPaid = 0, totalInterest = 0, totalDue = 0;
-        let line = `${ath.name};${athFee};`;
-
-        const athNameNorm = ath.name.trim().toUpperCase();
-        const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
-        const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
-        const isSapao = athNameNorm === "SAPÃO" || athNameNorm === "SAPAO";
-
-        months.forEach((m, mIndex) => {
-          const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
-          let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
-          const firstInterestDate = new Date(currentYear, mIndex, 16);
-          let interest = 0;
-          let debtMonth = 0;
-
-          const isJulioOct2026 = isJulio && m === "out";
-          const isSapaoSep2026 = isSapao && m === "set";
-
-          if (hasCustomVal) {
-            interest = 0;
-            if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
-              debtMonth = Math.max(0, athFee - paid);
-            } else {
-              debtMonth = 0;
+          if (!isPaid && now > dueDate) {
+            const suggested = athlete.monthlyFee || 110;
+            let interest = 0;
+            if (now >= firstDayAfterDue) {
+              const diffDays = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+              interest = diffDays > 0 ? diffDays * 1.00 : 0;
             }
-          } else if (now >= firstInterestDate) {
-            const diffDays = Math.floor(Math.abs(now - firstInterestDate) / (1000 * 60 * 60 * 24)) + 1;
-            interest = diffDays * 1.00;
-            debtMonth = Math.max(0, (athFee + interest) - paid);
-          } else {
-            debtMonth = Math.max(0, athFee - paid);
+            const monthTotal = suggested + interest;
+            totalDue += monthTotal;
+            details += `- ${mKey.toUpperCase()}/2026: Mensalidade R$ ${suggested.toFixed(2)} + Juros/Multa R$ ${interest.toFixed(2)} = R$ ${monthTotal.toFixed(2)}\n`;
           }
-
-          totalPaid += paid;
-          totalInterest += interest;
-          totalDue += debtMonth;
-          line += `${paid};`;
         });
 
-        line += `${totalPaid};${totalInterest};${totalDue}\n`;
-        csv += line;
+        msg = `Prezado(a) ${athlete.name},\n\nConstatamos pendências em suas mensalidades junto ao Teimoso F.C.C. Segue abaixo o demonstrativo de débitos atualizados:\n\n${details}\n*Total Geral Devido:* R$ ${totalDue.toFixed(2)}\n\n*Dados para Pagamento (PIX):*\nChave: teimosofcc@gmail.com\n\nPor favor, envie o comprovante após a realização.\n\nAtenciosamente,\nDiretoria Teimoso F.C.C.`;
+      }
+
+      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    window.openWhatsappFinancialMassModal = function() {
+      // Dispara em massa para inadimplentes
+      let count = 0;
+      window.athletes.forEach(athlete => {
+        if (athlete.isSuspended) return;
+        const status = getAthleteFinancialStatus(athlete.id);
+        if (status === 'overdue' && athlete.phone) {
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        showToast("Nenhum atleta inadimplente com telefone cadastrado.");
+        return;
+      }
+
+      showConfirm(`Deseja iniciar o envio de cobranças formais para os ${count} atletas inadimplentes?`, () => {
+        window.athletes.forEach(athlete => {
+          if (athlete.isSuspended) return;
+          const status = getAthleteFinancialStatus(athlete.id);
+          if (status === 'overdue' && athlete.phone) {
+            setTimeout(() => {
+              openWhatsappFinancialIndividual(athlete.id);
+            }, 500);
+          }
+        });
+        showToast("Disparos de cobrança iniciados.", "success");
+      });
+    };
+
+    // --- RELATÓRIOS ---
+    window.renderReports = function() {
+      const tbody = document.getElementById('reportsTableBody');
+      tbody.innerHTML = '';
+
+      const totalPeladas = window.datesList.length;
+
+      window.athletes.forEach(athlete => {
+        let confCount = 0;
+        window.datesList.forEach(d => {
+          const rec = window.presences[d]?.[athlete.id];
+          if (rec && rec.status === 'CONFIRMADO') confCount++;
+        });
+
+        const rate = totalPeladas > 0 ? Math.round((confCount / totalPeladas) * 100) : 0;
+        const finStatus = getAthleteFinancialStatus(athlete.id);
+        const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
+        const finColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/60 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-200">${athlete.name}</td>
+          <td class="py-3 px-4 text-slate-400">${athlete.position}</td>
+          <td class="py-3 px-4 text-center font-bold text-slate-300">${confCount} / ${totalPeladas}</td>
+          <td class="py-3 px-4 text-center font-bold text-emerald-400">${rate}%</td>
+          <td class="py-3 px-4 text-right">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finColor}">${finLabel}</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
+    window.exportReportsCSV = function() {
+      let csv = "Atleta,Posicao,Presencas,TotalPeladas,TaxaAssiduidade\n";
+      const totalPeladas = window.datesList.length;
+
+      window.athletes.forEach(athlete => {
+        let confCount = 0;
+        window.datesList.forEach(d => {
+          const rec = window.presences[d]?.[athlete.id];
+          if (rec && rec.status === 'CONFIRMADO') confCount++;
+        });
+        const rate = totalPeladas > 0 ? Math.round((confCount / totalPeladas) * 100) : 0;
+        csv += `"${athlete.name}","${athlete.position}",${confCount},${totalPeladas},"${rate}%"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `Financeiro_TeimosoFCC.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio_teimoso_fcc_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      showToast("Relatório CSV exportado com sucesso!", "success");
     };
-
-    window.addEventListener('DOMContentLoaded', () => {
-      initializeFirebaseAndListen();
-      checkDirectJustificationLink();
-    });
   </script>
 </body>
 </html>
