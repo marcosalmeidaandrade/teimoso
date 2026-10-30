@@ -1662,74 +1662,31 @@
     function handleFinKeyDown(event, athleteIndex, monthIndex) {
       if (event.key === 'Enter') {
         event.preventDefault();
-        // Enter: vai para a mesma coluna do próximo atleta (linha inferior)
-        let nextAthIndex = athleteIndex + 1;
-        let nextMIndex = monthIndex;
-
-        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
+        const nextAthIndex = athleteIndex + 1;
+        const nextInput = document.getElementById(`fin_${nextAthIndex}_${monthIndex}`);
         if (nextInput) {
           nextInput.focus();
           nextInput.select();
         }
-      } else if (event.key === 'Tab') {
+      } else if (event.key === 'ArrowRight' || event.key === 'Tab') {
         event.preventDefault();
-        // Tab: comportamento padrão ou vai para a coluna imediatamente à direita (próximo mês)
-        let nextAthIndex = athleteIndex;
-        let nextMIndex = monthIndex + 1;
-
-        if (nextMIndex >= months.length) {
-          nextMIndex = 0;
-          nextAthIndex = athleteIndex + 1;
-        }
-
-        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.select();
-        }
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        let nextAthIndex = athleteIndex + 1;
-        let nextMIndex = monthIndex;
-        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.select();
-        }
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        let prevAthIndex = athleteIndex - 1;
-        let prevMIndex = monthIndex;
-        const prevInput = document.getElementById(`fin_${prevAthIndex}_${prevMIndex}`);
-        if (prevInput) {
-          prevInput.focus();
-          prevInput.select();
-        }
-      } else if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        let nextAthIndex = athleteIndex;
-        let nextMIndex = monthIndex + 1;
-        if (nextMIndex >= months.length) {
-          nextMIndex = 0;
-          nextAthIndex = athleteIndex + 1;
-        }
-        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.select();
+        const nextMIndex = monthIndex + 1;
+        if (nextMIndex < months.length) {
+          const nextInput = document.getElementById(`fin_${athleteIndex}_${nextMIndex}`);
+          if (nextInput) {
+            nextInput.focus();
+            nextInput.select();
+          }
         }
       } else if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        let prevAthIndex = athleteIndex;
-        let prevMIndex = monthIndex - 1;
-        if (prevMIndex < 0) {
-          prevMIndex = months.length - 1;
-          prevAthIndex = athleteIndex - 1;
-        }
-        const prevInput = document.getElementById(`fin_${prevAthIndex}_${prevMIndex}`);
-        if (prevInput) {
-          prevInput.focus();
-          prevInput.select();
+        const prevMIndex = monthIndex - 1;
+        if (prevMIndex >= 0) {
+          const prevInput = document.getElementById(`fin_${athleteIndex}_${prevMIndex}`);
+          if (prevInput) {
+            prevInput.focus();
+            prevInput.select();
+          }
         }
       }
     }
