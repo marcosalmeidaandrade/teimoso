@@ -304,7 +304,8 @@
                   <th class="py-3 px-3 text-center">Out</th>
                   <th class="py-3 px-3 text-center">Nov</th>
                   <th class="py-3 px-4 text-center">Total Pago</th>
-                  <th class="py-3 px-4 text-center">Valor Devido</th>
+                  <th class="py-3 px-4 text-center text-amber-400">Juros</th>
+                  <th class="py-3 px-4 text-center text-rose-400">Valor Devido</th>
                 </tr>
               </thead>
               <tbody id="financialTableBody" class="divide-y divide-slate-800/60 text-xs">
@@ -1417,6 +1418,7 @@
         const payments = window.financialPayments[athlete.id] || {};
         let athleteTotalPaid = 0;
         let athleteTotalDue = 0;
+        let athleteTotalInterest = 0;
 
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
@@ -1471,6 +1473,7 @@
             const diffTime = now - firstDayAfterDue;
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
             interest = diffDays > 0 ? diffDays * 1.00 : 0;
+            athleteTotalInterest += interest;
           }
 
           const suggestedFee = athlete.monthlyFee || 110;
@@ -1520,6 +1523,7 @@
 
         rowHtml += `
           <td class="py-3 px-4 text-center font-bold text-emerald-400">R$ ${athleteTotalPaid.toFixed(2)}</td>
+          <td class="py-3 px-4 text-center font-bold text-amber-400">R$ ${athleteTotalInterest.toFixed(2)}</td>
           <td class="py-3 px-4 text-center font-bold text-rose-400">R$ ${athleteTotalDue.toFixed(2)}</td>
         `;
 
@@ -1735,3 +1739,9 @@
   </script>
 </body>
 </html>
+```
+
+### O que foi alterado:
+1. **Nova Coluna "Juros":** Adicionei o cabeçalho `<th class="py-3 px-4 text-center text-amber-400">Juros</th>` na tabela financeira.
+2. **Cálculo Cumulativo:** O sistema agora soma todos os juros gerados pelos meses vencidos (`athleteTotalInterest`) para cada atleta individualmente.
+3. **Exibição:** O valor acumulado aparece destacado na cor amarela (`R$ X,XX`), proporcionando clareza sobre qual parte da dívida corresponde apenas aos atrasos.
