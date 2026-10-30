@@ -1756,11 +1756,11 @@
           let debtMonth = 0;
           let colorClass = "";
 
-          // REGRA SOLICITADA: Se lançar valor a menor, não compute nem some juros. Dê a mensalidade como quitada.
+          // REGRA ATUALIZADA: Qualquer valor lançado (igual, maior ou menor) é considerado baixa de pagamento, zerando os juros e quitando a mensalidade.
           if (hasCustomVal) {
             interest = 0;
             debtMonth = 0;
-            // Valores baixados no financeiro devem ficar azul claro
+            // Valores baixados no financeiro (quaisquer valores informados) ficam em azul claro
             colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
           } else if (now > dueDate) {
             // Em atraso e não pago: Vermelho
