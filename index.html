@@ -1778,10 +1778,11 @@
 
         let monthCells = '';
 
-        // Identifica se o atleta atual é Júlio ou Matheus Onofre
+        // Identifica se o atleta atual é Júlio, Matheus Onofre ou Sapão
         const athNameNorm = ath.name.trim().toUpperCase();
         const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
         const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
+        const isSapao = athNameNorm === "SAPÃO" || athNameNorm === "SAPAO";
 
         months.forEach((m, mIndex) => {
           const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
@@ -1796,13 +1797,14 @@
 
           // Condições específicas para regras de saldo devedor parcial
           const isJulioOct2026 = isJulio && m === "out";
+          const isSapaoSep2026 = isSapao && m === "set";
 
           if (hasCustomVal) {
             // REGRA: Sem juros em mensalidades com valor baixado/lançado.
             interest = 0;
             
-            if (isJulioOct2026 || isMatheusOnofre) {
-              // Regra específica para o Júlio (em OUT/2026) e Matheus Onofre (em todos os meses):
+            if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
+              // Regra específica para o Júlio (em OUT/2026), Matheus Onofre (todos os meses) e Sapão (em SET/2026):
               // Considera a diferença do valor pago a menor no valor devido.
               debtMonth = Math.max(0, athFee - paid);
               if (debtMonth === 0) {
@@ -1891,6 +1893,7 @@
         const athNameNorm = ath.name.trim().toUpperCase();
         const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
         const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
+        const isSapao = athNameNorm === "SAPÃO" || athNameNorm === "SAPAO";
 
         let monthValuesCSV = [];
 
@@ -1903,10 +1906,11 @@
           let debtMonth = 0;
 
           const isJulioOct2026 = isJulio && m === "out";
+          const isSapaoSep2026 = isSapao && m === "set";
 
           if (hasCustomVal) {
             interest = 0;
-            debtMonth = (isJulioOct2026 || isMatheusOnofre) ? Math.max(0, athFee - paid) : 0;
+            debtMonth = (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) ? Math.max(0, athFee - paid) : 0;
           } else if (now >= firstInterestDate) {
             const diffTime = Math.abs(now - firstInterestDate);
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
