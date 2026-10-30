@@ -1710,13 +1710,14 @@
         let monthCells = '';
 
         months.forEach((m, mIndex) => {
-          const hasCustomVal = athPay[m] !== undefined;
-          let paid = hasCustomVal ? athPay[m] : 0;
+          const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
+          let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
 
           const dueDate = new Date(currentYear, mIndex, 15);
           let interest = 0;
 
-          if (now > dueDate && paid < athFee) {
+          // Se já houve lançamento de pagamento para esta mensalidade, não computar juros, mesmo que o valor seja inferior
+          if (!hasCustomVal && now > dueDate && paid < athFee) {
             const diffTime = Math.abs(now - dueDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             interest = diffDays * 1;
@@ -1731,7 +1732,7 @@
           const debtMonth = Math.max(0, (athFee + interest) - paid);
           totalDue += debtMonth;
 
-          const isOverdue = debtMonth > 0 && now > dueDate;
+          const isOverdue = debtMonth > 0 && now > dueDate && !hasCustomVal;
 
           monthCells += `
             <td class="p-1 text-center">
@@ -1782,13 +1783,13 @@
         let monthValuesCSV = [];
 
         months.forEach((m, idx) => {
-          const hasCustomVal = athPay[m] !== undefined;
-          let paid = hasCustomVal ? athPay[m] : 0;
+          const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
+          let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
 
           const dueDate = new Date(currentYear, idx, 15);
           let interest = 0;
 
-          if (now > dueDate && paid < athFee) {
+          if (!hasCustomVal && now > dueDate && paid < athFee) {
             const diffTime = Math.abs(now - dueDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             interest = diffDays * 1;
