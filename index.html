@@ -135,22 +135,23 @@
     </div>
 
     <!-- NAVEGAÇÃO DE ABAS -->
-    <div class="max-w-4xl mx-auto px-4 flex border-t border-slate-800/80 overflow-x-auto custom-scrollbar">
-      <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-brand-green text-brand-green transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-        <i class="fa-solid fa-list-check"></i> Presença
-      </button>
-      <button onclick="switchTab('teams')" id="tab-teams" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-        <i class="fa-solid fa-people-group"></i> Sorteio
-      </button>
-      <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-        <i class="fa-solid fa-chart-pie"></i> Relatórios
-      </button>
-      <!-- Aba Financeiro (Exclusiva Admin) -->
-      <button id="tab-financial" onclick="switchTab('financial')" class="hidden flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-        <i class="fa-solid fa-sack-dollar text-amber-400"></i> Financeiro
-      </button>
-    </div>
-  </header>
+  <div class="max-w-4xl mx-auto px-4 flex border-t border-slate-800/80 overflow-x-auto custom-scrollbar">
+    <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-brand-green text-brand-green transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+      <i class="fa-solid fa-list-check"></i> Presença
+    </button>
+    <!-- Sorteio visível para todos -->
+    <button onclick="switchTab('teams')" id="tab-teams" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+      <i class="fa-solid fa-people-group"></i> Sorteio
+    </button>
+    <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+      <i class="fa-solid fa-chart-pie"></i> Relatórios
+    </button>
+    <!-- Aba Financeiro (Exclusiva Admin) -->
+    <button id="tab-financial" onclick="switchTab('financial')" class="hidden flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+      <i class="fa-solid fa-sack-dollar text-amber-400"></i> Financeiro
+    </button>
+  </div>
+</header>
 
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="max-w-4xl mx-auto px-4 py-4 flex-1 w-full">
@@ -262,11 +263,11 @@
 
     <!-- ABA 2: SORTEIO DE TIMES -->
     <section id="sec-teams" class="hidden space-y-4">
-      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
+      <div id="teamsConfigCard" class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
         <h2 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
           <i class="fa-solid fa-sliders text-brand-green"></i> Configuração do Sorteio
         </h2>
-        <div class="grid grid-cols-2 gap-3 mb-3">
+        <div class="grid grid-cols-1 gap-3 mb-3">
           <div>
             <label class="text-xs text-slate-400 block mb-1">Qtd. de Times</label>
             <select id="numTeams" class="w-full bg-slate-900 border border-slate-700 text-white text-xs font-bold rounded-lg p-2">
@@ -275,20 +276,19 @@
               <option value="4">4 Times</option>
             </select>
           </div>
-          <div>
-            <label class="text-xs text-slate-400 block mb-1">Atletas p/ Time</label>
-            <input type="text" disabled value="8 Jogadores (Fixo)" class="w-full bg-slate-900/80 border border-slate-700 text-emerald-400 text-xs font-bold rounded-lg p-2 text-center cursor-not-allowed" />
-          </div>
         </div>
         
-        <div class="flex gap-2">
+        <div id="teamsActionButtons" class="flex gap-2">
           <button onclick="drawTeams()" class="flex-1 py-2.5 bg-brand-green hover:bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-2">
-            <i class="fa-solid fa-dice"></i> Sortear Equipes Equilibradas (8 por Time)
+            <i class="fa-solid fa-dice"></i> Sortear Equipes Equilibradas (Fixo 8/Time)
           </button>
           <button onclick="copyTeamsZap()" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5">
             <i class="fa-brands fa-whatsapp text-sm"></i> Copiar
           </button>
         </div>
+      </div>
+      <div id="teamsAthleteNotice" class="hidden p-3 bg-slate-800/60 border border-slate-700 rounded-xl text-xs text-slate-300 text-center font-medium">
+        🔒 A visualização dos times sorteados está ativa. O sorteio e alteração de parâmetros são restritos aos administradores.
       </div>
 
       <div id="drawResults" class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -674,22 +674,16 @@
           if (statusParam === 'CONFIRMADO') {
             window.presences[window.currentDate][idNum] = { status: 'CONFIRMADO', checked: false, fault: false, reason: '' };
             alert(`⚽ Presença de ${ath.name} GRAVADA como CONFIRMADO para o dia da pelada!`);
-            saveData();
-            window.history.replaceState({}, document.title, window.location.pathname);
           } else if (statusParam === 'FORA') {
             window.presences[window.currentDate][idNum] = { status: 'FORA', checked: false, fault: false, reason: '' };
             alert(`❌ Resposta de ${ath.name} GRAVADA como FORA da pelada.`);
-            saveData();
-            window.history.replaceState({}, document.title, window.location.pathname);
           } else if (statusParam === 'JUSTIFICADO') {
-            // Abre diretamente o modal de justificativa para o atleta vinculado
-            currentJustifyAthleteId = idNum;
-            const currentEntry = window.presences[window.currentDate][idNum] || { reason: '' };
-            document.getElementById('justifyAthleteName').innerText = ath.name;
-            document.getElementById('justifyReason').value = currentEntry.reason || '';
-            document.getElementById('modalJustify').classList.remove('hidden');
-            window.history.replaceState({}, document.title, window.location.pathname);
+            window.presences[window.currentDate][idNum] = { status: 'JUSTIFICADO', checked: false, fault: false, reason: 'Ausência informada via WhatsApp' };
+            alert(`🟡 Ausência de ${ath.name} registrada como JUSTIFICADA.`);
           }
+
+          saveData();
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
     }
@@ -819,17 +813,17 @@
       const baseUrl = window.location.origin + window.location.pathname;
 
       const linkSim = `${baseUrl}?atleta=${ath.id}&status=CONFIRMADO`;
-      const linkJust = `${baseUrl}?atleta=${ath.id}&status=JUSTIFICADO`;
       const linkNao = `${baseUrl}?atleta=${ath.id}&status=FORA`;
+      const linkJust = `${baseUrl}?atleta=${ath.id}&status=JUSTIFICADO`;
 
       const msg = `⚽ *TEIMOSO FCC - CONVOCAÇÃO*\n` +
                   `📍 *Local:* AABB\n` +
                   `📅 *Data:* ${dateFormatted}\n` +
                   `⏰ *Horário:* ${timeFormatted}\n\n` +
-                  `Fala *${ath.name}*, clique no link correspondente abaixo para registrar sua resposta (até as 18:00):\n\n` +
-                  `✅ *CONF. (Vou Jogar):*\n${linkSim}\n\n` +
-                  `🟡 *JUSTIF. (Justificar Ausência):*\n${linkJust}\n\n` +
-                  `❌ *FORA (Não Vou):*\n${linkNao}`;
+                  `Fala *${ath.name}*, clique no link correspondente abaixo para atualizar exclusivamente o seu status (até as 18:00):\n\n` +
+                  `✅ *CONFIRMAR PRESENÇA:*\n${linkSim}\n\n` +
+                  `🟡 *JUSTIFICAR AUSÊNCIA:*\n${linkJust}\n\n` +
+                  `❌ *NÃO VOU (FORA):*\n${linkNao}`;
 
       const url = `https://wa.me/${cleanNum}?text=${encodeURIComponent(msg)}`;
       window.open(url, '_blank');
@@ -849,6 +843,9 @@
           document.getElementById('btnAddAthlete').classList.remove('hidden');
           document.getElementById('btnMasterZap').classList.remove('hidden');
           document.getElementById('tab-financial').classList.remove('hidden');
+          document.getElementById('teamsConfigCard').classList.remove('hidden');
+          document.getElementById('teamsAthleteNotice').classList.add('hidden');
+          populateDateSelect();
           renderAthletesList();
           renderFinancial();
         } else if (pin !== null) {
@@ -865,7 +862,10 @@
         document.getElementById('btnAddAthlete').classList.add('hidden');
         document.getElementById('btnMasterZap').classList.add('hidden');
         document.getElementById('tab-financial').classList.add('hidden');
+        document.getElementById('teamsConfigCard').classList.add('hidden');
+        document.getElementById('teamsAthleteNotice').classList.remove('hidden');
         if (activeTab === 'financial') switchTab('presence');
+        populateDateSelect();
         renderAthletesList();
       }
     }
@@ -901,7 +901,19 @@
         select.appendChild(opt);
         return;
       }
-      window.datesList.forEach(d => {
+
+      // Atletas padrão só podem ver e interagir com a próxima pelada (data futura mais próxima ou igual a hoje)
+      let availableDates = window.datesList;
+      if (!isAdmin) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const nextDate = window.datesList.find(d => d >= todayStr) || window.datesList[0];
+        availableDates = nextDate ? [nextDate] : [window.datesList[0]];
+        if (!availableDates.includes(window.currentDate)) {
+          window.currentDate = availableDates[0];
+        }
+      }
+
+      availableDates.forEach(d => {
         const [yyyy, mm, dd] = d.split('-');
         const formatted = `${dd}/${mm}/${yyyy}`;
         const opt = document.createElement('option');
@@ -1452,6 +1464,7 @@
         return;
       }
       const numTeams = parseInt(document.getElementById('numTeams').value);
+      const playersPerTeam = 8; // Fixo em 8 jogadores por time
       const currentPresences = window.presences[window.currentDate] || {};
       
       const confirmedAthletes = window.athletes.filter(a => {
@@ -1461,7 +1474,7 @@
       });
 
       if (confirmedAthletes.length < numTeams) {
-        alert(`É necessário pelo menos ${numTeams} atletas de linha/goleiro confirmados para realizar o sorteio.`);
+        alert(`É necessário pelo menos ${numTeams} atletas confirmados para realizar o sorteio.`);
         return;
       }
 
@@ -1477,14 +1490,19 @@
 
       keepers.forEach((k, idx) => {
         const teamIdx = idx % numTeams;
-        teams[teamIdx].players.push(k);
-        teams[teamIdx].totalStars += k.stars;
+        if (teams[teamIdx].players.length < playersPerTeam) {
+          teams[teamIdx].players.push(k);
+          teams[teamIdx].totalStars += k.stars;
+        }
       });
 
-      linePlayers.forEach((p, idx) => {
-        teams.sort((a, b) => a.totalStars - b.totalStars);
-        teams[0].players.push(p);
-        teams[0].totalStars += p.stars;
+      linePlayers.forEach((p) => {
+        // Encontra o time com menor pontuação que ainda tenha vaga (menor que 8)
+        let availableTeams = teams.filter(t => t.players.length < playersPerTeam);
+        if (availableTeams.length === 0) availableTeams = teams; // fallback se passar de 8
+        availableTeams.sort((a, b) => a.totalStars - b.totalStars);
+        availableTeams[0].players.push(p);
+        availableTeams[0].totalStars += p.stars;
       });
 
       teams.sort((a, b) => a.id - b.id);
@@ -1511,7 +1529,7 @@
 
         card.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-700 pb-2 mb-2">
-            <h3 class="font-extrabold text-brand-green text-sm">${t.name}</h3>
+            <h3 class="font-extrabold text-brand-green text-sm">${t.name} <span class="text-[10px] text-slate-400 font-normal">(${t.players.length}/8)</span></h3>
             <span class="text-[10px] text-slate-400 font-semibold bg-slate-900 px-2 py-0.5 rounded">
               Média: ${(t.totalStars / (t.players.length || 1)).toFixed(1)} <i class="fa-solid fa-star text-amber-400"></i>
             </span>
