@@ -489,6 +489,17 @@
           <button type="button" onclick="setNewAthleteStars(5)" class="text-amber-400 text-lg hover:scale-110 transition"><i id="star-5" class="fa-solid fa-star"></i></button>
         </div>
       </div>
+
+      <!-- CHECKBOX SUSPENSO / SAIU -->
+      <div class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2.5 flex items-center justify-between">
+        <div>
+          <label for="newAthleteSuspended" class="text-xs font-bold text-rose-300 flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-user-slash"></i> SUSPENSO / SAIU
+          </label>
+          <p class="text-[9px] text-slate-400">Oculta da presença, sorteio e mensagens de WhatsApp.</p>
+        </div>
+        <input type="checkbox" id="newAthleteSuspended" class="w-4 h-4 accent-rose-500 rounded cursor-pointer" />
+      </div>
       
       <div class="flex items-center justify-end gap-2 pt-2">
         <button onclick="closeAddAthleteModal()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold rounded-lg">Cancelar</button>
@@ -735,9 +746,9 @@
         alert("Apenas administradores podem disparar convocações em massa.");
         return;
       }
-      masterZapQueue = window.athletes.filter(a => a.phone && cleanPhone(a.phone) !== "");
+      masterZapQueue = window.athletes.filter(a => !a.isSuspended && a.phone && cleanPhone(a.phone) !== "");
       if (masterZapQueue.length === 0) {
-        alert("Nenhum atleta possui número de telefone cadastrado no momento.");
+        alert("Nenhum atleta ativo possui número de telefone cadastrado no momento.");
         return;
       }
       masterZapCurrentIndex = 0;
@@ -783,6 +794,11 @@
     function sendAthleteZap(athleteId) {
       const ath = window.athletes.find(a => a.id === athleteId);
       if (!ath) return;
+
+      if (ath.isSuspended) {
+        alert(`O atleta ${ath.name} está marcado como SUSPENSO / SAIU e não pode receber mensagens de WhatsApp sob nenhuma circunstância.`);
+        return;
+      }
 
       if (!isAdmin) {
         if (ath.phone && cleanPhone(ath.phone) !== "") {
@@ -1130,6 +1146,7 @@
       document.getElementById('newAthletePhone').value = '';
       document.getElementById('newAthletePosition').value = 'Meia';
       document.getElementById('newAthleteMonthlyFee').value = '110';
+      document.getElementById('newAthleteSuspended').checked = false;
       setNewAthleteStars(5);
       document.getElementById('modalAddAthlete').classList.remove('hidden');
     }
@@ -1144,6 +1161,7 @@
       document.getElementById('newAthletePhone').value = ath.phone || '';
       document.getElementById('newAthletePosition').value = ath.position || (ath.isKeeper ? "Goleiro" : "Meia");
       document.getElementById('newAthleteMonthlyFee').value = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
+      document.getElementById('newAthleteSuspended').checked = !!ath.isSuspended;
       setNewAthleteStars(ath.stars || 5);
       document.getElementById('modalAddAthlete').classList.remove('hidden');
     }
@@ -1171,6 +1189,7 @@
       const position = document.getElementById('newAthletePosition').value;
       const feeVal = parseFloat(document.getElementById('newAthleteMonthlyFee').value);
       const monthlyFee = isNaN(feeVal) ? 110 : feeVal;
+      const isSuspended = document.getElementById('newAthleteSuspended').checked;
 
       if (!name) {
         alert("Por favor, digite o nome do jogador.");
@@ -1189,7 +1208,8 @@
             position,
             isKeeper,
             stars: selectedStarsForNewAthlete,
-            monthlyFee
+            monthlyFee,
+            isSuspended
           };
         }
       } else {
@@ -1200,7 +1220,8 @@
           position,
           isKeeper,
           stars: selectedStarsForNewAthlete,
-          monthlyFee
+          monthlyFee,
+          isSuspended
         };
         window.athletes.push(newAth);
       }
@@ -1231,6 +1252,9 @@
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
       sortedAthletes.forEach(ath => {
+        // Ignora atletas marcados como SUSPENSO / SAIU na lista de presença
+        if (ath.isSuspended) return;
+
         const p = currentPresences[ath.id] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
         const isInside = p.status === 'CONFIRMADO' || p.status === 'DENTRO' || p.status === 'VOU';
         const isOutside = p.status === 'FORA' || p.status === 'NAO';
@@ -1474,6 +1498,7 @@
       const currentPresences = window.presences[window.currentDate] || {};
       
       const confirmedAthletes = window.athletes.filter(a => {
+        if (a.isSuspended) return false;
         const st = currentPresences[a.id]?.status;
         const isInside = st === 'CONFIRMADO' || st === 'DENTRO' || st === 'VOU';
         return isInside && a.position !== 'EXTRA';
@@ -1804,8 +1829,6 @@
             interest = 0;
             
             if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
-              // Regra específica para o Júlio (em OUT/2026), Matheus Onofre (todos os meses) e Sapão (em SET/2026):
-              // Considera a diferença do valor pago a menor no valor devido.
               debtMonth = Math.max(0, athFee - paid);
               if (debtMonth === 0) {
                 colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
@@ -1813,19 +1836,16 @@
                 colorClass = "border-amber-500/50 text-amber-300 font-bold bg-amber-950/20";
               }
             } else {
-              // Regra geral para os demais atletas: dá a mensalidade como quitada integralmente
               debtMonth = 0;
               colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
             }
           } else if (now >= firstInterestDate) {
-            // Em atraso e não pago: Vermelho (computa R$ 1,00 por dia a contar do dia 16)
             const diffTime = Math.abs(now - firstInterestDate);
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
             interest = diffDays * 1.00;
             debtMonth = Math.max(0, (athFee + interest) - paid);
             colorClass = "border-rose-500/50 text-rose-400 font-bold bg-rose-950/20";
           } else {
-            // Valor sugerido para parcelas não pagas e não vencidas: Cinza
             debtMonth = Math.max(0, athFee - paid);
             colorClass = "border-slate-700 text-slate-500 font-normal bg-slate-900";
           }
@@ -1856,10 +1876,12 @@
           `;
         });
 
+        const suspendedTag = ath.isSuspended ? ` <span class="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 py-0.5 rounded font-extrabold ml-1">SUSPENSO</span>` : '';
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-700/30 transition";
         tr.innerHTML = `
-          <td class="p-2 font-bold text-white sticky left-0 bg-slate-800 z-10 border-r border-slate-700">${ath.name}</td>
+          <td class="p-2 font-bold text-white sticky left-0 bg-slate-800 z-10 border-r border-slate-700">${ath.name}${suspendedTag}</td>
           <td class="p-2 text-center font-bold text-amber-400 bg-slate-900/40 border-r border-slate-800">R$ ${athFee.toFixed(2)}</td>
           ${monthCells}
           <td class="p-2 text-center font-extrabold text-sky-300 bg-slate-900/40">R$ ${totalPaid.toFixed(2)}</td>
