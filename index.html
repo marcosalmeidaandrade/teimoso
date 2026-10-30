@@ -48,26 +48,26 @@
       border-radius: 3px;
     }
   </style>
-
-  <!-- FIREBASE SDK & CONFIGURAÇÃO EM TEMPO REAL -->
+  <!-- FIREBASE SDK & CONFIGURAÇÃO -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 🔑 SUBSTITUA ABAIXO COM AS CREDENCIAIS DO SEU PAINEL DO FIREBASE
+    // 🔑 SUAS CREDENCIAIS DO FIREBASE INSERIDAS
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY_AQUI",
-      authDomain: "seu-projeto.firebaseapp.com",
-      projectId: "seu-projeto-id",
-      storageBucket: "seu-projeto.appspot.com",
-      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-      appId: "SEU_APP_ID"
+      apiKey: "AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ",
+      authDomain: "teimosoweb.firebaseapp.com",
+      projectId: "teimosoweb",
+      storageBucket: "teimosoweb.firebasestorage.app",
+      messagingSenderId: "90879285758",
+      appId: "1:90879285758:web:ef602bfe90c131e0f808af",
+      measurementId: "G-3ESB69D4WQ"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Função global para salvar dados na nuvem Firestore
+    // Funções globais de sincronização com a Nuvem
     window.salvarNaNuvem = async function(dataPayload) {
       try {
         await setDoc(doc(db, "teimoso_config", "dados_gerais"), {
@@ -103,14 +103,14 @@
 </head>
 <body class="min-h-screen flex flex-col pb-12 select-none">
 
-  <!-- CABEÇALHO COM LOGO ALINHADA À ESQUERDA (HULK 2.JPG), CRÉDITOS E MODO ADMIN -->
+  <!-- CABEÇALHO COM LOGO PADRÃO ALINHADA À ESQUERDA, CRÉDITOS E MODO ADMIN -->
   <header class="bg-gradient-to-b from-brand-darkgreen to-brand-dark border-b border-brand-border sticky top-0 z-40 shadow-lg">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       
-      <!-- Logo & Nome do Clube (Alinhados à Esquerda com Hulk 2.jpg) -->
+      <!-- Logo & Nome do Clube (Alinhados à Esquerda com Escudo Padrão) -->
       <div class="flex items-center gap-3">
         <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-brand-green bg-white flex items-center justify-center shrink-0 shadow-md">
-          <img src="hulk 2.jpg" alt="Teimoso FCC Logo" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-futbol text-brand-green text-3xl\'></i>';" />
+          <img src="logo.png" alt="Teimoso FCC Logo" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=&quot;fa-solid fa-futbol text-brand-green text-3xl&quot;></i>';" />
         </div>
         <div>
           <h1 class="font-extrabold text-xl sm:text-2xl tracking-wide text-white leading-tight flex items-center gap-2">
