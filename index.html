@@ -1662,31 +1662,63 @@
     function handleFinKeyDown(event, athleteIndex, monthIndex) {
       if (event.key === 'Enter') {
         event.preventDefault();
-        const nextAthIndex = athleteIndex + 1;
-        const nextInput = document.getElementById(`fin_${nextAthIndex}_${monthIndex}`);
+        // Enter sempre para a próxima janela abaixo (próximo atleta na mesma coluna/mês)
+        let nextAthIndex = athleteIndex + 1;
+        let nextMIndex = monthIndex;
+
+        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
         if (nextInput) {
           nextInput.focus();
           nextInput.select();
         }
-      } else if (event.key === 'ArrowRight' || event.key === 'Tab') {
+      } else if (event.key === 'Tab') {
         event.preventDefault();
-        const nextMIndex = monthIndex + 1;
+        // Tab sempre para o campo imediatamente à direita (próximo mês na mesma linha)
+        let nextAthIndex = athleteIndex;
+        let nextMIndex = monthIndex + 1;
+
         if (nextMIndex < months.length) {
-          const nextInput = document.getElementById(`fin_${athleteIndex}_${nextMIndex}`);
+          const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
           if (nextInput) {
             nextInput.focus();
             nextInput.select();
           }
         }
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        let nextAthIndex = athleteIndex;
+        let nextMIndex = Math.min(months.length - 1, monthIndex + 1);
+        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
       } else if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        const prevMIndex = monthIndex - 1;
-        if (prevMIndex >= 0) {
-          const prevInput = document.getElementById(`fin_${athleteIndex}_${prevMIndex}`);
-          if (prevInput) {
-            prevInput.focus();
-            prevInput.select();
-          }
+        let prevAthIndex = athleteIndex;
+        let prevMIndex = Math.max(0, monthIndex - 1);
+        const prevInput = document.getElementById(`fin_${prevAthIndex}_${prevMIndex}`);
+        if (prevInput) {
+          prevInput.focus();
+          prevInput.select();
+        }
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        let nextAthIndex = athleteIndex + 1;
+        let nextMIndex = monthIndex;
+        const nextInput = document.getElementById(`fin_${nextAthIndex}_${nextMIndex}`);
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        let prevAthIndex = Math.max(0, athleteIndex - 1);
+        let prevMIndex = monthIndex;
+        const prevInput = document.getElementById(`fin_${prevAthIndex}_${prevMIndex}`);
+        if (prevInput) {
+          prevInput.focus();
+          prevInput.select();
         }
       }
     }
@@ -1710,29 +1742,35 @@
         let monthCells = '';
 
         months.forEach((m, mIndex) => {
-          const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
-          let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
+          const hasCustomVal = athPay[m] !== undefined;
+          let paid = hasCustomVal ? athPay[m] : 0;
 
           const dueDate = new Date(currentYear, mIndex, 15);
           let interest = 0;
 
-          // Se já houve lançamento de pagamento para esta mensalidade, não computar juros, mesmo que o valor seja inferior
-          if (!hasCustomVal && now > dueDate && paid < athFee) {
+          // Se lançou qualquer valor (mesmo menor que a mensalidade), considera quitado e sem juros
+          let debtMonth = 0;
+          if (!hasCustomVal && now > dueDate) {
             const diffTime = Math.abs(now - dueDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             interest = diffDays * 1;
+            debtMonth = Math.max(0, (athFee + interest) - paid);
+          } else if (hasCustomVal) {
+            // Valor lançado: quitado, sem juros adicionais computados
+            interest = 0;
+            debtMonth = 0;
+          } else {
+            debtMonth = Math.max(0, athFee - paid);
           }
 
-          let suggestedVal = athFee + interest;
-          let displayVal = hasCustomVal ? paid : (now > dueDate ? suggestedVal : 0);
+          let suggestedVal = athFee;
+          let displayVal = hasCustomVal ? paid : (now > dueDate ? athFee : 0);
 
           totalPaid += paid;
           totalInterest += interest;
-          
-          const debtMonth = Math.max(0, (athFee + interest) - paid);
           totalDue += debtMonth;
 
-          const isOverdue = debtMonth > 0 && now > dueDate && !hasCustomVal;
+          const isOverdue = debtMonth > 0 && now > dueDate;
 
           monthCells += `
             <td class="p-1 text-center">
@@ -1740,7 +1778,7 @@
                 onchange="updatePayment(${ath.id}, '${m}', this.value)" 
                 onkeydown="handleFinKeyDown(event, ${athIndex}, ${mIndex})"
                 placeholder="${suggestedVal}"
-                title="Mensalidade: R$ ${athFee.toFixed(2)} | Juros: R$ ${interest.toFixed(2)}"
+                title="Mensalidade: R$ ${athFee.toFixed(2)} | Status: ${hasCustomVal ? 'Quitado' : 'Pendente'}"
                 class="w-16 bg-slate-900 border ${isOverdue ? 'border-rose-500/50 text-rose-300' : 'border-slate-700 text-slate-200'} text-xs font-bold rounded p-1 text-center focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
             </td>
           `;
