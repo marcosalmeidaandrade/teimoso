@@ -342,18 +342,12 @@
 
       <div class="w-full space-y-4 mt-2 z-10">
         <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Selecione seu Nome:</label>
-          <select id="loginAthleteSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-brand-green appearance-none shadow-inner">
-            <option value="">Carregando atletas...</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Senha de Acesso:</label>
-          <input type="password" id="loginPassword" placeholder="____" maxlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-center text-2xl tracking-[0.7em] font-black text-white focus:outline-none focus:border-brand-green shadow-inner" onkeydown="if(event.key==='Enter') executeLogin()" />
-          <div class="mt-3 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex gap-2 items-start">
+          <label class="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider text-center">Sua Senha (4 dígitos):</label>
+          <input type="password" id="loginPassword" placeholder="____" maxlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-center text-3xl tracking-[0.7em] font-black text-white focus:outline-none focus:border-brand-green shadow-inner" onkeydown="if(event.key==='Enter') executeLogin()" />
+          <div class="mt-4 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex gap-2 items-start">
             <i class="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
-            <p class="text-[10px] text-amber-300/90 leading-tight">
-              A senha padrão é composta pelos <strong>4 últimos dígitos</strong> do seu número de telefone celular cadastrado.
+            <p class="text-[10px] text-amber-300/90 leading-relaxed">
+              Digite os <strong>4 últimos dígitos</strong> do seu número de telefone celular para acessar o aplicativo automaticamente.
             </p>
           </div>
         </div>
@@ -669,7 +663,6 @@
             window.presences = data.presences || {};
             window.financialPayments = data.financialPayments || {};
 
-            populateLoginSelect();
             populateDateSelect();
             updateCurrentTimeUI();
             
@@ -1339,40 +1332,19 @@
     };
 
     // SISTEMA DE LOGIN DE USUÁRIOS
-    function populateLoginSelect() {
-      const sel = document.getElementById('loginAthleteSelect');
-      const currentVal = sel.value;
-      sel.innerHTML = '<option value="">[ Escolha seu nome ]</option>';
-      const sorted = [...window.athletes].sort((a,b) => a.name.localeCompare(b.name, 'pt-BR'));
-      sorted.forEach(a => {
-        if(!a.isSuspended) {
-          sel.innerHTML += `<option value="${a.id}">${a.name}</option>`;
-        }
-      });
-      if (currentVal) sel.value = currentVal;
-    }
-
     window.executeLogin = function() {
-      const athId = document.getElementById('loginAthleteSelect').value;
       const pwd = document.getElementById('loginPassword').value.trim();
 
-      if (!athId) {
-        window.showToast("Selecione seu nome na lista.");
+      if (pwd.length !== 4) {
+        window.showToast("A senha deve conter exatamente 4 dígitos.");
         return;
       }
 
-      const ath = window.athletes.find(a => a.id == athId);
-      if (!ath) return;
+      // Busca automaticamente o atleta ativo cujo celular termine com os 4 dígitos informados
+      const ath = window.athletes.find(a => !a.isSuspended && window.cleanPhone(a.phone).endsWith(pwd));
 
-      const phone = window.cleanPhone(ath.phone);
-      if (phone.length < 4) {
-        window.showToast("Seu cadastro não possui um celular válido. Contate o administrador.");
-        return;
-      }
-
-      const last4 = phone.slice(-4);
-      if (pwd !== last4 && pwd !== "0902") { // Senha emergencial hardcoded
-        window.showToast("Senha incorreta! Digite os 4 últimos números do celular.");
+      if (!ath) {
+        window.showToast("Senha incorreta ou atleta não encontrado. Verifique seu cadastro.");
         return;
       }
 
@@ -1493,7 +1465,6 @@
       }
       window.saveData();
       closeAthleteModal();
-      populateLoginSelect(); // Atualiza select de login caso precise
       renderAthletesList();
     };
 
@@ -1503,7 +1474,6 @@
         window.athletes = window.athletes.filter(a => a.id !== id);
         window.saveData();
         renderAthletesList();
-        populateLoginSelect();
       });
     };
 
