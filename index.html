@@ -371,6 +371,10 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nome Completo:</label>
           <input type="text" id="athleteNameInput" placeholder="Ex: Carlos Alberto" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
         </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">URL da Foto (Opcional):</label>
+          <input type="text" id="athletePhotoUrlInput" placeholder="Cole o link de uma imagem aqui (opcional)..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Posição:</label>
@@ -562,13 +566,13 @@
     };
 
     const defaultAthletes = [
-      { id: 1, name: "Lucas Silva", position: "Goleiro", stars: 5, phone: "22999991111", isKeeper: true, monthlyFee: 110, isSuspended: false },
-      { id: 2, name: "Matheus Onofre", position: "Atacante", stars: 5, phone: "22999992222", isKeeper: false, monthlyFee: 110, isSuspended: false },
-      { id: 3, name: "Júlio", position: "Meia", stars: 4, phone: "22999993333", isKeeper: false, monthlyFee: 110, isSuspended: false },
-      { id: 4, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999994444", isKeeper: false, monthlyFee: 110, isSuspended: false },
-      { id: 5, name: "Gabriel Souza", position: "Lateral", stars: 3, phone: "22999995555", isKeeper: false, monthlyFee: 110, isSuspended: false },
-      { id: 6, name: "Rodrigo Costa", position: "Volante", stars: 4, phone: "22999996666", isKeeper: false, monthlyFee: 110, isSuspended: false },
-      { id: 7, name: "Felipe Macaco", position: "Atacante", stars: 5, phone: "22999990000", isKeeper: false, monthlyFee: 110, isSuspended: false }
+      { id: 1, name: "Lucas Silva", position: "Goleiro", stars: 5, phone: "22999991111", isKeeper: true, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 2, name: "Matheus Onofre", position: "Atacante", stars: 5, phone: "22999992222", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 3, name: "Júlio", position: "Meia", stars: 4, phone: "22999993333", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 4, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999994444", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 5, name: "Gabriel Souza", position: "Lateral", stars: 3, phone: "22999995555", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 6, name: "Rodrigo Costa", position: "Volante", stars: 4, phone: "22999996666", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 7, name: "Felipe Macaco", position: "Atacante", stars: 5, phone: "22999990000", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
     ];
 
     window.datesList = ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"];
@@ -1026,21 +1030,32 @@
           `;
         }
 
+        // Gera a imagem: URL preenchida OU iniciais do nome de forma automática
+        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name)}&background=0f172a&color=34d399&bold=true&size=128`;
+
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-200">
-            <div class="flex flex-col gap-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-sm">${athlete.name}</span>
-                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}">
-                  <span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}
-                </span>
-                ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+            <div class="flex items-center gap-3">
+              <!-- Avatar Foto -->
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-slate-700 overflow-hidden shrink-0 bg-slate-900 shadow-md">
+                <img src="${avatarUrl}" alt="${athlete.name}" class="w-full h-full object-cover">
               </div>
-              <div class="flex items-center gap-2 mt-0.5">
-                <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
-                <div class="text-amber-400 text-[10px] tracking-widest" title="${athlete.stars} estrelas">${starsHtml}</div>
+              
+              <!-- Info Atleta -->
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm">${athlete.name}</span>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}">
+                    <span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}
+                  </span>
+                  ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
+                  <div class="text-amber-400 text-[10px] tracking-widest" title="${athlete.stars} estrelas">${starsHtml}</div>
+                </div>
+                ${pRecord.reason ? `<div class="text-[10px] text-amber-400 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
               </div>
-              ${pRecord.reason ? `<div class="text-[10px] text-amber-400 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
             </div>
           </td>
           <td class="py-3 px-4 text-center">
@@ -1084,6 +1099,7 @@
       document.getElementById('editAthleteId').value = '';
       document.getElementById('athleteNameInput').value = '';
       document.getElementById('athletePhoneInput').value = '';
+      document.getElementById('athletePhotoUrlInput').value = '';
       document.getElementById('athletePositionSelect').value = 'Meia';
       document.getElementById('athleteSuspendedCheckbox').checked = false;
       buildStarRatingSelector(5);
@@ -1097,6 +1113,7 @@
       document.getElementById('editAthleteId').value = athlete.id;
       document.getElementById('athleteNameInput').value = athlete.name;
       document.getElementById('athletePhoneInput').value = athlete.phone || '';
+      document.getElementById('athletePhotoUrlInput').value = athlete.photoUrl || '';
       document.getElementById('athletePositionSelect').value = athlete.position;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
       buildStarRatingSelector(athlete.stars);
@@ -1125,6 +1142,7 @@
       const id = document.getElementById('editAthleteId').value;
       const name = document.getElementById('athleteNameInput').value.trim();
       const phone = document.getElementById('athletePhoneInput').value.trim();
+      const photoUrl = document.getElementById('athletePhotoUrlInput').value.trim();
       const position = document.getElementById('athletePositionSelect').value;
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
@@ -1138,6 +1156,7 @@
         if (athlete) {
           athlete.name = name;
           athlete.phone = phone;
+          athlete.photoUrl = photoUrl;
           athlete.position = position;
           athlete.stars = selectedStarsForNewAthlete;
           athlete.isSuspended = isSuspended;
@@ -1152,6 +1171,7 @@
           position: position,
           stars: selectedStarsForNewAthlete,
           phone: phone,
+          photoUrl: photoUrl,
           isKeeper: (position === 'Goleiro'),
           monthlyFee: 110,
           isSuspended: isSuspended
