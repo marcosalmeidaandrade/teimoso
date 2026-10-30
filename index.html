@@ -48,35 +48,86 @@
       border-radius: 3px;
     }
   </style>
+
+  <!-- FIREBASE SDK & CONFIGURAÇÃO EM TEMPO REAL -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 🔑 SUBSTITUA ABAIXO COM AS CREDENCIAIS DO SEU PAINEL DO FIREBASE
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY_AQUI",
+      authDomain: "seu-projeto.firebaseapp.com",
+      projectId: "seu-projeto-id",
+      storageBucket: "seu-projeto.appspot.com",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Função global para salvar dados na nuvem Firestore
+    window.salvarNaNuvem = async function(dataPayload) {
+      try {
+        await setDoc(doc(db, "teimoso_config", "dados_gerais"), {
+          ...dataPayload,
+          atualizadoEm: new Date()
+        });
+        console.log("Dados salvos na nuvem com sucesso!");
+      } catch (error) {
+        console.error("Erro ao salvar no Firebase:", error);
+      }
+    };
+
+    // Função global para escutar alterações em tempo real de qualquer dispositivo
+    window.escutarNuvem = function(callback) {
+      const docRef = doc(db, "teimoso_config", "dados_gerais");
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          callback(docSnap.data());
+        } else {
+          // Se o documento ainda não existir, cria o estado inicial na nuvem
+          window.salvarNaNuvem({
+            datesList: window.datesList || [],
+            currentDate: window.currentDate || "",
+            eventTimes: window.eventTimes || {},
+            athletes: window.athletes || [],
+            presences: window.presences || {},
+            financialPayments: window.financialPayments || {}
+          });
+        }
+      });
+    };
+  </script>
 </head>
 <body class="min-h-screen flex flex-col pb-12 select-none">
 
-  <!-- CABEÇALHO COM LOGO CENTRALIZADA, CRÉDITOS E MODO ADMIN -->
+  <!-- CABEÇALHO COM LOGO ALINHADA À ESQUERDA (HULK 2.JPG), CRÉDITOS E MODO ADMIN -->
   <header class="bg-gradient-to-b from-brand-darkgreen to-brand-dark border-b border-brand-border sticky top-0 z-40 shadow-lg">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between relative">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       
-      <!-- Espaçador à esquerda para equilibrar o layout -->
-      <div class="w-20 sm:w-24 shrink-0"></div>
-
-      <!-- Logo & Nome do Clube (CENTRALIZADOS) -->
-      <div class="flex flex-col items-center justify-center text-center">
-        <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-brand-green bg-white flex items-center justify-center shrink-0 shadow-md mb-1">
-          <img src="logo.png" alt="Teimoso FCC Logo" class="w-full h-full object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\"fa-solid fa-futbol text-brand-green text-3xl\"></i>';" />
+      <!-- Logo & Nome do Clube (Alinhados à Esquerda com Hulk 2.jpg) -->
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-brand-green bg-white flex items-center justify-center shrink-0 shadow-md">
+          <img src="hulk 2.jpg" alt="Teimoso FCC Logo" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-futbol text-brand-green text-3xl\'></i>';" />
         </div>
-        <h1 class="font-extrabold text-xl sm:text-2xl tracking-wide text-white leading-tight flex items-center justify-center gap-2">
-          TEIMOSO FCC
-        </h1>
-        <p class="text-xs text-emerald-400 font-semibold flex items-center justify-center gap-1 mt-0.5">
-          <i class="fa-solid fa-location-dot text-red-400"></i> Local: AABB
-        </p>
-        <p class="text-[10px] text-slate-300 font-medium italic">
-          Desenvolvido por Marcos Almeida®
-        </p>
+        <div>
+          <h1 class="font-extrabold text-xl sm:text-2xl tracking-wide text-white leading-tight flex items-center gap-2">
+            TEIMOSO FCC
+          </h1>
+          <p class="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-location-dot text-red-400"></i> Local: AABB
+          </p>
+          <p class="text-[10px] text-slate-300 font-medium italic">
+            Desenvolvido por Marcos Almeida®
+          </p>
+        </div>
       </div>
 
-      <!-- Modo de Acesso (Atleta vs Admin) - Posicionado à Direita -->
-      <div class="w-20 sm:w-24 shrink-0 flex justify-end">
-        <button id="btnToggleAdmin" onclick="handleAdminToggle()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500 shadow-sm">
+      <!-- Modo de Acesso (Atleta vs Admin) -->
+      <div class="flex items-center gap-2">
+        <button id="btnToggleAdmin" onclick="handleAdminToggle()" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-500 shadow-sm">
           <i class="fa-solid fa-user-lock" id="iconAdmin"></i>
           <span id="textAdmin">Atleta</span>
         </button>
@@ -548,38 +599,46 @@
 
     const generatedSundays = ["2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29"];
 
-    let datesList = JSON.parse(localStorage.getItem('teimoso_dates')) || generatedSundays;
-    datesList.sort();
+    window.datesList = JSON.parse(localStorage.getItem('teimoso_dates')) || generatedSundays;
+    window.datesList.sort();
     
     let todayStr = new Date().toISOString().split('T')[0];
-    let defaultCurrentDate = datesList.find(d => d >= todayStr) || datesList[0];
-    let currentDate = localStorage.getItem('teimoso_currentDate') || defaultCurrentDate;
+    let defaultCurrentDate = window.datesList.find(d => d >= todayStr) || window.datesList[0];
+    window.currentDate = localStorage.getItem('teimoso_currentDate') || defaultCurrentDate;
     
-    let eventTimes = JSON.parse(localStorage.getItem('teimoso_times')) || {};
-    let athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || defaultAthletes;
-    let presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
-    let financialPayments = JSON.parse(localStorage.getItem('teimoso_financial')) || {};
+    window.eventTimes = JSON.parse(localStorage.getItem('teimoso_times')) || {};
+    window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || defaultAthletes;
+    window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
+    window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financial')) || {};
 
     const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov"];
 
     window.addEventListener('DOMContentLoaded', () => {
-      populateDateSelect();
-      updateCurrentTimeUI();
-      verificarConfirmacaoViaURL();
-      renderAthletesList();
-      renderReports();
-      renderFinancial();
-      checkDeadlinePassed();
+      // Inicia a escuta em tempo real do banco de dados na nuvem
+      window.escutarNuvem((data) => {
+        window.datesList = data.datesList || window.datesList;
+        window.currentDate = data.currentDate || window.currentDate;
+        window.eventTimes = data.eventTimes || window.eventTimes;
+        window.athletes = data.athletes || window.athletes;
+        window.presences = data.presences || window.presences;
+        window.financialPayments = data.financialPayments || window.financialPayments;
+
+        populateDateSelect();
+        updateCurrentTimeUI();
+        verificarConfirmacaoViaURL();
+        renderAthletesList();
+        renderReports();
+        renderFinancial();
+        checkDeadlinePassed();
+      });
     });
 
     // VALIDAÇÃO DE TRAVA ATÉ AS 18:00 DO DIA DA PELADA
     function checkDeadlinePassed() {
-      if (!currentDate) return false;
+      if (!window.currentDate) return false;
       
       const now = new Date();
-      const [yyyy, mm, dd] = currentDate.split('-').map(Number);
-      
-      // Define a data do jogo no horário limite das 18:00:00
+      const [yyyy, mm, dd] = window.currentDate.split('-').map(Number);
       const deadline = new Date(yyyy, mm - 1, dd, 18, 0, 0);
 
       const isPassed = now > deadline;
@@ -603,7 +662,6 @@
       const statusParam = urlParams.get('status');
 
       if (athleteId && statusParam) {
-        // Bloqueia se o horário limite já passou
         if (!isAdmin && checkDeadlinePassed()) {
           alert("⚠️ A confirmação de presença se encerrou às 18:00 do dia da pelada. Não é mais possível alterar seu status.");
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -611,34 +669,45 @@
         }
 
         const idNum = parseInt(athleteId);
-        const ath = athletes.find(a => a.id === idNum);
+        const ath = window.athletes.find(a => a.id === idNum);
 
         if (ath) {
-          if (!presences[currentDate]) presences[currentDate] = {};
+          if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
 
           if (statusParam === 'CONFIRMADO') {
-            presences[currentDate][idNum] = { status: 'CONFIRMADO', checked: false, fault: false, reason: '' };
+            window.presences[window.currentDate][idNum] = { status: 'CONFIRMADO', checked: false, fault: false, reason: '' };
             alert(`⚽ Presença de ${ath.name} GRAVADA como CONFIRMADO para o dia da pelada!`);
           } else if (statusParam === 'FORA') {
-            presences[currentDate][idNum] = { status: 'FORA', checked: false, fault: false, reason: '' };
+            window.presences[window.currentDate][idNum] = { status: 'FORA', checked: false, fault: false, reason: '' };
             alert(`❌ Resposta de ${ath.name} GRAVADA como FORA da pelada.`);
           }
 
           saveData();
-
-          // Limpa os parâmetros da URL sem recarregar a página
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
     }
 
     function saveData() {
-      localStorage.setItem('teimoso_dates', JSON.stringify(datesList));
-      localStorage.setItem('teimoso_currentDate', currentDate);
-      localStorage.setItem('teimoso_times', JSON.stringify(eventTimes));
-      localStorage.setItem('teimoso_athletes', JSON.stringify(athletes));
-      localStorage.setItem('teimoso_presences', JSON.stringify(presences));
-      localStorage.setItem('teimoso_financial', JSON.stringify(financialPayments));
+      const payload = {
+        datesList: window.datesList,
+        currentDate: window.currentDate,
+        eventTimes: window.eventTimes,
+        athletes: window.athletes,
+        presences: window.presences,
+        financialPayments: window.financialPayments
+      };
+      // Salva localmente e dispara para o Firebase
+      localStorage.setItem('teimoso_dates', JSON.stringify(window.datesList));
+      localStorage.setItem('teimoso_currentDate', window.currentDate);
+      localStorage.setItem('teimoso_times', JSON.stringify(window.eventTimes));
+      localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
+      localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
+      localStorage.setItem('teimoso_financial', JSON.stringify(window.financialPayments));
+
+      if (window.salvarNaNuvem) {
+        window.salvarNaNuvem(payload);
+      }
     }
 
     function formatPhoneInput(input) {
@@ -671,7 +740,7 @@
         alert("Apenas administradores podem disparar convocações em massa.");
         return;
       }
-      masterZapQueue = athletes.filter(a => a.phone && cleanPhone(a.phone) !== "");
+      masterZapQueue = window.athletes.filter(a => a.phone && cleanPhone(a.phone) !== "");
       if (masterZapQueue.length === 0) {
         alert("Nenhum atleta possui número de telefone cadastrado no momento. Cadastre os números dos atletas primeiro!");
         return;
@@ -717,7 +786,7 @@
     }
 
     function sendAthleteZap(athleteId) {
-      const ath = athletes.find(a => a.id === athleteId);
+      const ath = window.athletes.find(a => a.id === athleteId);
       if (!ath) return;
 
       if (!isAdmin) {
@@ -737,9 +806,9 @@
       }
 
       const cleanNum = cleanPhone(ath.phone);
-      const [yyyy, mm, dd] = currentDate.split('-');
+      const [yyyy, mm, dd] = window.currentDate.split('-');
       const dateFormatted = `${dd}/${mm}/${yyyy}`;
-      const timeFormatted = eventTimes[currentDate] || "07:00";
+      const timeFormatted = window.eventTimes[window.currentDate] || "07:00";
 
       const baseUrl = window.location.origin + window.location.pathname;
 
@@ -817,32 +886,32 @@
     function populateDateSelect() {
       const select = document.getElementById('selectEventDate');
       select.innerHTML = '';
-      if (datesList.length === 0) {
+      if (window.datesList.length === 0) {
         const opt = document.createElement('option');
         opt.value = "";
         opt.innerText = "Nenhuma data cadastrada";
         select.appendChild(opt);
         return;
       }
-      datesList.forEach(d => {
+      window.datesList.forEach(d => {
         const [yyyy, mm, dd] = d.split('-');
         const formatted = `${dd}/${mm}/${yyyy}`;
         const opt = document.createElement('option');
         opt.value = d;
         opt.innerText = formatted;
-        if (d === currentDate) opt.selected = true;
+        if (d === window.currentDate) opt.selected = true;
         select.appendChild(opt);
       });
     }
 
     function updateCurrentTimeUI() {
-      const currentTime = eventTimes[currentDate] || "07:00";
+      const currentTime = window.eventTimes[window.currentDate] || "07:00";
       document.getElementById('inputEventTime').value = currentTime;
     }
 
     function changeDate(newDate) {
       if (!newDate) return;
-      currentDate = newDate;
+      window.currentDate = newDate;
       updateCurrentTimeUI();
       saveData();
       checkDeadlinePassed();
@@ -851,8 +920,8 @@
     }
 
     function changeTime(newTime) {
-      if (!currentDate) return;
-      eventTimes[currentDate] = newTime || "07:00";
+      if (!window.currentDate) return;
+      window.eventTimes[window.currentDate] = newTime || "07:00";
       saveData();
     }
 
@@ -864,10 +933,10 @@
     }
 
     function openEditDateModal() {
-      if (!currentDate) return;
+      if (!window.currentDate) return;
       document.getElementById('modalDateTitle').innerHTML = `<i class="fa-solid fa-calendar-pen text-amber-400"></i> Alterar Data Selecionada`;
       document.getElementById('modalDateMode').value = "edit";
-      document.getElementById('inputModalDateValue').value = currentDate;
+      document.getElementById('inputModalDateValue').value = window.currentDate;
       document.getElementById('modalDate').classList.remove('hidden');
     }
 
@@ -885,36 +954,36 @@
       }
 
       if (mode === 'add') {
-        if (datesList.includes(dateVal)) {
+        if (window.datesList.includes(dateVal)) {
           alert("Esta data já está cadastrada!");
           return;
         }
-        datesList.push(dateVal);
-        datesList.sort();
-        currentDate = dateVal;
-        eventTimes[currentDate] = "07:00";
+        window.datesList.push(dateVal);
+        window.datesList.sort();
+        window.currentDate = dateVal;
+        window.eventTimes[window.currentDate] = "07:00";
       } else if (mode === 'edit') {
-        if (dateVal === currentDate) {
+        if (dateVal === window.currentDate) {
           closeDateModal();
           return;
         }
-        if (datesList.includes(dateVal)) {
+        if (window.datesList.includes(dateVal)) {
           alert("A nova data já existe na lista!");
           return;
         }
-        const idx = datesList.indexOf(currentDate);
-        if (idx !== -1) datesList[idx] = dateVal;
-        datesList.sort();
+        const idx = window.datesList.indexOf(window.currentDate);
+        if (idx !== -1) window.datesList[idx] = dateVal;
+        window.datesList.sort();
 
-        if (eventTimes[currentDate]) {
-          eventTimes[dateVal] = eventTimes[currentDate];
-          delete eventTimes[currentDate];
+        if (window.eventTimes[window.currentDate]) {
+          window.eventTimes[dateVal] = window.eventTimes[window.currentDate];
+          delete window.eventTimes[window.currentDate];
         }
-        if (presences[currentDate]) {
-          presences[dateVal] = presences[currentDate];
-          delete presences[currentDate];
+        if (window.presences[window.currentDate]) {
+          window.presences[dateVal] = window.presences[window.currentDate];
+          delete window.presences[window.currentDate];
         }
-        currentDate = dateVal;
+        window.currentDate = dateVal;
       }
 
       saveData();
@@ -926,16 +995,16 @@
     }
 
     function deleteCurrentDate() {
-      if (!currentDate) return;
-      const [yyyy, mm, dd] = currentDate.split('-');
+      if (!window.currentDate) return;
+      const [yyyy, mm, dd] = window.currentDate.split('-');
       const formatted = `${dd}/${mm}/${yyyy}`;
 
       if (confirm(`Tem certeza que deseja excluir a data ${formatted}? Todo o histórico dessa pelada será removido.`)) {
-        datesList = datesList.filter(d => d !== currentDate);
-        delete eventTimes[currentDate];
-        delete presences[currentDate];
+        window.datesList = window.datesList.filter(d => d !== window.currentDate);
+        delete window.eventTimes[window.currentDate];
+        delete window.presences[window.currentDate];
 
-        currentDate = datesList.length > 0 ? datesList[0] : "";
+        window.currentDate = window.datesList.length > 0 ? window.datesList[0] : "";
         saveData();
         populateDateSelect();
         updateCurrentTimeUI();
@@ -945,23 +1014,22 @@
     }
 
     function setStatus(athleteId, status) {
-      if (!currentDate) {
+      if (!window.currentDate) {
         alert("Cadastre uma data primeiro!");
         return;
       }
 
-      // Bloqueio de horário limite (18:00) para atletas
       if (!isAdmin && checkDeadlinePassed()) {
         alert("⚠️ A confirmação de presença se encerrou às 18:00 do dia da pelada. Não é mais possível alterar seu status.");
         return;
       }
 
-      if (!presences[currentDate]) presences[currentDate] = {};
+      if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       
-      const currentEntry = presences[currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
+      const currentEntry = window.presences[window.currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
 
       if (currentEntry.status === status && !currentEntry.fault) {
-        presences[currentDate][athleteId] = { status: 'PENDENTE', checked: false, fault: false, reason: '' };
+        window.presences[window.currentDate][athleteId] = { status: 'PENDENTE', checked: false, fault: false, reason: '' };
         saveData();
         renderAthletesList();
         return;
@@ -969,26 +1037,26 @@
       
       if (status === 'JUSTIFICADO') {
         currentJustifyAthleteId = athleteId;
-        const ath = athletes.find(a => a.id === athleteId);
+        const ath = window.athletes.find(a => a.id === athleteId);
         document.getElementById('justifyAthleteName').innerText = ath ? ath.name : '';
         document.getElementById('justifyReason').value = currentEntry.reason || '';
         document.getElementById('modalJustify').classList.remove('hidden');
         return;
       }
 
-      presences[currentDate][athleteId] = { status, checked: status === 'CONFIRMADO' ? currentEntry.checked : false, fault: false, reason: '' };
+      window.presences[window.currentDate][athleteId] = { status, checked: status === 'CONFIRMADO' ? currentEntry.checked : false, fault: false, reason: '' };
       saveData();
       renderAthletesList();
     }
 
     function toggleFault(athleteId) {
-      if (!isAdmin || !currentDate) return;
-      if (!presences[currentDate]) presences[currentDate] = {};
+      if (!isAdmin || !window.currentDate) return;
+      if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
 
-      const currentEntry = presences[currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
+      const currentEntry = window.presences[window.currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
       const newFault = !currentEntry.fault;
 
-      presences[currentDate][athleteId] = {
+      window.presences[window.currentDate][athleteId] = {
         status: 'CONFIRMADO',
         checked: newFault ? false : currentEntry.checked,
         fault: newFault,
@@ -1000,17 +1068,17 @@
     }
 
     function toggleCheck(athleteId) {
-      if (!isAdmin || !currentDate) return;
-      if (!presences[currentDate]) presences[currentDate] = {};
+      if (!isAdmin || !window.currentDate) return;
+      if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       
-      const currentEntry = presences[currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
+      const currentEntry = window.presences[window.currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
 
       if (currentEntry.status !== 'CONFIRMADO' && currentEntry.status !== 'DENTRO' && currentEntry.status !== 'VOU') {
         alert("Apenas atletas com status CONFIRMADO podem ser validados.");
         return;
       }
 
-      presences[currentDate][athleteId] = {
+      window.presences[window.currentDate][athleteId] = {
         ...currentEntry,
         checked: !currentEntry.checked,
         fault: false
@@ -1026,15 +1094,15 @@
     }
 
     function saveJustification() {
-      if (currentJustifyAthleteId && currentDate) {
+      if (currentJustifyAthleteId && window.currentDate) {
         if (!isAdmin && checkDeadlinePassed()) {
           alert("⚠️ A confirmação de presença se encerrou às 18:00 do dia da pelada.");
           closeJustifyModal();
           return;
         }
         const reason = document.getElementById('justifyReason').value.trim();
-        if (!presences[currentDate]) presences[currentDate] = {};
-        presences[currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', checked: false, fault: false, reason };
+        if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
+        window.presences[window.currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', checked: false, fault: false, reason };
         saveData();
         closeJustifyModal();
         renderAthletesList();
@@ -1053,7 +1121,7 @@
     }
 
     function openEditAthleteModal(athleteId) {
-      const ath = athletes.find(a => a.id === athleteId);
+      const ath = window.athletes.find(a => a.id === athleteId);
       if (!ath) return;
 
       document.getElementById('editAthleteId').value = ath.id;
@@ -1098,10 +1166,10 @@
       const isKeeper = position === 'Goleiro';
 
       if (editId) {
-        const index = athletes.findIndex(a => a.id == editId);
+        const index = window.athletes.findIndex(a => a.id == editId);
         if (index !== -1) {
-          athletes[index] = {
-            ...athletes[index],
+          window.athletes[index] = {
+            ...window.athletes[index],
             name,
             phone,
             position,
@@ -1120,7 +1188,7 @@
           stars: selectedStarsForNewAthlete,
           monthlyFee
         };
-        athletes.push(newAth);
+        window.athletes.push(newAth);
       }
 
       saveData();
@@ -1132,12 +1200,12 @@
     function renderAthletesList() {
       const listEl = document.getElementById('athletesList');
       const search = document.getElementById('searchAthlete').value.toLowerCase();
-      const currentPresences = presences[currentDate] || {};
+      const currentPresences = window.presences[window.currentDate] || {};
 
       let countUnvalidated = 0, countValidated = 0, countOutside = 0, countJustified = 0, countFaults = 0, countPending = 0, countGoleiros = 0;
 
       listEl.innerHTML = '';
-      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
       sortedAthletes.forEach(ath => {
         const p = currentPresences[ath.id] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
@@ -1209,7 +1277,6 @@
           `;
         }
 
-        // VERIFICA SE O NÚMERO DE WHATSAPP ESTÁ PREENCHIDO
         const hasPhone = ath.phone && cleanPhone(ath.phone) !== "";
         const zapBtnTitle = isAdmin 
           ? (hasPhone ? `Enviar Convocação Zap para ${ath.phone}` : 'Sem WhatsApp (Clique para cadastrar)')
@@ -1271,7 +1338,7 @@
 
     function deleteAthlete(id) {
       if (confirm("Remover este atleta do elenco?")) {
-        athletes = athletes.filter(a => a.id !== id);
+        window.athletes = window.athletes.filter(a => a.id !== id);
         saveData();
         renderAthletesList();
         renderFinancial();
@@ -1279,14 +1346,14 @@
     }
 
     function copyZapList() {
-      if (!currentDate) {
+      if (!window.currentDate) {
         alert("Nenhuma data selecionada!");
         return;
       }
-      const [yyyy, mm, dd] = currentDate.split('-');
+      const [yyyy, mm, dd] = window.currentDate.split('-');
       const dateFormatted = `${dd}/${mm}/${yyyy}`;
-      const timeFormatted = eventTimes[currentDate] || "07:00";
-      const currentPresences = presences[currentDate] || {};
+      const timeFormatted = window.eventTimes[window.currentDate] || "07:00";
+      const currentPresences = window.presences[window.currentDate] || {};
 
       const keeperList = [];
       const fieldList = [];
@@ -1294,7 +1361,7 @@
       const outsideList = [];
       const justifiedList = [];
 
-      athletes.forEach(a => {
+      window.athletes.forEach(a => {
         const p = currentPresences[a.id];
         const isInside = p?.status === 'CONFIRMADO' || p?.status === 'DENTRO' || p?.status === 'VOU';
         const isOutside = p?.status === 'FORA' || p?.status === 'NAO';
@@ -1351,14 +1418,14 @@
     }
 
     function drawTeams() {
-      if (!currentDate) {
+      if (!window.currentDate) {
         alert("Nenhuma data selecionada!");
         return;
       }
       const numTeams = parseInt(document.getElementById('numTeams').value);
-      const currentPresences = presences[currentDate] || {};
+      const currentPresences = window.presences[window.currentDate] || {};
       
-      const confirmedAthletes = athletes.filter(a => {
+      const confirmedAthletes = window.athletes.filter(a => {
         const st = currentPresences[a.id]?.status;
         const isInside = st === 'CONFIRMADO' || st === 'DENTRO' || st === 'VOU';
         return isInside && a.position !== 'EXTRA';
@@ -1437,7 +1504,7 @@
         return;
       }
 
-      const timeFormatted = eventTimes[currentDate] || "07:00";
+      const timeFormatted = window.eventTimes[window.currentDate] || "07:00";
       let text = `⚽ *TEIMOSO FCC - TIMES SORTEADOS*\n📍 *Local:* AABB\n⏰ *Horário:* ${timeFormatted}\n\n`;
 
       window.lastDrawnTeams.forEach(t => {
@@ -1457,16 +1524,16 @@
       const tbody = document.getElementById('tblReportsBody');
       tbody.innerHTML = '';
 
-      const totalEvents = datesList.length;
-      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const totalEvents = window.datesList.length;
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
       sortedAthletes.forEach(ath => {
         let validatedInsideCount = 0;
         let justifiedCount = 0;
         let faultCount = 0;
 
-        datesList.forEach(d => {
-          const entry = presences[d]?.[ath.id];
+        window.datesList.forEach(d => {
+          const entry = window.presences[d]?.[ath.id];
           const isInside = entry?.status === 'CONFIRMADO' || entry?.status === 'DENTRO' || entry?.status === 'VOU';
           const isFault = entry?.fault || entry?.status === 'FALTA';
           
@@ -1502,16 +1569,16 @@
 
     function exportCSV() {
       let csv = "Atleta,Posição,Total Peladas,Presenças Validadas,Ausências Justificadas,Faltas Sem Justificativa,% Frequência\n";
-      const totalEvents = datesList.length;
-      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const totalEvents = window.datesList.length;
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
       sortedAthletes.forEach(ath => {
         let validatedInsideCount = 0;
         let justifiedCount = 0;
         let faultCount = 0;
 
-        datesList.forEach(d => {
-          const entry = presences[d]?.[ath.id];
+        window.datesList.forEach(d => {
+          const entry = window.presences[d]?.[ath.id];
           const isInside = entry?.status === 'CONFIRMADO' || entry?.status === 'DENTRO' || entry?.status === 'VOU';
           const isFault = entry?.fault || entry?.status === 'FALTA';
           
@@ -1532,15 +1599,15 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `Teimoso_FCC_Relatorio_${currentDate || 'Geral'}.csv`);
+      link.setAttribute('download', `Teimoso_FCC_Relatorio_${window.currentDate || 'Geral'}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
     function updatePayment(athleteId, monthKey, val) {
-      if (!financialPayments[athleteId]) financialPayments[athleteId] = {};
-      financialPayments[athleteId][monthKey] = parseFloat(val) || 0;
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      window.financialPayments[athleteId][monthKey] = parseFloat(val) || 0;
       saveData();
       renderFinancial();
     }
@@ -1584,12 +1651,12 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-      const now = new Date(currentDate || new Date());
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const now = new Date(window.currentDate || new Date());
       const currentYear = now.getFullYear();
 
       sortedAthletes.forEach((ath, athIndex) => {
-        const athPay = financialPayments[ath.id] || {};
+        const athPay = window.financialPayments[ath.id] || {};
         const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
         let totalPaid = 0;
         let totalInterest = 0;
@@ -1607,7 +1674,7 @@
           if (now > dueDate && paid < athFee) {
             const diffTime = Math.abs(now - dueDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            interest = diffDays * 1; // R$ 1,00/dia
+            interest = diffDays * 1;
           }
 
           let suggestedVal = athFee + interest;
@@ -1652,8 +1719,8 @@
 
       let csv = "Atleta,Celular,Mensalidade Base,JAN,FEV,MAR,ABR,MAI,JUN,JUL,AGO,SET,OUT,NOV,Total Pago,Juros/Multa,Valor Devido\n";
       
-      const sortedAthletes = [...athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-      const now = new Date(currentDate || new Date());
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      const now = new Date(window.currentDate || new Date());
       const currentYear = now.getFullYear();
 
       let grandTotalPaid = 0;
@@ -1661,7 +1728,7 @@
       let grandTotalDue = 0;
 
       sortedAthletes.forEach(ath => {
-        const athPay = financialPayments[ath.id] || {};
+        const athPay = window.financialPayments[ath.id] || {};
         const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
         let totalPaid = 0;
         let totalInterest = 0;
@@ -1698,14 +1765,13 @@
         csv += `"${ath.name}","${ath.phone || ''}",${athFee.toFixed(2)},${monthValuesCSV.join(',')},${totalPaid.toFixed(2)},${totalInterest.toFixed(2)},${totalDue.toFixed(2)}\n`;
       });
 
-      // Linha de Total Geral do Grupo
       csv += `\n"TOTAL GERAL DO GRUPO",-,-,-,-,-,-,-,-,-,-,-,-,-,${grandTotalPaid.toFixed(2)},${grandTotalInterest.toFixed(2)},${grandTotalDue.toFixed(2)}\n`;
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `Teimoso_FCC_Relatorio_Financeiro_${currentDate || 'Temporada'}.csv`);
+      link.setAttribute('download', `Teimoso_FCC_Relatorio_Financeiro_${window.currentDate || 'Temporada'}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
