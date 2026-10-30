@@ -1778,8 +1778,10 @@
 
         let monthCells = '';
 
-        // Identifica se o atleta atual é especificamente o Júlio
-        const isJulio = ath.name.trim().toUpperCase() === "JÚLIO" || ath.name.trim().toUpperCase() === "JULIO";
+        // Identifica se o atleta atual é Júlio ou Matheus Onofre
+        const athNameNorm = ath.name.trim().toUpperCase();
+        const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
+        const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
 
         months.forEach((m, mIndex) => {
           const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
@@ -1792,15 +1794,16 @@
           let colorClass = "";
           let isPaidCheck = hasCustomVal && paid > 0;
 
-          // Condição específica para o mês de Outubro de 2026 do Júlio
+          // Condições específicas para regras de saldo devedor parcial
           const isJulioOct2026 = isJulio && m === "out";
 
           if (hasCustomVal) {
             // REGRA: Sem juros em mensalidades com valor baixado/lançado.
             interest = 0;
             
-            if (isJulioOct2026) {
-              // Regra exclusiva do Júlio em Outubro: considera a diferença do valor pago a menor no valor devido
+            if (isJulioOct2026 || isMatheusOnofre) {
+              // Regra específica para o Júlio (em OUT/2026) e Matheus Onofre (em todos os meses):
+              // Considera a diferença do valor pago a menor no valor devido.
               debtMonth = Math.max(0, athFee - paid);
               if (debtMonth === 0) {
                 colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
@@ -1808,7 +1811,7 @@
                 colorClass = "border-amber-500/50 text-amber-300 font-bold bg-amber-950/20";
               }
             } else {
-              // Regra geral para os demais atletas/meses: dá a mensalidade como quitada integralmente
+              // Regra geral para os demais atletas: dá a mensalidade como quitada integralmente
               debtMonth = 0;
               colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
             }
@@ -1885,7 +1888,10 @@
         let totalInterest = 0;
         let totalDue = 0;
 
-        const isJulio = ath.name.trim().toUpperCase() === "JÚLIO" || ath.name.trim().toUpperCase() === "JULIO";
+        const athNameNorm = ath.name.trim().toUpperCase();
+        const isJulio = athNameNorm === "JÚLIO" || athNameNorm === "JULIO";
+        const isMatheusOnofre = athNameNorm === "MATHEUS ONOFRE" || athNameNorm === "MATEUS ONOFRE" || athNameNorm.includes("ONOFRE");
+
         let monthValuesCSV = [];
 
         months.forEach((m, idx) => {
@@ -1900,7 +1906,7 @@
 
           if (hasCustomVal) {
             interest = 0;
-            debtMonth = isJulioOct2026 ? Math.max(0, athFee - paid) : 0;
+            debtMonth = (isJulioOct2026 || isMatheusOnofre) ? Math.max(0, athFee - paid) : 0;
           } else if (now >= firstInterestDate) {
             const diffTime = Math.abs(now - firstInterestDate);
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
