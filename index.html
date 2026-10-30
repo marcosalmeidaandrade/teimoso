@@ -336,7 +336,7 @@
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-sack-dollar text-amber-400"></i> Gestão Financeira de Mensalidades
             </h2>
-            <p class="text-[10px] text-slate-400">Vencimento: Todo dia 15 | Juros de R$ 1,00/dia após o vencimento | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> (abaixo) ou <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Tab</kbd> (ao lado)</p>
+            <p class="text-[10px] text-slate-400">Vencimento: Dia 15 | Juros de R$ 1,00/dia a partir do dia 16 | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> (abaixo) ou <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Tab</kbd> (ao lado)</p>
           </div>
 
           <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
@@ -1664,17 +1664,17 @@
       renderFinancial();
     }
 
-    // Função para alternar o pagamento via checkbox na aba Financeiro e permitir edição
+    // Função para alternar o pagamento via checkbox na aba Financeiro e permitir edição imediata
     function togglePaymentCheck(athleteId, monthKey, isChecked, suggestedFee) {
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
       if (isChecked) {
-        // Marca como pago com o valor sugerido e foca o input para permitir edição manual imediata
+        // Marca como pago com o valor sugerido e libera/foca o campo de texto para edição manual se desejado
         const currentVal = window.financialPayments[athleteId][monthKey];
         if (currentVal === undefined || currentVal === null || currentVal === 0) {
           window.financialPayments[athleteId][monthKey] = suggestedFee;
         }
       } else {
-        // Desmarca (limpa o valor)
+        // Desmarca (limpa o valor baixado)
         window.financialPayments[athleteId][monthKey] = 0;
       }
       saveData();
@@ -1710,7 +1710,7 @@
         }
       } else if (event.key === 'Tab') {
         event.preventDefault();
-        // Tab sempre para o campo imediatamente à direita (próximo mês na mesma linha, sem voltar para o início)
+        // Tab sempre para o campo imediatamente à direita (próximo mês na mesma linha, sem voltar ao início)
         let nextAthIndex = athleteIndex;
         let nextMIndex = monthIndex + 1;
 
@@ -1766,7 +1766,7 @@
       tbody.innerHTML = '';
 
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-      const now = new Date(window.currentDate || new Date());
+      const now = new Date();
       const currentYear = now.getFullYear();
 
       sortedAthletes.forEach((ath, athIndex) => {
@@ -1782,33 +1782,34 @@
           const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
           let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
 
-          const dueDate = new Date(currentYear, mIndex, 15);
+          // Vencimento dia 15. Juros de R$ 1,00/dia a partir do primeiro dia após o vencimento (dia 16)
+          const firstInterestDate = new Date(currentYear, mIndex, 16);
           let interest = 0;
           let debtMonth = 0;
           let colorClass = "";
           let isPaidCheck = hasCustomVal && paid > 0;
 
-          // REGRA: Qualquer valor lançado (igual, maior ou menor) é considerado baixa de pagamento, zerando os juros e quitando a mensalidade.
+          // REGRA: Qualquer valor informado (igual, maior ou menor) é considerado baixa de pagamento, zerando os juros e quitando a parcela.
           if (hasCustomVal) {
             interest = 0;
             debtMonth = 0;
-            // Valores baixados no financeiro (quaisquer valores informados) ficam em azul claro
+            // Valores baixados no financeiro ficam em azul claro (text-sky-300)
             colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
-          } else if (now > dueDate) {
-            // Em atraso e não pago: Vermelho
-            const diffTime = Math.abs(now - dueDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            interest = diffDays * 1;
+          } else if (now >= firstInterestDate) {
+            // Em atraso e não pago: Vermelho (computa R$ 1,00 por dia a contar do dia 16)
+            const diffTime = Math.abs(now - firstInterestDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            interest = diffDays * 1.00;
             debtMonth = Math.max(0, (athFee + interest) - paid);
             colorClass = "border-rose-500/50 text-rose-400 font-bold bg-rose-950/20";
           } else {
-            // Valor sugerido para parcelas não pagas (não vencidas): Cinza
+            // Valor sugerido para parcelas não pagas e não vencidas: Cinza
             debtMonth = Math.max(0, athFee - paid);
             colorClass = "border-slate-700 text-slate-500 font-normal bg-slate-900";
           }
 
           let suggestedVal = athFee;
-          let displayVal = hasCustomVal ? paid : (now > dueDate ? athFee : 0);
+          let displayVal = hasCustomVal ? paid : (now >= firstInterestDate ? athFee : 0);
 
           totalPaid += paid;
           totalInterest += interest;
@@ -1853,7 +1854,7 @@
       let csv = "Atleta,Celular,Mensalidade Base,JAN,FEV,MAR,ABR,MAI,JUN,JUL,AGO,SET,OUT,NOV,Total Pago,Juros/Multa,Valor Devido\n";
       
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-      const now = new Date(window.currentDate || new Date());
+      const now = new Date();
       const currentYear = now.getFullYear();
 
       let grandTotalPaid = 0;
@@ -1873,15 +1874,15 @@
           const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
           let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
 
-          const dueDate = new Date(currentYear, idx, 15);
+          const firstInterestDate = new Date(currentYear, idx, 16);
           let interest = 0;
 
           if (hasCustomVal) {
             interest = 0;
-          } else if (now > dueDate) {
-            const diffTime = Math.abs(now - dueDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            interest = diffDays * 1;
+          } else if (now >= firstInterestDate) {
+            const diffTime = Math.abs(now - firstInterestDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            interest = diffDays * 1.00;
           }
 
           totalPaid += paid;
