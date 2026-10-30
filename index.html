@@ -46,10 +46,8 @@
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
         <!-- LOGOMARCA OFICIAL -->
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-green to-emerald-700 flex items-center justify-center text-slate-950 shadow-lg shadow-brand-green/20 overflow-hidden shrink-0 border border-emerald-500/30">
-          <!-- Substitua o link do src pela URL da sua Logomarca -->
-          <img src="https://placehold.co/100x100/10b981/0f172a?text=FCC" alt="Logo Teimoso" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-          <i class="fa-solid fa-futbol text-xl font-black hidden"></i>
+        <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg overflow-hidden shrink-0 border border-slate-700 p-0.5">
+          <img src="logo.png" alt="Logo Teimoso" class="w-full h-full object-contain" />
         </div>
         <div>
           <h1 class="text-base font-black tracking-tight text-white flex items-center gap-1.5 leading-none">
@@ -57,6 +55,7 @@
             <span class="text-[9px] bg-brand-green/20 text-brand-green border border-brand-green/30 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
           </h1>
           <p class="text-[10px] text-slate-400 font-medium mt-0.5">Gestão Inteligente de Peladas</p>
+          <p class="text-[9px] text-emerald-500 font-semibold mt-0.5 tracking-wide">Developer by Marcos Almeida®</p>
         </div>
       </div>
       <!-- PAINEL ADMIN / STATUS -->
@@ -409,7 +408,7 @@
           <label class="block font-bold text-slate-300 mb-1">Horário do Jogo:</label>
           <input type="time" id="inputGameTime" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
         </div>
-        <div>
+        <div class="hidden">
           <label class="block font-bold text-slate-300 mb-1">Horário Limite Confirmação:</label>
           <input type="time" id="inputDeadline" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
         </div>
@@ -598,6 +597,14 @@
       return (p || '').replace(/\D/g, '');
     };
 
+    window.isDeadlinePassed = function() {
+      if (!window.currentDate) return false;
+      const [y, m, d] = window.currentDate.split('-');
+      // Cria a data exata com 1 dia a menos às 18:00
+      const deadlineDate = new Date(y, m - 1, d - 1, 18, 0, 0); 
+      return new Date() > deadlineDate;
+    };
+
     // STATUS FINANCEIRO DO ATLETA (REGRA DE JÁ ESTAR EM DIA / DÉBITO)
     function getAthleteFinancialStatus(ath) {
       const athPay = window.financialPayments[ath.id] || {};
@@ -655,6 +662,7 @@
 
       const search = (document.getElementById('searchAthlete')?.value || '').toLowerCase();
       const currentPresences = window.presences[window.currentDate] || {};
+      const deadlinePassed = window.isDeadlinePassed();
 
       let countUnvalidated = 0, countValidated = 0, countOutside = 0, countJustified = 0, countFaults = 0, countPending = 0, countGoleiros = 0;
 
@@ -765,6 +773,9 @@
           </button>
         `;
 
+        const isActionBlocked = ath.isSuspended || (!isAdmin && deadlinePassed);
+        const actionBlockedReason = ath.isSuspended ? "Atleta SUSPENSO" : "Prazo encerrado (1 dia antes às 18h)";
+
         card.innerHTML = `
           <div class="flex items-center gap-2.5 min-w-[150px]">
             <div class="w-8 h-8 rounded-lg ${posInfo.color} border flex items-center justify-center font-black text-[10px] shrink-0">
@@ -785,13 +796,13 @@
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" ${ath.isSuspended ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900')}">
+            <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" ${isActionBlocked ? 'disabled' : ''} title="${isActionBlocked ? actionBlockedReason : ''}" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isActionBlocked ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900')}">
               CONF.
             </button>
-            <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" ${ath.isSuspended ? 'disabled' : ''} class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}" title="Ausência Justificada">
+            <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" ${isActionBlocked ? 'disabled' : ''} title="${isActionBlocked ? actionBlockedReason : 'Ausência Justificada'}" class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${isActionBlocked ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}">
               JUSTIF.
             </button>
-            <button onclick="setStatus(${ath.id}, 'FORA')" ${ath.isSuspended ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900')}">
+            <button onclick="setStatus(${ath.id}, 'FORA')" ${isActionBlocked ? 'disabled' : ''} title="${isActionBlocked ? actionBlockedReason : ''}" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isActionBlocked ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900')}">
               FORA
             </button>
             ${zapBtn}
@@ -826,8 +837,29 @@
       const ath = window.athletes.find(a => a.id === athId);
       if (ath && ath.isSuspended) return;
 
+      if (!isAdmin && window.isDeadlinePassed()) {
+        alert("Prazo encerrado! O limite para alterações é até as 18h do dia anterior ao jogo. Fale com um Administrador.");
+        return;
+      }
+
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       
+      const currentPresence = window.presences[window.currentDate][athId];
+      const currentStatus = currentPresence ? currentPresence.status : 'PENDENTE';
+
+      // Se clicar no botão de um status que já está marcado, desmarca (volta para PENDENTE)
+      if (currentStatus === status) {
+        window.presences[window.currentDate][athId] = {
+          status: 'PENDENTE',
+          checked: false,
+          fault: false,
+          reason: ''
+        };
+        window.saveData();
+        renderAthletesList();
+        return;
+      }
+
       if (status === 'JUSTIFICADO') {
         openJustifyModal(athId);
         return;
@@ -1378,6 +1410,7 @@
       if(!isAdmin) return;
       window.currentDate = d;
       window.saveData();
+      updateCurrentTimeUI();
       renderAthletesList();
     };
 
@@ -1407,9 +1440,9 @@
 
     window.saveEventTimes = function() {
       const gt = document.getElementById('inputGameTime').value;
-      const dl = document.getElementById('inputDeadline').value;
-      if (gt && dl) {
-        window.eventTimes = { gameTime: gt, deadline: dl };
+      const dl = document.getElementById('inputDeadline').value; // Mantido por compatibilidade
+      if (gt) {
+        window.eventTimes = { gameTime: gt, deadline: dl || window.eventTimes.deadline };
         window.saveData();
         updateCurrentTimeUI();
         closeEditTimesModal();
@@ -1417,8 +1450,17 @@
     };
 
     function updateCurrentTimeUI() {
-      document.getElementById('lblGameTime').innerText = window.eventTimes.gameTime;
-      document.getElementById('lblDeadline').innerText = window.eventTimes.deadline;
+      document.getElementById('lblGameTime').innerText = window.eventTimes.gameTime || "20:00";
+      
+      if (window.currentDate) {
+        const [y, m, d] = window.currentDate.split('-');
+        const deadlineDate = new Date(y, m - 1, d - 1);
+        const dd = String(deadlineDate.getDate()).padStart(2, '0');
+        const mm = String(deadlineDate.getMonth() + 1).padStart(2, '0');
+        document.getElementById('lblDeadline').innerText = `${dd}/${mm} às 18:00`;
+      } else {
+        document.getElementById('lblDeadline').innerText = "18:00 (Dia Ant.)";
+      }
     }
 
     // WHATSAPP DISPARO E CONVOCAÇÃO
