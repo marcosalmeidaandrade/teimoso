@@ -1601,7 +1601,7 @@
       let msg = "";
 
       if (status === 'uptodate') {
-        msg = `Prezado(a) ${athlete.name},\n\nO Teimoso F.C.C. agradece sua pontualidade e colaboração com as mensalidades em dia. Sua dedicação fortalece nosso grupo!\n\nAtenciosamente,\nDiretoria Teimoso F.C.C.`;
+        msg = `Fala meu amigo ${athlete.name}! ⚽\n\nPassando só para agradecer pela pontualidade e colaboração com as mensalidades em dia. Sua dedicação fortalece demais o nosso Teimoso F.C.C.! Tamo junto! 👊🟢⚪\n\n🤖 _Mensagem enviada automaticamente pelo sistema de gestão de peladas do Teimoso FCC._`;
       } else {
         let totalDue = 0;
         let details = "";
@@ -1624,11 +1624,11 @@
             }
             const monthTotal = suggested + interest;
             totalDue += monthTotal;
-            details += `- ${mKey.toUpperCase()}/2026: Mensalidade R$ ${suggested.toFixed(2)} + Juros/Multa R$ ${interest.toFixed(2)} = R$ ${monthTotal.toFixed(2)}\n`;
+            details += `- ${mKey.toUpperCase()}/2026: R$ ${suggested.toFixed(2)} + Juros R$ ${interest.toFixed(2)} = R$ ${monthTotal.toFixed(2)}\n`;
           }
         });
 
-        msg = `Prezado(a) ${athlete.name},\n\nConstatamos pendências em suas mensalidades junto ao Teimoso F.C.C. Segue abaixo o demonstrativo de débitos atualizados:\n\n${details}\n*Total Geral Devido:* R$ ${totalDue.toFixed(2)}\n\n*Dados para Pagamento (PIX):*\nChave: teimosofcc@gmail.com\n\nPor favor, envie o comprovante após a realização.\n\nAtenciosamente,\nDiretoria Teimoso F.C.C.`;
+        msg = `Fala meu amigo ${athlete.name}! ⚽\n\nPassando aqui para lembrar das suas mensalidades no Teimoso F.C.C. que estão em aberto. Segue abaixo o resumo dos valores atualizados: 👇\n\n${details}\n*Total Geral Devido:* R$ ${totalDue.toFixed(2)} 💰\n\n*Dados para Pagamento (PIX):*\nChave: teimosofcc@gmail.com\n\nQuando puder, faz o PIX e envia o comprovante aqui pra gente dar baixa, beleza? Tamo junto! 👊\n\n🤖 _Mensagem enviada automaticamente pelo sistema de gestão de peladas do Teimoso FCC._`;
       }
 
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
