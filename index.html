@@ -1664,6 +1664,20 @@
       renderFinancial();
     }
 
+    // Função para alternar o pagamento via checkbox na aba Financeiro
+    function togglePaymentCheck(athleteId, monthKey, isChecked, suggestedFee) {
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      if (isChecked) {
+        // Marca como pago com o valor sugerido
+        window.financialPayments[athleteId][monthKey] = suggestedFee;
+      } else {
+        // Desmarca (limpa o valor)
+        window.financialPayments[athleteId][monthKey] = 0;
+      }
+      saveData();
+      renderFinancial();
+    }
+
     // NAVEGAÇÃO RIGOROSA DE TECLADO NA ABA FINANCEIRO
     function handleFinKeyDown(event, athleteIndex, monthIndex) {
       if (event.key === 'Enter') {
@@ -1755,8 +1769,9 @@
           let interest = 0;
           let debtMonth = 0;
           let colorClass = "";
+          let isPaidCheck = hasCustomVal && paid > 0;
 
-          // REGRA ATUALIZADA: Qualquer valor lançado (igual, maior ou menor) é considerado baixa de pagamento, zerando os juros e quitando a mensalidade.
+          // REGRA: Qualquer valor lançado (igual, maior ou menor) é considerado baixa de pagamento, zerando os juros e quitando a mensalidade.
           if (hasCustomVal) {
             interest = 0;
             debtMonth = 0;
@@ -1784,12 +1799,19 @@
 
           monthCells += `
             <td class="p-1 text-center">
-              <input type="number" id="fin_${athIndex}_${mIndex}" value="${displayVal}" min="0" 
-                onchange="updatePayment(${ath.id}, '${m}', this.value)" 
-                onkeydown="handleFinKeyDown(event, ${athIndex}, ${mIndex})"
-                placeholder="${suggestedVal}"
-                title="Mensalidade: R$ ${athFee.toFixed(2)} | Status: ${hasCustomVal ? 'Quitado (Baixado)' : 'Pendente'}"
-                class="w-16 border rounded p-1 text-center text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition ${colorClass}" />
+              <div class="flex items-center justify-center gap-1">
+                <input type="number" id="fin_${athIndex}_${mIndex}" value="${displayVal}" min="0" 
+                  onchange="updatePayment(${ath.id}, '${m}', this.value)" 
+                  ondblclick="updatePayment(${ath.id}, '${m}', ${athFee})"
+                  onkeydown="handleFinKeyDown(event, ${athIndex}, ${mIndex})"
+                  placeholder="${suggestedVal}"
+                  title="Mensalidade: R$ ${athFee.toFixed(2)} | Duplo clique para baixar sugerido"
+                  class="w-14 border rounded p-1 text-center text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition ${colorClass}" />
+                <input type="checkbox" ${isPaidCheck ? 'checked' : ''} 
+                  onchange="togglePaymentCheck(${ath.id}, '${m}', this.checked, ${athFee})"
+                  title="Marcar como pago (Baixa automática)"
+                  class="w-3.5 h-3.5 accent-sky-400 cursor-pointer rounded" />
+              </div>
             </td>
           `;
         });
