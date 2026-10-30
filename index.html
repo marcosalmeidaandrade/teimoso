@@ -210,35 +210,35 @@
 
     <!-- ABA 1: PRESENÇA -->
     <section id="sec-presence" class="space-y-4">
-      <!-- CARDS DE RESUMO -->
+      <!-- CARDS DE RESUMO (COM FILTRO CLICÁVEL) -->
       <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        <div class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center">
+        <div onclick="filterByStatus('CONFIRMADO')" class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-sky-900/40 transition active:scale-95" title="Filtrar Confirmados">
           <span class="block text-[9px] sm:text-[10px] text-sky-400 font-extrabold uppercase leading-tight">CONFIRMADO<br><span class="text-[8px] opacity-75">(Aguard.)</span></span>
           <span id="cntUnvalidated" class="text-base sm:text-lg font-black text-sky-300 mt-0.5 block">0</span>
         </div>
 
-        <div class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2 text-center">
+        <div onclick="filterByStatus('FORA')" class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-rose-900/40 transition active:scale-95" title="Filtrar Fora">
           <span class="block text-[9px] sm:text-[10px] text-rose-400 font-extrabold uppercase leading-tight">FORA<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntOutside" class="text-base sm:text-lg font-black text-rose-300 mt-0.5 block">0</span>
         </div>
 
-        <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center">
+        <div onclick="filterByStatus('JUSTIFICADO')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Justificados">
           <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">JUSTIFICADO<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntJustified" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
         </div>
 
-        <div class="bg-emerald-950/50 border border-emerald-500/50 rounded-xl p-2 text-center ring-1 ring-emerald-500/30">
+        <div onclick="filterByStatus('VALIDADOS')" class="bg-emerald-950/50 border border-emerald-500/50 rounded-xl p-2 text-center ring-1 ring-emerald-500/30 cursor-pointer hover:bg-emerald-900/50 transition active:scale-95" title="Filtrar Validados">
           <span class="block text-[9px] sm:text-[10px] text-emerald-400 font-extrabold uppercase leading-tight">VALIDADOS<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntValidated" class="text-base sm:text-lg font-black text-emerald-300 mt-0.5 block">0</span>
           <span id="cntGoleiros" class="block text-[8px] text-emerald-400/80 mt-0.5">(0 GK)</span>
         </div>
 
-        <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center">
+        <div onclick="filterByStatus('FALTA')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Faltas">
           <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">FALTA<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntFaults" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
         </div>
 
-        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-2 text-center">
+        <div onclick="filterByStatus('PENDENTE')" class="bg-slate-800/60 border border-slate-700 rounded-xl p-2 text-center cursor-pointer hover:bg-slate-700/60 transition active:scale-95" title="Filtrar Pendentes">
           <span class="block text-[9px] sm:text-[10px] text-slate-400 font-extrabold uppercase leading-tight">PEND.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntPending" class="text-base sm:text-lg font-black text-slate-300 mt-0.5 block">0</span>
         </div>
@@ -525,6 +525,7 @@
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
+    let activeStatusFilter = null; // Filtro ativo nos cards de resumo
 
     let masterZapQueue = [];
     let masterZapCurrentIndex = 0;
@@ -1208,6 +1209,15 @@
       renderFinancial();
     }
 
+    function filterByStatus(statusKey) {
+      if (activeStatusFilter === statusKey) {
+        activeStatusFilter = null; // Clicou novamente: desfaz o filtro
+      } else {
+        activeStatusFilter = statusKey; // Aplica o novo filtro
+      }
+      renderAthletesList();
+    }
+
     function renderAthletesList() {
       const listEl = document.getElementById('athletesList');
       const search = document.getElementById('searchAthlete').value.toLowerCase();
@@ -1226,22 +1236,34 @@
 
         const posInfo = positionBadges[ath.position || (ath.isKeeper ? "Goleiro" : "Meia")];
 
+        let athleteCategory = 'PENDENTE';
         if (isFault) {
           countFaults++;
+          athleteCategory = 'FALTA';
           if (isInside) countUnvalidated++;
         } else if (isInside) {
           if (p.checked) {
             countValidated++;
+            athleteCategory = 'VALIDADOS';
             if (ath.isKeeper || ath.position === "Goleiro") countGoleiros++;
           } else {
             countUnvalidated++;
+            athleteCategory = 'CONFIRMADO';
           }
         } else if (isOutside) {
           countOutside++;
+          athleteCategory = 'FORA';
         } else if (p.status === 'JUSTIFICADO') {
           countJustified++;
+          athleteCategory = 'JUSTIFICADO';
         } else {
           countPending++;
+          athleteCategory = 'PENDENTE';
+        }
+
+        // Aplica o filtro de status se houver um ativo
+        if (activeStatusFilter && athleteCategory !== activeStatusFilter) {
+          return;
         }
 
         if (search && !ath.name.toLowerCase().includes(search) && !(ath.position && ath.position.toLowerCase().includes(search))) return;
@@ -1322,10 +1344,10 @@
 
           <div class="flex items-center gap-1 shrink-0">
             <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900'}">
-              CONF.
+              CONFIRMADO
             </button>
             <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900'}" title="Ausência Justificada">
-              JUSTIF.
+              JUSTIFICADO
             </button>
             <button onclick="setStatus(${ath.id}, 'FORA')" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900'}">
               FORA
