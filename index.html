@@ -335,7 +335,7 @@
           <span class="text-slate-300">Total de Atletas com Telefone:</span>
           <span id="masterZapTotal" class="text-emerald-400 font-extrabold text-sm">0</span>
         </div>
-        <p class="text-[10px] text-slate-400">O sistema abrirá o WhatsApp do primeiro atleta da lista. Após o envio, retorne a esta tela e clique em "Próximo Atleta".</p>
+        <p class="text-[10px] text-slate-400">O sistema gerará a convocação individual com os links diretos para gravação no app e abrirá a conversa do WhatsApp do atleta.</p>
       </div>
 
       <!-- Barra de Progresso -->
@@ -555,10 +555,40 @@
     window.addEventListener('DOMContentLoaded', () => {
       populateDateSelect();
       updateCurrentTimeUI();
+      verificarConfirmacaoViaURL();
       renderAthletesList();
       renderReports();
       renderFinancial();
     });
+
+    // LEITURA AUTOMÁTICA DE CONFIRMAÇÃO VIA URL (OPÇÃO B)
+    function verificarConfirmacaoViaURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const athleteId = urlParams.get('atleta');
+      const statusParam = urlParams.get('status');
+
+      if (athleteId && statusParam) {
+        const idNum = parseInt(athleteId);
+        const ath = athletes.find(a => a.id === idNum);
+
+        if (ath) {
+          if (!presences[currentDate]) presences[currentDate] = {};
+
+          if (statusParam === 'CONFIRMADO') {
+            presences[currentDate][idNum] = { status: 'CONFIRMADO', checked: false, fault: false, reason: '' };
+            alert(`⚽ Presença de ${ath.name} GRAVADA como CONFIRMADO para o dia da pelada!`);
+          } else if (statusParam === 'FORA') {
+            presences[currentDate][idNum] = { status: 'FORA', checked: false, fault: false, reason: '' };
+            alert(`❌ Resposta de ${ath.name} GRAVADA como FORA da pelada.`);
+          }
+
+          saveData();
+
+          // Limpa os parâmetros da URL sem recarregar a página
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    }
 
     function saveData() {
       localStorage.setItem('teimoso_dates', JSON.stringify(datesList));
@@ -638,6 +668,40 @@
         masterZapCurrentIndex++;
         updateMasterZapUI();
       }
+    }
+
+    function sendAthleteZap(athleteId) {
+      const ath = athletes.find(a => a.id === athleteId);
+      if (!ath || !ath.phone) {
+        alert("Atleta não possui telefone cadastrado! Edite o cadastro para incluir o número.");
+        return;
+      }
+
+      const cleanNum = cleanPhone(ath.phone);
+      if (!cleanNum) {
+        alert("Número de telefone inválido!");
+        return;
+      }
+
+      const [yyyy, mm, dd] = currentDate.split('-');
+      const dateFormatted = `${dd}/${mm}/${yyyy}`;
+      const timeFormatted = eventTimes[currentDate] || "07:00";
+
+      const baseUrl = window.location.origin + window.location.pathname;
+
+      const linkSim = `${baseUrl}?atleta=${ath.id}&status=CONFIRMADO`;
+      const linkNao = `${baseUrl}?atleta=${ath.id}&status=FORA`;
+
+      const msg = `⚽ *TEIMOSO FCC - CONVOCAÇÃO*\n` +
+                  `📍 *Local:* AABB\n` +
+                  `📅 *Data:* ${dateFormatted}\n` +
+                  `⏰ *Horário:* ${timeFormatted}\n\n` +
+                  `Fala *${ath.name}*, clique no link correspondente para gravar sua presença no app:\n\n` +
+                  `✅ *VOU JOGAR (Confirmar):*\n${linkSim}\n\n` +
+                  `❌ *NÃO VOU (Fora):*\n${linkNao}`;
+
+      const url = `https://wa.me/${cleanNum}?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
     }
 
     function handleAdminToggle() {
@@ -992,39 +1056,6 @@
       closeAddAthleteModal();
       renderAthletesList();
       renderFinancial();
-    }
-
-    function sendAthleteZap(athleteId) {
-      const ath = athletes.find(a => a.id === athleteId);
-      if (!ath || !ath.phone) {
-        alert("Atleta não possui telefone cadastrado! Edite o cadastro para incluir o número.");
-        return;
-      }
-
-      const cleanNum = cleanPhone(ath.phone);
-      if (!cleanNum) {
-        alert("Número de telefone inválido!");
-        return;
-      }
-
-      const adminPhone = cleanNum; 
-      const [yyyy, mm, dd] = currentDate.split('-');
-      const dateFormatted = `${dd}/${mm}/${yyyy}`;
-      const timeFormatted = eventTimes[currentDate] || "07:00";
-
-      const linkSim = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`CONFIRMADO! ${ath.name} estará presente na pelada do dia ${dateFormatted}. ⚽`)}`;
-      const linkNao = `https://wa.me/${adminPhone}?text=${encodeURIComponent(`FORA! ${ath.name} não poderá ir na pelada do dia ${dateFormatted}. ❌`)}`;
-
-      const msg = `⚽ *TEIMOSO FCC - CONVOCAÇÃO*\n` +
-                  `📍 *Local:* AABB\n` +
-                  `📅 *Data:* ${dateFormatted}\n` +
-                  `⏰ *Horário:* ${timeFormatted}\n\n` +
-                  `Fala *${ath.name}*, confirme sua presença clicando em uma das opções abaixo:\n\n` +
-                  `✅ *VOU JOGAR:*\n${linkSim}\n\n` +
-                  `❌ *NÃO VOU:*\n${linkNao}`;
-
-      const url = `https://wa.me/${cleanNum}?text=${encodeURIComponent(msg)}`;
-      window.open(url, '_blank');
     }
 
     function renderAthletesList() {
