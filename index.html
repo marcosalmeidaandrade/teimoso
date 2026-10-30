@@ -348,6 +348,7 @@
             <i class="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
             <p class="text-[10px] text-amber-300/90 leading-relaxed">
               Digite os <strong>4 últimos dígitos</strong> do seu número de telefone celular para acessar o aplicativo automaticamente.
+              <br><span class="opacity-75 block mt-1">*Admin de Recuperação: digite <strong>0000</strong></span>
             </p>
           </div>
         </div>
@@ -576,7 +577,8 @@
       { id: 3, name: "Júlio", position: "Meia", stars: 4, phone: "22999993333", isKeeper: false, monthlyFee: 110, isSuspended: false },
       { id: 4, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999994444", isKeeper: false, monthlyFee: 110, isSuspended: false },
       { id: 5, name: "Gabriel Souza", position: "Lateral", stars: 3, phone: "22999995555", isKeeper: false, monthlyFee: 110, isSuspended: false },
-      { id: 6, name: "Rodrigo Costa", position: "Volante", stars: 4, phone: "22999996666", isKeeper: false, monthlyFee: 110, isSuspended: false }
+      { id: 6, name: "Rodrigo Costa", position: "Volante", stars: 4, phone: "22999996666", isKeeper: false, monthlyFee: 110, isSuspended: false },
+      { id: 7, name: "Felipe Macaco", position: "Atacante", stars: 5, phone: "22999990000", isKeeper: false, monthlyFee: 110, isSuspended: false }
     ];
 
     window.datesList = ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"];
@@ -1341,7 +1343,16 @@
       }
 
       // Busca automaticamente o atleta ativo cujo celular termine com os 4 dígitos informados
-      const ath = window.athletes.find(a => !a.isSuspended && window.cleanPhone(a.phone).endsWith(pwd));
+      let ath = window.athletes.find(a => !a.isSuspended && window.cleanPhone(a.phone).endsWith(pwd));
+
+      // SENHA MASTER PARA RECUPERAÇÃO / TESTE ADMIN (0000)
+      if (!ath && pwd === "0000") {
+        ath = window.athletes.find(a => a.name.toUpperCase().includes("FELIPE MACACO"));
+        if (!ath) {
+          ath = { id: 9999, name: "Felipe Macaco", position: "Meia", phone: "0000", stars: 5, monthlyFee: 110, isSuspended: false };
+          window.athletes.push(ath);
+        }
+      }
 
       if (!ath) {
         window.showToast("Senha incorreta ou atleta não encontrado. Verifique seu cadastro.");
