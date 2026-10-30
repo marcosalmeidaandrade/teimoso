@@ -1664,18 +1664,35 @@
       renderFinancial();
     }
 
-    // Função para alternar o pagamento via checkbox na aba Financeiro
+    // Função para alternar o pagamento via checkbox na aba Financeiro e permitir edição
     function togglePaymentCheck(athleteId, monthKey, isChecked, suggestedFee) {
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
       if (isChecked) {
-        // Marca como pago com o valor sugerido
-        window.financialPayments[athleteId][monthKey] = suggestedFee;
+        // Marca como pago com o valor sugerido e foca o input para permitir edição manual imediata
+        const currentVal = window.financialPayments[athleteId][monthKey];
+        if (currentVal === undefined || currentVal === null || currentVal === 0) {
+          window.financialPayments[athleteId][monthKey] = suggestedFee;
+        }
       } else {
         // Desmarca (limpa o valor)
         window.financialPayments[athleteId][monthKey] = 0;
       }
       saveData();
       renderFinancial();
+      
+      // Encontra e foca o input correspondente para permitir edição manual imediata
+      setTimeout(() => {
+        const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+        const athIndex = sortedAthletes.findIndex(a => a.id === athleteId);
+        const mIndex = months.indexOf(monthKey);
+        if (athIndex !== -1 && mIndex !== -1) {
+          const inputEl = document.getElementById(`fin_${athIndex}_${mIndex}`);
+          if (inputEl) {
+            inputEl.focus();
+            inputEl.select();
+          }
+        }
+      }, 50);
     }
 
     // NAVEGAÇÃO RIGOROSA DE TECLADO NA ABA FINANCEIRO
@@ -1809,7 +1826,7 @@
                   class="w-14 border rounded p-1 text-center text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition ${colorClass}" />
                 <input type="checkbox" ${isPaidCheck ? 'checked' : ''} 
                   onchange="togglePaymentCheck(${ath.id}, '${m}', this.checked, ${athFee})"
-                  title="Marcar como pago (Baixa automática)"
+                  title="Marcar como pago e editar valor"
                   class="w-3.5 h-3.5 accent-sky-400 cursor-pointer rounded" />
               </div>
             </td>
