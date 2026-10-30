@@ -1252,8 +1252,9 @@
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
       sortedAthletes.forEach(ath => {
-        // Ignora atletas marcados como SUSPENSO / SAIU na lista de presença
-        if (ath.isSuspended) return;
+        // Atletas suspensos só aparecem para Administradores.
+        // Se NÃO for administrador e o atleta estiver suspenso, não exibe na lista.
+        if (ath.isSuspended && !isAdmin) return;
 
         const p = currentPresences[ath.id] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
         const isInside = p.status === 'CONFIRMADO' || p.status === 'DENTRO' || p.status === 'VOU';
@@ -1287,7 +1288,7 @@
           athleteCategory = 'PENDENTE';
         }
 
-        // Aplica o filtro de status se houver um ativo
+        // Aplica o filtro de status se houver um ativo (se estiver suspenso, também respeita o filtro de busca se houver)
         if (activeStatusFilter && athleteCategory !== activeStatusFilter) {
           return;
         }
@@ -1295,7 +1296,12 @@
         if (search && !ath.name.toLowerCase().includes(search) && !(ath.position && ath.position.toLowerCase().includes(search))) return;
 
         const card = document.createElement('div');
-        card.className = "bg-slate-800/90 border border-slate-700/80 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm hover:border-slate-600 transition";
+        // Estilização diferenciada para atleta suspenso quando visível no Modo Admin
+        if (ath.isSuspended) {
+          card.className = "bg-rose-950/20 border border-rose-500/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm hover:border-rose-500 transition opacity-90";
+        } else {
+          card.className = "bg-slate-800/90 border border-slate-700/80 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm hover:border-slate-600 transition";
+        }
 
         let starsHtml = '';
         for (let i = 1; i <= 5; i++) {
@@ -1303,7 +1309,9 @@
         }
 
         let badgeHtml = '';
-        if (isInside) {
+        if (ath.isSuspended) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-600 text-white border border-rose-400 shadow flex items-center gap-1"><i class="fa-solid fa-user-slash"></i> SUSPENSO / SAIU</span>`;
+        } else if (isInside) {
           if (p.checked) {
             badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> VALIDADO</span>`;
           } else if (isFault) {
@@ -1321,29 +1329,29 @@
 
         let adminButtonsHtml = '';
         if (isAdmin) {
-          const isCheckable = isInside && !isFault;
+          const isCheckable = isInside && !isFault && !ath.isSuspended;
           adminButtonsHtml = `
-            <button onclick="toggleFault(${ath.id})" class="px-2 py-1.5 rounded-lg text-xs font-black transition ${isFault ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900'}" title="Atleta confirmou presença mas não compareceu">
+            <button onclick="toggleFault(${ath.id})" ${ath.isSuspended ? 'disabled' : ''} class="px-2 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isFault ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}" title="Atleta confirmou presença mas não compareceu">
               FALTA
             </button>
             <button onclick="toggleCheck(${ath.id})" 
-              title="${isCheckable ? (p.checked ? 'Presença Validada pelo Admin' : 'Validar Presença do Atleta') : 'Atleta precisa estar CONFIRMADO'}"
+              title="${isCheckable ? (p.checked ? 'Presença Validada pelo Admin' : 'Validar Presença do Atleta') : 'Atleta precisa estar CONFIRMADO e Ativo'}"
               class="ml-0.5 p-2 rounded-lg transition flex items-center justify-center ${p.checked ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : (isCheckable ? 'bg-slate-900/80 text-slate-500 hover:text-emerald-400 border border-slate-700' : 'bg-slate-900/40 text-slate-700 cursor-not-allowed')}">
               <i class="fa-solid fa-square-check text-base"></i>
             </button>
-            <button onclick="openEditAthleteModal(${ath.id})" class="ml-0.5 text-slate-400 hover:text-amber-400 p-1.5" title="Editar Atleta"><i class="fa-solid fa-pen text-xs"></i></button>
+            <button onclick="openEditAthleteModal(${ath.id})" class="ml-0.5 text-slate-400 hover:text-amber-400 p-1.5" title="Editar / Reativar Atleta"><i class="fa-solid fa-pen text-xs"></i></button>
             <button onclick="deleteAthlete(${ath.id})" class="ml-0.5 text-slate-500 hover:text-rose-400 p-1.5" title="Excluir Atleta"><i class="fa-solid fa-trash-can text-xs"></i></button>
           `;
         }
 
         const hasPhone = ath.phone && cleanPhone(ath.phone) !== "";
         const zapBtnTitle = isAdmin 
-          ? (hasPhone ? `Enviar Convocação Zap para ${ath.phone}` : 'Sem WhatsApp (Clique para cadastrar)')
+          ? (ath.isSuspended ? 'Atleta SUSPENSO - Envio de WhatsApp Bloqueado' : (hasPhone ? `Enviar Convocação Zap para ${ath.phone}` : 'Sem WhatsApp (Clique para cadastrar)'))
           : (hasPhone ? 'WhatsApp Cadastrado (Apenas Admin envia convite)' : 'Sem WhatsApp Cadastrado');
 
         const zapBtn = `
           <button onclick="sendAthleteZap(${ath.id})" 
-            class="w-8 h-8 rounded-lg flex items-center justify-center transition border ml-1 shrink-0 ${hasPhone ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30' : 'bg-slate-900/50 text-rose-500/80 border-rose-500/20 hover:bg-rose-500/10'}" 
+            class="w-8 h-8 rounded-lg flex items-center justify-center transition border ml-1 shrink-0 ${ath.isSuspended ? 'bg-rose-950/30 text-rose-500/50 border-rose-500/20 cursor-not-allowed' : (hasPhone ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30' : 'bg-slate-900/50 text-rose-500/80 border-rose-500/20 hover:bg-rose-500/10')}" 
             title="${zapBtnTitle}">
             <i class="${hasPhone ? 'fa-brands fa-whatsapp text-sm' : 'fa-solid fa-xmark text-sm font-black'}"></i>
           </button>
@@ -1356,7 +1364,7 @@
             </div>
             <div>
               <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-bold text-xs text-white">${ath.name}</span>
+                <span class="font-bold text-xs ${ath.isSuspended ? 'text-rose-300 line-through' : 'text-white'}">${ath.name}</span>
                 ${badgeHtml}
               </div>
               <div class="flex items-center gap-2 mt-0.5">
@@ -1369,13 +1377,13 @@
           </div>
 
           <div class="flex items-center gap-1 shrink-0">
-            <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900'}">
+            <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" ${ath.isSuspended ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900')}">
               CONF.
             </button>
-            <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900'}" title="Ausência Justificada">
+            <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" ${ath.isSuspended ? 'disabled' : ''} class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}" title="Ausência Justificada">
               JUSTIF.
             </button>
-            <button onclick="setStatus(${ath.id}, 'FORA')" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900'}">
+            <button onclick="setStatus(${ath.id}, 'FORA')" ${ath.isSuspended ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900')}">
               FORA
             </button>
             ${zapBtn}
