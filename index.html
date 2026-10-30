@@ -944,7 +944,10 @@
       let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
       const dayPresences = window.presences[window.currentDate] || {};
 
-      window.athletes.forEach(athlete => {
+      // Ordenar atletas alfabeticamente
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedAthletes.forEach(athlete => {
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
         const status = pRecord.status;
 
@@ -1374,7 +1377,10 @@
       let totalGeneralPaid = 0;
       let totalGeneralDue = 0;
 
-      window.athletes.forEach(athlete => {
+      // Ordenar atletas alfabeticamente
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedAthletes.forEach(athlete => {
         const payments = window.financialPayments[athlete.id] || {};
         let athleteTotalPaid = 0;
         let athleteTotalDue = 0;
@@ -1658,7 +1664,10 @@
 
       const totalPeladas = window.datesList.length;
 
-      window.athletes.forEach(athlete => {
+      // Ordenar atletas alfabeticamente
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedAthletes.forEach(athlete => {
         let confCount = 0;
         window.datesList.forEach(d => {
           const rec = window.presences[d]?.[athlete.id];
@@ -1689,7 +1698,10 @@
       let csv = "Atleta,Posicao,Presencas,TotalPeladas,TaxaAssiduidade\n";
       const totalPeladas = window.datesList.length;
 
-      window.athletes.forEach(athlete => {
+      // Mantém a exportação ordenada alfabeticamente
+      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedAthletes.forEach(athlete => {
         let confCount = 0;
         window.datesList.forEach(d => {
           const rec = window.presences[d]?.[athlete.id];
