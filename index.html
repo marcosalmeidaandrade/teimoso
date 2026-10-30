@@ -53,7 +53,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 🔑 SUAS CREDENCIAIS DO FIREBASE INSERIDAS
+    // 🔑 CREDENCIAIS DO FIREBASE DO USUÁRIO
     const firebaseConfig = {
       apiKey: "AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ",
       authDomain: "teimosoweb.firebaseapp.com",
@@ -87,7 +87,6 @@
         if (docSnap.exists()) {
           callback(docSnap.data());
         } else {
-          // Se o documento ainda não existir, cria o estado inicial na nuvem
           window.salvarNaNuvem({
             datesList: window.datesList || [],
             currentDate: window.currentDate || "",
@@ -135,23 +134,23 @@
     </div>
 
     <!-- NAVEGAÇÃO DE ABAS -->
-  <div class="max-w-4xl mx-auto px-4 flex border-t border-slate-800/80 overflow-x-auto custom-scrollbar">
-    <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-brand-green text-brand-green transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-      <i class="fa-solid fa-list-check"></i> Presença
-    </button>
-    <!-- Sorteio visível para todos -->
-    <button onclick="switchTab('teams')" id="tab-teams" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-      <i class="fa-solid fa-people-group"></i> Sorteio
-    </button>
-    <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-      <i class="fa-solid fa-chart-pie"></i> Relatórios
-    </button>
-    <!-- Aba Financeiro (Exclusiva Admin) -->
-    <button id="tab-financial" onclick="switchTab('financial')" class="hidden flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
-      <i class="fa-solid fa-sack-dollar text-amber-400"></i> Financeiro
-    </button>
-  </div>
-</header>
+    <div class="max-w-4xl mx-auto px-4 flex border-t border-slate-800/80 overflow-x-auto custom-scrollbar">
+      <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-brand-green text-brand-green transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-list-check"></i> Presença
+      </button>
+      <!-- Sorteio visível para todos -->
+      <button onclick="switchTab('teams')" id="tab-teams" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-people-group"></i> Sorteio
+      </button>
+      <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-chart-pie"></i> Relatórios
+      </button>
+      <!-- Aba Financeiro (Exclusiva Admin) -->
+      <button id="tab-financial" onclick="switchTab('financial')" class="hidden flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-sack-dollar text-amber-400"></i> Financeiro
+      </button>
+    </div>
+  </header>
 
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="max-w-4xl mx-auto px-4 py-4 flex-1 w-full">
@@ -213,33 +212,33 @@
     <section id="sec-presence" class="space-y-4">
       <!-- CARDS DE RESUMO (COM FILTRO CLICÁVEL) -->
       <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        <div onclick="filterByStatus('CONFIRMADO')" class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-sky-900/40 transition active:scale-95" title="Filtrar Confirmados">
-          <span class="block text-[9px] sm:text-[10px] text-sky-400 font-extrabold uppercase leading-tight">CONFIRMADO<br><span class="text-[8px] opacity-75">(Aguard.)</span></span>
+        <div id="card-CONFIRMADO" onclick="filterByStatus('CONFIRMADO')" class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-sky-900/40 transition active:scale-95" title="Filtrar Confirmados">
+          <span class="block text-[9px] sm:text-[10px] text-sky-400 font-extrabold uppercase leading-tight">CONF.<br><span class="text-[8px] opacity-75">(Aguard.)</span></span>
           <span id="cntUnvalidated" class="text-base sm:text-lg font-black text-sky-300 mt-0.5 block">0</span>
         </div>
 
-        <div onclick="filterByStatus('FORA')" class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-rose-900/40 transition active:scale-95" title="Filtrar Fora">
+        <div id="card-FORA" onclick="filterByStatus('FORA')" class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-rose-900/40 transition active:scale-95" title="Filtrar Fora">
           <span class="block text-[9px] sm:text-[10px] text-rose-400 font-extrabold uppercase leading-tight">FORA<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntOutside" class="text-base sm:text-lg font-black text-rose-300 mt-0.5 block">0</span>
         </div>
 
-        <div onclick="filterByStatus('JUSTIFICADO')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Justificados">
-          <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">JUSTIFICADO<br><span class="text-[8px] opacity-0">-</span></span>
+        <div id="card-JUSTIFICADO" onclick="filterByStatus('JUSTIFICADO')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Justificados">
+          <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">JUSTIF.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntJustified" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
         </div>
 
-        <div onclick="filterByStatus('VALIDADOS')" class="bg-emerald-950/50 border border-emerald-500/50 rounded-xl p-2 text-center ring-1 ring-emerald-500/30 cursor-pointer hover:bg-emerald-900/50 transition active:scale-95" title="Filtrar Validados">
-          <span class="block text-[9px] sm:text-[10px] text-emerald-400 font-extrabold uppercase leading-tight">VALIDADOS<br><span class="text-[8px] opacity-0">-</span></span>
+        <div id="card-VALIDADOS" onclick="filterByStatus('VALIDADOS')" class="bg-emerald-950/50 border border-emerald-500/50 rounded-xl p-2 text-center ring-1 ring-emerald-500/30 cursor-pointer hover:bg-emerald-900/50 transition active:scale-95" title="Filtrar Validados">
+          <span class="block text-[9px] sm:text-[10px] text-emerald-400 font-extrabold uppercase leading-tight">VAL.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntValidated" class="text-base sm:text-lg font-black text-emerald-300 mt-0.5 block">0</span>
           <span id="cntGoleiros" class="block text-[8px] text-emerald-400/80 mt-0.5">(0 GK)</span>
         </div>
 
-        <div onclick="filterByStatus('FALTA')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Faltas">
+        <div id="card-FALTA" onclick="filterByStatus('FALTA')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Faltas">
           <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">FALTA<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntFaults" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
         </div>
 
-        <div onclick="filterByStatus('PENDENTE')" class="bg-slate-800/60 border border-slate-700 rounded-xl p-2 text-center cursor-pointer hover:bg-slate-700/60 transition active:scale-95" title="Filtrar Pendentes">
+        <div id="card-PENDENTE" onclick="filterByStatus('PENDENTE')" class="bg-slate-800/60 border border-slate-700 rounded-xl p-2 text-center cursor-pointer hover:bg-slate-700/60 transition active:scale-95" title="Filtrar Pendentes">
           <span class="block text-[9px] sm:text-[10px] text-slate-400 font-extrabold uppercase leading-tight">PEND.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntPending" class="text-base sm:text-lg font-black text-slate-300 mt-0.5 block">0</span>
         </div>
@@ -337,7 +336,7 @@
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-sack-dollar text-amber-400"></i> Gestão Financeira de Mensalidades
             </h2>
-            <p class="text-[10px] text-slate-400">Vencimento: Todo dia 15 | Juros de R$ 1,00/dia após o vencimento | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> para avançar os meses</p>
+            <p class="text-[10px] text-slate-400">Vencimento: Todo dia 15 | Juros de R$ 1,00/dia após o vencimento | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> (abaixo) ou <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Tab</kbd> (ao lado)</p>
           </div>
 
           <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
@@ -611,7 +610,6 @@
     const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov"];
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Inicia a escuta em tempo real do banco de dados na nuvem
       window.escutarNuvem((data) => {
         window.datesList = data.datesList || window.datesList;
         window.currentDate = data.currentDate || window.currentDate;
@@ -630,29 +628,21 @@
       });
     });
 
-    // VALIDAÇÃO DE TRAVA ATÉ AS 18:00 DO DIA DA PELADA
     function checkDeadlinePassed() {
       if (!window.currentDate) return false;
-      
       const now = new Date();
       const [yyyy, mm, dd] = window.currentDate.split('-').map(Number);
       const deadline = new Date(yyyy, mm - 1, dd, 18, 0, 0);
-
       const isPassed = now > deadline;
       const banner = document.getElementById('deadlineBanner');
-
       if (banner) {
-        if (isPassed) {
-          banner.classList.remove('hidden');
-        } else {
-          banner.classList.add('hidden');
-        }
+        if (isPassed) banner.classList.remove('hidden');
+        else banner.classList.add('hidden');
       }
-
       return isPassed;
     }
 
-    // LEITURA AUTOMÁTICA DE CONFIRMAÇÃO VIA URL (OPÇÃO B)
+    // LEITURA AUTOMÁTICA DE CONFIRMAÇÃO OU JUSTIFICATIVA VIA URL
     function verificarConfirmacaoViaURL() {
       const urlParams = new URLSearchParams(window.location.search);
       const athleteId = urlParams.get('atleta');
@@ -674,16 +664,22 @@
           if (statusParam === 'CONFIRMADO') {
             window.presences[window.currentDate][idNum] = { status: 'CONFIRMADO', checked: false, fault: false, reason: '' };
             alert(`⚽ Presença de ${ath.name} GRAVADA como CONFIRMADO para o dia da pelada!`);
+            saveData();
+            window.history.replaceState({}, document.title, window.location.pathname);
           } else if (statusParam === 'FORA') {
             window.presences[window.currentDate][idNum] = { status: 'FORA', checked: false, fault: false, reason: '' };
             alert(`❌ Resposta de ${ath.name} GRAVADA como FORA da pelada.`);
+            saveData();
+            window.history.replaceState({}, document.title, window.location.pathname);
           } else if (statusParam === 'JUSTIFICADO') {
-            window.presences[window.currentDate][idNum] = { status: 'JUSTIFICADO', checked: false, fault: false, reason: 'Ausência informada via WhatsApp' };
-            alert(`🟡 Ausência de ${ath.name} registrada como JUSTIFICADA.`);
+            // Se clicou em justificar pelo WhatsApp, abre o modal automaticamente já direcionado ao atleta
+            currentJustifyAthleteId = idNum;
+            document.getElementById('justifyAthleteName').innerText = ath.name;
+            const currentEntry = window.presences[window.currentDate][idNum];
+            document.getElementById('justifyReason').value = currentEntry?.reason || '';
+            document.getElementById('modalJustify').classList.remove('hidden');
+            window.history.replaceState({}, document.title, window.location.pathname);
           }
-
-          saveData();
-          window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
     }
@@ -697,7 +693,6 @@
         presences: window.presences,
         financialPayments: window.financialPayments
       };
-      // Salva localmente e dispara para o Firebase
       localStorage.setItem('teimoso_dates', JSON.stringify(window.datesList));
       localStorage.setItem('teimoso_currentDate', window.currentDate);
       localStorage.setItem('teimoso_times', JSON.stringify(window.eventTimes));
@@ -742,7 +737,7 @@
       }
       masterZapQueue = window.athletes.filter(a => a.phone && cleanPhone(a.phone) !== "");
       if (masterZapQueue.length === 0) {
-        alert("Nenhum atleta possui número de telefone cadastrado no momento. Cadastre os números dos atletas primeiro!");
+        alert("Nenhum atleta possui número de telefone cadastrado no momento.");
         return;
       }
       masterZapCurrentIndex = 0;
@@ -793,7 +788,7 @@
         if (ath.phone && cleanPhone(ath.phone) !== "") {
           alert(`Atleta ${ath.name} possui WhatsApp cadastrado. Apenas administradores podem enviar mensagens.`);
         } else {
-          alert(`Atleta ${ath.name} não possui número cadastrado. Entre em contato com o Admin para cadastrar.`);
+          alert(`Atleta ${ath.name} não possui número cadastrado.`);
         }
         return;
       }
@@ -902,7 +897,6 @@
         return;
       }
 
-      // Atletas padrão só podem ver e interagir com a próxima pelada (data futura mais próxima ou igual a hoje)
       let availableDates = window.datesList;
       if (!isAdmin) {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -1352,10 +1346,10 @@
 
           <div class="flex items-center gap-1 shrink-0">
             <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900'}">
-              CONFIRMADO
+              CONF.
             </button>
             <button onclick="setStatus(${ath.id}, 'JUSTIFICADO')" class="px-2 py-1.5 rounded-lg text-xs font-bold transition ${p.status === 'JUSTIFICADO' ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900'}" title="Ausência Justificada">
-              JUSTIFICADO
+              JUSTIF.
             </button>
             <button onclick="setStatus(${ath.id}, 'FORA')" class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${isOutside ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400' : 'bg-slate-900/60 text-slate-400 hover:text-rose-400 hover:bg-slate-900'}">
               FORA
@@ -1375,6 +1369,18 @@
       document.getElementById('cntGoleiros').innerText = `(${countGoleiros} GK)`;
       document.getElementById('cntFaults').innerText = countFaults;
       document.getElementById('cntPending').innerText = countPending;
+
+      // Destaca visualmente o card do filtro ativo se houver
+      ['CONFIRMADO', 'FORA', 'JUSTIFICADO', 'VALIDADOS', 'FALTA', 'PENDENTE'].forEach(key => {
+        const cardEl = document.getElementById(`card-${key}`);
+        if (cardEl) {
+          if (activeStatusFilter === key) {
+            cardEl.classList.add('ring-2', 'ring-amber-400', 'scale-105');
+          } else {
+            cardEl.classList.remove('ring-2', 'ring-amber-400', 'scale-105');
+          }
+        }
+      });
     }
 
     function deleteAthlete(id) {
@@ -1497,9 +1503,8 @@
       });
 
       linePlayers.forEach((p) => {
-        // Encontra o time com menor pontuação que ainda tenha vaga (menor que 8)
         let availableTeams = teams.filter(t => t.players.length < playersPerTeam);
-        if (availableTeams.length === 0) availableTeams = teams; // fallback se passar de 8
+        if (availableTeams.length === 0) availableTeams = teams;
         availableTeams.sort((a, b) => a.totalStars - b.totalStars);
         availableTeams[0].players.push(p);
         availableTeams[0].totalStars += p.stars;
@@ -1659,6 +1664,7 @@
       renderFinancial();
     }
 
+    // NAVEGAÇÃO RIGOROSA DE TECLADO NA ABA FINANCEIRO
     function handleFinKeyDown(event, athleteIndex, monthIndex) {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -1673,7 +1679,7 @@
         }
       } else if (event.key === 'Tab') {
         event.preventDefault();
-        // Tab sempre para o campo imediatamente à direita (próximo mês na mesma linha)
+        // Tab sempre para o campo imediatamente à direita (próximo mês na mesma linha, sem voltar para o início)
         let nextAthIndex = athleteIndex;
         let nextMIndex = monthIndex + 1;
 
@@ -1742,25 +1748,31 @@
         let monthCells = '';
 
         months.forEach((m, mIndex) => {
-          const hasCustomVal = athPay[m] !== undefined;
-          let paid = hasCustomVal ? athPay[m] : 0;
+          const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
+          let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
 
           const dueDate = new Date(currentYear, mIndex, 15);
           let interest = 0;
-
-          // Se lançou qualquer valor (mesmo menor que a mensalidade), considera quitado e sem juros
           let debtMonth = 0;
-          if (!hasCustomVal && now > dueDate) {
+          let colorClass = "";
+
+          // REGRA SOLICITADA: Se lançar valor a menor, não compute nem some juros. Dê a mensalidade como quitada.
+          if (hasCustomVal) {
+            interest = 0;
+            debtMonth = 0;
+            // Valores baixados no financeiro devem ficar azul claro
+            colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
+          } else if (now > dueDate) {
+            // Em atraso e não pago: Vermelho
             const diffTime = Math.abs(now - dueDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             interest = diffDays * 1;
             debtMonth = Math.max(0, (athFee + interest) - paid);
-          } else if (hasCustomVal) {
-            // Valor lançado: quitado, sem juros adicionais computados
-            interest = 0;
-            debtMonth = 0;
+            colorClass = "border-rose-500/50 text-rose-400 font-bold bg-rose-950/20";
           } else {
+            // Valor sugerido para parcelas não pagas (não vencidas): Cinza
             debtMonth = Math.max(0, athFee - paid);
+            colorClass = "border-slate-700 text-slate-500 font-normal bg-slate-900";
           }
 
           let suggestedVal = athFee;
@@ -1770,16 +1782,14 @@
           totalInterest += interest;
           totalDue += debtMonth;
 
-          const isOverdue = debtMonth > 0 && now > dueDate;
-
           monthCells += `
             <td class="p-1 text-center">
               <input type="number" id="fin_${athIndex}_${mIndex}" value="${displayVal}" min="0" 
                 onchange="updatePayment(${ath.id}, '${m}', this.value)" 
                 onkeydown="handleFinKeyDown(event, ${athIndex}, ${mIndex})"
                 placeholder="${suggestedVal}"
-                title="Mensalidade: R$ ${athFee.toFixed(2)} | Status: ${hasCustomVal ? 'Quitado' : 'Pendente'}"
-                class="w-16 bg-slate-900 border ${isOverdue ? 'border-rose-500/50 text-rose-300' : 'border-slate-700 text-slate-200'} text-xs font-bold rounded p-1 text-center focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+                title="Mensalidade: R$ ${athFee.toFixed(2)} | Status: ${hasCustomVal ? 'Quitado (Baixado)' : 'Pendente'}"
+                class="w-16 border rounded p-1 text-center text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition ${colorClass}" />
             </td>
           `;
         });
@@ -1790,7 +1800,7 @@
           <td class="p-2 font-bold text-white sticky left-0 bg-slate-800 z-10 border-r border-slate-700">${ath.name}</td>
           <td class="p-2 text-center font-bold text-amber-400 bg-slate-900/40 border-r border-slate-800">R$ ${athFee.toFixed(2)}</td>
           ${monthCells}
-          <td class="p-2 text-center font-extrabold text-emerald-400 bg-slate-900/40">R$ ${totalPaid.toFixed(2)}</td>
+          <td class="p-2 text-center font-extrabold text-sky-300 bg-slate-900/40">R$ ${totalPaid.toFixed(2)}</td>
           <td class="p-2 text-center font-extrabold text-amber-400 bg-slate-900/40">R$ ${totalInterest.toFixed(2)}</td>
           <td class="p-2 text-center font-extrabold ${totalDue > 0 ? 'text-rose-400' : 'text-slate-400'} bg-slate-900/40">R$ ${totalDue.toFixed(2)}</td>
         `;
@@ -1827,7 +1837,9 @@
           const dueDate = new Date(currentYear, idx, 15);
           let interest = 0;
 
-          if (!hasCustomVal && now > dueDate && paid < athFee) {
+          if (hasCustomVal) {
+            interest = 0;
+          } else if (now > dueDate) {
             const diffTime = Math.abs(now - dueDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             interest = diffDays * 1;
@@ -1836,7 +1848,7 @@
           totalPaid += paid;
           totalInterest += interest;
           
-          const debtMonth = Math.max(0, (athFee + interest) - paid);
+          const debtMonth = hasCustomVal ? 0 : Math.max(0, (athFee + interest) - paid);
           totalDue += debtMonth;
 
           monthValuesCSV.push(paid.toFixed(2));
