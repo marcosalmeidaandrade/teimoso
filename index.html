@@ -245,9 +245,14 @@
             </h2>
             <p class="text-[10px] text-slate-400">Vencimento: Dia 15 | Juros de R$ 1,00/dia a partir do dia 16 | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> (abaixo) ou <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Tab</kbd> (ao lado)</p>
           </div>
-          <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
-            <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Relatório (CSV)
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="openFinancialZapModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
+              <i class="fa-brands fa-whatsapp"></i> Cobrar Atrasados
+            </button>
+            <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
+              <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Relatório (CSV)
+            </button>
+          </div>
         </div>
 
         <!-- QUADROS TOTALIZADORES FINANCEIROS -->
@@ -459,6 +464,24 @@
     </div>
   </div>
 
+  <!-- MODAL DISPARO COBRANÇA FINANCEIRA -->
+  <div id="modalFinancialZap" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-base"></i> Cobrança de Inadimplentes
+        </h3>
+        <button onclick="closeFinancialZapModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="financialZapBody" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button onclick="closeFinancialZapModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER / DADOS DO DESENVOLVEDOR -->
   <footer class="bg-slate-900 border-t border-slate-800 py-6 mt-auto">
     <div class="max-w-5xl mx-auto px-4 flex flex-col items-center justify-center text-center gap-1.5">
@@ -618,6 +641,8 @@
       const isSapao = athNameNorm === "SAPÃO" || athNameNorm === "SAPAO";
 
       let totalDueToDate = 0;
+      let totalBaseDue = 0;
+      let totalIntDue = 0;
 
       months.forEach((m, mIndex) => {
         const firstInterestDate = new Date(currentYear, mIndex, 16);
@@ -629,19 +654,25 @@
 
         if (hasCustomVal) {
           if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
-            totalDueToDate += Math.max(0, athFee - paid);
+            const diff = Math.max(0, athFee - paid);
+            totalDueToDate += diff;
+            totalBaseDue += diff;
           }
         } else if (now >= firstInterestDate) {
           const diffTime = Math.abs(now - firstInterestDate);
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
           const interest = diffDays * 1.00;
           totalDueToDate += Math.max(0, (athFee + interest) - paid);
+          totalBaseDue += Math.max(0, athFee - paid);
+          totalIntDue += interest;
         }
       });
 
       return {
         isUpToDate: totalDueToDate <= 0,
-        dueAmount: totalDueToDate
+        dueAmount: totalDueToDate,
+        baseDue: totalBaseDue,
+        interestDue: totalIntDue
       };
     }
 
@@ -999,15 +1030,23 @@
           ? `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-sm ring-2 ring-emerald-400/30 shrink-0" title="Mensalidades em dia"></span>`
           : `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-sm ring-2 ring-rose-500/30 shrink-0" title="Em débito até a presente data (R$ ${finStatus.dueAmount.toFixed(2)})"></span>`;
         const suspendedTag = ath.isSuspended ? ` <span class="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 py-0.5 rounded font-extrabold">SUSPENSO</span>` : '';
+        
+        const zapIconTitle = finStatus.isUpToDate ? "Enviar Agradecimento (Em dia)" : "Enviar Cobrança WhatsApp";
+        const zapIconColor = finStatus.isUpToDate ? "text-emerald-500 hover:text-emerald-400 bg-emerald-500/10" : "text-amber-500 hover:text-amber-400 bg-amber-500/10";
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-700/30 transition";
         tr.innerHTML = `
           <td class="p-2 font-bold text-white sticky left-0 bg-slate-800 z-10 border-r border-slate-700">
-            <div class="flex items-center gap-1.5">
-              <span>${ath.name}</span>
-              ${ballIcon}
-              ${suspendedTag}
+            <div class="flex items-center justify-between gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <span>${ath.name}</span>
+                ${ballIcon}
+                ${suspendedTag}
+              </div>
+              <button onclick="sendFinancialZap(${ath.id})" class="px-1.5 py-1 rounded transition ${zapIconColor}" title="${zapIconTitle}">
+                <i class="fa-brands fa-whatsapp"></i>
+              </button>
             </div>
           </td>
           <td class="p-2 text-center font-bold text-amber-400 bg-slate-900/40 border-r border-slate-800">R$ ${athFee.toFixed(2)}</td>
@@ -1526,6 +1565,67 @@
         msg += `\n`;
       });
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    // WHATSAPP FINANCEIRO
+    window.sendFinancialZap = function(athId) {
+      const ath = window.athletes.find(a => a.id === athId);
+      if (!ath) return;
+      if (ath.isSuspended) {
+        alert("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens.");
+        return;
+      }
+      const phone = cleanPhone(ath.phone);
+      if (!phone) {
+        alert("Atleta sem número de WhatsApp cadastrado.");
+        return;
+      }
+      
+      const finStatus = getAthleteFinancialStatus(ath);
+      let msg = "";
+
+      if (finStatus.isUpToDate) {
+        msg = `Prezado ${ath.name},\n\nO Teimoso FCC agradece por manter suas mensalidades rigorosamente em dia. Sua pontualidade e colaboração são fundamentais para o sucesso da nossa organização.\n\nForte abraço!`;
+      } else {
+        msg = `Prezado ${ath.name},\n\nEsperamos que esteja bem.\n\nNotamos que constam pendências financeiras referentes às mensalidades do Teimoso FCC até a presente data.\n\n*Resumo dos valores em aberto:*\n- Mensalidade(s): R$ ${finStatus.baseDue.toFixed(2).replace('.', ',')}\n- Juros/Multa: R$ ${finStatus.interestDue.toFixed(2).replace('.', ',')}\n- *TOTAL DEVIDO: R$ ${finStatus.dueAmount.toFixed(2).replace('.', ',')}*\n\nPor favor, solicitamos a regularização o mais breve possível utilizando nossa chave PIX:\n*teimosofcc@gmail.com*\n\nAgradecemos a compreensão e colaboração.`;
+      }
+      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    window.openFinancialZapModal = function() {
+      const overdueAthletes = window.athletes.filter(a => {
+        if(a.isSuspended || cleanPhone(a.phone) === "") return false;
+        const fin = getAthleteFinancialStatus(a);
+        return !fin.isUpToDate;
+      });
+      
+      const body = document.getElementById('financialZapBody');
+      body.innerHTML = '';
+      
+      if (overdueAthletes.length === 0) {
+        body.innerHTML = `<p class="text-slate-400">Nenhum atleta em atraso com WhatsApp cadastrado.</p>`;
+      } else {
+        overdueAthletes.forEach(ath => {
+          const fin = getAthleteFinancialStatus(ath);
+          const item = document.createElement('div');
+          item.className = "flex items-center justify-between bg-slate-800 p-2.5 rounded-lg border border-slate-700";
+          item.innerHTML = `
+            <div>
+              <span class="font-bold text-white text-xs">${ath.name}</span>
+              <span class="block text-[10px] text-rose-400 font-mono">Total Devido: R$ ${fin.dueAmount.toFixed(2).replace('.',',')}</span>
+            </div>
+            <button onclick="sendFinancialZap(${ath.id})" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-lg transition flex items-center gap-1">
+              <i class="fa-brands fa-whatsapp"></i> Cobrar
+            </button>
+          `;
+          body.appendChild(item);
+        });
+      }
+      document.getElementById('modalFinancialZap').classList.remove('hidden');
+    };
+
+    window.closeFinancialZapModal = function() {
+      document.getElementById('modalFinancialZap').classList.add('hidden');
     };
 
     // EXPORTAÇÕES CSV
