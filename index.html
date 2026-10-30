@@ -278,7 +278,6 @@
                   <th class="py-3 px-3 text-center">Nov</th>
                   <th class="py-3 px-4 text-center">Total Pago</th>
                   <th class="py-3 px-4 text-center">Valor Devido</th>
-                  <th class="py-3 px-4 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="financialTableBody" class="divide-y divide-slate-800/60 text-xs">
@@ -563,9 +562,14 @@
     function loadSavedFinancial() {
       let saved = null;
       try {
-        saved = JSON.parse(localStorage.getItem('teimoso_financial'));
-        if (!saved || Object.keys(saved).length === 0) {
-          saved = JSON.parse(localStorage.getItem('teimoso_financial_backup'));
+        const primary = localStorage.getItem('teimoso_financial');
+        const backup = localStorage.getItem('teimoso_financial_backup');
+        
+        // Tenta ler do primário; se estiver vazio ou corrompido, busca do backup
+        if (primary && primary !== '{}') {
+          saved = JSON.parse(primary);
+        } else if (backup && backup !== '{}') {
+          saved = JSON.parse(backup);
         }
       } catch (e) {
         console.error("Erro ao ler financeiro:", e);
@@ -575,13 +579,35 @@
         saved = {};
       }
 
-      // Garante os registros históricos consolidados caso não existam
-      // Júlio: Out/2026 pago R$ 36,00
+      // Garante os registros históricos e regras consolidadas caso não existam
+      // Regra 1: Júlio - Out/2026 pago R$ 36,00
       const julio = window.athletes.find(a => a.name.toLowerCase().includes('júlio') || a.name.toLowerCase().includes('julio'));
       if (julio) {
         if (!saved[julio.id]) saved[julio.id] = {};
-        if (!saved[julio.id]['out']) {
+        if (!saved[julio.id]['out'] || (saved[julio.id]['out'].amount === undefined && saved[julio.id]['out'] !== 36)) {
           saved[julio.id]['out'] = { paid: true, amount: 36 };
+        }
+      }
+
+      // Estrutura garantida para Matheus Onofre (Regra de diferença)
+      const onofre = window.athletes.find(a => a.name.toLowerCase().includes('matheus onofre'));
+      if (onofre && !saved[onofre.id]) {
+        saved[onofre.id] = {};
+      }
+
+      // Estrutura garantida para Sapão (Regra Set/2026)
+      const sapao = window.athletes.find(a => a.name.toLowerCase().includes('sapão') || a.name.toLowerCase().includes('sapao'));
+      if (sapao && !saved[sapao.id]) {
+        saved[sapao.id] = {};
+      }
+
+      // Auto-reparo de dados antigos (converte números soltos para objetos estruturados)
+      for (const athleteId in saved) {
+        for (const mKey in saved[athleteId]) {
+          const val = saved[athleteId][mKey];
+          if (typeof val === 'number') {
+            saved[athleteId][mKey] = { paid: val > 0, amount: val };
+          }
         }
       }
 
@@ -1308,14 +1334,23 @@
         let athleteTotalPaid = 0;
         let athleteTotalDue = 0;
 
+        const finStatus = getAthleteFinancialStatus(athlete.id);
+        const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-900/60 transition-colors";
 
         let rowHtml = `
-          <td class="py-3 px-4 font-bold text-slate-200 sticky left-0 bg-slate-900 z-10 whitespace-nowrap">
-            <div class="flex items-center gap-2">
-              <span>${athlete.name}</span>
-              ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+          <td class="py-3 px-4 font-bold text-slate-200 sticky left-0 bg-slate-900 z-10 whitespace-nowrap min-w-[220px]">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full ${dotColor}" title="${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}"></span>
+                <span>${athlete.name}</span>
+                ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+              </div>
+              <button onclick="openWhatsappFinancialIndividual(${athlete.id})" title="Enviar WhatsApp Financeiro" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all inline-flex items-center justify-center text-xs shrink-0">
+                <i class="fa-brands fa-whatsapp"></i>
+              </button>
             </div>
           </td>
         `;
@@ -1400,17 +1435,9 @@
         totalGeneralPaid += athleteTotalPaid;
         totalGeneralDue += athleteTotalDue;
 
-        const finStatus = getAthleteFinancialStatus(athlete.id);
-        const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
-
         rowHtml += `
           <td class="py-3 px-4 text-center font-bold text-emerald-400">R$ ${athleteTotalPaid.toFixed(2)}</td>
           <td class="py-3 px-4 text-center font-bold text-rose-400">R$ ${athleteTotalDue.toFixed(2)}</td>
-          <td class="py-3 px-4 text-center">
-            <button onclick="openWhatsappFinancialIndividual(${athlete.id})" title="Enviar Cobrança WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all inline-flex items-center justify-center text-xs">
-              <i class="fa-brands fa-whatsapp"></i>
-            </button>
-          </td>
         `;
 
         tr.innerHTML = rowHtml;
