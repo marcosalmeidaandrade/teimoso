@@ -277,17 +277,13 @@
           </div>
           <div>
             <label class="text-xs text-slate-400 block mb-1">Atletas p/ Time</label>
-            <select id="playersPerTeam" class="w-full bg-slate-900 border border-slate-700 text-white text-xs font-bold rounded-lg p-2">
-              <option value="5">5 Jogadores</option>
-              <option value="6" selected>6 Jogadores</option>
-              <option value="7">7 Jogadores</option>
-            </select>
+            <input type="text" disabled value="8 Jogadores (Fixo)" class="w-full bg-slate-900/80 border border-slate-700 text-emerald-400 text-xs font-bold rounded-lg p-2 text-center cursor-not-allowed" />
           </div>
         </div>
         
         <div class="flex gap-2">
           <button onclick="drawTeams()" class="flex-1 py-2.5 bg-brand-green hover:bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-2">
-            <i class="fa-solid fa-dice"></i> Sortear Equipes Equilibradas
+            <i class="fa-solid fa-dice"></i> Sortear Equipes Equilibradas (8 por Time)
           </button>
           <button onclick="copyTeamsZap()" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5">
             <i class="fa-brands fa-whatsapp text-sm"></i> Copiar
