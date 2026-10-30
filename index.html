@@ -714,7 +714,13 @@
     function sendAthleteZap(athleteId) {
       const ath = athletes.find(a => a.id === athleteId);
       if (!ath || !ath.phone) {
-        alert("Atleta não possui telefone cadastrado! Edite o cadastro para incluir o número.");
+        if (isAdmin) {
+          if (confirm(`O atleta ${ath.name} não possui celular cadastrado. Deseja cadastrar agora?`)) {
+            openEditAthleteModal(athleteId);
+          }
+        } else {
+          alert("Atleta não possui número de WhatsApp cadastrado.");
+        }
         return;
       }
 
@@ -1194,9 +1200,13 @@
           `;
         }
 
+        // VERIFICA SE O NÚMERO DE WHATSAPP ESTÁ PREENCHIDO
+        const hasPhone = ath.phone && cleanPhone(ath.phone) !== "";
         const zapBtn = `
-          <button onclick="sendAthleteZap(${ath.id})" class="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition text-xs border border-emerald-500/30 ml-1" title="${ath.phone ? 'Enviar Convocação Zap para ' + ath.phone : 'Cadastrar Celular'}">
-            <i class="fa-brands fa-whatsapp text-sm"></i>
+          <button onclick="sendAthleteZap(${ath.id})" 
+            class="w-8 h-8 rounded-lg flex items-center justify-center transition border ml-1 shrink-0 ${hasPhone ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white border-emerald-500/30' : 'bg-slate-900/50 text-rose-500/80 hover:bg-rose-500/20 hover:text-rose-400 border-rose-500/20'}" 
+            title="${hasPhone ? 'Enviar Convocação Zap para ' + ath.phone : 'Sem WhatsApp cadastrado (Clique para editar)'}">
+            <i class="${hasPhone ? 'fa-brands fa-whatsapp text-sm' : 'fa-solid fa-xmark text-sm font-black'}"></i>
           </button>
         `;
 
