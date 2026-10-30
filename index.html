@@ -255,7 +255,7 @@
             <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
               <i class="fa-solid fa-wallet text-emerald-400"></i> Gestão Financeira de Mensalidades
             </h3>
-            <p class="text-xs text-slate-400 mt-1">Clique duas vezes no campo para preencher o valor sugerido ou use o checkbox ao lado para editar. Juros de R$ 1,00/dia a partir do dia 16.</p>
+            <p class="text-xs text-slate-400 mt-1">Clique no atleta para ver as mensalidades. Clique duas vezes no campo para baixar o valor sugerido. Juros a partir do dia 16.</p>
           </div>
           <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
             <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes em Massa
@@ -285,34 +285,9 @@
           </div>
         </div>
 
-        <!-- FINANCIAL TABLE -->
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[1200px]" id="financialTable">
-              <thead>
-                <tr class="bg-slate-950/80 border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                  <th class="py-3 px-4 sticky left-0 bg-slate-950 z-20">Atleta</th>
-                  <th class="py-3 px-3 text-center">Jan</th>
-                  <th class="py-3 px-3 text-center">Fev</th>
-                  <th class="py-3 px-3 text-center">Mar</th>
-                  <th class="py-3 px-3 text-center">Abr</th>
-                  <th class="py-3 px-3 text-center">Mai</th>
-                  <th class="py-3 px-3 text-center">Jun</th>
-                  <th class="py-3 px-3 text-center">Jul</th>
-                  <th class="py-3 px-3 text-center">Ago</th>
-                  <th class="py-3 px-3 text-center">Set</th>
-                  <th class="py-3 px-3 text-center">Out</th>
-                  <th class="py-3 px-3 text-center">Nov</th>
-                  <th class="py-3 px-4 text-center">Total Pago</th>
-                  <th class="py-3 px-4 text-center text-amber-400">Juros</th>
-                  <th class="py-3 px-4 text-center text-rose-400">Valor Devido</th>
-                </tr>
-              </thead>
-              <tbody id="financialTableBody" class="divide-y divide-slate-800/60 text-xs">
-                <!-- Preenchido dinamicamente -->
-              </tbody>
-            </table>
-          </div>
+        <!-- FINANCIAL ACCORDION LIST -->
+        <div id="financialAccordionContainer" class="space-y-3">
+          <!-- Preenchido dinamicamente com os cartões dos atletas -->
         </div>
       </section>
 
@@ -558,6 +533,7 @@
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
     let activeStatusFilter = null;
+    window.expandedFinCards = new Set(); // Mantém os cartões financeiros abertos
     
     // Lista de administradores com permissões totais
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
@@ -693,7 +669,6 @@
         return;
       }
 
-      // Senha Mestre de Emergência
       if (pin === '0000') {
         window.currentUser = { id: 0, name: "Admin Master", isKeeper: false };
         window.isAdmin = true;
@@ -701,7 +676,6 @@
         return;
       }
 
-      // Busca na base de atletas (considerando apenas quem não está suspenso e tem celular cadastrado)
       const foundAthlete = window.athletes.find(a => 
         !a.isSuspended && 
         a.phone && 
@@ -710,7 +684,6 @@
 
       if (foundAthlete) {
         window.currentUser = foundAthlete;
-        // Verifica se o atleta está na lista VIP de Administradores
         window.isAdmin = adminNames.some(adminName => 
           foundAthlete.name.toUpperCase().includes(adminName)
         );
@@ -723,17 +696,13 @@
     };
 
     function completeLoginFlow() {
-      // Esconde a tela de login
       document.getElementById('globalLoginOverlay').classList.add('hidden');
-      
-      // Atualiza o header com o nome e badge de status do atleta
       const firstName = window.currentUser.name.split(' ')[0];
       document.getElementById('userBadgeName').innerText = `${firstName} ${window.isAdmin ? '(Admin)' : ''}`;
       
       if (window.isAdmin) {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 text-xs font-bold shrink-0 shadow-inner";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-shield-halved text-emerald-500";
-        // Mostra funções de admin
         document.getElementById('adminDateControls').classList.remove('hidden');
         document.getElementById('adminDateControls').classList.add('flex');
         document.getElementById('btnAddAthlete').classList.remove('hidden');
@@ -742,7 +711,6 @@
       } else {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-400";
-        // Esconde funções de admin
         document.getElementById('adminDateControls').classList.add('hidden');
         document.getElementById('adminDateControls').classList.remove('flex');
         document.getElementById('btnAddAthlete').classList.add('hidden');
@@ -752,7 +720,6 @@
 
       window.showToast(`Bem-vindo, ${firstName}!`, "success");
       
-      // Renderiza as telas baseadas nos privilégios
       renderAthletesList();
       renderFinancial();
       checkDeadlinePassed();
@@ -769,17 +736,13 @@
 
     // --- INICIALIZAÇÃO & ESCUTA DA NUVEM (REAL-TIME) ---
     window.addEventListener('DOMContentLoaded', () => {
-      // Foco imediato na senha
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
-
-      // Renderiza offline primeiro
       populateDateSelect();
       buildStarRatingSelector(5);
       renderAthletesList();
       renderFinancial();
       renderReports();
 
-      // Ativa ouvinte Firebase
       let isFirstLoad = true;
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -809,7 +772,6 @@
       });
     });
 
-    // --- NAVEGAÇÃO DE ABAS ---
     window.switchTab = function(tab) {
       activeTab = tab;
       ['presence', 'draw', 'financial', 'reports'].forEach(t => {
@@ -827,7 +789,6 @@
       if (tab === 'reports') renderReports();
     };
 
-    // --- DATAS E PRAZO ---
     window.populateDateSelect = function() {
       const select = document.getElementById('dateSelect');
       select.innerHTML = '';
@@ -876,7 +837,6 @@
       }
     };
 
-    // --- CONTROLE DE PRESENÇA E FILTROS ---
     window.filterPresenceCards = function(status) {
       activeStatusFilter = status;
       const badge = document.getElementById('activeFilterBadge');
@@ -967,7 +927,6 @@
       return 'uptodate';
     }
 
-    // --- RENDERIZAÇÃO DA LISTA DE PRESENÇA ---
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
       tbody.innerHTML = '';
@@ -1012,11 +971,6 @@
         let actionsHtml = '';
         const isPastDeadline = checkDeadlinePassed();
         const disabledAttr = (isPastDeadline && !window.isAdmin) ? 'opacity-40 pointer-events-none' : '';
-
-        // Só permite clicar se for admin OU se for o próprio atleta logado
-        // Removida restrição de botão apenas para o próprio atleta para manter a fluidez, 
-        // mas em sistema real, pode-se travar `pointer-events-none` se não for admin e `window.currentUser.id !== athlete.id`.
-        // Como não foi pedido explicitamente bloquear os outros além do admin no horário, mantido liberado.
 
         if (athlete.isSuspended) {
           actionsHtml = `<span class="text-[10px] font-bold px-2 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40">SUSPENSO / SAIU</span>`;
@@ -1100,7 +1054,6 @@
       }
     };
 
-    // --- CADASTRO E EDIÇÃO DE ATLETAS ---
     window.openNewAthleteModal = function() {
       document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-400"></i> Cadastrar Novo Atleta`;
       document.getElementById('editAthleteId').value = '';
@@ -1199,7 +1152,6 @@
       });
     };
 
-    // --- GERENCIAMENTO DE DATAS ---
     window.openNewDateModal = function() {
       document.getElementById('newDateInput').value = '';
       document.getElementById('newDateModal').classList.remove('hidden');
@@ -1266,7 +1218,6 @@
       });
     };
 
-    // --- SORTEIO EQUILIBRADO DE TIMES (MÁX 8 POR EQUIPE) ---
     window.generateTeams = function() {
       const dayPresences = window.presences[window.currentDate] || {};
       
@@ -1356,7 +1307,6 @@
       window.showToast("Sorteio realizado com sucesso!", "success");
     };
 
-    // --- WHATSAPP DISPATCHERS ---
     window.openWhatsappIndividual = function(phone, name) {
       if (!phone) {
         window.showToast("Este atleta não possui telefone/WhatsApp cadastrado.");
@@ -1404,10 +1354,19 @@
       window.showToast(`Iniciando disparo para ${phones.length} atletas.`, "success");
     };
 
-    // --- FINANCEIRO ---
+    // --- NOVA RENDERIZAÇÃO DO FINANCEIRO (CARDS EXPANSÍVEIS) ---
+    window.toggleFinancialAccordion = function(athleteId) {
+      if (window.expandedFinCards.has(athleteId)) {
+        window.expandedFinCards.delete(athleteId);
+      } else {
+        window.expandedFinCards.add(athleteId);
+      }
+      renderFinancial();
+    };
+
     window.renderFinancial = function() {
-      const tbody = document.getElementById('financialTableBody');
-      tbody.innerHTML = '';
+      const container = document.getElementById('financialAccordionContainer');
+      container.innerHTML = '';
 
       let totalGeneralPaid = 0;
       let totalGeneralDue = 0;
@@ -1422,30 +1381,15 @@
 
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-900/60 transition-colors";
-
-        let rowHtml = `
-          <td class="py-3 px-4 font-bold text-slate-200 sticky left-0 bg-slate-900 z-10 whitespace-nowrap min-w-[220px]">
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full ${dotColor}" title="${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}"></span>
-                <span>${athlete.name}</span>
-                ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
-              </div>
-              ${window.isAdmin ? `
-              <button onclick="openWhatsappFinancialIndividual(${athlete.id})" title="Enviar WhatsApp Financeiro" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all inline-flex items-center justify-center text-xs shrink-0">
-                <i class="fa-brands fa-whatsapp"></i>
-              </button>
-              ` : ''}
-            </div>
-          </td>
-        `;
+        const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
+        const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30' : 'text-rose-400 bg-rose-500/20 border border-rose-500/30';
+        const isExpanded = window.expandedFinCards.has(athlete.id);
 
         const now = new Date();
         const disableInput = !window.isAdmin ? 'disabled readonly' : '';
 
+        // Construir HTML dos meses primeiro para obter os totais
+        let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
           const monthNum = mIndex + 1;
           const dueDate = new Date(2026, monthNum - 1, 15);
@@ -1493,7 +1437,7 @@
             }
           }
 
-          let cellColorClass = "bg-slate-950/40 text-slate-500";
+          let cellColorClass = "bg-slate-950/40 text-slate-500 border-slate-800";
           if (isPaid) {
             const isJulioOct = (athlete.name.toLowerCase().includes('júlio') || athlete.name.toLowerCase().includes('julio')) && mKey === 'out';
             const isOnofre = athlete.name.toLowerCase().includes('matheus onofre');
@@ -1508,27 +1452,74 @@
           const displayValue = isPaid ? paidAmount : suggestedFee;
           const doubleClickAction = window.isAdmin ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : '';
 
-          rowHtml += `
-            <td class="py-2 px-2 text-center">
-              <div class="flex items-center justify-center gap-1">
-                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0 ${window.isAdmin ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}" title="Marcar como pago">
-                <input type="number" value="${displayValue}" data-athlete="${athlete.id}" data-month="${mKey}" ${doubleClickAction} onkeydown="handleFinancialKeydown(event, ${athlete.id}, '${mKey}')" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${disableInput} class="w-16 bg-slate-950 border border-slate-800 rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500 ${window.isAdmin ? '' : 'opacity-80'}" title="Duplo clique para baixar sugerido">
+          monthsGridHtml += `
+            <div class="flex flex-col gap-1 items-center bg-slate-950 border border-slate-800 p-2 rounded-xl shadow-inner">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">${mKey}</span>
+              <div class="flex items-center gap-1.5 w-full justify-center">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 ${window.isAdmin ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}" title="Marcar como pago">
+                <input type="number" value="${displayValue}" data-athlete="${athlete.id}" data-month="${mKey}" ${doubleClickAction} onkeydown="handleFinancialKeydown(event, ${athlete.id}, '${mKey}')" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${disableInput} class="w-14 bg-slate-900 border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500 ${window.isAdmin ? '' : 'opacity-80'}" title="Duplo clique para baixar sugerido">
               </div>
-            </td>
+            </div>
           `;
         });
 
         totalGeneralPaid += athleteTotalPaid;
         totalGeneralDue += athleteTotalDue;
 
-        rowHtml += `
-          <td class="py-3 px-4 text-center font-bold text-emerald-400">R$ ${athleteTotalPaid.toFixed(2)}</td>
-          <td class="py-3 px-4 text-center font-bold text-amber-400">R$ ${athleteTotalInterest.toFixed(2)}</td>
-          <td class="py-3 px-4 text-center font-bold text-rose-400">R$ ${athleteTotalDue.toFixed(2)}</td>
+        // Montando o Card (Acordeão)
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all group";
+        
+        card.innerHTML = `
+          <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-800/50 transition-colors focus:outline-none focus:bg-slate-800/50">
+            <div class="flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full ${dotColor} shrink-0"></span>
+              <span class="font-bold text-slate-200 text-sm md:w-48 flex items-center gap-2 truncate">
+                ${athlete.name} 
+                ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase shrink-0">Suspenso</span>' : ''}
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${finLabelColor} shrink-0 hidden sm:inline-block">${finLabel}</span>
+            </div>
+            
+            <div class="flex items-center justify-between md:justify-end gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto">
+              <div class="flex flex-col text-slate-400">
+                <span class="text-[9px] uppercase tracking-wider">Pago</span> 
+                <span class="text-emerald-400 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span>
+              </div>
+              <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3">
+                <span class="text-[9px] uppercase tracking-wider">Juros</span> 
+                <span class="text-amber-400 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span>
+              </div>
+              <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3 pr-2">
+                <span class="text-[9px] uppercase tracking-wider">A Vencer/Devido</span> 
+                <span class="text-rose-400 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span>
+              </div>
+              <div class="w-6 flex justify-end shrink-0">
+                <i class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-emerald-400' : 'group-hover:text-emerald-400'}"></i>
+              </div>
+            </div>
+          </button>
+          
+          <div id="fin-acc-${athlete.id}" class="${isExpanded ? 'block' : 'hidden'} border-t border-slate-800 bg-slate-950/50">
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades (Jan - Nov)
+                </h4>
+                ${window.isAdmin ? `
+                <button onclick="openWhatsappFinancialIndividual(${athlete.id})" title="Cobrar pelo WhatsApp" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-500/30">
+                  <i class="fa-brands fa-whatsapp text-sm"></i> Enviar Mensagem
+                </button>
+                ` : ''}
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                ${monthsGridHtml}
+              </div>
+            </div>
+          </div>
         `;
-
-        tr.innerHTML = rowHtml;
-        tbody.appendChild(tr);
+        
+        container.appendChild(card);
       });
 
       document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
@@ -1538,18 +1529,12 @@
     window.handleFinancialKeydown = function(event, athleteId, mKey) {
       if (!window.isAdmin) return;
       const input = event.target;
-      const allInputs = Array.from(document.querySelectorAll('#financialTable input[type="number"]'));
+      const allInputs = Array.from(document.querySelectorAll('#financialAccordionContainer input[type="number"]'));
       const index = allInputs.indexOf(input);
-      const numMonths = months.length;
 
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const nextInputIndex = index + numMonths;
-        if (nextInputIndex < allInputs.length) {
-          allInputs[nextInputIndex].focus();
-          allInputs[nextInputIndex].select();
-        }
-      } else if (event.key === 'Tab' && !event.shiftKey) {
+      // Como agora é um grid responsivo dentro de acordeões, Tab avança naturalmente.
+      // O Enter fará a mesma função do Tab (ir para o próximo input numérico).
+      if (event.key === 'Enter' || (event.key === 'Tab' && !event.shiftKey)) {
         event.preventDefault();
         const nextInputIndex = index + 1;
         if (nextInputIndex < allInputs.length) {
@@ -1604,7 +1589,6 @@
       renderReports();
     };
 
-    // --- MENSAGENS WHATSAPP FINANCEIRO (FORMAL) ---
     window.openWhatsappFinancialIndividual = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete || !athlete.phone) {
@@ -1679,7 +1663,6 @@
       });
     };
 
-    // --- RELATÓRIOS ---
     window.renderReports = function() {
       const tbody = document.getElementById('reportsTableBody');
       tbody.innerHTML = '';
@@ -1739,9 +1722,3 @@
   </script>
 </body>
 </html>
-```
-
-### O que foi alterado:
-1. **Nova Coluna "Juros":** Adicionei o cabeçalho `<th class="py-3 px-4 text-center text-amber-400">Juros</th>` na tabela financeira.
-2. **Cálculo Cumulativo:** O sistema agora soma todos os juros gerados pelos meses vencidos (`athleteTotalInterest`) para cada atleta individualmente.
-3. **Exibição:** O valor acumulado aparece destacado na cor amarela (`R$ X,XX`), proporcionando clareza sobre qual parte da dívida corresponde apenas aos atrasos.
