@@ -42,7 +42,29 @@
 <body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <div id="toastContainer" class="fixed top-5 right-5 z-[110] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- GLOBAL LOGIN OVERLAY -->
+  <div id="globalLoginOverlay" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-4 backdrop-blur-md">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-6">
+      <div class="w-24 h-24 rounded-2xl bg-white border border-slate-700 overflow-hidden flex items-center justify-center shadow-lg shadow-emerald-950/40 shrink-0">
+        <img src="logo.png" alt="Teimoso F.C.C. Logo" class="w-full h-full object-contain">
+      </div>
+      <div class="text-center space-y-1">
+        <h2 class="text-xl font-black text-emerald-400 uppercase tracking-wider">Acesso ao Sistema</h2>
+        <p class="text-xs text-slate-400 font-medium">Sua senha são os <strong class="text-slate-200">4 últimos dígitos</strong> do seu número de telefone cadastrado.</p>
+      </div>
+      <div class="w-full mt-2">
+        <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-4 text-3xl font-black text-emerald-400 focus:outline-none focus:border-emerald-500 text-center tracking-[0.5em] placeholder-slate-700 shadow-inner">
+      </div>
+      <button onclick="performLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-950/40 uppercase tracking-wider">
+        Entrar na Pelada
+      </button>
+    </div>
+    <div class="mt-8 text-slate-600 text-[10px] font-bold">
+      DEVELOPER BY MARCOS ALMEIDA®
+    </div>
+  </div>
 
   <!-- MAIN WRAPPER -->
   <div class="flex-grow flex flex-col">
@@ -78,13 +100,13 @@
           </button>
         </nav>
 
-        <!-- ADMIN AUTH CONTROLS -->
+        <!-- LOGGED USER CONTROLS -->
         <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
-          <div id="adminBadge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold shrink-0">
-            <i class="fa-solid fa-shield-halved"></i> Admin Ativo
+          <div id="userBadge" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0">
+            <i id="userBadgeIcon" class="fa-solid fa-user text-emerald-400"></i> <span id="userBadgeName">Atleta</span>
           </div>
-          <button onclick="toggleAdminMode()" id="adminToggleBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-2 shadow-sm shrink-0">
-            <i class="fa-solid fa-lock text-amber-400" id="adminLockIcon"></i> <span id="adminToggleText">Modo Admin</span>
+          <button onclick="logout()" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-950 hover:bg-rose-950 hover:border-rose-900 text-slate-400 hover:text-rose-400 transition-all flex items-center gap-2 shadow-sm shrink-0">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
           </button>
         </div>
 
@@ -122,7 +144,7 @@
             <button onclick="openNewAthleteModal()" id="btnAddAthlete" class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
               <i class="fa-solid fa-user-plus"></i> Novo Atleta
             </button>
-            <button onclick="openWhatsappMassModal()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
+            <button onclick="openWhatsappMassModal()" id="btnMassWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
               <i class="fa-brands fa-whatsapp"></i> Disparo em Massa
             </button>
           </div>
@@ -235,7 +257,7 @@
             </h3>
             <p class="text-xs text-slate-400 mt-1">Clique duas vezes no campo para preencher o valor sugerido ou use o checkbox ao lado para editar. Juros de R$ 1,00/dia a partir do dia 16.</p>
           </div>
-          <button onclick="openWhatsappFinancialMassModal()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
+          <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
             <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes em Massa
           </button>
         </div>
@@ -343,28 +365,6 @@
   </div>
 
   <!-- ================= MODALS ================= -->
-
-  <!-- ADMIN LOGIN MODAL -->
-  <div id="adminLoginModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-lock text-amber-400"></i> Autenticação Admin
-        </h3>
-        <button onclick="closeAdminLoginModal()" class="text-slate-500 hover:text-slate-300">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <div>
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Senha do Administrador:</label>
-        <input type="password" id="adminPasswordInput" placeholder="Digite a senha..." onkeydown="if(event.key==='Enter') verifyAdminPassword()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500 text-center tracking-widest text-lg">
-      </div>
-      <div class="flex items-center gap-2 pt-2">
-        <button onclick="closeAdminLoginModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
-        <button onclick="verifyAdminPassword()" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-950/40">Entrar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- NEW ATHLETE MODAL -->
   <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -551,11 +551,15 @@
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
     // --- ESTADO GLOBAL DA APLICAÇÃO ---
+    window.currentUser = null;
     window.isAdmin = false;
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
     let activeStatusFilter = null;
+    
+    // Lista de administradores com permissões totais
+    const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE'];
 
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
 
@@ -581,7 +585,7 @@
     window.datesList = ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"];
     window.currentDate = window.datesList[0];
     
-    // Leitura inicial do LocalStorage para evitar tela branca antes do Firebase carregar
+    // Leitura inicial do LocalStorage
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
 
@@ -613,7 +617,6 @@
       return saved;
     }
 
-    // Tenta carregar financeiro local primeiro
     let localFin = null;
     try {
       const primary = localStorage.getItem('teimoso_financial');
@@ -655,7 +658,6 @@
       confirmCallback = null;
     };
     
-    // Anexa evetos manualmente ao DOM para garantir compatibilidade com `type="module"`
     document.getElementById('btnConfirmAction').addEventListener('click', () => {
       if (confirmCallback) confirmCallback();
       window.closeConfirm();
@@ -663,13 +665,11 @@
 
     // --- FUNÇÃO GLOBAL DE SALVAMENTO (LOCAL + NUVEM) ---
     window.saveData = async function() {
-      // 1. Salva localmente (Backup offline/rápido)
       localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
       localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
       localStorage.setItem('teimoso_financial', JSON.stringify(window.financialPayments));
       localStorage.setItem('teimoso_financial_backup', JSON.stringify(window.financialPayments));
 
-      // 2. Salva na nuvem (Firestore Firebase)
       try {
         await setDoc(dbDocRef, {
           datesList: window.datesList,
@@ -683,17 +683,102 @@
       }
     };
 
+    // --- SISTEMA DE LOGIN (NOVO) ---
+    window.performLogin = function() {
+      const pin = document.getElementById('loginPinInput').value.trim();
+      
+      if (pin.length !== 4) {
+        window.showToast("Digite exatamente os 4 últimos dígitos do seu telefone.");
+        return;
+      }
+
+      // Senha Mestre de Emergência
+      if (pin === '0000') {
+        window.currentUser = { id: 0, name: "Admin Master", isKeeper: false };
+        window.isAdmin = true;
+        completeLoginFlow();
+        return;
+      }
+
+      // Busca na base de atletas (considerando apenas quem não está suspenso e tem celular cadastrado)
+      const foundAthlete = window.athletes.find(a => 
+        !a.isSuspended && 
+        a.phone && 
+        a.phone.slice(-4) === pin
+      );
+
+      if (foundAthlete) {
+        window.currentUser = foundAthlete;
+        // Verifica se o atleta está na lista VIP de Administradores
+        window.isAdmin = adminNames.some(adminName => 
+          foundAthlete.name.toUpperCase().includes(adminName)
+        );
+        completeLoginFlow();
+      } else {
+        window.showToast("Senha incorreta ou atleta não encontrado.", "error");
+        document.getElementById('loginPinInput').value = '';
+        document.getElementById('loginPinInput').focus();
+      }
+    };
+
+    function completeLoginFlow() {
+      // Esconde a tela de login
+      document.getElementById('globalLoginOverlay').classList.add('hidden');
+      
+      // Atualiza o header com o nome e badge de status do atleta
+      const firstName = window.currentUser.name.split(' ')[0];
+      document.getElementById('userBadgeName').innerText = `${firstName} ${window.isAdmin ? '(Admin)' : ''}`;
+      
+      if (window.isAdmin) {
+        document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 text-xs font-bold shrink-0 shadow-inner";
+        document.getElementById('userBadgeIcon').className = "fa-solid fa-shield-halved text-emerald-500";
+        // Mostra funções de admin
+        document.getElementById('adminDateControls').classList.remove('hidden');
+        document.getElementById('adminDateControls').classList.add('flex');
+        document.getElementById('btnAddAthlete').classList.remove('hidden');
+        document.getElementById('btnMassWhatsapp').classList.remove('hidden');
+        document.getElementById('btnMassFinWhatsapp').classList.remove('hidden');
+      } else {
+        document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0";
+        document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-400";
+        // Esconde funções de admin
+        document.getElementById('adminDateControls').classList.add('hidden');
+        document.getElementById('adminDateControls').classList.remove('flex');
+        document.getElementById('btnAddAthlete').classList.add('hidden');
+        document.getElementById('btnMassWhatsapp').classList.add('hidden');
+        document.getElementById('btnMassFinWhatsapp').classList.add('hidden');
+      }
+
+      window.showToast(`Bem-vindo, ${firstName}!`, "success");
+      
+      // Renderiza as telas baseadas nos privilégios
+      renderAthletesList();
+      renderFinancial();
+      checkDeadlinePassed();
+    }
+
+    window.logout = function() {
+      window.currentUser = null;
+      window.isAdmin = false;
+      document.getElementById('loginPinInput').value = '';
+      document.getElementById('globalLoginOverlay').classList.remove('hidden');
+      document.getElementById('globalLoginOverlay').classList.add('flex');
+      setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
+    };
+
     // --- INICIALIZAÇÃO & ESCUTA DA NUVEM (REAL-TIME) ---
     window.addEventListener('DOMContentLoaded', () => {
-      // Renderiza primeiro com dados locais para interface não piscar
+      // Foco imediato na senha
+      setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
+
+      // Renderiza offline primeiro
       populateDateSelect();
       buildStarRatingSelector(5);
       renderAthletesList();
       renderFinancial();
       renderReports();
-      checkDeadlinePassed();
 
-      // Ativa o ouvinte em tempo real do Firebase Firestore
+      // Ativa ouvinte Firebase
       let isFirstLoad = true;
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -710,19 +795,16 @@
             isFirstLoad = false;
           }
 
-          // Atualiza a interface
           populateDateSelect();
           renderAthletesList();
           renderFinancial();
           renderReports();
           checkDeadlinePassed();
         } else {
-          // Se for o primeiro acesso no banco vazio, salva os padrões iniciais
           window.saveData();
         }
       }, (error) => {
         console.error("Falha ao escutar Firestore:", error);
-        window.showToast("Rodando em modo offline. Verifique as regras do Firebase.", "error");
       });
     });
 
@@ -742,52 +824,6 @@
       });
       if (tab === 'financial') renderFinancial();
       if (tab === 'reports') renderReports();
-    };
-
-    // --- MODO ADMIN ---
-    window.toggleAdminMode = function() {
-      if (window.isAdmin) {
-        window.isAdmin = false;
-        document.getElementById('adminBadge').classList.add('hidden');
-        document.getElementById('adminBadge').classList.remove('flex');
-        document.getElementById('adminToggleBtn').className = "px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-2 shadow-sm";
-        document.getElementById('adminLockIcon').className = "fa-solid fa-lock text-amber-400";
-        document.getElementById('adminToggleText').innerText = "Modo Admin";
-        document.getElementById('adminDateControls').classList.add('hidden');
-        document.getElementById('adminDateControls').classList.remove('flex');
-        document.getElementById('btnAddAthlete').classList.add('hidden');
-        window.showToast("Modo Administrador desativado.", "success");
-        renderAthletesList();
-      } else {
-        document.getElementById('adminLoginModal').classList.remove('hidden');
-        document.getElementById('adminPasswordInput').value = '';
-        setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
-      }
-    };
-
-    window.closeAdminLoginModal = function() {
-      document.getElementById('adminLoginModal').classList.add('hidden');
-    };
-
-    window.verifyAdminPassword = function() {
-      const pass = document.getElementById('adminPasswordInput').value;
-      if (pass === '0000' || pass === '1234') {
-        window.isAdmin = true;
-        closeAdminLoginModal();
-        document.getElementById('adminBadge').classList.remove('hidden');
-        document.getElementById('adminBadge').classList.add('flex');
-        document.getElementById('adminToggleBtn').className = "px-3.5 py-2 rounded-xl text-xs font-bold border border-emerald-500/50 bg-emerald-950/40 text-emerald-300 transition-all flex items-center gap-2 shadow-sm";
-        document.getElementById('adminLockIcon').className = "fa-solid fa-lock-open text-emerald-400";
-        document.getElementById('adminToggleText').innerText = "Admin Ativo";
-        document.getElementById('adminDateControls').classList.remove('hidden');
-        document.getElementById('adminDateControls').classList.add('flex');
-        document.getElementById('btnAddAthlete').classList.remove('hidden');
-        window.showToast("Acesso Administrativo concedido!", "success");
-        renderAthletesList();
-        renderFinancial();
-      } else {
-        window.showToast("Senha incorreta!", "error");
-      }
     };
 
     // --- DATAS E PRAZO ---
@@ -818,7 +854,6 @@
       return dateObj.toLocaleDateString('pt-BR', options).toUpperCase();
     }
 
-    // Regra: Prazo até 1 dia antes da pelada às 18:00
     window.checkDeadlinePassed = function() {
       const [y, m, d] = window.currentDate.split('-');
       const peladaDate = new Date(y, m - 1, d, 20, 0, 0);
@@ -829,8 +864,7 @@
       const now = new Date();
       const banner = document.getElementById('deadlineBanner');
       
-      // Se já passou de 18h do dia anterior e não for admin
-      if (now > deadlineDate && !window.isAdmin) {
+      if (now > deadlineDate && !window.isAdmin && window.currentUser) {
         banner.classList.remove('hidden');
         banner.classList.add('flex');
         return true;
@@ -865,7 +899,6 @@
         window.presences[window.currentDate] = {};
       }
 
-      // Toggle rule: se clicar no mesmo status já marcado, desmarca (volta para null)
       const current = window.presences[window.currentDate][athleteId]?.status;
       const currentAttended = window.presences[window.currentDate][athleteId]?.attended || false;
 
@@ -914,13 +947,10 @@
       currentJustifyAthleteId = null;
     };
 
-    // --- CÁLCULO DE STATUS FINANCEIRO DO ATLETA ---
     function getAthleteFinancialStatus(athleteId) {
       const now = new Date();
-      
       const payments = window.financialPayments[athleteId] || {};
       
-      // Verifica se há alguma parcela vencida em aberto até a data atual
       for (let mIndex = 0; mIndex < months.length; mIndex++) {
         const mKey = months[mIndex];
         const monthNum = mIndex + 1;
@@ -930,10 +960,10 @@
         const isPaid = paymentData && (paymentData.paid || paymentData.amount > 0);
         
         if (!isPaid && now > dueDate) {
-          return 'overdue'; // Vermelho
+          return 'overdue';
         }
       }
-      return 'uptodate'; // Verde
+      return 'uptodate';
     }
 
     // --- RENDERIZAÇÃO DA LISTA DE PRESENÇA ---
@@ -944,16 +974,14 @@
       let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
       const dayPresences = window.presences[window.currentDate] || {};
 
-      // Ordenar atletas alfabeticamente
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
 
       sortedAthletes.forEach(athlete => {
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
         const status = pRecord.status;
 
-        // Se o atleta está suspenso/saiu
         if (athlete.isSuspended) {
-          if (!window.isAdmin) return; // Oculta para usuários comuns
+          if (!window.isAdmin) return;
         }
 
         countTotal++;
@@ -961,7 +989,6 @@
         else if (status === 'JUSTIFICADO') countJust++;
         else if (status === 'FORA') countOut++;
 
-        // Filtro ativo
         if (activeStatusFilter && status !== activeStatusFilter) {
           return;
         }
@@ -969,7 +996,6 @@
         const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" };
         const starsHtml = '★'.repeat(athlete.stars) + '☆'.repeat(5 - athlete.stars);
 
-        // Status financeiro do atleta
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const finDotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
@@ -985,6 +1011,11 @@
         let actionsHtml = '';
         const isPastDeadline = checkDeadlinePassed();
         const disabledAttr = (isPastDeadline && !window.isAdmin) ? 'opacity-40 pointer-events-none' : '';
+
+        // Só permite clicar se for admin OU se for o próprio atleta logado
+        // Removida restrição de botão apenas para o próprio atleta para manter a fluidez, 
+        // mas em sistema real, pode-se travar `pointer-events-none` se não for admin e `window.currentUser.id !== athlete.id`.
+        // Como não foi pedido explicitamente bloquear os outros além do admin no horário, mantido liberado.
 
         if (athlete.isSuspended) {
           actionsHtml = `<span class="text-[10px] font-bold px-2 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40">SUSPENSO / SAIU</span>`;
@@ -1002,7 +1033,7 @@
                 ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" title="Falta" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}">FALTA</button>` : ''}
               </div>
               ${(window.isAdmin && status === 'CONFIRMADO') ? `
-                <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-lg w-full justify-center">
+                <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-lg w-full justify-center mt-1">
                   <input type="checkbox" id="chk_att_${athlete.id}" ${pRecord.attended ? 'checked' : ''} onchange="toggleActualAttendance(${athlete.id}, this.checked)" class="w-3 h-3 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
                   <label for="chk_att_${athlete.id}" class="text-[9px] font-bold uppercase tracking-wider text-emerald-400 cursor-pointer">Validou Presença no Jogo?</label>
                 </div>
@@ -1344,7 +1375,7 @@
       let targetAthletes = [];
 
       window.athletes.forEach(a => {
-        if (a.isSuspended) return; // Atletas suspensos nunca recebem mensagens
+        if (a.isSuspended) return;
         const p = dayPresences[a.id]?.status;
         if (type === 'confirmed' && p === 'CONFIRMADO') targetAthletes.push(a);
         else if (type === 'pending' && (!p || p === '')) targetAthletes.push(a);
@@ -1363,7 +1394,6 @@
       }
 
       const msg = encodeURIComponent(`Fala craque! Convocação oficial para a pelada do Teimoso F.C.C. no dia ${formatDateDisplay(window.currentDate)}. Confirme sua presença no sistema!`);
-      // Abre o primeiro link como teste ou dispara
       window.open(`https://api.whatsapp.com/send?phone=55${phones[0].replace(/\D/g, '')}&text=${msg}`, '_blank');
       closeWhatsappMassModal();
       window.showToast(`Iniciando disparo para ${phones.length} atletas.`, "success");
@@ -1377,7 +1407,6 @@
       let totalGeneralPaid = 0;
       let totalGeneralDue = 0;
 
-      // Ordenar atletas alfabeticamente
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
 
       sortedAthletes.forEach(athlete => {
@@ -1399,14 +1428,17 @@
                 <span>${athlete.name}</span>
                 ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
               </div>
+              ${window.isAdmin ? `
               <button onclick="openWhatsappFinancialIndividual(${athlete.id})" title="Enviar WhatsApp Financeiro" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all inline-flex items-center justify-center text-xs shrink-0">
                 <i class="fa-brands fa-whatsapp"></i>
               </button>
+              ` : ''}
             </div>
           </td>
         `;
 
         const now = new Date();
+        const disableInput = !window.isAdmin ? 'disabled readonly' : '';
 
         months.forEach((mKey, mIndex) => {
           const monthNum = mIndex + 1;
@@ -1414,7 +1446,6 @@
           const firstDayAfterDue = new Date(2026, monthNum - 1, 16);
           
           let monthData = payments[mKey];
-          // Tratamento para suportar tanto objeto {paid, amount} quanto valor numérico direto
           let isPaid = false;
           let paidAmount = 0;
 
@@ -1431,7 +1462,6 @@
           
           if (isPaid) athleteTotalPaid += paidAmount;
 
-          // Cálculo de juros: R$ 1,00 por dia a partir do dia 16 exclusivamente para parcelas vencidas
           let interest = 0;
           if (!isPaid && now >= firstDayAfterDue) {
             const diffTime = now - firstDayAfterDue;
@@ -1441,13 +1471,11 @@
 
           const suggestedFee = athlete.monthlyFee || 110;
 
-          // Regra de saldo devedor / pagamento menor
           let dueForThisMonth = 0;
           if (!isPaid) {
             dueForThisMonth = suggestedFee + interest;
             athleteTotalDue += dueForThisMonth;
           } else {
-            // Exceções de pagamento parcial
             const isJulioOct = (athlete.name.toLowerCase().includes('júlio') || athlete.name.toLowerCase().includes('julio')) && mKey === 'out';
             const isOnofre = athlete.name.toLowerCase().includes('matheus onofre');
             const isSapaoSet = athlete.name.toLowerCase().includes('sapão') && mKey === 'set';
@@ -1458,7 +1486,6 @@
             }
           }
 
-          // Cores das células de mês
           let cellColorClass = "bg-slate-950/40 text-slate-500";
           if (isPaid) {
             const isJulioOct = (athlete.name.toLowerCase().includes('júlio') || athlete.name.toLowerCase().includes('julio')) && mKey === 'out';
@@ -1472,12 +1499,13 @@
           }
 
           const displayValue = isPaid ? paidAmount : suggestedFee;
+          const doubleClickAction = window.isAdmin ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : '';
 
           rowHtml += `
             <td class="py-2 px-2 text-center">
               <div class="flex items-center justify-center gap-1">
-                <input type="checkbox" ${isPaid ? 'checked' : ''} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0 cursor-pointer" title="Marcar como pago">
-                <input type="number" value="${displayValue}" data-athlete="${athlete.id}" data-month="${mKey}" ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')" onkeydown="handleFinancialKeydown(event, ${athlete.id}, '${mKey}')" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" class="w-16 bg-slate-950 border border-slate-800 rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500" title="Duplo clique para baixar sugerido">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0 ${window.isAdmin ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}" title="Marcar como pago">
+                <input type="number" value="${displayValue}" data-athlete="${athlete.id}" data-month="${mKey}" ${doubleClickAction} onkeydown="handleFinancialKeydown(event, ${athlete.id}, '${mKey}')" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${disableInput} class="w-16 bg-slate-950 border border-slate-800 rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500 ${window.isAdmin ? '' : 'opacity-80'}" title="Duplo clique para baixar sugerido">
               </div>
             </td>
           `;
@@ -1499,8 +1527,8 @@
       document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
     };
 
-    // --- CONTROLE DE NAVEGAÇÃO E EDIÇÃO FINANCEIRA POR TECLADO ---
     window.handleFinancialKeydown = function(event, athleteId, mKey) {
+      if (!window.isAdmin) return;
       const input = event.target;
       const allInputs = Array.from(document.querySelectorAll('#financialTable input[type="number"]'));
       const index = allInputs.indexOf(input);
@@ -1508,7 +1536,6 @@
 
       if (event.key === 'Enter') {
         event.preventDefault();
-        // Move para a célula de baixo (mesmo mês, próximo atleta)
         const nextInputIndex = index + numMonths;
         if (nextInputIndex < allInputs.length) {
           allInputs[nextInputIndex].focus();
@@ -1516,7 +1543,6 @@
         }
       } else if (event.key === 'Tab' && !event.shiftKey) {
         event.preventDefault();
-        // Move para a célula à direita (próximo mês)
         const nextInputIndex = index + 1;
         if (nextInputIndex < allInputs.length) {
           allInputs[nextInputIndex].focus();
@@ -1524,7 +1550,6 @@
         }
       } else if (event.key === 'Tab' && event.shiftKey) {
         event.preventDefault();
-        // Move para a célula à esquerda
         const prevInputIndex = index - 1;
         if (prevInputIndex >= 0) {
           allInputs[prevInputIndex].focus();
@@ -1534,20 +1559,15 @@
     };
 
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
+      if (!window.isAdmin) return;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
       const athlete = window.athletes.find(a => a.id === athleteId);
       const suggested = athlete ? athlete.monthlyFee : 110;
 
       if (isChecked) {
-        window.financialPayments[athleteId][mKey] = {
-          paid: true,
-          amount: suggested
-        };
+        window.financialPayments[athleteId][mKey] = { paid: true, amount: suggested };
       } else {
-        window.financialPayments[athleteId][mKey] = {
-          paid: false,
-          amount: 0
-        };
+        window.financialPayments[athleteId][mKey] = { paid: false, amount: 0 };
       }
       window.saveData();
       renderFinancial();
@@ -1555,13 +1575,11 @@
     };
 
     window.doubleClickSettleMonth = function(athleteId, mKey) {
+      if (!window.isAdmin) return;
       const athlete = window.athletes.find(a => a.id === athleteId);
       const suggested = athlete ? athlete.monthlyFee : 110;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
-      window.financialPayments[athleteId][mKey] = {
-        paid: true,
-        amount: suggested
-      };
+      window.financialPayments[athleteId][mKey] = { paid: true, amount: suggested };
       window.saveData();
       renderFinancial();
       renderReports();
@@ -1569,12 +1587,10 @@
     };
 
     window.updateFinancialValue = function(athleteId, mKey, val) {
+      if (!window.isAdmin) return;
       const numVal = parseFloat(val) || 0;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
-      window.financialPayments[athleteId][mKey] = {
-        paid: numVal > 0,
-        amount: numVal
-      };
+      window.financialPayments[athleteId][mKey] = { paid: numVal > 0, amount: numVal };
       window.saveData();
       renderFinancial();
       renderReports();
@@ -1595,7 +1611,6 @@
       if (status === 'uptodate') {
         msg = `Prezado(a) ${athlete.name},\n\nO Teimoso F.C.C. agradece sua pontualidade e colaboração com as mensalidades em dia. Sua dedicação fortalece nosso grupo!\n\nAtenciosamente,\nDiretoria Teimoso F.C.C.`;
       } else {
-        // Calcula débitos detalhados
         let totalDue = 0;
         let details = "";
         const payments = window.financialPayments[athleteId] || {};
@@ -1628,7 +1643,6 @@
     };
 
     window.openWhatsappFinancialMassModal = function() {
-      // Dispara em massa para inadimplentes
       let count = 0;
       window.athletes.forEach(athlete => {
         if (athlete.isSuspended) return;
@@ -1661,10 +1675,7 @@
     window.renderReports = function() {
       const tbody = document.getElementById('reportsTableBody');
       tbody.innerHTML = '';
-
       const totalPeladas = window.datesList.length;
-
-      // Ordenar atletas alfabeticamente
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
 
       sortedAthletes.forEach(athlete => {
@@ -1697,8 +1708,6 @@
     window.exportReportsCSV = function() {
       let csv = "Atleta,Posicao,Presencas,TotalPeladas,TaxaAssiduidade\n";
       const totalPeladas = window.datesList.length;
-
-      // Mantém a exportação ordenada alfabeticamente
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
 
       sortedAthletes.forEach(athlete => {
