@@ -197,13 +197,25 @@
 
         <!-- ATHLETES LIST TABLE -->
         <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
-          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 w-full sm:w-auto">
               <i class="fa-solid fa-clipboard-user text-emerald-400"></i> Lista de Presença da Pelada
             </h3>
-            <span id="activeFilterBadge" class="hidden text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              Filtro ativo: <span id="filterName"></span> <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-400 hover:underline">×</button>
-            </span>
+            
+            <div class="flex items-center justify-end gap-3 w-full sm:w-auto">
+              <span id="activeFilterBadge" class="hidden text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+                Filtro: <span id="filterName"></span> 
+                <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-400 hover:text-rose-300 focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
+              </span>
+              
+              <!-- CAMPO DE PESQUISA POR NOME -->
+              <div class="relative w-full sm:w-56 shrink-0">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fa-solid fa-search text-slate-500 text-xs"></i>
+                </div>
+                <input type="text" id="searchAthleteInput" oninput="renderAthletesList()" placeholder="Buscar atleta..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500 placeholder-slate-600 shadow-inner">
+              </div>
+            </div>
           </div>
 
           <div class="overflow-x-auto">
@@ -933,6 +945,9 @@
 
       let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
       const dayPresences = window.presences[window.currentDate] || {};
+      
+      const searchInput = document.getElementById('searchAthleteInput');
+      const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
 
@@ -940,15 +955,25 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
         const status = pRecord.status;
 
+        // Se o atleta for suspenso, não aparece para atletas comuns
         if (athlete.isSuspended) {
           if (!window.isAdmin) return;
         }
 
-        countTotal++;
-        if (status === 'CONFIRMADO') countConf++;
-        else if (status === 'JUSTIFICADO') countJust++;
-        else if (status === 'FORA') countOut++;
+        // Estatísticas Globais: Atletas SUSPENSOS não contam no Total
+        if (!athlete.isSuspended) {
+          countTotal++;
+          if (status === 'CONFIRMADO') countConf++;
+          else if (status === 'JUSTIFICADO') countJust++;
+          else if (status === 'FORA') countOut++;
+        }
 
+        // Filtro de Busca por Nome
+        if (searchTerm && !athlete.name.toLowerCase().includes(searchTerm)) {
+          return;
+        }
+
+        // Filtro dos Cards de Estatística
         if (activeStatusFilter && status !== activeStatusFilter) {
           return;
         }
