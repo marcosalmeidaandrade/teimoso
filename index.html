@@ -64,12 +64,8 @@
           <i class="fa-solid fa-user-shield"></i>
           <span class="hidden sm:inline">Admin</span>
         </div>
-        <div class="flex items-center gap-2 bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-700">
-          <i class="fa-solid fa-circle-user text-slate-400"></i>
-          <span id="userNameDisplay" class="text-xs font-bold text-white truncate max-w-[100px]"></span>
-        </div>
-        <button onclick="logoutUser()" class="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-lg transition" title="Sair do Sistema">
-          <i class="fa-solid fa-right-from-bracket"></i>
+        <button onclick="toggleAdminMode()" id="btnAdminToggle" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-lock text-brand-green"></i> <span id="adminToggleText">Modo Admin</span>
         </button>
       </div>
     </div>
@@ -326,35 +322,19 @@
     </div>
   </div>
 
-  <!-- TELA DE LOGIN DE USUÁRIO (SOBREPÕE O APP INICIALMENTE) -->
-  <div id="loginScreen" class="fixed inset-0 z-[9900] bg-slate-950 flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-4 relative overflow-hidden">
-      <!-- Glow effect -->
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-brand-green/10 blur-3xl rounded-full pointer-events-none"></div>
-      
-      <div class="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-lg overflow-hidden border border-slate-700 p-1 mb-2 z-10">
-        <img src="logo.png" alt="Logo Teimoso" class="w-full h-full object-contain" />
+  <!-- MODAL ADMIN PIN -->
+  <div id="modalAdmin" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-xs shadow-2xl space-y-4">
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-lock text-brand-green"></i> Acesso Administrativo
+      </h3>
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Senha (PIN):</label>
+        <input type="password" id="inputAdminPin" placeholder="Digite a senha..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-brand-green" onkeydown="if(event.key==='Enter') verifyAdminPin()" />
       </div>
-      <div class="text-center z-10">
-        <h2 class="text-xl font-black text-white tracking-tight">TEIMOSO FCC</h2>
-        <p class="text-[11px] text-slate-400 font-medium mt-0.5">Acesso de Jogadores</p>
-      </div>
-
-      <div class="w-full space-y-4 mt-2 z-10">
-        <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider text-center">Sua Senha (4 dígitos):</label>
-          <input type="password" id="loginPassword" placeholder="____" maxlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-center text-3xl tracking-[0.7em] font-black text-white focus:outline-none focus:border-brand-green shadow-inner" onkeydown="if(event.key==='Enter') executeLogin()" />
-          <div class="mt-4 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex gap-2 items-start">
-            <i class="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
-            <p class="text-[10px] text-amber-300/90 leading-relaxed">
-              Digite os <strong>4 últimos dígitos</strong> do seu número de telefone celular para acessar o aplicativo automaticamente.
-              <br><span class="opacity-75 block mt-1">*Admin de Recuperação: digite <strong>0000</strong></span>
-            </p>
-          </div>
-        </div>
-        <button onclick="executeLogin()" class="w-full py-3.5 mt-2 bg-brand-green hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-xl transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95">
-          ENTRAR NO APP
-        </button>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button onclick="closeAdminModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
+        <button onclick="verifyAdminPin()" class="px-4 py-1.5 bg-brand-green text-xs font-black text-slate-950 rounded-lg">ENTRAR</button>
       </div>
     </div>
   </div>
@@ -523,7 +503,7 @@
         &copy; 2026 <span class="text-white font-bold">Teimoso FCC</span>. Todos os direitos reservados.
       </p>
       <p class="text-[10px] text-slate-500 flex items-center gap-1">
-        Desenvolvido com <i class="fa-solid fa-heart text-brand-green"></i> por <span class="font-bold text-slate-300 hover:text-brand-green transition cursor-pointer">Seu Nome / Equipe de Dev</span>
+        Desenvolvido com <i class="fa-solid fa-heart text-brand-green"></i> por <span class="font-bold text-slate-300 hover:text-brand-green transition cursor-pointer">Marcos Almeida®</span>
       </p>
     </div>
   </footer>
@@ -534,7 +514,7 @@
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // MANTENHA AS SUAS CREDENCIAIS AQUI
+    // CREDENCIAIS TEIMOSOWEB
     const firebaseConfig = {
       apiKey: "AIzaSyD-ExemploDeChaveReal123456",
       authDomain: "teimosoweb.firebaseapp.com",
@@ -548,12 +528,10 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // OBTENÇÃO DINÂMICA DE APP_ID (Regra Estrita do Ambiente)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'teimoso-fcc-default';
 
     // DADOS GLOBAIS DA APLICAÇÃO
-    let isAdmin = false;
-    let loggedAthlete = null;
+    window.isAdmin = false;
     let docRef = null;
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
@@ -588,7 +566,7 @@
     window.presences = {}; 
     window.financialPayments = {};
 
-    // SISTEMA DE TOAST E CONFIRM (SUBSTITUI ALERT E CONFIRM)
+    // SISTEMA DE TOAST E CONFIRM
     window.showToast = function(message, type = 'error') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -624,7 +602,7 @@
       closeConfirm();
     });
 
-    // PERSISTÊNCIA NA NUVEM (FIREBASE) COM AUTENTICAÇÃO
+    // PERSISTÊNCIA NA NUVEM (FIREBASE)
     window.saveData = async function() {
       if (!docRef) return;
       try {
@@ -639,20 +617,17 @@
         });
       } catch (e) {
         console.error("Erro ao salvar no Firebase:", e);
-        window.showToast("Erro ao sincronizar com a nuvem.");
       }
     };
 
     async function initializeFirebaseAndListen() {
       try {
-        // Autenticação Obrigatória antes das Queries
         if (typeof __initial_auth_token !== 'undefined') {
           await signInWithCustomToken(auth, __initial_auth_token);
         } else {
           await signInAnonymously(auth);
         }
         
-        // Caminho de gravação estrito e seguro
         docRef = doc(db, 'artifacts', appId, 'public', 'data', 'teimoso_config_doc');
         
         onSnapshot(docRef, (snapshot) => {
@@ -667,13 +642,9 @@
 
             populateDateSelect();
             updateCurrentTimeUI();
-            
-            // Só renderiza a lista se já estiver passado do login
-            if (loggedAthlete) {
-              renderAthletesList();
-              if (activeTab === 'reports') renderReports();
-              if (activeTab === 'financial') renderFinancial();
-            }
+            renderAthletesList();
+            if (activeTab === 'reports') renderReports();
+            if (activeTab === 'financial') renderFinancial();
           } else {
             window.saveData();
           }
@@ -685,7 +656,7 @@
       }
     }
 
-    // UTILITÁRIOS E NAVEGAÇÃO
+    // NAVEGAÇÃO DE ABAS
     window.switchTab = function(tabName) {
       activeTab = tabName;
       ['presence', 'draw', 'reports', 'financial'].forEach(t => {
@@ -719,12 +690,59 @@
     window.isDeadlinePassed = function() {
       if (!window.currentDate) return false;
       const [y, m, d] = window.currentDate.split('-');
-      // Cria a data exata com 1 dia a menos às 18:00
       const deadlineDate = new Date(y, m - 1, d - 1, 18, 0, 0); 
       return new Date() > deadlineDate;
     };
 
-    // STATUS FINANCEIRO DO ATLETA (REGRA DE JÁ ESTAR EM DIA / DÉBITO)
+    // MODO ADMIN
+    window.toggleAdminMode = function() {
+      if (window.isAdmin) {
+        window.isAdmin = false;
+        document.getElementById('adminBadge').classList.add('hidden');
+        document.getElementById('adminBadge').classList.remove('flex');
+        document.getElementById('adminToggleText').innerText = "Modo Admin";
+        document.getElementById('btnAdminToggle').classList.remove('bg-amber-500/20', 'border-amber-500/50', 'text-amber-400');
+        document.getElementById('btnAddAthlete').classList.add('hidden');
+        document.getElementById('btnAddDate').classList.add('hidden');
+        document.getElementById('btnEditTimes').classList.add('hidden');
+        document.getElementById('btnMasterZap').classList.add('hidden');
+        document.getElementById('tab-financial').classList.add('hidden');
+        if (activeTab === 'financial') window.switchTab('presence');
+        window.showToast("Modo Admin desativado.", "success");
+        renderAthletesList();
+      } else {
+        document.getElementById('modalAdmin').classList.remove('hidden');
+        document.getElementById('inputAdminPin').value = '';
+        setTimeout(() => document.getElementById('inputAdminPin').focus(), 100);
+      }
+    };
+
+    window.closeAdminModal = function() {
+      document.getElementById('modalAdmin').classList.add('hidden');
+    };
+
+    window.verifyAdminPin = function() {
+      const pin = document.getElementById('inputAdminPin').value.trim();
+      if (pin === "2026" || pin === "0000" || pin === "1234") {
+        window.isAdmin = true;
+        document.getElementById('adminBadge').classList.remove('hidden');
+        document.getElementById('adminBadge').classList.add('flex');
+        document.getElementById('adminToggleText').innerText = "Sair Admin";
+        document.getElementById('btnAdminToggle').classList.add('bg-amber-500/20', 'border-amber-500/50', 'text-amber-400');
+        document.getElementById('btnAddAthlete').classList.remove('hidden');
+        document.getElementById('btnAddDate').classList.remove('hidden');
+        document.getElementById('btnEditTimes').classList.remove('hidden');
+        document.getElementById('btnMasterZap').classList.remove('hidden');
+        document.getElementById('tab-financial').classList.remove('hidden');
+        closeAdminModal();
+        window.showToast("Modo Administrador ativado com sucesso!", "success");
+        renderAthletesList();
+      } else {
+        window.showToast("Senha incorreta!");
+      }
+    };
+
+    // STATUS FINANCEIRO DO ATLETA
     function getAthleteFinancialStatus(ath) {
       const athPay = window.financialPayments[ath.id] || {};
       const athFee = ath.monthlyFee !== undefined ? ath.monthlyFee : 110;
@@ -797,7 +815,7 @@
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
       sortedAthletes.forEach(ath => {
-        if (ath.isSuspended && !isAdmin) return;
+        if (ath.isSuspended && !window.isAdmin) return;
 
         const p = currentPresences[ath.id] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
         const isInside = p.status === 'CONFIRMADO' || p.status === 'DENTRO' || p.status === 'VOU';
@@ -871,7 +889,7 @@
         }
 
         let adminButtonsHtml = '';
-        if (isAdmin) {
+        if (window.isAdmin) {
           const isCheckable = isInside && !isFault && !ath.isSuspended;
           adminButtonsHtml = `
             <button onclick="toggleFault(${ath.id})" ${ath.isSuspended ? 'disabled' : ''} class="px-2 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isFault ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-300' : 'bg-slate-900/60 text-slate-400 hover:text-amber-400 hover:bg-slate-900')}" title="Atleta confirmou presença mas não compareceu">
@@ -888,7 +906,7 @@
         }
 
         const hasPhone = ath.phone && cleanPhone(ath.phone) !== "";
-        const zapBtnTitle = isAdmin 
+        const zapBtnTitle = window.isAdmin 
           ? (ath.isSuspended ? 'Atleta SUSPENSO - Envio de WhatsApp Bloqueado' : (hasPhone ? `Enviar Convocação Zap para ${ath.phone}` : 'Sem WhatsApp (Clique para cadastrar)'))
           : (hasPhone ? 'WhatsApp Cadastrado (Apenas Admin envia convite)' : 'Sem WhatsApp Cadastrado');
 
@@ -900,7 +918,7 @@
           </button>
         `;
 
-        const isActionBlocked = ath.isSuspended || (!isAdmin && deadlinePassed);
+        const isActionBlocked = ath.isSuspended || (!window.isAdmin && deadlinePassed);
         const actionBlockedReason = ath.isSuspended ? "Atleta SUSPENSO" : "Prazo encerrado (1 dia antes às 18h)";
 
         card.innerHTML = `
@@ -964,7 +982,7 @@
       const ath = window.athletes.find(a => a.id === athId);
       if (ath && ath.isSuspended) return;
 
-      if (!isAdmin && window.isDeadlinePassed()) {
+      if (!window.isAdmin && window.isDeadlinePassed()) {
         window.showToast("Prazo encerrado! O limite para alterações é até as 18h do dia anterior ao jogo. Fale com um Administrador.");
         return;
       }
@@ -974,7 +992,6 @@
       const currentPresence = window.presences[window.currentDate][athId];
       const currentStatus = currentPresence ? currentPresence.status : 'PENDENTE';
 
-      // Se clicar no botão de um status que já está marcado, desmarca (volta para PENDENTE)
       if (currentStatus === status) {
         window.presences[window.currentDate][athId] = {
           status: 'PENDENTE',
@@ -1003,7 +1020,7 @@
     };
 
     window.toggleCheck = function(athId) {
-      if (!isAdmin) return;
+      if (!window.isAdmin) return;
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       const current = window.presences[window.currentDate][athId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
       
@@ -1017,7 +1034,7 @@
     };
 
     window.toggleFault = function(athId) {
-      if (!isAdmin) return;
+      if (!window.isAdmin) return;
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       const current = window.presences[window.currentDate][athId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
       
@@ -1078,7 +1095,7 @@
                 colorClass = "border-amber-500/50 text-amber-300 font-bold bg-amber-950/20";
               }
             } else {
-              debtMonth = 0; // Regra Geral: isenção e quitação ao informar qualquer valor
+              debtMonth = 0;
               colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
             }
           } else if (now >= firstInterestDate) {
@@ -1278,14 +1295,13 @@
         if(teams[idx % numTeams].players.length < PLAYERS_PER_TEAM) {
             teams[idx % numTeams].players.push(k);
         } else {
-             // Fallback
              teams.find(t => t.players.length < PLAYERS_PER_TEAM)?.players.push(k);
         }
       });
 
       linePlayers.forEach((p) => {
         let minTeam = teams.find(t => t.players.length < PLAYERS_PER_TEAM);
-        if(!minTeam) minTeam = teams[0]; // Avoid error if full, though numTeams calculation prevents this.
+        if(!minTeam) minTeam = teams[0];
         
         teams.forEach(t => {
           if (t.players.length < minTeam.players.length && t.players.length < PLAYERS_PER_TEAM) {
@@ -1331,74 +1347,6 @@
       });
 
       document.getElementById('btnShareTeamsZap').classList.remove('hidden');
-    };
-
-    // SISTEMA DE LOGIN DE USUÁRIOS
-    window.executeLogin = function() {
-      const pwd = document.getElementById('loginPassword').value.trim();
-
-      if (pwd.length !== 4) {
-        window.showToast("A senha deve conter exatamente 4 dígitos.");
-        return;
-      }
-
-      // Busca automaticamente o atleta ativo cujo celular termine com os 4 dígitos informados
-      let ath = window.athletes.find(a => !a.isSuspended && window.cleanPhone(a.phone).endsWith(pwd));
-
-      // SENHA MASTER PARA RECUPERAÇÃO / TESTE ADMIN (0000)
-      if (!ath && pwd === "0000") {
-        ath = window.athletes.find(a => a.name.toUpperCase().includes("FELIPE MACACO"));
-        if (!ath) {
-          ath = { id: 9999, name: "Felipe Macaco", position: "Meia", phone: "0000", stars: 5, monthlyFee: 110, isSuspended: false };
-          window.athletes.push(ath);
-        }
-      }
-
-      if (!ath) {
-        window.showToast("Senha incorreta ou atleta não encontrado. Verifique seu cadastro.");
-        return;
-      }
-
-      // Login Sucesso
-      loggedAthlete = ath;
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('userNameDisplay').innerText = ath.name;
-
-      // Verifica lista de Administradores
-      const nameUpper = ath.name.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const adminList = ["FELIPE MACACO", "CLAUDIO", "PABLO PADILHA", "DAVI", "TIAGO BOQUETE"];
-      
-      isAdmin = adminList.includes(nameUpper);
-
-      if (isAdmin) {
-        document.getElementById('adminBadge').classList.remove('hidden');
-        document.getElementById('adminBadge').classList.add('flex');
-        document.getElementById('btnAddAthlete').classList.remove('hidden');
-        document.getElementById('btnAddDate').classList.remove('hidden');
-        document.getElementById('btnEditTimes').classList.remove('hidden');
-        document.getElementById('btnMasterZap').classList.remove('hidden');
-        document.getElementById('tab-financial').classList.remove('hidden');
-      } else {
-        document.getElementById('adminBadge').classList.add('hidden');
-        document.getElementById('adminBadge').classList.remove('flex');
-        document.getElementById('btnAddAthlete').classList.add('hidden');
-        document.getElementById('btnAddDate').classList.add('hidden');
-        document.getElementById('btnEditTimes').classList.add('hidden');
-        document.getElementById('btnMasterZap').classList.add('hidden');
-        document.getElementById('tab-financial').classList.add('hidden');
-        if (activeTab === 'financial') window.switchTab('presence');
-      }
-
-      populateDateSelect();
-      renderAthletesList();
-      window.showToast(`Bem-vindo(a), ${ath.name}!`, 'success');
-    };
-
-    window.logoutUser = function() {
-      loggedAthlete = null;
-      isAdmin = false;
-      document.getElementById('loginPassword').value = '';
-      document.getElementById('loginScreen').classList.remove('hidden');
     };
 
     // MODAL ATLETA
@@ -1480,7 +1428,7 @@
     };
 
     window.deleteAthlete = function(id) {
-      if (!isAdmin) return;
+      if (!window.isAdmin) return;
       window.showConfirm("Tem certeza que deseja excluir este atleta?", () => {
         window.athletes = window.athletes.filter(a => a.id !== id);
         window.saveData();
@@ -1501,7 +1449,6 @@
     window.closeJustifyModal = function() {
       document.getElementById('modalJustify').classList.add('hidden');
       currentJustifyAthleteId = null;
-      // Remove a query url caso tenha vindo pelo link
       if (window.history.replaceState) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
@@ -1522,12 +1469,10 @@
       renderAthletesList();
     };
 
-    // VERIFICADOR DE LINK DIRETO (WHATSAPP)
     function checkDirectJustificationLink() {
       const urlParams = new URLSearchParams(window.location.search);
       const justifyId = urlParams.get('justificar');
       if (justifyId) {
-        // Aguardar um instante para carregar tudo e abrir o modal
         setTimeout(() => {
           openJustifyModal(parseInt(justifyId));
         }, 500);
@@ -1538,8 +1483,7 @@
     function populateDateSelect() {
       const sel = document.getElementById('selectDate');
       sel.innerHTML = '';
-      if (!isAdmin && window.datesList.length > 0) {
-        // Atleta padrão visualiza apenas a data atual (próxima pelada)
+      if (!window.isAdmin && window.datesList.length > 0) {
         const d = window.currentDate;
         const [y, m, day] = d.split('-');
         const opt = document.createElement('option');
@@ -1547,9 +1491,8 @@
         opt.innerText = `${day}/${m}/${y}`;
         opt.selected = true;
         sel.appendChild(opt);
-        sel.disabled = true; // Impede alterar
+        sel.disabled = true;
       } else {
-        // Admin visualiza e altera para qualquer data
         sel.disabled = false;
         window.datesList.forEach(d => {
           const [y, m, day] = d.split('-');
@@ -1563,7 +1506,7 @@
     }
 
     window.changeCurrentDate = function(d) {
-      if(!isAdmin) return;
+      if(!window.isAdmin) return;
       window.currentDate = d;
       window.saveData();
       updateCurrentTimeUI();
@@ -1596,7 +1539,7 @@
 
     window.saveEventTimes = function() {
       const gt = document.getElementById('inputGameTime').value;
-      const dl = document.getElementById('inputDeadline').value; // Mantido por compatibilidade
+      const dl = document.getElementById('inputDeadline').value;
       if (gt) {
         window.eventTimes = { gameTime: gt, deadline: dl || window.eventTimes.deadline };
         window.saveData();
@@ -1619,7 +1562,7 @@
       }
     }
 
-    // WHATSAPP DISPARO E CONVOCAÇÃO
+    // WHATSAPP
     window.sendAthleteZap = function(athId) {
       const ath = window.athletes.find(a => a.id === athId);
       if (!ath) return;
@@ -1629,7 +1572,7 @@
       }
       const phone = cleanPhone(ath.phone);
       if (!phone) {
-        if (isAdmin) openEditAthleteModal(athId);
+        if (window.isAdmin) openEditAthleteModal(athId);
         else window.showToast("Atleta sem número de WhatsApp cadastrado.");
         return;
       }
@@ -1831,7 +1774,6 @@
       document.body.removeChild(link);
     };
 
-    // INICIALIZAÇÃO DA APLICAÇÃO
     window.addEventListener('DOMContentLoaded', () => {
       initializeFirebaseAndListen();
       checkDirectJustificationLink();
