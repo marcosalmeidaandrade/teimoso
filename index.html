@@ -60,14 +60,15 @@
       </div>
       <!-- PAINEL ADMIN / STATUS -->
       <div class="flex items-center gap-2">
-        <div id="adminBadge" class="hidden items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">
-          <i class="fa-solid fa-user-shield text-xs"></i>
-          <span class="hidden sm:inline">Modo Admin</span>
+        <div id="adminBadge" class="hidden items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">
+          <i class="fa-solid fa-user-shield"></i>
+          <span class="hidden sm:inline">Admin</span>
         </div>
-        <button id="btnLoginAdmin" onclick="openAdminModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-200">
-          <i class="fa-solid fa-lock text-brand-green"></i><span>ADMIN</span>
-        </button>
-        <button id="btnLogoutAdmin" onclick="logoutAdmin()" class="hidden px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-lg transition">
+        <div class="flex items-center gap-2 bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-700">
+          <i class="fa-solid fa-circle-user text-slate-400"></i>
+          <span id="userNameDisplay" class="text-xs font-bold text-white truncate max-w-[100px]"></span>
+        </div>
+        <button onclick="logoutUser()" class="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-lg transition" title="Sair do Sistema">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
@@ -308,22 +309,57 @@
     </section>
   </main>
 
-  <!-- MODAL LOGIN ADMIN -->
-  <div id="modalAdmin" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2"></div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="customConfirmModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-4">
-      <div class="text-center">
-        <div class="w-12 h-12 rounded-full bg-brand-green/20 border border-brand-green/40 text-brand-green flex items-center justify-center mx-auto mb-2 text-xl">
-          <i class="fa-solid fa-shield-halved"></i>
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-circle-question text-amber-400 text-lg"></i> Confirmação
+      </h3>
+      <p id="confirmMessage" class="text-xs text-slate-300 font-medium"></p>
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-800 mt-2">
+        <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition">Cancelar</button>
+        <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-xs font-black text-white rounded-xl transition">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE LOGIN DE USUÁRIO (SOBREPÕE O APP INICIALMENTE) -->
+  <div id="loginScreen" class="fixed inset-0 z-[9900] bg-slate-950 flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-4 relative overflow-hidden">
+      <!-- Glow effect -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-brand-green/10 blur-3xl rounded-full pointer-events-none"></div>
+      
+      <div class="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-lg overflow-hidden border border-slate-700 p-1 mb-2 z-10">
+        <img src="logo.png" alt="Logo Teimoso" class="w-full h-full object-contain" />
+      </div>
+      <div class="text-center z-10">
+        <h2 class="text-xl font-black text-white tracking-tight">TEIMOSO FCC</h2>
+        <p class="text-[11px] text-slate-400 font-medium mt-0.5">Acesso de Jogadores</p>
+      </div>
+
+      <div class="w-full space-y-4 mt-2 z-10">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Selecione seu Nome:</label>
+          <select id="loginAthleteSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-brand-green appearance-none shadow-inner">
+            <option value="">Carregando atletas...</option>
+          </select>
         </div>
-        <h3 class="text-base font-bold text-white">Acesso do Administrador</h3>
-        <p class="text-xs text-slate-400">Informe a senha master do Teimoso FCC</p>
-      </div>
-      <div>
-        <input type="password" id="inputAdminPin" placeholder="Senha / PIN Admin" onkeydown="if(event.key==='Enter') loginAdmin()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-white text-sm tracking-widest focus:outline-none focus:border-brand-green" />
-      </div>
-      <div class="flex items-center gap-2">
-        <button onclick="closeAdminModal()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition">Cancelar</button>
-        <button onclick="loginAdmin()" class="w-1/2 py-2 bg-brand-green hover:bg-emerald-400 text-xs font-black text-slate-950 rounded-xl transition">ENTRAR</button>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Senha de Acesso:</label>
+          <input type="password" id="loginPassword" placeholder="____" maxlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-center text-2xl tracking-[0.7em] font-black text-white focus:outline-none focus:border-brand-green shadow-inner" onkeydown="if(event.key==='Enter') executeLogin()" />
+          <div class="mt-3 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex gap-2 items-start">
+            <i class="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 shrink-0"></i>
+            <p class="text-[10px] text-amber-300/90 leading-tight">
+              A senha padrão é composta pelos <strong>4 últimos dígitos</strong> do seu número de telefone celular cadastrado.
+            </p>
+          </div>
+        </div>
+        <button onclick="executeLogin()" class="w-full py-3.5 mt-2 bg-brand-green hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-xl transition shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95">
+          ENTRAR NO APP
+        </button>
       </div>
     </div>
   </div>
@@ -500,11 +536,12 @@
   <!-- FIREBASE SDK MODULAR E SCRIPTS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // CREDENCIAIS FIREBASE (Solicitadas pelo usuário: "teimosoweb")
+    // MANTENHA AS SUAS CREDENCIAIS AQUI
     const firebaseConfig = {
-      apiKey: "AIzaSyD-ExemploDeChaveReal123456", // Altere conforme necessário na Vercel
+      apiKey: "AIzaSyD-ExemploDeChaveReal123456",
       authDomain: "teimosoweb.firebaseapp.com",
       projectId: "teimosoweb",
       storageBucket: "teimosoweb.appspot.com",
@@ -513,11 +550,16 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // OBTENÇÃO DINÂMICA DE APP_ID (Regra Estrita do Ambiente)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'teimoso-fcc-default';
+
     // DADOS GLOBAIS DA APLICAÇÃO
-    const ADMIN_PIN = "09022019";
     let isAdmin = false;
+    let loggedAthlete = null;
+    let docRef = null;
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
@@ -550,10 +592,47 @@
     window.presences = {}; 
     window.financialPayments = {};
 
-    // PERSISTÊNCIA NA NUVEM (FIREBASE)
+    // SISTEMA DE TOAST E CONFIRM (SUBSTITUI ALERT E CONFIRM)
+    window.showToast = function(message, type = 'error') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgColor = type === 'error' ? 'bg-rose-600' : 'bg-emerald-600';
+      toast.className = `${bgColor} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-x-10 opacity-0`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i> ${message}`;
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-10', 'opacity-0');
+      });
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-10');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    };
+
+    let confirmCallback = null;
+    window.showConfirm = function(message, callback) {
+      document.getElementById('confirmMessage').innerText = message;
+      confirmCallback = callback;
+      document.getElementById('customConfirmModal').classList.remove('hidden');
+    };
+    
+    window.closeConfirm = function() {
+      document.getElementById('customConfirmModal').classList.add('hidden');
+      confirmCallback = null;
+    };
+    
+    document.getElementById('btnConfirmAction').addEventListener('click', () => {
+      if (confirmCallback) confirmCallback();
+      closeConfirm();
+    });
+
+    // PERSISTÊNCIA NA NUVEM (FIREBASE) COM AUTENTICAÇÃO
     window.saveData = async function() {
+      if (!docRef) return;
       try {
-        await setDoc(doc(db, "teimoso_config", "dados_gerais"), {
+        await setDoc(docRef, {
           datesList: window.datesList,
           currentDate: window.currentDate,
           eventTimes: window.eventTimes,
@@ -564,29 +643,51 @@
         });
       } catch (e) {
         console.error("Erro ao salvar no Firebase:", e);
+        window.showToast("Erro ao sincronizar com a nuvem.");
       }
     };
 
-    function listenToCloudData() {
-      onSnapshot(doc(db, "teimoso_config", "dados_gerais"), (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          window.datesList = data.datesList || window.datesList;
-          window.currentDate = data.currentDate || window.datesList[0];
-          window.eventTimes = data.eventTimes || window.eventTimes;
-          window.athletes = data.athletes || window.athletes;
-          window.presences = data.presences || {};
-          window.financialPayments = data.financialPayments || {};
-
-          populateDateSelect();
-          updateCurrentTimeUI();
-          renderAthletesList();
-          if (activeTab === 'reports') renderReports();
-          if (activeTab === 'financial') renderFinancial();
+    async function initializeFirebaseAndListen() {
+      try {
+        // Autenticação Obrigatória antes das Queries
+        if (typeof __initial_auth_token !== 'undefined') {
+          await signInWithCustomToken(auth, __initial_auth_token);
         } else {
-          window.saveData();
+          await signInAnonymously(auth);
         }
-      });
+        
+        // Caminho de gravação estrito e seguro
+        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'teimoso_config_doc');
+        
+        onSnapshot(docRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            window.datesList = data.datesList || window.datesList;
+            window.currentDate = data.currentDate || window.datesList[0];
+            window.eventTimes = data.eventTimes || window.eventTimes;
+            window.athletes = data.athletes || window.athletes;
+            window.presences = data.presences || {};
+            window.financialPayments = data.financialPayments || {};
+
+            populateLoginSelect();
+            populateDateSelect();
+            updateCurrentTimeUI();
+            
+            // Só renderiza a lista se já estiver passado do login
+            if (loggedAthlete) {
+              renderAthletesList();
+              if (activeTab === 'reports') renderReports();
+              if (activeTab === 'financial') renderFinancial();
+            }
+          } else {
+            window.saveData();
+          }
+        }, (error) => {
+          console.error("Erro no onSnapshot:", error);
+        });
+      } catch(e) {
+        console.error("Erro na autenticação Firebase:", e);
+      }
     }
 
     // UTILITÁRIOS E NAVEGAÇÃO
@@ -869,7 +970,7 @@
       if (ath && ath.isSuspended) return;
 
       if (!isAdmin && window.isDeadlinePassed()) {
-        alert("Prazo encerrado! O limite para alterações é até as 18h do dia anterior ao jogo. Fale com um Administrador.");
+        window.showToast("Prazo encerrado! O limite para alterações é até as 18h do dia anterior ao jogo. Fale com um Administrador.");
         return;
       }
 
@@ -1160,7 +1261,7 @@
       });
 
       if (availableAthletes.length < 2) {
-        alert("É necessário ter pelo menos 2 atletas com presença VALIDADA para realizar o sorteio.");
+        window.showToast("É necessário ter pelo menos 2 atletas com presença VALIDADA para realizar o sorteio.");
         return;
       }
 
@@ -1237,51 +1338,84 @@
       document.getElementById('btnShareTeamsZap').classList.remove('hidden');
     };
 
-    // MODAL E LOGINS ADMIN
-    window.openAdminModal = function() {
-      document.getElementById('modalAdmin').classList.remove('hidden');
-      document.getElementById('inputAdminPin').focus();
-    };
+    // SISTEMA DE LOGIN DE USUÁRIOS
+    function populateLoginSelect() {
+      const sel = document.getElementById('loginAthleteSelect');
+      const currentVal = sel.value;
+      sel.innerHTML = '<option value="">[ Escolha seu nome ]</option>';
+      const sorted = [...window.athletes].sort((a,b) => a.name.localeCompare(b.name, 'pt-BR'));
+      sorted.forEach(a => {
+        if(!a.isSuspended) {
+          sel.innerHTML += `<option value="${a.id}">${a.name}</option>`;
+        }
+      });
+      if (currentVal) sel.value = currentVal;
+    }
 
-    window.closeAdminModal = function() {
-      document.getElementById('modalAdmin').classList.add('hidden');
-      document.getElementById('inputAdminPin').value = '';
-    };
+    window.executeLogin = function() {
+      const athId = document.getElementById('loginAthleteSelect').value;
+      const pwd = document.getElementById('loginPassword').value.trim();
 
-    window.loginAdmin = function() {
-      const pin = document.getElementById('inputAdminPin').value;
-      if (pin === ADMIN_PIN) {
-        isAdmin = true;
+      if (!athId) {
+        window.showToast("Selecione seu nome na lista.");
+        return;
+      }
+
+      const ath = window.athletes.find(a => a.id == athId);
+      if (!ath) return;
+
+      const phone = window.cleanPhone(ath.phone);
+      if (phone.length < 4) {
+        window.showToast("Seu cadastro não possui um celular válido. Contate o administrador.");
+        return;
+      }
+
+      const last4 = phone.slice(-4);
+      if (pwd !== last4 && pwd !== "0902") { // Senha emergencial hardcoded
+        window.showToast("Senha incorreta! Digite os 4 últimos números do celular.");
+        return;
+      }
+
+      // Login Sucesso
+      loggedAthlete = ath;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('userNameDisplay').innerText = ath.name;
+
+      // Verifica lista de Administradores
+      const nameUpper = ath.name.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const adminList = ["FELIPE MACACO", "CLAUDIO", "PABLO PADILHA", "DAVI", "TIAGO BOQUETE"];
+      
+      isAdmin = adminList.includes(nameUpper);
+
+      if (isAdmin) {
         document.getElementById('adminBadge').classList.remove('hidden');
         document.getElementById('adminBadge').classList.add('flex');
-        document.getElementById('btnLoginAdmin').classList.add('hidden');
-        document.getElementById('btnLogoutAdmin').classList.remove('hidden');
         document.getElementById('btnAddAthlete').classList.remove('hidden');
         document.getElementById('btnAddDate').classList.remove('hidden');
         document.getElementById('btnEditTimes').classList.remove('hidden');
         document.getElementById('btnMasterZap').classList.remove('hidden');
         document.getElementById('tab-financial').classList.remove('hidden');
-        closeAdminModal();
-        populateDateSelect(); // Refreshes to show all dates for admin
-        renderAthletesList();
       } else {
-        alert("Senha incorreta!");
+        document.getElementById('adminBadge').classList.add('hidden');
+        document.getElementById('adminBadge').classList.remove('flex');
+        document.getElementById('btnAddAthlete').classList.add('hidden');
+        document.getElementById('btnAddDate').classList.add('hidden');
+        document.getElementById('btnEditTimes').classList.add('hidden');
+        document.getElementById('btnMasterZap').classList.add('hidden');
+        document.getElementById('tab-financial').classList.add('hidden');
+        if (activeTab === 'financial') window.switchTab('presence');
       }
+
+      populateDateSelect();
+      renderAthletesList();
+      window.showToast(`Bem-vindo(a), ${ath.name}!`, 'success');
     };
 
-    window.logoutAdmin = function() {
+    window.logoutUser = function() {
+      loggedAthlete = null;
       isAdmin = false;
-      document.getElementById('adminBadge').classList.add('hidden');
-      document.getElementById('btnLoginAdmin').classList.remove('hidden');
-      document.getElementById('btnLogoutAdmin').classList.add('hidden');
-      document.getElementById('btnAddAthlete').classList.add('hidden');
-      document.getElementById('btnAddDate').classList.add('hidden');
-      document.getElementById('btnEditTimes').classList.add('hidden');
-      document.getElementById('btnMasterZap').classList.add('hidden');
-      document.getElementById('tab-financial').classList.add('hidden');
-      if (activeTab === 'financial') switchTab('presence');
-      populateDateSelect(); // Hides future dates for athletes
-      renderAthletesList();
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginScreen').classList.remove('hidden');
     };
 
     // MODAL ATLETA
@@ -1334,7 +1468,7 @@
     window.saveAthlete = function() {
       const name = document.getElementById('athName').value.trim();
       if (!name) {
-        alert("Informe o nome do atleta.");
+        window.showToast("Informe o nome do atleta.");
         return;
       }
       const id = document.getElementById('editAthleteId').value;
@@ -1359,16 +1493,18 @@
       }
       window.saveData();
       closeAthleteModal();
+      populateLoginSelect(); // Atualiza select de login caso precise
       renderAthletesList();
     };
 
     window.deleteAthlete = function(id) {
       if (!isAdmin) return;
-      if (confirm("Tem certeza que deseja excluir este atleta?")) {
+      window.showConfirm("Tem certeza que deseja excluir este atleta?", () => {
         window.athletes = window.athletes.filter(a => a.id !== id);
         window.saveData();
         renderAthletesList();
-      }
+        populateLoginSelect();
+      });
     };
 
     // JUSTIFICATIVA
@@ -1507,13 +1643,13 @@
       const ath = window.athletes.find(a => a.id === athId);
       if (!ath) return;
       if (ath.isSuspended) {
-        alert("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens de WhatsApp.");
+        window.showToast("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens de WhatsApp.");
         return;
       }
       const phone = cleanPhone(ath.phone);
       if (!phone) {
         if (isAdmin) openEditAthleteModal(athId);
-        else alert("Atleta sem número de WhatsApp cadastrado.");
+        else window.showToast("Atleta sem número de WhatsApp cadastrado.");
         return;
       }
       const [y, m, day] = window.currentDate.split('-');
@@ -1572,12 +1708,12 @@
       const ath = window.athletes.find(a => a.id === athId);
       if (!ath) return;
       if (ath.isSuspended) {
-        alert("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens.");
+        window.showToast("Este atleta está SUSPENSO / SAIU e está impedido de receber mensagens.");
         return;
       }
       const phone = cleanPhone(ath.phone);
       if (!phone) {
-        alert("Atleta sem número de WhatsApp cadastrado.");
+        window.showToast("Atleta sem número de WhatsApp cadastrado.");
         return;
       }
       
@@ -1716,7 +1852,7 @@
 
     // INICIALIZAÇÃO DA APLICAÇÃO
     window.addEventListener('DOMContentLoaded', () => {
-      listenToCloudData();
+      initializeFirebaseAndListen();
       checkDirectJustificationLink();
     });
   </script>
