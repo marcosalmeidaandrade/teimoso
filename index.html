@@ -677,13 +677,22 @@
           if (statusParam === 'CONFIRMADO') {
             window.presences[window.currentDate][idNum] = { status: 'CONFIRMADO', checked: false, fault: false, reason: '' };
             alert(`⚽ Presença de ${ath.name} GRAVADA como CONFIRMADO para o dia da pelada!`);
+            saveData();
+            window.history.replaceState({}, document.title, window.location.pathname);
           } else if (statusParam === 'FORA') {
             window.presences[window.currentDate][idNum] = { status: 'FORA', checked: false, fault: false, reason: '' };
             alert(`❌ Resposta de ${ath.name} GRAVADA como FORA da pelada.`);
+            saveData();
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else if (statusParam === 'JUSTIFICADO') {
+            // Abre diretamente o modal de justificativa para o atleta vinculado
+            currentJustifyAthleteId = idNum;
+            const currentEntry = window.presences[window.currentDate][idNum] || { reason: '' };
+            document.getElementById('justifyAthleteName').innerText = ath.name;
+            document.getElementById('justifyReason').value = currentEntry.reason || '';
+            document.getElementById('modalJustify').classList.remove('hidden');
+            window.history.replaceState({}, document.title, window.location.pathname);
           }
-
-          saveData();
-          window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
     }
@@ -813,15 +822,17 @@
       const baseUrl = window.location.origin + window.location.pathname;
 
       const linkSim = `${baseUrl}?atleta=${ath.id}&status=CONFIRMADO`;
+      const linkJust = `${baseUrl}?atleta=${ath.id}&status=JUSTIFICADO`;
       const linkNao = `${baseUrl}?atleta=${ath.id}&status=FORA`;
 
       const msg = `⚽ *TEIMOSO FCC - CONVOCAÇÃO*\n` +
                   `📍 *Local:* AABB\n` +
                   `📅 *Data:* ${dateFormatted}\n` +
                   `⏰ *Horário:* ${timeFormatted}\n\n` +
-                  `Fala *${ath.name}*, clique no link correspondente para gravar sua presença no app (até as 18:00):\n\n` +
-                  `✅ *VOU JOGAR (Confirmar):*\n${linkSim}\n\n` +
-                  `❌ *NÃO VOU (Fora):*\n${linkNao}`;
+                  `Fala *${ath.name}*, clique no link correspondente abaixo para registrar sua resposta (até as 18:00):\n\n` +
+                  `✅ *CONF. (Vou Jogar):*\n${linkSim}\n\n` +
+                  `🟡 *JUSTIF. (Justificar Ausência):*\n${linkJust}\n\n` +
+                  `❌ *FORA (Não Vou):*\n${linkNao}`;
 
       const url = `https://wa.me/${cleanNum}?text=${encodeURIComponent(msg)}`;
       window.open(url, '_blank');
@@ -1028,7 +1039,7 @@
       
       const currentEntry = window.presences[window.currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
 
-      if (currentEntry.status === status && !currentEntry.fault) {
+      if (currentEntry.status === status && !currentEntry.fault && status !== 'JUSTIFICADO') {
         window.presences[window.currentDate][athleteId] = { status: 'PENDENTE', checked: false, fault: false, reason: '' };
         saveData();
         renderAthletesList();
