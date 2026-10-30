@@ -180,10 +180,7 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
-                  <th class="py-3 px-4">Atleta</th>
-                  <th class="py-3 px-4">Posição</th>
-                  <th class="py-3 px-4 text-center">Nível</th>
-                  <th class="py-3 px-4 text-center">Status / Financeiro</th>
+                  <th class="py-3 px-4">Atleta / Info</th>
                   <th class="py-3 px-4 text-center">Ações de Presença</th>
                   <th class="py-3 px-4 text-right">Opções</th>
                 </tr>
@@ -955,22 +952,20 @@
 
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-200">
-            <div class="flex items-center gap-2">
-              <span>${athlete.name}</span>
-              ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm">${athlete.name}</span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}">
+                  <span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}
+                </span>
+                ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase">Suspenso</span>' : ''}
+              </div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
+                <div class="text-amber-400 text-[10px] tracking-widest" title="${athlete.stars} estrelas">${starsHtml}</div>
+              </div>
+              ${pRecord.reason ? `<div class="text-[10px] text-amber-400 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
             </div>
-            ${pRecord.reason ? `<div class="text-[10px] text-amber-400 mt-0.5 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
-          </td>
-          <td class="py-3 px-4">
-            <span class="text-[10px] font-black px-2 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
-          </td>
-          <td class="py-3 px-4 text-center text-amber-400 text-[11px]" title="${athlete.stars} estrelas">
-            ${starsHtml}
-          </td>
-          <td class="py-3 px-4 text-center">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${finLabelColor}">
-              <span class="w-2 h-2 rounded-full ${finDotColor}"></span> ${finLabel}
-            </span>
           </td>
           <td class="py-3 px-4 text-center">
             ${actionsHtml}
