@@ -147,6 +147,15 @@
       </div>
     </div>
 
+    <!-- BANNER DE ALERTA DE HORÁRIO LIMITE (18:00) -->
+    <div id="deadlineBanner" class="hidden mb-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 text-amber-300 text-xs font-bold">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-clock-rotate-left text-base"></i>
+        <span>Confirmação encerrada! O limite das 18:00 do dia da pelada foi atingido.</span>
+      </div>
+      <span class="text-[10px] bg-amber-500/30 px-2 py-0.5 rounded uppercase font-black">Encerrado</span>
+    </div>
+
     <!-- ABA 1: PRESENÇA -->
     <section id="sec-presence" class="space-y-4">
       <!-- CARDS DE RESUMO -->
@@ -559,7 +568,32 @@
       renderAthletesList();
       renderReports();
       renderFinancial();
+      checkDeadlinePassed();
     });
+
+    // VALIDAÇÃO DE TRAVA ATÉ AS 18:00 DO DIA DA PELADA
+    function checkDeadlinePassed() {
+      if (!currentDate) return false;
+      
+      const now = new Date();
+      const [yyyy, mm, dd] = currentDate.split('-').map(Number);
+      
+      // Define a data do jogo no horário limite das 18:00:00
+      const deadline = new Date(yyyy, mm - 1, dd, 18, 0, 0);
+
+      const isPassed = now > deadline;
+      const banner = document.getElementById('deadlineBanner');
+
+      if (banner) {
+        if (isPassed) {
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+
+      return isPassed;
+    }
 
     // LEITURA AUTOMÁTICA DE CONFIRMAÇÃO VIA URL (OPÇÃO B)
     function verificarConfirmacaoViaURL() {
@@ -568,6 +602,13 @@
       const statusParam = urlParams.get('status');
 
       if (athleteId && statusParam) {
+        // Bloqueia se o horário limite já passou
+        if (!isAdmin && checkDeadlinePassed()) {
+          alert("⚠️ A confirmação de presença se encerrou às 18:00 do dia da pelada. Não é mais possível alterar seu status.");
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return;
+        }
+
         const idNum = parseInt(athleteId);
         const ath = athletes.find(a => a.id === idNum);
 
@@ -696,7 +737,7 @@
                   `📍 *Local:* AABB\n` +
                   `📅 *Data:* ${dateFormatted}\n` +
                   `⏰ *Horário:* ${timeFormatted}\n\n` +
-                  `Fala *${ath.name}*, clique no link correspondente para gravar sua presença no app:\n\n` +
+                  `Fala *${ath.name}*, clique no link correspondente para gravar sua presença no app (até as 18:00):\n\n` +
                   `✅ *VOU JOGAR (Confirmar):*\n${linkSim}\n\n` +
                   `❌ *NÃO VOU (Fora):*\n${linkNao}`;
 
@@ -789,6 +830,7 @@
       currentDate = newDate;
       updateCurrentTimeUI();
       saveData();
+      checkDeadlinePassed();
       renderAthletesList();
       renderFinancial();
     }
@@ -864,6 +906,7 @@
       populateDateSelect();
       updateCurrentTimeUI();
       closeDateModal();
+      checkDeadlinePassed();
       renderAthletesList();
     }
 
@@ -881,6 +924,7 @@
         saveData();
         populateDateSelect();
         updateCurrentTimeUI();
+        checkDeadlinePassed();
         renderAthletesList();
       }
     }
@@ -890,6 +934,13 @@
         alert("Cadastre uma data primeiro!");
         return;
       }
+
+      // Bloqueio de horário limite (18:00) para atletas
+      if (!isAdmin && checkDeadlinePassed()) {
+        alert("⚠️ A confirmação de presença se encerrou às 18:00 do dia da pelada. Não é mais possível alterar seu status.");
+        return;
+      }
+
       if (!presences[currentDate]) presences[currentDate] = {};
       
       const currentEntry = presences[currentDate][athleteId] || { status: 'PENDENTE', checked: false, fault: false, reason: '' };
@@ -961,6 +1012,11 @@
 
     function saveJustification() {
       if (currentJustifyAthleteId && currentDate) {
+        if (!isAdmin && checkDeadlinePassed()) {
+          alert("⚠️ A confirmação de presença se encerrou às 18:00 do dia da pelada.");
+          closeJustifyModal();
+          return;
+        }
         const reason = document.getElementById('justifyReason').value.trim();
         if (!presences[currentDate]) presences[currentDate] = {};
         presences[currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', checked: false, fault: false, reason };
