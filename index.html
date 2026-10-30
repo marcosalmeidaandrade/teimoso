@@ -1789,12 +1789,19 @@
           let colorClass = "";
           let isPaidCheck = hasCustomVal && paid > 0;
 
-          // REGRA: Qualquer valor informado (igual, maior ou menor) é considerado baixa de pagamento, zerando os juros e quitando a parcela.
           if (hasCustomVal) {
+            // REGRA: Sem juros em mensalidades com valor baixado/lançado.
             interest = 0;
-            debtMonth = 0;
-            // Valores baixados no financeiro ficam em azul claro (text-sky-300)
-            colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
+            // Se pagou valor menor que a mensalidade base, calcula a diferença devida
+            debtMonth = Math.max(0, athFee - paid);
+            
+            if (debtMonth === 0) {
+              // Totalmente quitado: Azul claro
+              colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
+            } else {
+              // Pago parcialmente: Amarelo/Laranja para indicar saldo restante sem juros
+              colorClass = "border-amber-500/50 text-amber-300 font-bold bg-amber-950/20";
+            }
           } else if (now >= firstInterestDate) {
             // Em atraso e não pago: Vermelho (computa R$ 1,00 por dia a contar do dia 16)
             const diffTime = Math.abs(now - firstInterestDate);
@@ -1888,7 +1895,7 @@
           totalPaid += paid;
           totalInterest += interest;
           
-          const debtMonth = hasCustomVal ? 0 : Math.max(0, (athFee + interest) - paid);
+          const debtMonth = hasCustomVal ? Math.max(0, athFee - paid) : Math.max(0, (athFee + interest) - paid);
           totalDue += debtMonth;
 
           monthValuesCSV.push(paid.toFixed(2));
