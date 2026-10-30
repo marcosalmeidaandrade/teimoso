@@ -32,34 +32,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col pb-12 antialiased selection:bg-brand-green selection:text-slate-950">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-green selection:text-slate-950">
 
   <!-- CABEÇALHO PRINCIPAL -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-      
       <div class="flex items-center gap-2.5">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-emerald-700 flex items-center justify-center text-slate-950 shadow-lg shadow-brand-green/20">
-          <i class="fa-solid fa-futbol text-xl font-black"></i>
+        <!-- LOGOMARCA OFICIAL -->
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-green to-emerald-700 flex items-center justify-center text-slate-950 shadow-lg shadow-brand-green/20 overflow-hidden shrink-0 border border-emerald-500/30">
+          <!-- Substitua o link do src pela URL da sua Logomarca -->
+          <img src="https://placehold.co/100x100/10b981/0f172a?text=FCC" alt="Logo Teimoso" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+          <i class="fa-solid fa-futbol text-xl font-black hidden"></i>
         </div>
         <div>
           <h1 class="text-base font-black tracking-tight text-white flex items-center gap-1.5 leading-none">
@@ -69,31 +59,25 @@
           <p class="text-[10px] text-slate-400 font-medium mt-0.5">Gestão Inteligente de Peladas</p>
         </div>
       </div>
-
       <!-- PAINEL ADMIN / STATUS -->
       <div class="flex items-center gap-2">
         <div id="adminBadge" class="hidden items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">
           <i class="fa-solid fa-user-shield text-xs"></i>
           <span class="hidden sm:inline">Modo Admin</span>
         </div>
-
         <button id="btnLoginAdmin" onclick="openAdminModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5 text-slate-200">
-          <i class="fa-solid fa-lock text-brand-green"></i>
-          <span>ADMIN</span>
+          <i class="fa-solid fa-lock text-brand-green"></i><span>ADMIN</span>
         </button>
-
         <button id="btnLogoutAdmin" onclick="logoutAdmin()" class="hidden px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-lg transition">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
-
     </div>
   </header>
 
   <!-- SELETOR DE DATA / HORÁRIO DA PELADA -->
   <section class="bg-slate-900/60 border-b border-slate-800/80 py-2.5">
     <div class="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
-      
       <div class="flex items-center gap-2 flex-1 min-w-[240px]">
         <label for="selectDate" class="text-xs font-bold text-slate-400 flex items-center gap-1 shrink-0">
           <i class="fa-solid fa-calendar-day text-brand-green"></i> Pelada:
@@ -101,12 +85,10 @@
         <select id="selectDate" onchange="changeCurrentDate(this.value)" class="bg-slate-800 border border-slate-700 text-xs text-white rounded-lg px-2.5 py-1.5 font-semibold focus:outline-none focus:border-brand-green w-full max-w-[200px]">
           <!-- Opções preenchidas via JS -->
         </select>
-        
         <button id="btnAddDate" onclick="openAddDateModal()" class="hidden p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-brand-green rounded-lg transition" title="Adicionar Nova Data">
           <i class="fa-solid fa-plus text-xs"></i>
         </button>
       </div>
-
       <!-- HORÁRIOS DO JOGO E LIMITE -->
       <div id="timesDisplay" class="flex items-center gap-3 text-[11px] text-slate-300 bg-slate-950/60 border border-slate-800 px-3 py-1 rounded-lg">
         <div><i class="fa-regular fa-clock text-brand-green"></i> Jogo: <span id="lblGameTime" class="font-bold text-white">00:00</span></div>
@@ -115,30 +97,24 @@
           <i class="fa-solid fa-pen-to-square text-xs"></i>
         </button>
       </div>
-
     </div>
   </section>
 
   <!-- NAVEGAÇÃO DE ABAS -->
   <nav class="bg-slate-900 border-b border-slate-800 sticky top-[57px] z-20">
     <div class="max-w-5xl mx-auto px-4 flex items-center gap-1 overflow-x-auto custom-scrollbar py-1">
-      
       <button onclick="switchTab('presence')" id="tab-presence" class="px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-brand-green text-slate-950 shadow">
         <i class="fa-solid fa-users"></i> Presença
       </button>
-
       <button onclick="switchTab('draw')" id="tab-draw" class="px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
         <i class="fa-solid fa-shuffle"></i> Sorteio
       </button>
-
       <button onclick="switchTab('reports')" id="tab-reports" class="px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
         <i class="fa-solid fa-chart-pie"></i> Relatórios
       </button>
-
       <button onclick="switchTab('financial')" id="tab-financial" class="hidden px-3.5 py-2 text-xs font-bold rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-amber-400 hover:bg-amber-500/10 border border-amber-500/20">
         <i class="fa-solid fa-sack-dollar"></i> Financeiro
       </button>
-
     </div>
   </nav>
 
@@ -147,41 +123,33 @@
 
     <!-- ABA 1: PRESENÇA -->
     <section id="sec-presence" class="space-y-4">
-      
       <!-- CARDS DE RESUMO (FILTROS CLICÁVEIS) -->
       <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        
         <div id="card-CONFIRMADO" onclick="filterByStatus('CONFIRMADO')" class="bg-sky-950/40 border border-sky-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-sky-900/40 transition active:scale-95" title="Filtrar Confirmados">
           <span class="block text-[9px] sm:text-[10px] text-sky-400 font-extrabold uppercase leading-tight">CONF.<br><span class="text-[8px] opacity-75">(Aguard.)</span></span>
           <span id="cntUnvalidated" class="text-base sm:text-lg font-black text-sky-300 mt-0.5 block">0</span>
         </div>
-
         <div id="card-FORA" onclick="filterByStatus('FORA')" class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-rose-900/40 transition active:scale-95" title="Filtrar Fora">
           <span class="block text-[9px] sm:text-[10px] text-rose-400 font-extrabold uppercase leading-tight">FORA<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntOutside" class="text-base sm:text-lg font-black text-rose-300 mt-0.5 block">0</span>
         </div>
-
         <div id="card-JUSTIFICADO" onclick="filterByStatus('JUSTIFICADO')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Justificados">
           <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">JUSTIF.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntJustified" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
         </div>
-
         <div id="card-VALIDADOS" onclick="filterByStatus('VALIDADOS')" class="bg-emerald-950/50 border border-emerald-500/50 rounded-xl p-2 text-center ring-1 ring-emerald-500/30 cursor-pointer hover:bg-emerald-900/50 transition active:scale-95" title="Filtrar Validados">
           <span class="block text-[9px] sm:text-[10px] text-emerald-400 font-extrabold uppercase leading-tight">VAL.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntValidated" class="text-base sm:text-lg font-black text-emerald-300 mt-0.5 block">0</span>
           <span id="cntGoleiros" class="block text-[8px] text-emerald-400/80 mt-0.5">(0 GK)</span>
         </div>
-
         <div id="card-FALTA" onclick="filterByStatus('FALTA')" class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-900/40 transition active:scale-95" title="Filtrar Faltas">
           <span class="block text-[9px] sm:text-[10px] text-amber-400 font-extrabold uppercase leading-tight">FALTA<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntFaults" class="text-base sm:text-lg font-black text-amber-300 mt-0.5 block">0</span>
         </div>
-
         <div id="card-PENDENTE" onclick="filterByStatus('PENDENTE')" class="bg-slate-800/60 border border-slate-700 rounded-xl p-2 text-center cursor-pointer hover:bg-slate-700/60 transition active:scale-95" title="Filtrar Pendentes">
           <span class="block text-[9px] sm:text-[10px] text-slate-400 font-extrabold uppercase leading-tight">PEND.<br><span class="text-[8px] opacity-0">-</span></span>
           <span id="cntPending" class="text-base sm:text-lg font-black text-slate-300 mt-0.5 block">0</span>
         </div>
-
       </div>
 
       <!-- BARRA DE BUSCA E FERRAMENTAS ADMIN -->
@@ -190,12 +158,10 @@
           <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
           <input type="text" id="searchAthlete" onkeyup="renderAthletesList()" placeholder="Buscar jogador ou posição..." class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-green" />
         </div>
-
         <div class="flex items-center gap-1.5">
           <button id="btnMasterZap" onclick="openMasterZapModal()" class="hidden px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1 shadow-md">
             <i class="fa-brands fa-whatsapp"></i> Disparo Convocações
           </button>
-          
           <button id="btnAddAthlete" onclick="openAddAthleteModal()" class="hidden px-2.5 py-1.5 bg-slate-800 border border-slate-700 hover:border-brand-green text-xs font-bold text-slate-200 rounded-lg transition flex items-center gap-1">
             <i class="fa-solid fa-user-plus text-brand-green"></i> Cadastrar
           </button>
@@ -206,13 +172,11 @@
       <div id="athletesList" class="space-y-2">
         <!-- Renderizado dinamicamente via JS -->
       </div>
-
     </section>
 
     <!-- ABA 2: SORTEIO DE TIMES -->
     <section id="sec-draw" class="hidden space-y-4">
       <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
-        
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
           <div>
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -220,7 +184,6 @@
             </h2>
             <p class="text-[10px] text-slate-400">Distribuição automatizada por posição, estrelas e goleiros fixed em 8 por time</p>
           </div>
-
           <div class="flex items-center gap-2">
             <button id="btnDrawTeams" onclick="drawTeams()" class="px-4 py-2 bg-brand-green hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-lg transition flex items-center gap-1.5 shadow-lg shadow-brand-green/10">
               <i class="fa-solid fa-shuffle"></i> SORTEAR TIMES
@@ -230,21 +193,18 @@
             </button>
           </div>
         </div>
-
         <div id="drawContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="col-span-full text-center py-12 text-slate-500 text-xs">
             <i class="fa-solid fa-futbol text-3xl text-slate-700 mb-2 block"></i>
-            Clique em "SORTEAR TIMES" para distribuir os atletas validados em equipes.
+            Clique em "SORTEAR TIMES" para distribuir os atletas validados (até 8 por time).
           </div>
         </div>
-
       </div>
     </section>
 
     <!-- ABA 3: RELATÓRIOS E ASSIDUIDADE -->
     <section id="sec-reports" class="hidden space-y-4">
       <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
-        
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
           <div>
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -252,12 +212,10 @@
             </h2>
             <p class="text-[10px] text-slate-400">Estatísticas acumuladas das peladas realizadas no ano</p>
           </div>
-
           <button onclick="exportReportsCSV()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-bold text-white rounded-lg transition flex items-center gap-1">
             <i class="fa-solid fa-file-csv text-brand-green"></i> Exportar CSV
           </button>
         </div>
-
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left text-xs text-slate-300">
             <thead class="bg-slate-900 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-700">
@@ -275,14 +233,12 @@
             </tbody>
           </table>
         </div>
-
       </div>
     </section>
 
     <!-- ABA 4: FINANCEIRO (EXCLUSIVA ADMIN) -->
     <section id="sec-financial" class="hidden space-y-4">
       <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4">
-        
         <div class="flex flex-wrap items-center justify-between gap-3 mb-3 border-b border-slate-700/80 pb-3">
           <div>
             <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -290,7 +246,6 @@
             </h2>
             <p class="text-[10px] text-slate-400">Vencimento: Dia 15 | Juros de R$ 1,00/dia a partir do dia 16 | Pressione <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Enter</kbd> (abaixo) ou <kbd class="bg-slate-900 px-1 py-0.5 rounded text-amber-400 font-mono">Tab</kbd> (ao lado)</p>
           </div>
-
           <button onclick="exportFinancialCSV()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition flex items-center gap-1.5 shadow-md">
             <i class="fa-solid fa-file-invoice-dollar"></i> Gerar Relatório (CSV)
           </button>
@@ -307,7 +262,6 @@
               <i class="fa-solid fa-money-bill-wave"></i>
             </div>
           </div>
-
           <div class="bg-rose-950/40 border border-rose-500/40 rounded-xl p-3 flex items-center justify-between shadow-sm">
             <div>
               <span class="block text-[10px] text-rose-400 font-extrabold uppercase tracking-wider">Total a Receber</span>
@@ -346,10 +300,8 @@
             </tbody>
           </table>
         </div>
-
       </div>
     </section>
-
   </main>
 
   <!-- MODAL LOGIN ADMIN -->
@@ -362,11 +314,9 @@
         <h3 class="text-base font-bold text-white">Acesso do Administrador</h3>
         <p class="text-xs text-slate-400">Informe a senha master do Teimoso FCC</p>
       </div>
-
       <div>
         <input type="password" id="inputAdminPin" placeholder="Senha / PIN Admin" onkeydown="if(event.key==='Enter') loginAdmin()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-white text-sm tracking-widest focus:outline-none focus:border-brand-green" />
       </div>
-
       <div class="flex items-center gap-2">
         <button onclick="closeAdminModal()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-xl transition">Cancelar</button>
         <button onclick="loginAdmin()" class="w-1/2 py-2 bg-brand-green hover:bg-emerald-400 text-xs font-black text-slate-950 rounded-xl transition">ENTRAR</button>
@@ -383,15 +333,12 @@
         </h3>
         <button onclick="closeAthleteModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <input type="hidden" id="editAthleteId" value="" />
-
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-bold text-slate-300 mb-1">Nome Completo:</label>
           <input type="text" id="athName" placeholder="Ex: Lucas Silva" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
         </div>
-
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block font-bold text-slate-300 mb-1">Posição Principal:</label>
@@ -404,34 +351,29 @@
               <option value="Atacante">Atacante (ATA)</option>
             </select>
           </div>
-
           <div>
             <label class="block font-bold text-slate-300 mb-1">Mensalidade (R$):</label>
             <input type="number" id="athMonthlyFee" value="110" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
           </div>
         </div>
-
         <div>
           <label class="block font-bold text-slate-300 mb-1">WhatsApp (DDD + Número):</label>
           <input type="text" id="athPhone" placeholder="Ex: 22999998888" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
         </div>
-
         <div>
           <label class="block font-bold text-slate-300 mb-1">Nível Técnico (Estrelas):</label>
           <div id="starRatingContainer" class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg p-2">
             <!-- Renderizado via JS -->
           </div>
         </div>
-
         <div class="bg-rose-950/30 border border-rose-500/30 rounded-lg p-2.5 mt-2">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="athIsSuspended" class="w-4 h-4 accent-rose-500 rounded cursor-pointer" />
             <span class="font-bold text-rose-300 text-xs">SUSPENSO / SAIU</span>
           </label>
-          <p class="text-[10px] text-slate-400 mt-1">Quando marcado: oculto da Presença para atletas, fora do sorteio de times e bloqueado de qualquer envio de WhatsApp.</p>
+          <p class="text-[10px] text-slate-400 mt-1">Quando marcado: oculto da Presença para atletas, fora do sorteio e bloqueado de envios.</p>
         </div>
       </div>
-
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
         <button onclick="closeAthleteModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 rounded-lg transition">Cancelar</button>
         <button onclick="saveAthlete()" class="px-4 py-1.5 bg-brand-green hover:bg-emerald-400 text-xs font-black text-slate-950 rounded-lg transition">SALVAR</button>
@@ -445,12 +387,10 @@
       <h3 class="text-sm font-bold text-white flex items-center gap-2">
         <i class="fa-solid fa-calendar-plus text-brand-green"></i> Adicionar Nova Data
       </h3>
-
       <div>
         <label class="block text-xs font-bold text-slate-300 mb-1">Data da Pelada:</label>
         <input type="date" id="inputNewDate" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-brand-green" />
       </div>
-
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
         <button onclick="closeAddDateModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
         <button onclick="addNewDate()" class="px-4 py-1.5 bg-brand-green text-xs font-black text-slate-950 rounded-lg">ADICIONAR</button>
@@ -464,7 +404,6 @@
       <h3 class="text-sm font-bold text-white flex items-center gap-2">
         <i class="fa-solid fa-clock text-amber-400"></i> Ajustar Horários
       </h3>
-
       <div class="space-y-2 text-xs">
         <div>
           <label class="block font-bold text-slate-300 mb-1">Horário do Jogo:</label>
@@ -475,7 +414,6 @@
           <input type="time" id="inputDeadline" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-brand-green" />
         </div>
       </div>
-
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
         <button onclick="closeEditTimesModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
         <button onclick="saveEventTimes()" class="px-4 py-1.5 bg-brand-green text-xs font-black text-slate-950 rounded-lg">SALVAR</button>
@@ -492,14 +430,11 @@
         </h3>
         <button onclick="closeJustifyModal()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <p id="lblJustifyAthleteName" class="text-xs font-bold text-white"></p>
-
       <div>
         <label class="block text-[11px] font-bold text-slate-300 mb-1">Motivo / Justificativa:</label>
         <textarea id="txtJustifyReason" rows="3" placeholder="Ex: Trabalho, viagem, lesão..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-400"></textarea>
       </div>
-
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
         <button onclick="closeJustifyModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Cancelar</button>
         <button onclick="submitJustification()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-xs font-black text-slate-950 rounded-lg">ENVIAR JUSTIFICATIVA</button>
@@ -516,25 +451,38 @@
         </h3>
         <button onclick="closeMasterZapModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div id="masterZapBody" class="space-y-3 text-xs">
+      <div id="masterZapBody" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
         <!-- Renderizado dinamicamente via JS -->
       </div>
-
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
         <button onclick="closeMasterZapModal()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-slate-300 rounded-lg">Fechar</button>
       </div>
     </div>
   </div>
 
-  <!-- FIREBASE SDK MODULAR -->
+  <!-- FOOTER / DADOS DO DESENVOLVEDOR -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-6 mt-auto">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col items-center justify-center text-center gap-1.5">
+      <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-brand-green mb-1">
+        <i class="fa-solid fa-code text-xs"></i>
+      </div>
+      <p class="text-xs text-slate-400 font-medium">
+        &copy; 2026 <span class="text-white font-bold">Teimoso FCC</span>. Todos os direitos reservados.
+      </p>
+      <p class="text-[10px] text-slate-500 flex items-center gap-1">
+        Desenvolvido com <i class="fa-solid fa-heart text-brand-green"></i> por <span class="font-bold text-slate-300 hover:text-brand-green transition cursor-pointer">Seu Nome / Equipe de Dev</span>
+      </p>
+    </div>
+  </footer>
+
+  <!-- FIREBASE SDK MODULAR E SCRIPTS -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // CREDENCIAIS FIREBASE
+    // CREDENCIAIS FIREBASE (Solicitadas pelo usuário: "teimosoweb")
     const firebaseConfig = {
-      apiKey: "AIzaSyD-ExemploDeChaveReal123456",
+      apiKey: "AIzaSyD-ExemploDeChaveReal123456", // Altere conforme necessário na Vercel
       authDomain: "teimosoweb.firebaseapp.com",
       projectId: "teimosoweb",
       storageBucket: "teimosoweb.appspot.com",
@@ -552,9 +500,6 @@
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
     let activeStatusFilter = null;
-
-    let masterZapQueue = [];
-    let masterZapCurrentIndex = 0;
 
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
 
@@ -614,8 +559,8 @@
           populateDateSelect();
           updateCurrentTimeUI();
           renderAthletesList();
-          renderReports();
-          renderFinancial();
+          if (activeTab === 'reports') renderReports();
+          if (activeTab === 'financial') renderFinancial();
         } else {
           window.saveData();
         }
@@ -724,7 +669,7 @@
         const isOutside = p.status === 'FORA' || p.status === 'NAO';
         const isFault = p.fault || p.status === 'FALTA';
 
-        const posInfo = positionBadges[ath.position || (ath.isKeeper ? "Goleiro" : "Meia")];
+        const posInfo = positionBadges[ath.position] || positionBadges[ath.isKeeper ? "Goleiro" : "Meia"] || positionBadges["Meia"];
 
         let athleteCategory = 'PENDENTE';
         if (isFault) {
@@ -751,10 +696,7 @@
           athleteCategory = 'PENDENTE';
         }
 
-        if (activeStatusFilter && athleteCategory !== activeStatusFilter) {
-          return;
-        }
-
+        if (activeStatusFilter && athleteCategory !== activeStatusFilter) return;
         if (search && !ath.name.toLowerCase().includes(search) && !(ath.position && ath.position.toLowerCase().includes(search))) return;
 
         const finStatus = getAthleteFinancialStatus(ath);
@@ -842,7 +784,6 @@
               ${p.status === 'JUSTIFICADO' && p.reason ? `<p class="text-[10px] text-amber-300/80 italic mt-0.5">Motivo: "${p.reason}"</p>` : ''}
             </div>
           </div>
-
           <div class="flex items-center gap-1 shrink-0">
             <button onclick="setStatus(${ath.id}, 'CONFIRMADO')" ${ath.isSuspended ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg text-xs font-black transition ${ath.isSuspended ? 'opacity-40 cursor-not-allowed bg-slate-900/40 text-slate-600' : (isInside ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400' : 'bg-slate-900/60 text-slate-400 hover:text-emerald-400 hover:bg-slate-900')}">
               CONF.
@@ -857,7 +798,6 @@
             ${adminButtonsHtml}
           </div>
         `;
-
         listEl.appendChild(card);
       });
 
@@ -899,7 +839,6 @@
         fault: false,
         reason: ''
       };
-
       window.saveData();
       renderAthletesList();
     };
@@ -914,7 +853,6 @@
         checked: !current.checked,
         fault: false
       };
-
       window.saveData();
       renderAthletesList();
     };
@@ -929,7 +867,6 @@
         fault: !current.fault,
         checked: false
       };
-
       window.saveData();
       renderAthletesList();
     };
@@ -953,7 +890,6 @@
         let totalPaid = 0;
         let totalInterest = 0;
         let totalDue = 0;
-
         let monthCells = '';
 
         const athNameNorm = ath.name.trim().toUpperCase();
@@ -964,7 +900,6 @@
         months.forEach((m, mIndex) => {
           const hasCustomVal = athPay[m] !== undefined && athPay[m] !== null && athPay[m] !== "";
           let paid = hasCustomVal ? parseFloat(athPay[m]) : 0;
-
           const firstInterestDate = new Date(currentYear, mIndex, 16);
           let interest = 0;
           let debtMonth = 0;
@@ -975,8 +910,7 @@
           const isSapaoSep2026 = isSapao && m === "set";
 
           if (hasCustomVal) {
-            interest = 0;
-            
+            interest = 0; 
             if (isJulioOct2026 || isMatheusOnofre || isSapaoSep2026) {
               debtMonth = Math.max(0, athFee - paid);
               if (debtMonth === 0) {
@@ -985,7 +919,7 @@
                 colorClass = "border-amber-500/50 text-amber-300 font-bold bg-amber-950/20";
               }
             } else {
-              debtMonth = 0;
+              debtMonth = 0; // Regra Geral: isenção e quitação ao informar qualquer valor
               colorClass = "border-sky-500/50 text-sky-300 font-extrabold bg-sky-950/20";
             }
           } else if (now >= firstInterestDate) {
@@ -1000,7 +934,7 @@
           }
 
           let suggestedVal = athFee;
-          let displayVal = hasCustomVal ? paid : (now >= firstInterestDate ? athFee : 0);
+          let displayVal = hasCustomVal ? paid : (now >= firstInterestDate ? athFee : "");
 
           totalPaid += paid;
           totalInterest += interest;
@@ -1014,7 +948,7 @@
                   ondblclick="updatePayment(${ath.id}, '${m}', ${athFee})"
                   onkeydown="handleFinKeyDown(event, ${athIndex}, ${mIndex})"
                   placeholder="${suggestedVal}"
-                  title="Mensalidade: R$ ${athFee.toFixed(2)} | Duplo clique para baixar sugerido"
+                  title="Mensalidade: R$ ${athFee.toFixed(2)} | Duplo clique para baixar"
                   class="w-14 border rounded p-1 text-center text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition ${colorClass}" />
                 <input type="checkbox" ${isPaidCheck ? 'checked' : ''} 
                   onchange="togglePaymentCheck(${ath.id}, '${m}', this.checked, ${athFee}, ${athIndex}, ${mIndex})"
@@ -1032,7 +966,6 @@
         const ballIcon = finStatus.isUpToDate
           ? `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-sm ring-2 ring-emerald-400/30 shrink-0" title="Mensalidades em dia"></span>`
           : `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block shadow-sm ring-2 ring-rose-500/30 shrink-0" title="Em débito até a presente data (R$ ${finStatus.dueAmount.toFixed(2)})"></span>`;
-
         const suspendedTag = ath.isSuspended ? ` <span class="text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1 py-0.5 rounded font-extrabold">SUSPENSO</span>` : '';
 
         const tr = document.createElement('tr');
@@ -1056,7 +989,6 @@
 
       const totalPagoEl = document.getElementById('lblTotalGeralPago');
       const totalAReceberEl = document.getElementById('lblTotalAReceber');
-
       if (totalPagoEl) totalPagoEl.innerText = `R$ ${grandTotalPaid.toFixed(2).replace('.', ',')}`;
       if (totalAReceberEl) totalAReceberEl.innerText = `R$ ${grandTotalDue.toFixed(2).replace('.', ',')}`;
     };
@@ -1115,13 +1047,11 @@
       const tbody = document.getElementById('tblReportsBody');
       if (!tbody) return;
       tbody.innerHTML = '';
-
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
       const totalDates = window.datesList.length;
 
       sortedAthletes.forEach(ath => {
         let validados = 0, justificados = 0, faltas = 0;
-
         window.datesList.forEach(d => {
           const p = (window.presences[d] || {})[ath.id];
           if (p) {
@@ -1130,10 +1060,8 @@
             else if (p.status === 'JUSTIFICADO') justificados++;
           }
         });
-
         const pct = totalDates > 0 ? Math.round((validados / totalDates) * 100) : 0;
-        const posInfo = positionBadges[ath.position || "Meia"];
-
+        const posInfo = positionBadges[ath.position] || positionBadges["Meia"];
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-700/30 transition";
         tr.innerHTML = `
@@ -1154,7 +1082,6 @@
     // SORTEIO DE TIMES
     window.drawTeams = function() {
       const currentPresences = window.presences[window.currentDate] || {};
-      
       const availableAthletes = window.athletes.filter(ath => {
         if (ath.isSuspended) return false;
         const p = currentPresences[ath.id];
@@ -1181,13 +1108,20 @@
       }));
 
       keepers.forEach((k, idx) => {
-        teams[idx % numTeams].players.push(k);
+        if(teams[idx % numTeams].players.length < PLAYERS_PER_TEAM) {
+            teams[idx % numTeams].players.push(k);
+        } else {
+             // Fallback
+             teams.find(t => t.players.length < PLAYERS_PER_TEAM)?.players.push(k);
+        }
       });
 
       linePlayers.forEach((p) => {
-        let minTeam = teams[0];
+        let minTeam = teams.find(t => t.players.length < PLAYERS_PER_TEAM);
+        if(!minTeam) minTeam = teams[0]; // Avoid error if full, though numTeams calculation prevents this.
+        
         teams.forEach(t => {
-          if (t.players.length < minTeam.players.length) {
+          if (t.players.length < minTeam.players.length && t.players.length < PLAYERS_PER_TEAM) {
             minTeam = t;
           }
         });
@@ -1200,10 +1134,9 @@
       teams.forEach((t, idx) => {
         const teamCard = document.createElement('div');
         teamCard.className = "bg-slate-900 border border-slate-700/80 rounded-xl p-3 shadow-lg space-y-2";
-        
         let playersHtml = '';
         t.players.forEach(pl => {
-          const posInfo = positionBadges[pl.position || "Meia"];
+          const posInfo = positionBadges[pl.position] || positionBadges["Meia"];
           playersHtml += `
             <div class="flex items-center justify-between bg-slate-800/80 p-2 rounded-lg border border-slate-700/50">
               <div class="flex items-center gap-2">
@@ -1216,13 +1149,12 @@
             </div>
           `;
         });
-
         teamCard.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <h3 class="text-xs font-black text-brand-green flex items-center gap-1.5">
               <i class="fa-solid fa-shield text-slate-400"></i> ${t.name}
             </h3>
-            <span class="text-[10px] text-slate-400 font-bold">${t.players.length} Atletas</span>
+            <span class="text-[10px] text-slate-400 font-bold">${t.players.length} / 8</span>
           </div>
           <div class="space-y-1.5">
             ${playersHtml}
@@ -1253,14 +1185,13 @@
         document.getElementById('adminBadge').classList.add('flex');
         document.getElementById('btnLoginAdmin').classList.add('hidden');
         document.getElementById('btnLogoutAdmin').classList.remove('hidden');
-
         document.getElementById('btnAddAthlete').classList.remove('hidden');
         document.getElementById('btnAddDate').classList.remove('hidden');
         document.getElementById('btnEditTimes').classList.remove('hidden');
         document.getElementById('btnMasterZap').classList.remove('hidden');
         document.getElementById('tab-financial').classList.remove('hidden');
-
         closeAdminModal();
+        populateDateSelect(); // Refreshes to show all dates for admin
         renderAthletesList();
       } else {
         alert("Senha incorreta!");
@@ -1272,14 +1203,13 @@
       document.getElementById('adminBadge').classList.add('hidden');
       document.getElementById('btnLoginAdmin').classList.remove('hidden');
       document.getElementById('btnLogoutAdmin').classList.add('hidden');
-
       document.getElementById('btnAddAthlete').classList.add('hidden');
       document.getElementById('btnAddDate').classList.add('hidden');
       document.getElementById('btnEditTimes').classList.add('hidden');
       document.getElementById('btnMasterZap').classList.add('hidden');
       document.getElementById('tab-financial').classList.add('hidden');
-
       if (activeTab === 'financial') switchTab('presence');
+      populateDateSelect(); // Hides future dates for athletes
       renderAthletesList();
     };
 
@@ -1300,7 +1230,6 @@
     window.openEditAthleteModal = function(id) {
       const ath = window.athletes.find(a => a.id === id);
       if (!ath) return;
-
       document.getElementById('modalAthleteTitle').innerHTML = `<i class="fa-solid fa-user-pen text-amber-400"></i> Editar Atleta`;
       document.getElementById('editAthleteId').value = ath.id;
       document.getElementById('athName').value = ath.name;
@@ -1337,7 +1266,6 @@
         alert("Informe o nome do atleta.");
         return;
       }
-
       const id = document.getElementById('editAthleteId').value;
       const pos = document.getElementById('athPosition').value;
       const fee = parseFloat(document.getElementById('athMonthlyFee').value) || 110;
@@ -1349,29 +1277,15 @@
         if (idx !== -1) {
           window.athletes[idx] = {
             ...window.athletes[idx],
-            name,
-            position: pos,
-            isKeeper: pos === "Goleiro",
-            monthlyFee: fee,
-            phone,
-            stars: selectedStarsForNewAthlete,
-            isSuspended
+            name, position: pos, isKeeper: pos === "Goleiro", monthlyFee: fee, phone, stars: selectedStarsForNewAthlete, isSuspended
           };
         }
       } else {
         const newAth = {
-          id: Date.now(),
-          name,
-          position: pos,
-          isKeeper: pos === "Goleiro",
-          monthlyFee: fee,
-          phone,
-          stars: selectedStarsForNewAthlete,
-          isSuspended
+          id: Date.now(), name, position: pos, isKeeper: pos === "Goleiro", monthlyFee: fee, phone, stars: selectedStarsForNewAthlete, isSuspended
         };
         window.athletes.push(newAth);
       }
-
       window.saveData();
       closeAthleteModal();
       renderAthletesList();
@@ -1388,9 +1302,9 @@
 
     // JUSTIFICATIVA
     window.openJustifyModal = function(athId) {
-      const ath = window.athletes.find(a => a.id === athId);
+      const ath = window.athletes.find(a => a.id === parseInt(athId));
       if (!ath) return;
-      currentJustifyAthleteId = athId;
+      currentJustifyAthleteId = ath.id;
       document.getElementById('lblJustifyAthleteName').innerText = `Atleta: ${ath.name}`;
       document.getElementById('txtJustifyReason').value = '';
       document.getElementById('modalJustify').classList.remove('hidden');
@@ -1399,12 +1313,15 @@
     window.closeJustifyModal = function() {
       document.getElementById('modalJustify').classList.add('hidden');
       currentJustifyAthleteId = null;
+      // Remove a query url caso tenha vindo pelo link
+      if (window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     };
 
     window.submitJustification = function() {
       if (!currentJustifyAthleteId) return;
       const reason = document.getElementById('txtJustifyReason').value.trim();
-
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       window.presences[window.currentDate][currentJustifyAthleteId] = {
         status: 'JUSTIFICADO',
@@ -1412,39 +1329,60 @@
         fault: false,
         reason: reason || 'Não informado'
       };
-
       window.saveData();
       closeJustifyModal();
       renderAthletesList();
     };
 
+    // VERIFICADOR DE LINK DIRETO (WHATSAPP)
+    function checkDirectJustificationLink() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const justifyId = urlParams.get('justificar');
+      if (justifyId) {
+        // Aguardar um instante para carregar tudo e abrir o modal
+        setTimeout(() => {
+          openJustifyModal(parseInt(justifyId));
+        }, 500);
+      }
+    }
+
     // DATAS E HORÁRIOS
     function populateDateSelect() {
       const sel = document.getElementById('selectDate');
       sel.innerHTML = '';
-      window.datesList.forEach(d => {
+      if (!isAdmin && window.datesList.length > 0) {
+        // Atleta padrão visualiza apenas a data atual (próxima pelada)
+        const d = window.currentDate;
         const [y, m, day] = d.split('-');
         const opt = document.createElement('option');
         opt.value = d;
         opt.innerText = `${day}/${m}/${y}`;
-        if (d === window.currentDate) opt.selected = true;
+        opt.selected = true;
         sel.appendChild(opt);
-      });
+        sel.disabled = true; // Impede alterar
+      } else {
+        // Admin visualiza e altera para qualquer data
+        sel.disabled = false;
+        window.datesList.forEach(d => {
+          const [y, m, day] = d.split('-');
+          const opt = document.createElement('option');
+          opt.value = d;
+          opt.innerText = `${day}/${m}/${y}`;
+          if (d === window.currentDate) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
     }
 
     window.changeCurrentDate = function(d) {
+      if(!isAdmin) return;
       window.currentDate = d;
       window.saveData();
       renderAthletesList();
     };
 
-    window.openAddDateModal = function() {
-      document.getElementById('modalAddDate').classList.remove('hidden');
-    };
-
-    window.closeAddDateModal = function() {
-      document.getElementById('modalAddDate').classList.add('hidden');
-    };
+    window.openAddDateModal = function() { document.getElementById('modalAddDate').classList.remove('hidden'); };
+    window.closeAddDateModal = function() { document.getElementById('modalAddDate').classList.add('hidden'); };
 
     window.addNewDate = function() {
       const val = document.getElementById('inputNewDate').value;
@@ -1465,10 +1403,7 @@
       document.getElementById('inputDeadline').value = window.eventTimes.deadline;
       document.getElementById('modalEditTimes').classList.remove('hidden');
     };
-
-    window.closeEditTimesModal = function() {
-      document.getElementById('modalEditTimes').classList.add('hidden');
-    };
+    window.closeEditTimesModal = function() { document.getElementById('modalEditTimes').classList.add('hidden'); };
 
     window.saveEventTimes = function() {
       const gt = document.getElementById('inputGameTime').value;
@@ -1500,9 +1435,9 @@
         else alert("Atleta sem número de WhatsApp cadastrado.");
         return;
       }
-
       const [y, m, day] = window.currentDate.split('-');
-      const msg = `Fala ${ath.name}! ⚽ Pelada Teimoso FCC dia ${day}/${m}/${y} às ${window.eventTimes.gameTime}. Favor confirmar sua presença ou justificar se não puder ir!`;
+      const justifyLink = `${window.location.origin}${window.location.pathname}?justificar=${ath.id}`;
+      const msg = `Fala ${ath.name}! ⚽ Pelada Teimoso FCC dia ${day}/${m}/${y} às ${window.eventTimes.gameTime}.\n\nFavor confirmar sua presença!\nCaso não possa ir, justifique clicando no link abaixo:\n${justifyLink}`;
       window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
@@ -1510,13 +1445,11 @@
       const activeAthletes = window.athletes.filter(a => !a.isSuspended && cleanPhone(a.phone) !== "");
       const body = document.getElementById('masterZapBody');
       body.innerHTML = '';
-
       if (activeAthletes.length === 0) {
         body.innerHTML = `<p class="text-slate-400">Nenhum atleta ativo com WhatsApp cadastrado.</p>`;
         document.getElementById('modalMasterZap').classList.remove('hidden');
         return;
       }
-
       activeAthletes.forEach(ath => {
         const item = document.createElement('div');
         item.className = "flex items-center justify-between bg-slate-800 p-2.5 rounded-lg border border-slate-700";
@@ -1531,19 +1464,15 @@
         `;
         body.appendChild(item);
       });
-
       document.getElementById('modalMasterZap').classList.remove('hidden');
     };
 
-    window.closeMasterZapModal = function() {
-      document.getElementById('modalMasterZap').classList.add('hidden');
-    };
+    window.closeMasterZapModal = function() { document.getElementById('modalMasterZap').classList.add('hidden'); };
 
     window.shareTeamsWhatsApp = function() {
       const container = document.getElementById('drawContainer');
       const cards = container.querySelectorAll('div.bg-slate-900');
       if (cards.length === 0) return;
-
       let msg = `*TEIMOSO FCC - TIMES SORTEADOS* ⚽\nData: ${window.currentDate}\n\n`;
       cards.forEach(card => {
         const title = card.querySelector('h3')?.innerText || 'TIME';
@@ -1554,7 +1483,6 @@
         });
         msg += `\n`;
       });
-
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
@@ -1562,7 +1490,6 @@
     window.exportReportsCSV = function() {
       let csv = "Atleta;Posição;Validados;Justificados;Faltas;% Presença\n";
       const totalDates = window.datesList.length;
-
       window.athletes.forEach(ath => {
         let val = 0, jus = 0, fal = 0;
         window.datesList.forEach(d => {
@@ -1576,7 +1503,6 @@
         const pct = totalDates > 0 ? Math.round((val / totalDates) * 100) : 0;
         csv += `${ath.name};${ath.position || "Meia"};${val};${jus};${fal};${pct}%\n`;
       });
-
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
@@ -1649,6 +1575,7 @@
     // INICIALIZAÇÃO DA APLICAÇÃO
     window.addEventListener('DOMContentLoaded', () => {
       listenToCloudData();
+      checkDirectJustificationLink();
     });
   </script>
 </body>
