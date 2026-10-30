@@ -528,8 +528,28 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT APPLICATION CORE -->
-  <script>
+  <!-- JAVASCRIPT APPLICATION CORE (WITH FIREBASE) -->
+  <script type="module">
+    // --- IMPORTAÇÕES DO FIREBASE (SDK v11) ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- CREDENCIAIS DO USUÁRIO ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ",
+      authDomain: "teimosoweb.firebaseapp.com",
+      projectId: "teimosoweb",
+      storageBucket: "teimosoweb.firebasestorage.app",
+      messagingSenderId: "90879285758",
+      appId: "1:90879285758:web:ef602bfe90c131e0f808af",
+      measurementId: "G-3ESB69D4WQ"
+    };
+
+    // Inicialização do Banco de Dados em Nuvem
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
+
     // --- ESTADO GLOBAL DA APLICAÇÃO ---
     window.isAdmin = false;
     let activeTab = 'presence';
@@ -560,32 +580,14 @@
 
     window.datesList = ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"];
     window.currentDate = window.datesList[0];
+    
+    // Leitura inicial do LocalStorage para evitar tela branca antes do Firebase carregar
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
 
-    // Recuperação inteligente de histórico financeiro (previne perda de dados)
-    function loadSavedFinancial() {
-      let saved = null;
-      try {
-        const primary = localStorage.getItem('teimoso_financial');
-        const backup = localStorage.getItem('teimoso_financial_backup');
-        
-        // Tenta ler do primário; se estiver vazio ou corrompido, busca do backup
-        if (primary && primary !== '{}') {
-          saved = JSON.parse(primary);
-        } else if (backup && backup !== '{}') {
-          saved = JSON.parse(backup);
-        }
-      } catch (e) {
-        console.error("Erro ao ler financeiro:", e);
-      }
+    function repairFinancialData(saved) {
+      if (!saved || typeof saved !== 'object') saved = {};
 
-      if (!saved || typeof saved !== 'object') {
-        saved = {};
-      }
-
-      // Garante os registros históricos e regras consolidadas caso não existam
-      // Regra 1: Júlio - Out/2026 pago R$ 36,00
       const julio = window.athletes.find(a => a.name.toLowerCase().includes('júlio') || a.name.toLowerCase().includes('julio'));
       if (julio) {
         if (!saved[julio.id]) saved[julio.id] = {};
@@ -594,19 +596,12 @@
         }
       }
 
-      // Estrutura garantida para Matheus Onofre (Regra de diferença)
       const onofre = window.athletes.find(a => a.name.toLowerCase().includes('matheus onofre'));
-      if (onofre && !saved[onofre.id]) {
-        saved[onofre.id] = {};
-      }
+      if (onofre && !saved[onofre.id]) saved[onofre.id] = {};
 
-      // Estrutura garantida para Sapão (Regra Set/2026)
       const sapao = window.athletes.find(a => a.name.toLowerCase().includes('sapão') || a.name.toLowerCase().includes('sapao'));
-      if (sapao && !saved[sapao.id]) {
-        saved[sapao.id] = {};
-      }
+      if (sapao && !saved[sapao.id]) saved[sapao.id] = {};
 
-      // Auto-reparo de dados antigos (converte números soltos para objetos estruturados)
       for (const athleteId in saved) {
         for (const mKey in saved[athleteId]) {
           const val = saved[athleteId][mKey];
@@ -615,11 +610,19 @@
           }
         }
       }
-
       return saved;
     }
 
-    window.financialPayments = loadSavedFinancial();
+    // Tenta carregar financeiro local primeiro
+    let localFin = null;
+    try {
+      const primary = localStorage.getItem('teimoso_financial');
+      const backup = localStorage.getItem('teimoso_financial_backup');
+      if (primary && primary !== '{}') localFin = JSON.parse(primary);
+      else if (backup && backup !== '{}') localFin = JSON.parse(backup);
+    } catch (e) {}
+    
+    window.financialPayments = repairFinancialData(localFin);
 
     // --- TOAST NOTIFICATION SYSTEM ---
     window.showToast = function(message, type = 'error') {
@@ -652,27 +655,75 @@
       confirmCallback = null;
     };
     
+    // Anexa evetos manualmente ao DOM para garantir compatibilidade com `type="module"`
     document.getElementById('btnConfirmAction').addEventListener('click', () => {
       if (confirmCallback) confirmCallback();
-      closeConfirm();
+      window.closeConfirm();
     });
 
-    window.saveData = function() {
+    // --- FUNÇÃO GLOBAL DE SALVAMENTO (LOCAL + NUVEM) ---
+    window.saveData = async function() {
+      // 1. Salva localmente (Backup offline/rápido)
       localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
       localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
       localStorage.setItem('teimoso_financial', JSON.stringify(window.financialPayments));
-      // Backup redundante para evitar perdas acidentais de sessão
       localStorage.setItem('teimoso_financial_backup', JSON.stringify(window.financialPayments));
+
+      // 2. Salva na nuvem (Firestore Firebase)
+      try {
+        await setDoc(dbDocRef, {
+          datesList: window.datesList,
+          athletes: window.athletes,
+          presences: window.presences,
+          financialPayments: window.financialPayments,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Erro ao salvar no Firebase:", error);
+      }
     };
 
-    // --- INICIALIZAÇÃO ---
+    // --- INICIALIZAÇÃO & ESCUTA DA NUVEM (REAL-TIME) ---
     window.addEventListener('DOMContentLoaded', () => {
+      // Renderiza primeiro com dados locais para interface não piscar
       populateDateSelect();
       buildStarRatingSelector(5);
       renderAthletesList();
       renderFinancial();
       renderReports();
       checkDeadlinePassed();
+
+      // Ativa o ouvinte em tempo real do Firebase Firestore
+      let isFirstLoad = true;
+      onSnapshot(dbDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          window.datesList = data.datesList || window.datesList;
+          window.athletes = data.athletes || window.athletes;
+          window.presences = data.presences || window.presences;
+          window.financialPayments = repairFinancialData(data.financialPayments);
+
+          if (isFirstLoad) {
+            if (!window.datesList.includes(window.currentDate)) {
+              window.currentDate = window.datesList[0] || "";
+            }
+            isFirstLoad = false;
+          }
+
+          // Atualiza a interface
+          populateDateSelect();
+          renderAthletesList();
+          renderFinancial();
+          renderReports();
+          checkDeadlinePassed();
+        } else {
+          // Se for o primeiro acesso no banco vazio, salva os padrões iniciais
+          window.saveData();
+        }
+      }, (error) => {
+        console.error("Falha ao escutar Firestore:", error);
+        window.showToast("Rodando em modo offline. Verifique as regras do Firebase.", "error");
+      });
     });
 
     // --- NAVEGAÇÃO DE ABAS ---
@@ -705,7 +756,7 @@
         document.getElementById('adminDateControls').classList.add('hidden');
         document.getElementById('adminDateControls').classList.remove('flex');
         document.getElementById('btnAddAthlete').classList.add('hidden');
-        showToast("Modo Administrador desativado.", "success");
+        window.showToast("Modo Administrador desativado.", "success");
         renderAthletesList();
       } else {
         document.getElementById('adminLoginModal').classList.remove('hidden');
@@ -731,11 +782,11 @@
         document.getElementById('adminDateControls').classList.remove('hidden');
         document.getElementById('adminDateControls').classList.add('flex');
         document.getElementById('btnAddAthlete').classList.remove('hidden');
-        showToast("Acesso Administrativo concedido!", "success");
+        window.showToast("Acesso Administrativo concedido!", "success");
         renderAthletesList();
         renderFinancial();
       } else {
-        showToast("Senha incorreta!", "error");
+        window.showToast("Senha incorreta!", "error");
       }
     };
 
@@ -806,7 +857,7 @@
     window.setPresenceStatus = function(athleteId, newStatus) {
       const isPastDeadline = checkDeadlinePassed();
       if (isPastDeadline && !window.isAdmin) {
-        showToast("Prazo encerrado às 18h do dia anterior. Apenas admins podem alterar.");
+        window.showToast("Prazo encerrado às 18h do dia anterior. Apenas admins podem alterar.");
         return;
       }
 
@@ -836,14 +887,14 @@
         };
       }
 
-      saveData();
+      window.saveData();
       renderAthletesList();
     };
 
     window.saveJustification = function() {
       const reason = document.getElementById('justifyReasonInput').value.trim();
       if (!reason) {
-        showToast("Digite o motivo da justificativa.");
+        window.showToast("Digite o motivo da justificativa.");
         return;
       }
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
@@ -852,10 +903,10 @@
         reason: reason,
         attended: false
       };
-      saveData();
+      window.saveData();
       closeJustifyModal();
       renderAthletesList();
-      showToast("Justificativa salva com sucesso!", "success");
+      window.showToast("Justificativa salva com sucesso!", "success");
     };
 
     window.closeJustifyModal = function() {
@@ -866,7 +917,6 @@
     // --- CÁLCULO DE STATUS FINANCEIRO DO ATLETA ---
     function getAthleteFinancialStatus(athleteId) {
       const now = new Date();
-      const currentYearMonthKey = `2026-${String(now.getMonth() + 1).padStart(2, '0')}`;
       
       const payments = window.financialPayments[athleteId] || {};
       
@@ -1007,7 +1057,7 @@
       if (!window.presences[window.currentDate]) return;
       if (window.presences[window.currentDate][athleteId]) {
         window.presences[window.currentDate][athleteId].attended = isChecked;
-        saveData();
+        window.saveData();
       }
     };
 
@@ -1062,7 +1112,7 @@
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
       if (!name) {
-        showToast("Digite o nome do atleta.");
+        window.showToast("Digite o nome do atleta.");
         return;
       }
 
@@ -1076,7 +1126,7 @@
           athlete.isSuspended = isSuspended;
           athlete.isKeeper = (position === 'Goleiro');
         }
-        showToast("Atleta atualizado com sucesso!", "success");
+        window.showToast("Atleta atualizado com sucesso!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
         window.athletes.push({
@@ -1089,10 +1139,10 @@
           monthlyFee: 110,
           isSuspended: isSuspended
         });
-        showToast("Atleta cadastrado com sucesso!", "success");
+        window.showToast("Atleta cadastrado com sucesso!", "success");
       }
 
-      saveData();
+      window.saveData();
       closeAthleteModal();
       renderAthletesList();
       renderFinancial();
@@ -1102,11 +1152,11 @@
     window.confirmDeleteAthlete = function(id) {
       showConfirm("Deseja realmente excluir este atleta do sistema?", () => {
         window.athletes = window.athletes.filter(a => a.id !== id);
-        saveData();
+        window.saveData();
         renderAthletesList();
         renderFinancial();
         renderReports();
-        showToast("Atleta excluído.", "success");
+        window.showToast("Atleta excluído.", "success");
       });
     };
 
@@ -1123,21 +1173,21 @@
     window.addNewDate = function() {
       const val = document.getElementById('newDateInput').value;
       if (!val) {
-        showToast("Selecione uma data válida.");
+        window.showToast("Selecione uma data válida.");
         return;
       }
       if (window.datesList.includes(val)) {
-        showToast("Esta data já está cadastrada.");
+        window.showToast("Esta data já está cadastrada.");
         return;
       }
       window.datesList.push(val);
       window.datesList.sort();
       window.currentDate = val;
-      saveData();
+      window.saveData();
       closeNewDateModal();
       populateDateSelect();
       renderAthletesList();
-      showToast("Nova data adicionada!", "success");
+      window.showToast("Nova data adicionada!", "success");
     };
 
     window.openManageDatesModal = function() {
@@ -1161,7 +1211,7 @@
 
     window.deleteDate = function(d) {
       if (window.datesList.length <= 1) {
-        showToast("É necessário manter ao menos uma data cadastrada.");
+        window.showToast("É necessário manter ao menos uma data cadastrada.");
         return;
       }
       showConfirm(`Deseja excluir a data ${formatDateDisplay(d)}?`, () => {
@@ -1169,11 +1219,11 @@
         if (window.currentDate === d) {
           window.currentDate = window.datesList[0];
         }
-        saveData();
+        window.saveData();
         populateDateSelect();
         renderAthletesList();
         openManageDatesModal();
-        showToast("Data excluída.", "success");
+        window.showToast("Data excluída.", "success");
       });
     };
 
@@ -1181,7 +1231,6 @@
     window.generateTeams = function() {
       const dayPresences = window.presences[window.currentDate] || {};
       
-      // Filtra atletas confirmados e que não estão suspensos
       const confirmedAthletes = window.athletes.filter(a => {
         if (a.isSuspended) return false;
         const rec = dayPresences[a.id];
@@ -1196,18 +1245,15 @@
             <p class="text-[11px] text-slate-500 mt-1">Confirme a presença dos atletas na aba Presença antes de realizar o sorteio.</p>
           </div>
         `;
-        showToast("Nenhum atleta confirmado para esta data.");
+        window.showToast("Nenhum atleta confirmado para esta data.");
         return;
       }
 
-      // Separa goleiros e jogadores de linha
       const keepers = confirmedAthletes.filter(a => a.isKeeper);
       const outfield = confirmedAthletes.filter(a => !a.isKeeper);
 
-      // Embaralha jogadores de linha
       outfield.sort(() => Math.random() - 0.5);
 
-      // Define número de times (máximo 8 jogadores por equipe)
       const totalConfirmed = confirmedAthletes.length;
       let numTeams = Math.ceil(totalConfirmed / 8);
       if (numTeams < 2 && totalConfirmed >= 10) numTeams = 2;
@@ -1215,7 +1261,6 @@
 
       const teams = Array.from({ length: numTeams }, () => ({ players: [], totalStars: 0, keepersCount: 0 }));
 
-      // Distribui goleiros primeiro
       keepers.forEach((keeper, index) => {
         const targetTeam = teams[index % numTeams];
         targetTeam.players.push(keeper);
@@ -1223,9 +1268,7 @@
         targetTeam.keepersCount++;
       });
 
-      // Distribui jogadores de linha balanceando estrelas
       outfield.forEach(player => {
-        // Ordena times por menor quantidade de jogadores (respeitando limite de 8) e menor pontuação de estrelas
         teams.sort((a, b) => {
           if (a.players.length !== b.players.length) return a.players.length - b.players.length;
           return a.totalStars - b.totalStars;
@@ -1234,7 +1277,6 @@
         teams[0].totalStars += player.stars;
       });
 
-      // Renderiza os times
       const container = document.getElementById('teamsContainer');
       container.innerHTML = '';
 
@@ -1272,13 +1314,13 @@
         container.appendChild(teamCard);
       });
 
-      showToast("Sorteio realizado com sucesso!", "success");
+      window.showToast("Sorteio realizado com sucesso!", "success");
     };
 
     // --- WHATSAPP DISPATCHERS ---
     window.openWhatsappIndividual = function(phone, name) {
       if (!phone) {
-        showToast("Este atleta não possui telefone/WhatsApp cadastrado.");
+        window.showToast("Este atleta não possui telefone/WhatsApp cadastrado.");
         return;
       }
       const cleanPhone = phone.replace(/\D/g, '');
@@ -1307,13 +1349,13 @@
       });
 
       if (targetAthletes.length === 0) {
-        showToast("Nenhum atleta encontrado para este critério.");
+        window.showToast("Nenhum atleta encontrado para este critério.");
         return;
       }
 
       const phones = targetAthletes.map(a => a.phone).filter(Boolean);
       if (phones.length === 0) {
-        showToast("Nenhum dos atletas selecionados possui número de telefone cadastrado.");
+        window.showToast("Nenhum dos atletas selecionados possui número de telefone cadastrado.");
         return;
       }
 
@@ -1321,7 +1363,7 @@
       // Abre o primeiro link como teste ou dispara
       window.open(`https://api.whatsapp.com/send?phone=55${phones[0].replace(/\D/g, '')}&text=${msg}`, '_blank');
       closeWhatsappMassModal();
-      showToast(`Iniciando disparo para ${phones.length} atletas.`, "success");
+      window.showToast(`Iniciando disparo para ${phones.length} atletas.`, "success");
     };
 
     // --- FINANCEIRO ---
@@ -1501,7 +1543,7 @@
           amount: 0
         };
       }
-      saveData();
+      window.saveData();
       renderFinancial();
       renderReports();
     };
@@ -1514,10 +1556,10 @@
         paid: true,
         amount: suggested
       };
-      saveData();
+      window.saveData();
       renderFinancial();
       renderReports();
-      showToast("Mensalidade baixada com sucesso!", "success");
+      window.showToast("Mensalidade baixada com sucesso!", "success");
     };
 
     window.updateFinancialValue = function(athleteId, mKey, val) {
@@ -1527,7 +1569,7 @@
         paid: numVal > 0,
         amount: numVal
       };
-      saveData();
+      window.saveData();
       renderFinancial();
       renderReports();
     };
@@ -1536,7 +1578,7 @@
     window.openWhatsappFinancialIndividual = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete || !athlete.phone) {
-        showToast("Atleta sem telefone cadastrado.");
+        window.showToast("Atleta sem telefone cadastrado.");
         return;
       }
 
@@ -1591,7 +1633,7 @@
       });
 
       if (count === 0) {
-        showToast("Nenhum atleta inadimplente com telefone cadastrado.");
+        window.showToast("Nenhum atleta inadimplente com telefone cadastrado.");
         return;
       }
 
@@ -1605,7 +1647,7 @@
             }, 500);
           }
         });
-        showToast("Disparos de cobrança iniciados.", "success");
+        window.showToast("Disparos de cobrança iniciados.", "success");
       });
     };
 
@@ -1663,7 +1705,7 @@
       a.href = url;
       a.download = `relatorio_teimoso_fcc_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
-      showToast("Relatório CSV exportado com sucesso!", "success");
+      window.showToast("Relatório CSV exportado com sucesso!", "success");
     };
   </script>
 </body>
