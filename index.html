@@ -1025,17 +1025,21 @@
           const btnOutClass = status === 'FORA' ? 'bg-rose-600 text-white shadow-md shadow-rose-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700';
 
           actionsHtml = `
-            <div class="flex flex-col items-center justify-center gap-1.5">
-              <div class="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 ${disabledAttr}">
-                <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" title="Confirmar" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${btnConfClass}">CONF.</button>
-                <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" title="Justificar" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${btnJustClass}">JUSTIF.</button>
-                <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" title="Fora" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${btnOutClass}">FORA</button>
-                ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" title="Falta" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}">FALTA</button>` : ''}
+            <div class="flex flex-col items-center justify-center gap-1.5 w-full">
+              <div class="grid grid-cols-2 gap-1 sm:gap-1.5 w-full max-w-[150px] mx-auto ${disabledAttr}">
+                <div class="flex flex-col gap-1 sm:gap-1.5">
+                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" title="Confirmar" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${btnConfClass}">CONF.</button>
+                  <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" title="Justificar" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${btnJustClass}">JUSTIF.</button>
+                </div>
+                <div class="flex flex-col gap-1 sm:gap-1.5">
+                  <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" title="Fora" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${btnOutClass}">FORA</button>
+                  ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" title="Falta" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white shadow-md shadow-purple-950' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">FALTA</button>` : ''}
+                </div>
               </div>
               ${(window.isAdmin && status === 'CONFIRMADO') ? `
-                <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-lg w-full justify-center mt-1">
+                <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-lg w-full max-w-[150px] justify-center mt-1">
                   <input type="checkbox" id="chk_att_${athlete.id}" ${pRecord.attended ? 'checked' : ''} onchange="toggleActualAttendance(${athlete.id}, this.checked)" class="w-3 h-3 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
-                  <label for="chk_att_${athlete.id}" class="text-[9px] font-bold uppercase tracking-wider text-emerald-400 cursor-pointer">Validou Presença no Jogo?</label>
+                  <label for="chk_att_${athlete.id}" class="text-[9px] font-bold uppercase tracking-wider text-emerald-400 cursor-pointer text-center leading-tight">Validou Presença no Jogo?</label>
                 </div>
               ` : ''}
             </div>
