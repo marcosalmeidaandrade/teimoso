@@ -438,7 +438,7 @@
     </div>
   </div>
 
-  <!-- JUSTIFICATION MODAL (COM OBRIGATORIEDADE DE MOTIVO) -->
+  <!-- JUSTIFICATION MODAL -->
   <div id="justifyModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
@@ -671,10 +671,9 @@
       }
     };
 
-    // --- MAGIC LINK / AÇÃO VIA URL DO WHATSAPP ---
     window.checkMagicLink = function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const action = urlParams.get('acao'); // 'confirmar', 'fora', 'justificar'
+      const action = urlParams.get('acao');
       const confirmId = urlParams.get('atleta');
       const dataPelada = urlParams.get('data');
 
@@ -704,12 +703,8 @@
             window.currentDate = dataPelada;
             populateDateSelect();
             currentJustifyAthleteId = athleteId;
-            if (!window.currentUser) {
-              window.showToast("Por favor, faça login com os 4 últimos dígitos do seu celular para justificar.");
-            } else {
-              document.getElementById('justifyReasonInput').value = '';
-              document.getElementById('justifyModal').classList.remove('hidden');
-            }
+            document.getElementById('justifyReasonInput').value = '';
+            document.getElementById('justifyModal').classList.remove('hidden');
             window.history.replaceState({}, document.title, window.location.pathname);
           }
         }
@@ -904,19 +899,9 @@
       const current = window.presences[window.currentDate][athleteId]?.status;
       const currentAttended = window.presences[window.currentDate][athleteId]?.attended || false;
 
+      // REGRA: Clicar no botão que já está ativo desmarca (limpa o status) obedecendo se mostra ou não na tela
       if (current === newStatus) {
-        if (window.isAdmin) {
-          window.presences[window.currentDate][athleteId].status = null;
-          window.presences[window.currentDate][athleteId].reason = '';
-          window.presences[window.currentDate][athleteId].attended = false;
-        } else {
-          if (newStatus === 'JUSTIFICADO') {
-            currentJustifyAthleteId = athleteId;
-            document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
-            document.getElementById('justifyModal').classList.remove('hidden');
-          }
-          return;
-        }
+        window.presences[window.currentDate][athleteId] = { status: null, reason: '', attended: false };
       } else {
         if (newStatus === 'JUSTIFICADO') {
           currentJustifyAthleteId = athleteId;
