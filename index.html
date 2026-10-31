@@ -106,7 +106,7 @@
           <button onclick="switchTab('draw')" id="tabBtn-draw" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
             <i class="fa-solid fa-shuffle"></i> Sorteio
           </button>
-          <button onclick="switchTab('financial')" id="tabBtn-financial" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
+          <button onclick="switchTab('financial')" id="tabBtn-financial" class="hidden px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
             <i class="fa-solid fa-wallet"></i> Financeiro
           </button>
           <button onclick="switchTab('reports')" id="tabBtn-reports" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
@@ -970,6 +970,8 @@
       const firstName = window.currentUser.name.split(' ')[0];
       document.getElementById('userBadgeName').innerText = `${firstName} ${window.isAdmin ? '(Admin)' : ''}`;
       
+      const tabFinancialBtn = document.getElementById('tabBtn-financial');
+
       if (window.isAdmin) {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 text-xs font-bold shrink-0 shadow-inner";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-shield-halved text-emerald-500";
@@ -980,6 +982,7 @@
         document.getElementById('btnExportListWhatsapp').classList.remove('hidden');
         document.getElementById('btnActivityLog').classList.remove('hidden');
         document.getElementById('btnActivityLog').classList.add('flex');
+        if (tabFinancialBtn) tabFinancialBtn.classList.remove('hidden');
       } else {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-400";
@@ -990,6 +993,7 @@
         document.getElementById('btnExportListWhatsapp').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.remove('flex');
+        if (tabFinancialBtn) tabFinancialBtn.classList.add('hidden');
       }
 
       if (window.canEditFinancial) {
@@ -1021,6 +1025,11 @@
       document.getElementById('loginPinInput').value = '';
       document.getElementById('globalLoginOverlay').classList.remove('hidden');
       document.getElementById('globalLoginOverlay').classList.add('flex');
+      
+      const tabFinancialBtn = document.getElementById('tabBtn-financial');
+      if (tabFinancialBtn) tabFinancialBtn.classList.add('hidden');
+      if (activeTab === 'financial') switchTab('presence');
+
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
