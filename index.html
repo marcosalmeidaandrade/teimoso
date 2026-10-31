@@ -281,7 +281,7 @@
         </div>
       </section>
 
-      <!-- ================= TAB 3: FINANCEIRO ================= -->
+      <!-- ================= TAB 3: FINANCEIRO (EXCLUSIVO PARA ADMINS) ================= -->
       <section id="tab-financial" class="hidden space-y-6">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
@@ -1076,6 +1076,10 @@
     });
 
     window.switchTab = function(tab) {
+      if (tab === 'financial' && !window.isAdmin) {
+        window.showToast("Acesso restrito apenas para administradores.", "error");
+        return;
+      }
       activeTab = tab;
       ['presence', 'draw', 'financial', 'reports'].forEach(t => {
         const el = document.getElementById(`tab-${t}`);
@@ -1673,6 +1677,7 @@
     };
 
     window.renderFinancial = function() {
+      if (!window.isAdmin) return;
       const container = document.getElementById('financialAccordionContainer');
       container.innerHTML = '';
       let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralInterest = 0;
