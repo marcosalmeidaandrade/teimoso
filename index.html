@@ -1170,7 +1170,6 @@
         const status = pRecord.status;
         const isExtra = (athlete.position === 'Extra');
 
-        // Os extras não contam para o total da pelada elegível
         if (!isExtra) {
           countTotal++;
           if (status === 'CONFIRMADO') countConf++;
@@ -1529,7 +1528,7 @@
         });
       }
 
-      text += `\n✨ *Atenção craques!* O clima tá quente e a resenha tá garantida! Quem estiver de fora cola com a gente pro chopinho gelado! 🧊🍻\n\n⏰ _Lembrando: Confirmações encerram às 18h do dia anterior. Após esse horário, falar com a direção ou presidência!_ 👊🟢⚪`;
+      text += `\n🔥⚽ *ATENÇÃO CRAQUES!* Vai perder essa oportunidade incrível?! 🚨 A cerveja tá trincando e o clima tá sensacional! Cola com a gente para curtir a resenha! 🧊🍻🏆\n\n⏰ _Lembrando: Confirmações encerram às 18h do dia anterior. Após esse horário, falar com a direção ou presidência!_ 👊🟢⚪`;
 
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     };
