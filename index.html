@@ -291,7 +291,7 @@
         </div>
 
         <!-- TOTALIZADORES FINANCEIROS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
             <div>
               <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Geral Pago</span>
@@ -299,6 +299,16 @@
             </div>
             <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <i class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total de Juros Devidos</span>
+              <div class="text-2xl font-black text-amber-400 mt-1" id="finTotalInterest">R$ 0,00</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <i class="fa-solid fa-clock text-lg"></i>
             </div>
           </div>
 
@@ -1263,7 +1273,7 @@
     window.renderFinancial = function() {
       const container = document.getElementById('financialAccordionContainer');
       container.innerHTML = '';
-      let totalGeneralPaid = 0, totalGeneralDue = 0;
+      let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralInterest = 0;
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
 
       sortedAthletes.forEach(athlete => {
@@ -1311,7 +1321,9 @@
             </div>`;
         });
 
-        totalGeneralPaid += athleteTotalPaid; totalGeneralDue += athleteTotalDue;
+        totalGeneralPaid += athleteTotalPaid;
+        totalGeneralDue += athleteTotalDue;
+        totalGeneralInterest += athleteTotalInterest;
 
         container.innerHTML += `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
@@ -1340,6 +1352,7 @@
           </div>`;
       });
       document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
+      document.getElementById('finTotalInterest').innerText = `R$ ${totalGeneralInterest.toFixed(2)}`;
       document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
     };
 
