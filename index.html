@@ -281,46 +281,59 @@
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
-              <i class="fa-solid fa-wallet text-emerald-400"></i> Gestão Financeira de Mensalidades
+              <i class="fa-solid fa-wallet text-emerald-400"></i> Controle Financeiro Anual (2026)
             </h3>
-            <p class="text-xs text-slate-400 mt-1">Clique no atleta para ver as mensalidades. Clique duas vezes no campo para baixar o valor sugerido. Juros a partir do dia 16.</p>
+            <p class="text-xs text-slate-400 mt-1">Clique nos cartões abaixo para filtrar os atletas ou clique nos cards dos atletas para abrir as mensalidades.</p>
           </div>
-          <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
-            <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes em Massa
+          <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
+            <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes
           </button>
         </div>
 
-        <!-- TOTALIZADORES FINANCEIROS -->
+        <!-- TOTALIZADORES FINANCEIROS (FILTRÁVEIS) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
+          <div onclick="filterFinancialCards('paid')" id="finCard-paid" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer transition-all group">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Geral Pago</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-400 transition-colors">Total Geral Pago</span>
               <div class="text-2xl font-black text-emerald-400 mt-1" id="finTotalPaid">R$ 0,00</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Clique para filtrar pagos</span>
             </div>
             <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <i class="fa-solid fa-circle-check text-lg"></i>
             </div>
           </div>
 
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
+          <div onclick="filterFinancialCards('interest')" id="finCard-interest" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer transition-all group">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total de Juros Devidos</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-400 transition-colors">Total de Juros Devidos</span>
               <div class="text-2xl font-black text-amber-400 mt-1" id="finTotalInterest">R$ 0,00</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Clique para filtrar com juros</span>
             </div>
             <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
               <i class="fa-solid fa-clock text-lg"></i>
             </div>
           </div>
 
-          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg flex items-center justify-between">
+          <div onclick="filterFinancialCards('due')" id="finCard-due" class="bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer transition-all group">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total a Receber</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-rose-400 transition-colors">Total a Receber</span>
               <div class="text-2xl font-black text-rose-400 mt-1" id="finTotalDue">R$ 0,00</div>
+              <span class="text-[10px] text-slate-500 font-semibold">Clique para filtrar pendentes</span>
             </div>
             <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
               <i class="fa-solid fa-triangle-exclamation text-lg"></i>
             </div>
           </div>
+        </div>
+
+        <!-- BADGE DE FILTRO FINANCEIRO ATIVO -->
+        <div id="activeFinFilterContainer" class="hidden flex items-center justify-between bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-2xl">
+          <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-filter text-emerald-400"></i> Filtrando por: <span id="activeFinFilterName" class="text-emerald-400 uppercase"></span>
+          </span>
+          <button onclick="filterFinancialCards(null)" class="text-xs font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20 transition-all">
+            <i class="fa-solid fa-xmark"></i> Limpar Filtro
+          </button>
         </div>
 
         <!-- FINANCIAL ACCORDION LIST -->
@@ -446,14 +459,14 @@
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-comment-dots text-amber-400"></i> Justificativa de Ausência
+          <i class="fa-solid fa-comment-dots text-amber-400"></i> Justificativa de Ausência <span class="text-rose-400">*</span>
         </h3>
         <button onclick="closeJustifyModal()" class="text-slate-500 hover:text-slate-300">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
       <div>
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Motivo:</label>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Motivo obrigatório:</label>
         <textarea id="justifyReasonInput" rows="3" placeholder="Ex: Viagem a trabalho, contusão..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
       </div>
       <div class="flex items-center gap-2 pt-2">
@@ -510,7 +523,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-brands fa-whatsapp text-emerald-400"></i> Disparo em Massa (Link Mágico)
+          <i class="fa-brands fa-whatsapp text-emerald-400"></i> Disparo em Massa (Links Mágicos)
         </h3>
         <button onclick="closeWhatsappMassModal()" class="text-slate-500 hover:text-slate-300">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -580,6 +593,7 @@
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
     let activeStatusFilter = null;
+    let activeFinancialFilter = null;
     window.expandedFinCards = new Set();
     
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
@@ -601,7 +615,6 @@
     window.datesList = ["2026-11-03"];
     window.currentDate = window.datesList[0];
     
-    // Fallback variables
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
     window.financialPayments = {};
@@ -624,7 +637,6 @@
       const content = document.getElementById('animatedConfirmContent');
       
       overlay.classList.remove('hidden');
-      // Força o navegador a renderizar (reflow) para a transição funcionar
       void overlay.offsetWidth;
       
       overlay.classList.remove('opacity-0');
@@ -632,13 +644,12 @@
       content.classList.remove('scale-0');
       content.classList.add('scale-100');
       
-      // Esconde automaticamente após 3 segundos
       setTimeout(() => {
         overlay.classList.remove('opacity-100');
         overlay.classList.add('opacity-0');
         content.classList.remove('scale-100');
         content.classList.add('scale-0');
-        setTimeout(() => overlay.classList.add('hidden'), 500); // tempo do fade
+        setTimeout(() => overlay.classList.add('hidden'), 500);
       }, 3000);
     };
 
@@ -690,29 +701,45 @@
       }
     };
 
-    // --- MAGIC LINK / VERIFICAÇÃO DE URL ---
+    // --- MAGIC LINK / VERIFICAÇÃO DE URL INTERATIVA ---
     window.checkMagicLink = function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const confirmId = urlParams.get('confirmar');
+      const action = urlParams.get('acao'); // 'dentro', 'fora', 'justificar'
+      const confirmId = urlParams.get('atleta');
       const dataPelada = urlParams.get('data');
 
-      if (confirmId && dataPelada) {
+      if (action && confirmId && dataPelada) {
         const athleteId = parseInt(confirmId);
         const athlete = window.athletes.find(a => a.id === athleteId);
         if (athlete && window.datesList.includes(dataPelada)) {
           if (!window.presences[dataPelada]) window.presences[dataPelada] = {};
-          window.presences[dataPelada][athleteId] = { status: 'CONFIRMADO', reason: '', attended: false };
-          
-          window.saveData();
-          window.currentDate = dataPelada; // Muda para a data do link
-          populateDateSelect();
-          renderAthletesList();
-          
-          // Chama a animação linda de emojis
-          setTimeout(() => window.showAnimatedConfirmation(), 800);
-          
-          // Limpa a URL para não disparar novamente se o usuário atualizar a página
-          window.history.replaceState({}, document.title, window.location.pathname);
+
+          if (action === 'dentro') {
+            window.presences[dataPelada][athleteId] = { status: 'CONFIRMADO', reason: '', attended: false };
+            window.saveData();
+            window.currentDate = dataPelada;
+            populateDateSelect();
+            renderAthletesList();
+            setTimeout(() => window.showAnimatedConfirmation(), 800);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else if (action === 'fora') {
+            window.presences[dataPelada][athleteId] = { status: 'FORA', reason: '', attended: false };
+            window.saveData();
+            window.currentDate = dataPelada;
+            populateDateSelect();
+            renderAthletesList();
+            window.showToast(`Entendido, ${athlete.name.split(' ')[0]}. Marcado como FORA!`, "success");
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else if (action === 'justificar') {
+            // Exige login rápido ou reconhece se já logado
+            window.currentDate = dataPelada;
+            populateDateSelect();
+            currentJustifyAthleteId = athleteId;
+            document.getElementById('globalLoginOverlay').classList.add('hidden');
+            document.getElementById('justifyReasonInput').value = '';
+            document.getElementById('justifyModal').classList.remove('hidden');
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
         }
       }
     };
@@ -803,7 +830,6 @@
               window.currentDate = window.datesList[0] || "";
             }
             isFirstLoad = false;
-            // Checa se o usuário clicou no link mágico assim que carregar
             window.checkMagicLink();
           }
 
@@ -909,22 +935,25 @@
       const currentAttended = window.presences[window.currentDate][athleteId]?.attended || false;
 
       if (current === newStatus) {
-        window.presences[window.currentDate][athleteId].status = null;
-        window.presences[window.currentDate][athleteId].reason = '';
-        window.presences[window.currentDate][athleteId].attended = false;
-      } else {
         if (newStatus === 'JUSTIFICADO') {
           currentJustifyAthleteId = athleteId;
           document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
           document.getElementById('justifyModal').classList.remove('hidden');
-          return;
         }
-        window.presences[window.currentDate][athleteId] = { status: newStatus, reason: '', attended: newStatus === 'CONFIRMADO' ? currentAttended : false };
-        
-        // Se confirmou, dispara a animação de celebração!
-        if (newStatus === 'CONFIRMADO') {
-          window.showAnimatedConfirmation();
-        }
+        return;
+      }
+
+      if (newStatus === 'JUSTIFICADO') {
+        currentJustifyAthleteId = athleteId;
+        document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
+        document.getElementById('justifyModal').classList.remove('hidden');
+        return;
+      }
+
+      window.presences[window.currentDate][athleteId] = { status: newStatus, reason: '', attended: newStatus === 'CONFIRMADO' ? currentAttended : false };
+      
+      if (newStatus === 'CONFIRMADO') {
+        window.showAnimatedConfirmation();
       }
 
       window.saveData();
@@ -933,13 +962,16 @@
 
     window.saveJustification = function() {
       const reason = document.getElementById('justifyReasonInput').value.trim();
-      if (!reason) return window.showToast("Digite o motivo.");
+      if (!reason) {
+        window.showToast("A inclusão da observação do motivo é obrigatória!");
+        return;
+      }
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       window.presences[window.currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', reason: reason, attended: false };
       window.saveData();
       closeJustifyModal();
       renderAthletesList();
-      window.showToast("Justificativa salva!", "success");
+      window.showToast("Justificativa salva com sucesso!", "success");
     };
 
     window.closeJustifyModal = function() {
@@ -1226,8 +1258,13 @@
       if (!phone) return window.showToast("Sem telefone.");
       const cleanPhone = phone.replace(/\D/g, '');
       const currentUrl = window.location.href.split('?')[0];
-      const magicLink = `${currentUrl}?confirmar=${athleteId}&data=${window.currentDate}`;
-      const msg = `Fala meu amigo ${name}!! ⚽🔥\n\nConvocação para a nossa pelada do dia *${formatDateDisplay(window.currentDate)}*.\n\nPara confirmar sua presença, clique no link abaixo. Não precisa de senha, é só clicar!\n👇\n${magicLink}\n\nMensagem enviada automaticamente pelo sistema de gestão de peladas do Teimoso FCC.`;
+      
+      const linkDentro = `${currentUrl}?acao=dentro&atleta=${athleteId}&data=${window.currentDate}`;
+      const linkJustificar = `${currentUrl}?acao=justificar&atleta=${athleteId}&data=${window.currentDate}`;
+      const linkFora = `${currentUrl}?acao=fora&atleta=${athleteId}&data=${window.currentDate}`;
+
+      const msg = `Fala meu amigo ${name}! ⚽🔥\n\nA convocação para a nossa pelada do dia *${formatDateDisplay(window.currentDate)}* está aberta! 🏆⚽\n\nConfirme sua presença abaixo:\n\n🟢 *[ESTOU DENTRO]*\n${linkDentro}\n\n🟡 *[VOU JUSTIFICAR]*\n${linkJustificar}\n\n🔴 *[ESTOU FORA]*\n${linkFora}\n\nMensagem enviada automaticamente pelo sistema de gestão de peladas do Teimoso FCC. 🚀`;
+      
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
     
@@ -1247,23 +1284,61 @@
       const phones = targetAthletes.map(a => a.phone).filter(Boolean);
       if (phones.length === 0) return window.showToast("Nenhum telefone encontrado.");
       
-      const currentUrl = window.location.href.split('?')[0]; // URL base do seu app
+      const currentUrl = window.location.href.split('?')[0];
       
       targetAthletes.forEach((athlete, index) => {
         const cleanPhone = athlete.phone.replace(/\D/g, '');
-        const magicLink = `${currentUrl}?confirmar=${athlete.id}&data=${window.currentDate}`;
-        const msg = `Fala meu amigo ${athlete.name}!! ⚽🔥\n\nConvocação para a nossa pelada do dia *${formatDateDisplay(window.currentDate)}*.\n\nPara confirmar sua presença, clique no link abaixo. Não precisa de senha, é só clicar!\n👇\n${magicLink}\n\nMensagem enviada automaticamente pelo sistema de gestão de peladas do Teimoso FCC.`;
+        const linkDentro = `${currentUrl}?acao=dentro&atleta=${athlete.id}&data=${window.currentDate}`;
+        const linkJustificar = `${currentUrl}?acao=justificar&atleta=${athlete.id}&data=${window.currentDate}`;
+        const linkFora = `${currentUrl}?acao=fora&atleta=${athlete.id}&data=${window.currentDate}`;
+
+        const msg = `Fala meu amigo ${athlete.name}! ⚽🔥\n\nA convocação para a nossa pelada do dia *${formatDateDisplay(window.currentDate)}* está aberta! 🏆⚽\n\nConfirme sua presença abaixo:\n\n🟢 *[ESTOU DENTRO]*\n${linkDentro}\n\n🟡 *[VOU JUSTIFICAR]*\n${linkJustificar}\n\n🔴 *[ESTOU FORA]*\n${linkFora}\n\nMensagem enviada automaticamente pelo sistema de gestão de peladas do Teimoso FCC. 🚀`;
         
-        // Simula clique seqüencial com timeout para driblar (parcialmente) bloqueio de popup
         setTimeout(() => {
           window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
         }, index * 1200);
       });
       
-      closeWhatsappMassModal(); window.showToast("Disparo inciado! Libere os pop-ups do navegador.", "success");
+      closeWhatsappMassModal(); window.showToast("Disparo iniciado! Libere os pop-ups do navegador.", "success");
     };
 
     // FINANCEIRO
+    window.filterFinancialCards = function(filterType) {
+      if (activeFinancialFilter === filterType) {
+        activeFinancialFilter = null;
+      } else {
+        activeFinancialFilter = filterType;
+      }
+      
+      const badgeContainer = document.getElementById('activeFinFilterContainer');
+      const filterNameEl = document.getElementById('activeFinFilterName');
+      
+      ['paid', 'interest', 'due'].forEach(type => {
+        const card = document.getElementById(`finCard-${type}`);
+        if (card) {
+          card.classList.remove('ring-2', 'ring-emerald-500', 'ring-amber-500', 'ring-rose-500');
+        }
+      });
+
+      if (activeFinancialFilter) {
+        badgeContainer.classList.remove('hidden');
+        if (activeFinancialFilter === 'paid') {
+          filterNameEl.innerText = 'Atletas com Pagamentos Realizados';
+          document.getElementById('finCard-paid')?.classList.add('ring-2', 'ring-emerald-500');
+        } else if (activeFinancialFilter === 'interest') {
+          filterNameEl.innerText = 'Atletas com Juros Devidos (Em Atraso)';
+          document.getElementById('finCard-interest')?.classList.add('ring-2', 'ring-amber-500');
+        } else if (activeFinancialFilter === 'due') {
+          filterNameEl.innerText = 'Atletas com Valores a Receber';
+          document.getElementById('finCard-due')?.classList.add('ring-2', 'ring-rose-500');
+        }
+      } else {
+        badgeContainer.classList.add('hidden');
+      }
+
+      renderFinancial();
+    };
+
     window.toggleFinancialAccordion = function(athleteId) {
       if (window.expandedFinCards.has(athleteId)) window.expandedFinCards.delete(athleteId);
       else window.expandedFinCards.add(athleteId);
@@ -1324,6 +1399,10 @@
         totalGeneralPaid += athleteTotalPaid;
         totalGeneralDue += athleteTotalDue;
         totalGeneralInterest += athleteTotalInterest;
+
+        if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
+        if (activeFinancialFilter === 'interest' && athleteTotalInterest <= 0) return;
+        if (activeFinancialFilter === 'due' && athleteTotalDue <= 0) return;
 
         container.innerHTML += `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
