@@ -240,7 +240,7 @@
                 <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
                   <th class="py-3 px-4">Atleta / Info</th>
                   <th class="py-3 px-4 text-center">Ações de Presença</th>
-                  <th class="py-3 px-4 text-right">Opções</th>
+                  <th id="thPresenceOptions" class="hidden py-3 px-4 text-right">Opções</th>
                 </tr>
               </thead>
               <tbody id="athletesTableBody" class="divide-y divide-slate-800/60 text-xs">
@@ -951,6 +951,12 @@
     }
 
     window.renderAthletesList = function() {
+      const thOptions = document.getElementById('thPresenceOptions');
+      if (thOptions) {
+        if (window.isAdmin) thOptions.classList.remove('hidden');
+        else thOptions.classList.add('hidden');
+      }
+
       const tbody = document.getElementById('athletesTableBody');
       tbody.innerHTML = '';
       let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
@@ -1033,15 +1039,15 @@
             </div>
           </td>
           <td class="py-3 px-4 text-center">${actionsHtml}</td>
-          <td class="py-3 px-4 text-right">
-            <div class="flex items-center justify-end gap-2">
-              <button onclick="openWhatsappIndividual('${athlete.phone}', '${athlete.name}')" title="WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs"><i class="fa-brands fa-whatsapp"></i></button>
-              ${window.isAdmin ? `
+          ${window.isAdmin ? `
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button onclick="openWhatsappIndividual('${athlete.phone}', '${athlete.name}')" title="WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs"><i class="fa-brands fa-whatsapp"></i></button>
                 <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all flex items-center justify-center text-xs"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="confirmDeleteAthlete(${athlete.id})" title="Excluir" class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button>
-              ` : ''}
-            </div>
-          </td>
+              </div>
+            </td>
+          ` : ''}
         `;
         tbody.appendChild(tr);
       });
@@ -1209,6 +1215,7 @@
     };
 
     window.openWhatsappIndividual = function(phone, name) {
+      if (!window.isAdmin) return;
       if (!phone) return window.showToast("Sem telefone.");
       window.open(`https://api.whatsapp.com/send?phone=55${phone.replace(/\D/g, '')}&text=${encodeURIComponent(`Olá ${name}, passando para falar sobre a pelada no Teimoso F.C.C.!`)}`, '_blank');
     };
@@ -1229,7 +1236,6 @@
       const phones = targetAthletes.map(a => a.phone).filter(Boolean);
       if (phones.length === 0) return window.showToast("Nenhum telefone encontrado.");
       
-      // Abre o primeiro (poderia abrir sequencial, mas navegadores bloqueiam múltiplos popups, então abre apenas para teste ou precisa ser feito um por um via clique manual)
       const currentUrl = window.location.href.split('?')[0]; // URL base do seu app
       
       targetAthletes.forEach((athlete, index) => {
