@@ -174,9 +174,9 @@
           </div>
         </div>
 
-        <!-- STATS CARDS (FILTERABLE) -->
+        <!-- STATS CARDS (TOGGLE FILTER) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div onclick="filterPresenceCards('CONFIRMADO')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+          <div onclick="togglePresenceFilter('CONFIRMADO')" id="cardStat-CONFIRMADO" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
             <div class="flex items-center justify-between text-slate-400 mb-1">
               <span class="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Confirmados</span>
               <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
@@ -184,7 +184,7 @@
             <div class="text-2xl font-black text-emerald-400" id="statConfirmed">0</div>
           </div>
 
-          <div onclick="filterPresenceCards('JUSTIFICADO')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+          <div onclick="togglePresenceFilter('JUSTIFICADO')" id="cardStat-JUSTIFICADO" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
             <div class="flex items-center justify-between text-slate-400 mb-1">
               <span class="text-xs font-bold uppercase tracking-wider group-hover:text-amber-400 transition-colors">Justificados</span>
               <i class="fa-solid fa-circle-exclamation text-amber-400 text-sm"></i>
@@ -192,7 +192,7 @@
             <div class="text-2xl font-black text-amber-400" id="statJustified">0</div>
           </div>
 
-          <div onclick="filterPresenceCards('FORA')" class="bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+          <div onclick="togglePresenceFilter('FORA')" id="cardStat-FORA" class="bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
             <div class="flex items-center justify-between text-slate-400 mb-1">
               <span class="text-xs font-bold uppercase tracking-wider group-hover:text-rose-400 transition-colors">Fora</span>
               <i class="fa-solid fa-circle-xmark text-rose-400 text-sm"></i>
@@ -200,7 +200,7 @@
             <div class="text-2xl font-black text-rose-400" id="statOut">0</div>
           </div>
 
-          <div onclick="filterPresenceCards(null)" class="bg-slate-900 border border-slate-800 hover:border-slate-600 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+          <div onclick="togglePresenceFilter(null)" id="cardStat-ALL" class="bg-slate-900 border border-slate-800 hover:border-slate-600 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
             <div class="flex items-center justify-between text-slate-400 mb-1">
               <span class="text-xs font-bold uppercase tracking-wider group-hover:text-slate-200 transition-colors">Total Atletas</span>
               <i class="fa-solid fa-users text-slate-400 text-sm"></i>
@@ -219,7 +219,7 @@
             <div class="flex items-center justify-end gap-3 w-full sm:w-auto">
               <span id="activeFilterBadge" class="hidden text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
                 Filtro: <span id="filterName"></span> 
-                <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-400 hover:text-rose-300 focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="togglePresenceFilter(null)" class="ml-1 text-rose-400 hover:text-rose-300 focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
               </span>
               
               <!-- CAMPO DE PESQUISA POR NOME -->
@@ -533,7 +533,7 @@
     </div>
   </div>
 
-  <!-- STATUS OPTIONS MODAL (QUANDO CLICA NO BOTÃO JÁ ATIVO) -->
+  <!-- STATUS OPTIONS MODAL -->
   <div id="statusOptionsModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
       <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto text-lg">
@@ -899,12 +899,39 @@
       }
     };
 
-    window.filterPresenceCards = function(status) {
-      activeStatusFilter = status;
+    window.togglePresenceFilter = function(status) {
+      // Se clicar no mesmo filtro ativo, desmarca e volta ao início (null)
+      if (activeStatusFilter === status) {
+        activeStatusFilter = null;
+      } else {
+        activeStatusFilter = status;
+      }
+
+      // Atualiza o destaque visual dos cards estatísticos
+      ['CONFIRMADO', 'JUSTIFICADO', 'FORA'].forEach(s => {
+        const card = document.getElementById(`cardStat-${s}`);
+        if (card) {
+          if (activeStatusFilter === s) {
+            card.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-800');
+          } else {
+            card.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-800');
+          }
+        }
+      });
+
+      const cardAll = document.getElementById('cardStat-ALL');
+      if (cardAll) {
+        if (!activeStatusFilter) {
+          cardAll.classList.add('ring-2', 'ring-slate-500', 'bg-slate-800');
+        } else {
+          cardAll.classList.remove('ring-2', 'ring-slate-500', 'bg-slate-800');
+        }
+      }
+
       const badge = document.getElementById('activeFilterBadge');
-      if (status) {
+      if (activeStatusFilter) {
         badge.classList.remove('hidden');
-        document.getElementById('filterName').innerText = status;
+        document.getElementById('filterName').innerText = activeStatusFilter;
       } else {
         badge.classList.add('hidden');
       }
@@ -922,7 +949,6 @@
       const current = window.presences[window.currentDate][athleteId]?.status;
       const currentAttended = window.presences[window.currentDate][athleteId]?.attended || false;
 
-      // Se clicar no botão que já está ativo, abre o modal de opções de origem
       if (current === newStatus) {
         pendingToggleAthleteId = athleteId;
         document.getElementById('statusOptionsModal').classList.remove('hidden');
@@ -956,7 +982,7 @@
         renderAthletesList();
         window.showToast("Status removido com sucesso.", "success");
       } else if (action === 'change') {
-        // Apenas fecha o modal e mantém os botões prontos para receber nova seleção
+        // Fecha o modal e deixa livre
       }
       closeStatusOptionsModal();
     };
