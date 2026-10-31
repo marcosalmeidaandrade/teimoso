@@ -706,7 +706,6 @@
       if (window.activityLogs.length > 80) window.activityLogs = window.activityLogs.slice(0, 80);
       updateActivityBadge();
 
-      // Disparo silencioso por E-mail (FormSubmit AJAX) se configurado
       if (window.notificationSettings?.email) {
         fetch(`https://formsubmit.co/ajax/${encodeURIComponent(window.notificationSettings.email)}`, {
           method: "POST",
@@ -720,7 +719,6 @@
         }).catch(() => {});
       }
 
-      // Disparo silencioso via Webhook / CallMeBot (WhatsApp Automático) se configurado
       if (window.notificationSettings?.webhookUrl) {
         const textMsg = encodeURIComponent(`⚽ *Teimoso FCC*: ${actorName} - ${actionDescription} (${timestamp})`);
         const url = window.notificationSettings.webhookUrl.includes('{text}')
