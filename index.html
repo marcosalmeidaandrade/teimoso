@@ -806,15 +806,12 @@
         const [ny, nm, nd] = nextDateStr.split('-');
         const nextPeladaDate = new Date(ny, nm - 1, nd, 0, 0, 0);
 
-        // Calcula o sábado imediatamente anterior à próxima pelada
-        const targetSaturday = new Date(nextPeladaDate);
-        let dayOfWeek = targetSaturday.getDay(); // 0: domingo, 1: segunda, ..., 6: sábado
-        let daysToSaturday = (dayOfWeek + 1) % 7;
-        targetSaturday.setDate(targetSaturday.getDate() - daysToSaturday);
-        targetSaturday.setHours(0, 0, 0, 0);
+        // Usuário comum só vê a próxima a partir do dia que antecede a pelada (véspera)
+        const eveOfPelada = new Date(nextPeladaDate);
+        eveOfPelada.setDate(eveOfPelada.getDate() - 1);
+        eveOfPelada.setHours(0, 0, 0, 0);
 
-        // Se hoje já é o sábado que antecede ou depois, seleciona a próxima pelada
-        if (today >= targetSaturday) {
+        if (today >= eveOfPelada) {
           return nextDateStr;
         }
       }
@@ -1357,12 +1354,30 @@
     function getAvailableDates() {
       const currentYear = new Date().getFullYear();
       const sorted = [...window.datesList].sort();
-      return window.isAdmin
-        ? sorted
-        : sorted.filter(d => {
-            const y = parseInt(d.split('-')[0], 10);
-            return y >= currentYear;
-          });
+      if (window.isAdmin) {
+        return sorted;
+      }
+
+      // Usuários comuns:
+      // - Peladas do ano corrente até a data de hoje/passadas
+      // - Peladas futuras SOMENTE a partir do dia que antecede a pelada (véspera)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      return sorted.filter(d => {
+        const [y, m, day] = d.split('-').map(Number);
+        if (y < currentYear) return false;
+
+        const peladaDate = new Date(y, m - 1, day, 0, 0, 0);
+        if (peladaDate <= today) return true; // Peladas que já aconteceram ou hoje
+
+        // Pelada futura: só libera a partir da véspera (1 dia antes)
+        const eve = new Date(peladaDate);
+        eve.setDate(eve.getDate() - 1);
+        eve.setHours(0, 0, 0, 0);
+
+        return today >= eve;
+      });
     }
 
     function updateDateNavButtons() {
@@ -1473,6 +1488,14 @@
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
         window.showToast("Atleta suspenso. Apenas administradores podem realizar ações para este atleta.", "error");
         return;
+      }
+
+      // Usuário comum só pode alterar a presença do seu próprio perfil
+      if (!window.isAdmin) {
+        if (!window.currentUser || window.currentUser.id !== athleteId) {
+          window.showToast("Você só pode confirmar ou alterar a presença do seu próprio login.", "error");
+          return;
+        }
       }
 
       const isPastDeadline = checkDeadlinePassed();
@@ -1684,6 +1707,9 @@
         tr.className = athlete.isSuspended ? "bg-rose-950/20 hover:bg-rose-900/30 transition-colors" : "hover:bg-slate-900/60 transition-colors";
 
         let actionsHtml = '';
+        const isSelf = window.currentUser && window.currentUser.id === athlete.id;
+        const canControlPresence = window.isAdmin || isSelf;
+
         if (athlete.isSuspended && !window.isAdmin) {
           actionsHtml = `
             <div class="flex flex-col items-center justify-center gap-1">
@@ -1691,6 +1717,23 @@
                 <i class="fa-solid fa-ban"></i> Suspenso
               </span>
               ${status ? `<span class="text-[9px] font-bold text-slate-400">Status: ${status}</span>` : ''}
+            </div>
+          `;
+        } else if (!canControlPresence) {
+          // Usuário comum visualizando outro atleta (apenas leitura do status)
+          let currentStatusBadge = `<span class="text-[10px] text-slate-500 font-bold">Pendente</span>`;
+          if (status === 'CONFIRMADO') {
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${athlete.position === 'EXTRA' ? 'Confirmado Resenha' : 'Confirmado'}</span>`;
+          } else if (status === 'JUSTIFICADO') {
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-600/20 text-amber-400 border border-amber-500/30 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Justificado</span>`;
+          } else if (status === 'FORA') {
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-600/20 text-rose-400 border border-rose-500/30 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Fora</span>`;
+          } else if (status === 'FALTA') {
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center gap-1"><i class="fa-solid fa-ban"></i> Faltou</span>`;
+          }
+          actionsHtml = `
+            <div class="flex flex-col items-center justify-center py-1">
+              ${currentStatusBadge}
             </div>
           `;
         } else {
