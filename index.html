@@ -594,17 +594,21 @@
 
   <!-- MANAGE DATES MODAL -->
   <div id="manageDatesModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-days text-emerald-400"></i> Gerenciar Datas
+          <i class="fa-solid fa-calendar-days text-emerald-400"></i> Gerenciar Datas e Horários
         </h3>
         <button onclick="closeManageDatesModal()" class="text-slate-500 hover:text-slate-300">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
+      <p class="text-xs text-slate-400">
+        Ajuste o horário de cada pelada diretamente no campo abaixo ou remova datas que não serão utilizadas:
+      </p>
       <div id="manageDatesList" class="divide-y divide-slate-800 overflow-y-auto flex-grow space-y-2 pr-1"></div>
-      <div class="pt-2 border-t border-slate-800 text-right">
+      <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+        <span class="text-[10px] text-slate-500">Alterações de horário são salvas automaticamente.</span>
         <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
@@ -1800,17 +1804,55 @@
       window.showToast("Data adicionada com sucesso!", "success");
     };
     window.openManageDatesModal = function() {
-      const list = document.getElementById('manageDatesList'); list.innerHTML = '';
+      const list = document.getElementById('manageDatesList'); 
+      list.innerHTML = '';
+      if (!window.peladaTimes) window.peladaTimes = {};
+
       window.datesList.forEach(d => {
+        const currentTime = window.peladaTimes[d] || '07:00';
+        const [y, m, day] = d.split('-');
+        const dateObj = new Date(y, m - 1, day);
+        const dayLabel = dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase();
+
         list.innerHTML += `
-          <div class="py-2.5 flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-200">${formatDateDisplay(d)}</span>
-            <button onclick="deleteDate('${d}')" class="px-3 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-600 rounded-lg font-bold">Excluir</button>
+          <div class="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-calendar-check text-emerald-400 text-sm shrink-0"></i>
+              <div>
+                <div class="font-bold text-slate-200 text-xs">${dayLabel}</div>
+                <div class="text-[10px] text-slate-500 font-mono">${d}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-auto">
+              <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl">
+                <i class="fa-solid fa-clock text-emerald-400 text-xs"></i>
+                <label class="text-[10px] uppercase font-bold text-slate-400">Horário:</label>
+                <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-100 focus:outline-none cursor-pointer">
+              </div>
+              <button onclick="deleteDate('${d}')" title="Excluir data" class="px-3 py-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
           </div>
         `;
       });
       document.getElementById('manageDatesModal').classList.remove('hidden');
     };
+
+    window.updatePeladaTime = function(dateStr, newTime) {
+      if (!window.isAdmin) {
+        window.showToast("Apenas administradores podem gerenciar horários.", "error");
+        return;
+      }
+      if (!window.peladaTimes) window.peladaTimes = {};
+      window.peladaTimes[dateStr] = newTime || '07:00';
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Alterou o horário da pelada de ${dateStr} para ${newTime}`);
+      window.saveData();
+      populateDateSelect();
+      renderAthletesList();
+      window.showToast(`Horário atualizado para ${newTime}!`, "success");
+    };
+
     window.closeManageDatesModal = function() { document.getElementById('manageDatesModal').classList.add('hidden'); };
     window.deleteDate = function(d) {
       if (window.datesList.length <= 1) return window.showToast("Mantenha ao menos uma data.");
