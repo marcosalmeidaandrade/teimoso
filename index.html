@@ -676,7 +676,9 @@
       { id: 4, name: "Cláudio", position: "Atacante", stars: 4, phone: "22999990004", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 5, name: "Davi", position: "Volante", stars: 4, phone: "22999990005", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 6, name: "Tiago Boquete", position: "Lateral", stars: 4, phone: "22999990006", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
+      { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
     ];
 
     const initialMockFinancial = {
@@ -701,6 +703,13 @@
     }
     if (!window.financialPayments[7]) {
       window.financialPayments[7] = initialMockFinancial[7];
+    }
+
+    if (!window.athletes.some(a => a.name.toUpperCase().includes('JÚLIO') || a.name.toUpperCase().includes('JULIO'))) {
+      window.athletes.push(defaultAthletes[7]);
+    }
+    if (!window.athletes.some(a => a.name.toUpperCase().includes('SAPÃO') || a.name.toUpperCase().includes('SAPAO'))) {
+      window.athletes.push(defaultAthletes[8]);
     }
 
     function repairFinancialData(saved) {
@@ -1816,24 +1825,46 @@
           let paidAmount = Number(monthData.amount) || 0;
           
           if (isPaid) athleteTotalPaid += paidAmount;
-          let interest = (!isPaid && now >= firstDayAfterDue && !athlete.isSuspended) ? (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
+
+          const athleteNameNorm = athlete.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const isJulioSpecial = athleteNameNorm.includes('JULIO') && mKey === 'out';
+          const isSapaoSpecial = athleteNameNorm.includes('SAPAO') && mKey === 'set';
+          const isSpecialExempt = isJulioSpecial || isSapaoSpecial;
+
+          let interest = 0;
+          if (!isSpecialExempt && !isPaid && now >= firstDayAfterDue && !athlete.isSuspended) {
+            interest = (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00;
+          }
           athleteTotalInterest += interest;
 
           const suggestedFee = athlete.monthlyFee || 110;
-          if (!isPaid && !athlete.isSuspended) {
-            athleteInstallmentsDue += suggestedFee;
-            athleteTotalDue += (suggestedFee + interest);
+          let dueForThisMonth = 0;
+          if (isSpecialExempt) {
+            dueForThisMonth = Math.max(0, suggestedFee - paidAmount);
+            if (!athlete.isSuspended) {
+              athleteInstallmentsDue += dueForThisMonth;
+              athleteTotalDue += dueForThisMonth;
+            }
+          } else {
+            if (!isPaid && !athlete.isSuspended) {
+              athleteInstallmentsDue += suggestedFee;
+              athleteTotalDue += (suggestedFee + interest);
+            }
           }
 
           let cellColorClass = isPaid ? "bg-sky-500/20 text-sky-300 border-sky-500/40" : (now > dueDate ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-slate-950/40 text-slate-500 border-slate-800");
 
           monthsGridHtml += `
-            <div class="flex flex-col gap-1 items-center bg-slate-950 border border-slate-800 p-2 rounded-xl shadow-inner">
-              <span class="text-[10px] uppercase font-bold text-slate-400">${mKey}</span>
+            <div class="flex flex-col gap-1 items-center bg-slate-950 border border-slate-800 p-2 rounded-xl shadow-inner ${isSpecialExempt ? 'ring-1 ring-amber-500/40' : ''}">
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] uppercase font-bold text-slate-400">${mKey}</span>
+                ${isSpecialExempt ? '<span class="text-[8px] text-amber-400 font-bold" title="Sem juros futuros. Saldo: Parcela original - Pago">*</span>' : ''}
+              </div>
               <div class="flex items-center gap-1.5 justify-center">
                 <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${isPaid ? paidAmount : suggestedFee}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-slate-900 border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="number" value="${isPaid ? paidAmount : (isSpecialExempt && paidAmount > 0 ? paidAmount : suggestedFee)}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-slate-900 border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
+              ${isSpecialExempt && paidAmount > 0 && dueForThisMonth > 0 ? `<span class="text-[8px] text-rose-400 font-bold">Resta R$ ${dueForThisMonth.toFixed(2)}</span>` : ''}
             </div>`;
         });
 
