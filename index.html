@@ -2080,10 +2080,119 @@
       if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone.");
       const status = getAthleteFinancialStatus(athleteId);
       const cleanPhone = athlete.phone.replace(/\D/g, '');
-      let msg = status === 'uptodate' 
-        ? `Fala meu amigo ${athlete.name}! ⚽\n\nPassando só para agradecer pela pontualidade com as mensalidades. Tamo junto! 👊🟢⚪`
-        : `Fala meu amigo ${athlete.name}! ⚽\n\nPassando aqui para lembrar das suas mensalidades em aberto no Teimoso F.C.C.. Faz o PIX pra chave: teimosofcc@gmail.com e envia o comprovante! 👊`;
-      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+      const now = new Date();
+
+      if (status === 'uptodate') {
+        const msgEmDia = `Fala meu craque *${athlete.name}*! ⚽🔥🎩\n\nPassando aqui rapidinho só pra tirar o chapéu! Você está 100% *EM DIA* com o *Teimoso F.C.C.*! 🏆✅\n\nPontualidade de camisa 10 dentro e fora das quatro linhas! Muito obrigado pela parceria e assiduidade. Que a nossa resenha continue daquele jeito e desejamos uma excelente festa e muitas comemorações a todos nós! 🍻🎉🥩🚀\n\n_🤖 Mensagem automática enviada pelo Sistema de Gestão do Teimoso F.C.C._`;
+        window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msgEmDia)}`, '_blank');
+        return;
+      }
+
+      // --- LEVANTAMENTO COMPLETO DE DÉBITOS E JUROS ---
+      const payments = window.financialPayments[athleteId] || {};
+      const athleteNameNorm = athlete.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const suggestedFee = athlete.monthlyFee || 110;
+
+      let debitsList = [];
+      let totalMensalidadesDue = 0;
+      let totalJurosMensalidades = 0;
+
+      const monthNamesFull = {
+        jan: 'Janeiro', fev: 'Fevereiro', mar: 'Março', abr: 'Abril',
+        mai: 'Maio', jun: 'Junho', jul: 'Julho', ago: 'Agosto',
+        set: 'Setembro', out: 'Outubro', nov: 'Novembro'
+      };
+
+      months.forEach((mKey, mIndex) => {
+        const dueDate = new Date(2026, mIndex, 15);
+        const firstDayAfterDue = new Date(2026, mIndex, 16);
+        const monthData = payments[mKey] || { paid: false, amount: 0 };
+        const isPaid = monthData.paid === true || Number(monthData.amount) > 0;
+        const paidAmount = Number(monthData.amount) || 0;
+
+        const isJulioSpecial = athleteNameNorm.includes('JULIO') && mKey === 'out';
+        const isSapaoSpecial = athleteNameNorm.includes('SAPAO') && mKey === 'set';
+        const isOnofreSpecial = athleteNameNorm.includes('ONOFRE') && mKey === 'ago';
+        const isZielSpecial = athleteNameNorm.includes('ZIEL') && mKey === 'nov';
+        const isSpecialExempt = isJulioSpecial || isSapaoSpecial || isOnofreSpecial || isZielSpecial;
+
+        let monthInterest = 0;
+        let monthDue = 0;
+
+        if (isSpecialExempt) {
+          const saldo = Math.max(0, suggestedFee - paidAmount);
+          if (saldo > 0) {
+            monthDue = saldo;
+            debitsList.push(`• *${monthNamesFull[mKey]}*: R$ ${saldo.toFixed(2)} (Saldo devedor isento de juros)`);
+            totalMensalidadesDue += saldo;
+          }
+        } else {
+          if (!isPaid) {
+            if (now >= firstDayAfterDue) {
+              const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+              monthInterest = daysLate * 1.00;
+            }
+            monthDue = suggestedFee + monthInterest;
+            totalMensalidadesDue += suggestedFee;
+            totalJurosMensalidades += monthInterest;
+
+            debitsList.push(`• *${monthNamesFull[mKey]}*: Mensalidade R$ ${suggestedFee.toFixed(2)} + Juros R$ ${monthInterest.toFixed(2)} = *R$ ${monthDue.toFixed(2)}*`);
+          }
+        }
+      });
+
+      // --- MULTAS POR FALTA (R$ 30,00 + R$ 1,00/dia) ---
+      const fines = window.absenceFines?.[athleteId] || {};
+      let finesList = [];
+      let totalFinesBase = 0;
+      let totalFinesInterest = 0;
+
+      for (const [fineDate, fineData] of Object.entries(fines)) {
+        if (!fineData.paid) {
+          const [fy, fm, fd] = fineDate.split('-');
+          const fineDay = new Date(fy, fm - 1, fd, 23, 59, 59);
+          let daysLate = 0;
+          if (now > fineDay) {
+            daysLate = Math.floor((now - fineDay) / (1000 * 60 * 60 * 24));
+          }
+          const fineInterest = daysLate * 1.00;
+          const baseAmt = fineData.baseAmount || 30;
+          const fineTotal = baseAmt + fineInterest;
+
+          totalFinesBase += baseAmt;
+          totalFinesInterest += fineInterest;
+
+          finesList.push(`• Falta de ${formatDateDisplay(fineDate)}: R$ ${baseAmt.toFixed(2)} + Juros R$ ${fineInterest.toFixed(2)} (${daysLate} dias) = *R$ ${fineTotal.toFixed(2)}*`);
+        }
+      }
+
+      const totalGeralDevido = totalMensalidadesDue + totalJurosMensalidades + totalFinesBase + totalFinesInterest;
+
+      let msgCobranca = `Fala meu parceiro *${athlete.name}*! Beleza, artilheiro? ⚽🏃💨\n\n`;
+      msgCobranca += `Passando aqui com todo o respeito e carinho da diretoria do *Teimoso F.C.C.* para te dar uma forcinha na contabilidade e deixar você pronto pro próximo golaço! 🥅🍺\n\n`;
+      msgCobranca += `Identificamos que constam algumas pendências no seu histórico esportivo-financeiro:\n\n`;
+
+      if (debitsList.length > 0) {
+        msgCobranca += `📋 *MENSALIDADES EM ABERTO:*\n${debitsList.join('\n')}\n\n`;
+      }
+
+      if (finesList.length > 0) {
+        msgCobranca += `🚨 *MULTAS POR FALTA (R$ 30 + R$ 1/dia de juros):*\n${finesList.join('\n')}\n\n`;
+      }
+
+      msgCobranca += `💰 *RESUMO GERAL ATÉ HOJE:*`;
+      if (totalMensalidadesDue > 0) msgCobranca += `\n• Mensalidades: R$ ${totalMensalidadesDue.toFixed(2)}`;
+      if (totalJurosMensalidades > 0) msgCobranca += `\n• Juros de Mensalidades: R$ ${totalJurosMensalidades.toFixed(2)}`;
+      if (totalFinesBase > 0) msgCobranca += `\n• Multas por Falta: R$ ${totalFinesBase.toFixed(2)}`;
+      if (totalFinesInterest > 0) msgCobranca += `\n• Juros das Faltas: R$ ${totalFinesInterest.toFixed(2)}`;
+      msgCobranca += `\n🔥 *TOTAL GERAL CONSOLIDADO: R$ ${totalGeralDevido.toFixed(2)}*\n\n`;
+
+      msgCobranca += `Facilita no pix e vem pra resenha com o coração leve! 🍻\n`;
+      msgCobranca += `🔑 *Chave PIX:* teimosofcc@gmail.com\n\n`;
+      msgCobranca += `Assim que fizer a transferência, favor enviar o comprovante pra diretoria dar baixa imediata no app. Tamo junto demais! 👊⚽⚪🟢\n\n`;
+      msgCobranca += `_🤖 Esta é uma mensagem automática gerada pelo Sistema de Gestão de Peladas do Teimoso F.C.C._`;
+
+      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msgCobranca)}`, '_blank');
     };
 
     window.openWhatsappFinancialMassModal = function() {
