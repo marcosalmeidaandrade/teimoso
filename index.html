@@ -1311,45 +1311,6 @@
       if (tab === 'reports') renderReports();
     };
 
-    window.populateDateSelect = function() {
-      const select = document.getElementById('dateSelect');
-      select.innerHTML = '';
-
-      const currentYear = new Date().getFullYear();
-      const sorted = [...window.datesList].sort();
-
-      // Usuários comuns podem navegar entre peladas anteriores até o início do ano corrente
-      const availableDates = window.isAdmin
-        ? sorted
-        : sorted.filter(d => {
-            const y = parseInt(d.split('-')[0], 10);
-            return y >= currentYear;
-          });
-
-      availableDates.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d;
-        opt.innerText = formatDateDisplay(d);
-        if (d === window.currentDate) opt.selected = true;
-        select.appendChild(opt);
-      });
-
-      if (!availableDates.includes(window.currentDate) && availableDates.length > 0) {
-        window.currentDate = availableDates[availableDates.length - 1];
-        select.value = window.currentDate;
-      }
-
-      document.getElementById('massModalDate').innerText = formatDateDisplay(window.currentDate);
-    };
-
-    window.changeDate = function(val) {
-      window.currentDate = val;
-      document.getElementById('massModalDate').innerText = formatDateDisplay(val);
-      updateDateNavButtons();
-      checkDeadlinePassed();
-      renderAthletesList();
-    };
-
     // --- NAVEGAÇÃO RÁPIDA ENTRE PELADAS (- E +) ---
     function getAvailableDates() {
       const currentYear = new Date().getFullYear();
@@ -1444,6 +1405,14 @@
       updateDateNavButtons();
     };
 
+    window.changeDate = function(val) {
+      window.currentDate = val;
+      document.getElementById('massModalDate').innerText = formatDateDisplay(val);
+      updateDateNavButtons();
+      checkDeadlinePassed();
+      renderAthletesList();
+    };
+
     function formatDateDisplay(dateStr) {
       if(!dateStr) return "";
       const [y, m, d] = dateStr.split('-');
@@ -1482,7 +1451,7 @@
       renderAthletesList();
     };
 
-    // --- MARCAR / DESMARCAR PRESENÇA & GERAÇÃO DE MULTAS DE FALTA ---
+    // --- MARCAR / DESMARCAR PRESENÇA & GERAÇÃO DE MULTAS DE FALTA (A PARTIR DE 01/11/2026) ---
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
@@ -1530,7 +1499,9 @@
           return;
         }
 
-        if (newStatus === 'FALTA') {
+        // REGRA ESTRITA: Multa de R$ 30,00 só é aplicada a partir de 01/11/2026.
+        // Faltas em datas anteriores são mantidas estritamente para fins estatísticos.
+        if (newStatus === 'FALTA' && window.currentDate >= '2026-11-01') {
           const fineExists = window.absenceFines[athleteId].some(f => f.date === window.currentDate);
           if (!fineExists) {
             window.absenceFines[athleteId].push({
@@ -1639,7 +1610,8 @@
 
       const rawFines = window.absenceFines[athleteId] || [];
       const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
-      const hasUnpaidFine = athleteFines.some(f => !f.paid);
+      // Considera inadimplente apenas faltas não quitadas com data a partir de 01/11/2026
+      const hasUnpaidFine = athleteFines.some(f => !f.paid && f.date >= '2026-11-01');
       if (hasUnpaidFine) return 'overdue';
 
       return 'uptodate';
@@ -2357,6 +2329,7 @@
         });
 
         // --- CÁLCULO E RENDERIZAÇÃO DAS MULTAS POR FALTA (R$ 30,00 + R$ 1,00/dia) ---
+        // Apenas para faltas datadas a partir de 01/11/2026
         const rawFines = window.absenceFines[athlete.id] || [];
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let athleteTotalFinesBase = 0;
@@ -2364,6 +2337,8 @@
         let finesHtml = '';
 
         athleteFines.forEach((fine, fineIdx) => {
+          if (fine.date < '2026-11-01') return; // Isenção estrita antes de 01/11/2026
+
           const fineDate = new Date(fine.date + 'T00:00:00');
           let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
           if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -2439,7 +2414,7 @@
                   </div>
                 ` : ''}
                 
-                ${athleteFines.length > 0 ? `
+                ${finesHtml ? `
                   <div class="bg-rose-950/20 border border-rose-500/20 rounded-2xl p-3.5 space-y-2">
                     <h5 class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
                       <i class="fa-solid fa-gavel"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia)
@@ -2558,12 +2533,12 @@
           }
         });
 
-        const athleteFines = Array.isArray(window.absenceFines[athleteId])
-          ? window.absenceFines[athleteId]
-          : Object.values(window.absenceFines[athleteId] || {});
+        const rawFines = window.absenceFines[athleteId] || [];
+        const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (!fine.paid) {
+          // Apenas faltas a partir de 01/11/2026 entram na mensagem de cobrança
+          if (!fine.paid && fine.date >= '2026-11-01') {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0) daysPassed = 0;
