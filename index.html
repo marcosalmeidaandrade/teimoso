@@ -106,7 +106,7 @@
           <button onclick="switchTab('draw')" id="tabBtn-draw" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
             <i class="fa-solid fa-shuffle"></i> Sorteio
           </button>
-          <button onclick="switchTab('financial')" id="tabBtn-financial" class="hidden px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
+          <button onclick="switchTab('financial')" id="tabBtn-financial" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
             <i class="fa-solid fa-wallet"></i> Financeiro
           </button>
           <button onclick="switchTab('reports')" id="tabBtn-reports" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
@@ -726,17 +726,28 @@
       return saved;
     }
 
-    // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS ---
+    // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS (ÚLTIMOS 30 DIAS) ---
+    function pruneActivityLogs() {
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      window.activityLogs = (window.activityLogs || []).filter(item => {
+        const itemTime = item.timestamp || item.id || 0;
+        return itemTime >= thirtyDaysAgo;
+      });
+    }
+
     window.recordUserInteraction = function(actorName, actionDescription) {
-      const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const nowMs = Date.now();
+      const timestamp = new Date(nowMs).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const entry = {
-        id: Date.now(),
+        id: nowMs,
+        timestamp: nowMs,
         actor: actorName || 'Usuário',
         description: actionDescription,
         time: timestamp
       };
+      if (!window.activityLogs) window.activityLogs = [];
       window.activityLogs.unshift(entry);
-      if (window.activityLogs.length > 80) window.activityLogs = window.activityLogs.slice(0, 80);
+      pruneActivityLogs();
       updateActivityBadge();
 
       if (window.notificationSettings?.email) {
@@ -763,7 +774,7 @@
 
     function updateActivityBadge() {
       const badge = document.getElementById('activityBadgeCount');
-      if (badge) badge.innerText = window.activityLogs.length;
+      if (badge) badge.innerText = (window.activityLogs || []).length;
     }
 
     window.openActivityLogModal = function() {
@@ -1006,6 +1017,7 @@
       document.getElementById('userBadgeName').innerText = `${firstName} ${window.isAdmin ? '(Admin)' : ''}`;
       
       const tabFinancialBtn = document.getElementById('tabBtn-financial');
+      if (tabFinancialBtn) tabFinancialBtn.classList.remove('hidden');
 
       if (window.isAdmin) {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 text-xs font-bold shrink-0 shadow-inner";
@@ -1018,7 +1030,6 @@
         document.getElementById('btnExportListWhatsapp').classList.remove('hidden');
         document.getElementById('btnActivityLog').classList.remove('hidden');
         document.getElementById('btnActivityLog').classList.add('flex');
-        if (tabFinancialBtn) tabFinancialBtn.classList.remove('hidden');
       } else {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-400";
@@ -1030,7 +1041,6 @@
         document.getElementById('btnExportListWhatsapp').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.remove('flex');
-        if (tabFinancialBtn) tabFinancialBtn.classList.add('hidden');
       }
 
       if (window.canEditFinancial) {
@@ -1063,8 +1073,6 @@
       document.getElementById('globalLoginOverlay').classList.remove('hidden');
       document.getElementById('globalLoginOverlay').classList.add('flex');
       
-      const tabFinancialBtn = document.getElementById('tabBtn-financial');
-      if (tabFinancialBtn) tabFinancialBtn.classList.add('hidden');
       if (activeTab === 'financial') switchTab('presence');
 
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
@@ -1087,6 +1095,7 @@
           if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
           if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           window.financialPayments = repairFinancialData(data.financialPayments);
+          pruneActivityLogs();
 
           if (isFirstLoad) {
             if (!window.datesList.includes(window.currentDate)) {
@@ -1114,10 +1123,6 @@
     });
 
     window.switchTab = function(tab) {
-      if (tab === 'financial' && !window.isAdmin) {
-        window.showToast("Acesso restrito apenas para administradores.", "error");
-        return;
-      }
       activeTab = tab;
       ['presence', 'draw', 'financial', 'reports'].forEach(t => {
         const el = document.getElementById(`tab-${t}`);
@@ -1806,7 +1811,6 @@
     };
 
     window.renderFinancial = function() {
-      if (!window.isAdmin) return;
       const container = document.getElementById('financialAccordionContainer');
       container.innerHTML = '';
       let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralInterest = 0;
@@ -1884,6 +1888,11 @@
           totalGeneralInterest += athleteTotalInterest;
         } else {
           totalGeneralPaid += athleteTotalPaid;
+        }
+
+        // Se o usuário logado não for admin, exibe somente o seu próprio registro
+        if (!window.isAdmin && window.currentUser && window.currentUser.id !== athlete.id) {
+          return;
         }
 
         if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
