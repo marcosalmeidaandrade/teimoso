@@ -154,8 +154,14 @@
           </button>
         </nav>
 
-        <!-- LOGGED USER CONTROLS, SOUND TOGGLE & NOTIFICATION BELL -->
+        <!-- LOGGED USER CONTROLS, EXCLUSIVE CONTROLS, SOUND TOGGLE & NOTIFICATION BELL -->
         <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
+          <!-- BOTÃO EXCLUSIVO MARCÃO: ATIVAR / DESATIVAR ANIMAÇÃO DE CONFIRMAÇÃO -->
+          <button onclick="toggleConfirmAnimationSetting()" id="btnToggleAnimationMarcao" title="Controle de Animação de Confirmação (Exclusivo Marcão)" class="hidden px-2.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/70 border border-purple-700/60 text-purple-300 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm">
+            <i id="animIconMarcao" class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+            <span id="animLabelMarcao" class="hidden md:inline text-[10px]">Animações: ON</span>
+          </button>
+
           <!-- BOTÃO LIGAR/DESLIGAR SOM -->
           <button onclick="toggleAudioSound()" id="btnSoundToggle" title="Ativar/Desativar Sons de Clique" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center shrink-0">
             <i id="soundIcon" class="fa-solid fa-volume-high"></i>
@@ -752,7 +758,6 @@
         const now = audioCtx.currentTime;
 
         if (type === 'click') {
-          // Clique sutil e suave (pop de seleção)
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
@@ -766,7 +771,6 @@
           osc.stop(now + 0.045);
 
         } else if (type === 'confirm') {
-          // Acorde alegre de confirmação/sucesso
           [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -781,7 +785,6 @@
           });
 
         } else if (type === 'cancel') {
-          // Tom grave para desmarcações ou alertas
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
@@ -841,6 +844,8 @@
     window.currentUser = null;
     window.isAdmin = false;
     window.canEditFinancial = false;
+    window.isMarcaoUser = false;
+    window.animationsEnabled = localStorage.getItem('teimoso_animationsEnabled') !== 'false';
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
@@ -866,7 +871,6 @@
       "EXTRA": { tag: "EXTRA", color: "bg-purple-500/20 text-purple-400 border-purple-500/40" }
     };
 
-    // Atleta Cláudio participa desde o início do ano (sem restrição de data de início)
     const defaultAthletes = [
       { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
@@ -884,11 +888,8 @@
       { id: 14, name: "Todinho", position: "Atacante", stars: 4, phone: "22999990014", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" }
     ];
 
-    // Helper: retorna a data inicial efetiva para estatísticas e assiduidade
-    // O atleta Cláudio retorna explicitamente null (início do ano / todas as peladas)
     function getAthleteEffectiveStartDate(athlete) {
       if (!athlete) return null;
-
       const upper = (athlete.name || '').toUpperCase();
       if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
         return null;
@@ -922,7 +923,7 @@
         window.activityLogs = [];
         return;
       }
-      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000); // 90 dias
+      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000);
       window.activityLogs = window.activityLogs.filter(entry => {
         const entryTime = entry.id || (entry.timestamp ? new Date(entry.timestamp).getTime() : 0);
         return entryTime >= cutoffTime;
@@ -934,7 +935,6 @@
     window.currentDate = window.datesList[0];
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     
-    // Assegura a integridade das datas de início para todos os atletas
     defaultAthletes.forEach(defA => {
       const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
       if (!existing) {
@@ -959,7 +959,7 @@
       return saved;
     }
 
-    // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN (SÁBADO ANTECEDENTE / ÚLTIMA PELADA) ---
+    // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN ---
     function getSmartDefaultDate() {
       if (!window.datesList || window.datesList.length === 0) return "";
       const sorted = [...window.datesList].sort();
@@ -996,6 +996,52 @@
 
       return sorted[sorted.length - 1];
     }
+
+    // --- CONTROLE EXCLUSIVO DE ANIMAÇÕES PARA MARCÃO ---
+    window.updateAnimationButtonUI = function() {
+      const btn = document.getElementById('btnToggleAnimationMarcao');
+      const icon = document.getElementById('animIconMarcao');
+      const label = document.getElementById('animLabelMarcao');
+      if (!btn) return;
+
+      if (window.isMarcaoUser) {
+        btn.classList.remove('hidden');
+        btn.classList.add('flex');
+        if (window.animationsEnabled) {
+          btn.className = "flex px-2.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/70 border border-purple-700/60 text-purple-300 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm";
+          icon.className = "fa-solid fa-wand-magic-sparkles text-purple-400";
+          if (label) label.innerText = "Animações: ATIVAS";
+          btn.title = "Animações de Confirmação: ATIVAS (Clique para desativar)";
+        } else {
+          btn.className = "flex px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm opacity-70";
+          icon.className = "fa-solid fa-ban text-rose-400";
+          if (label) label.innerText = "Animações: OFF";
+          btn.title = "Animações de Confirmação: DESATIVADAS (Clique para ativar)";
+        }
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('flex');
+      }
+    };
+
+    window.toggleConfirmAnimationSetting = function() {
+      if (!window.isMarcaoUser) {
+        window.showToast("Opção exclusiva para o usuário Marcão.", "error");
+        return;
+      }
+      window.animationsEnabled = !window.animationsEnabled;
+      localStorage.setItem('teimoso_animationsEnabled', window.animationsEnabled ? 'true' : 'false');
+      window.updateAnimationButtonUI();
+      window.saveData();
+
+      if (window.animationsEnabled) {
+        window.showToast("Animações de confirmação ativadas no sistema! ✨", "success");
+        window.recordUserInteraction("Marcão", "Ativou as animações de confirmação do sistema");
+      } else {
+        window.showToast("Animações de confirmação desativadas! 🚫", "error");
+        window.recordUserInteraction("Marcão", "Desativou as animações de confirmação do sistema");
+      }
+    };
 
     // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS ---
     window.recordUserInteraction = function(actorName, actionDescription) {
@@ -1115,9 +1161,13 @@
       });
     }
 
-    // --- ANIMAÇÃO DE CONFIRMAÇÃO COM IMAGEM DO ATLETA ---
+    // --- ANIMAÇÃO DE CONFIRMAÇÃO COM IMAGEM DO ATLETA (RESPEITA CONFIGURAÇÃO DO MARCÃO) ---
     window.showAnimatedConfirmation = function(athlete) {
       window.playSelectionSound('confirm');
+      if (!window.animationsEnabled) {
+        return;
+      }
+
       const overlay = document.getElementById('animatedConfirmOverlay');
       const content = document.getElementById('animatedConfirmContent');
       const photoEl = document.getElementById('confirmAthletePhoto');
@@ -1236,6 +1286,7 @@
           absenceFines: window.absenceFines,
           activityLogs: window.activityLogs,
           notificationSettings: window.notificationSettings,
+          animationsEnabled: window.animationsEnabled,
           updatedAt: new Date().toISOString()
         });
       } catch (error) {
@@ -1336,6 +1387,7 @@
         window.currentUser = { id: 0, name: "Admin Master", isKeeper: false };
         window.isAdmin = true;
         window.canEditFinancial = true;
+        window.isMarcaoUser = true;
         window.recordUserInteraction("Admin Master", "Realizou login no sistema (0000)");
         completeLoginFlow();
         return;
@@ -1348,6 +1400,7 @@
         const upperName = foundAthlete.name.toUpperCase();
         window.isAdmin = adminNames.some(adminName => upperName.includes(adminName));
         window.canEditFinancial = finEditorNames.some(finName => upperName.includes(finName));
+        window.isMarcaoUser = upperName.includes('MARCÃO') || upperName.includes('MARCAO');
         window.recordUserInteraction(foundAthlete.name, `Realizou login no sistema`);
         completeLoginFlow();
       } else {
@@ -1395,6 +1448,8 @@
         document.getElementById('btnMassFinWhatsapp').classList.add('hidden');
       }
 
+      window.updateAnimationButtonUI();
+
       window.currentDate = getSmartDefaultDate();
       populateDateSelect();
 
@@ -1421,6 +1476,9 @@
       window.currentUser = null;
       window.isAdmin = false;
       window.canEditFinancial = false;
+      window.isMarcaoUser = false;
+      window.updateAnimationButtonUI();
+
       document.getElementById('loginPinInput').value = '';
       document.getElementById('globalLoginOverlay').classList.remove('hidden');
       document.getElementById('globalLoginOverlay').classList.add('flex');
@@ -1463,6 +1521,11 @@
           if (data.absenceFines) window.absenceFines = data.absenceFines;
           if (data.activityLogs) window.activityLogs = data.activityLogs;
           if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
+          if (typeof data.animationsEnabled === 'boolean') {
+            window.animationsEnabled = data.animationsEnabled;
+            localStorage.setItem('teimoso_animationsEnabled', data.animationsEnabled ? 'true' : 'false');
+            window.updateAnimationButtonUI();
+          }
           window.financialPayments = repairFinancialData(data.financialPayments);
 
           pruneActivityLogs();
@@ -2790,7 +2853,6 @@
       window.athletes.sort((a, b) => a.name.localeCompare(b.name)).forEach(athlete => {
         const effectiveStart = getAthleteEffectiveStartDate(athlete);
         
-        // Filtra apenas as peladas elegíveis para o atleta conforme sua data de início
         const eligibleDates = effectiveStart
           ? window.datesList.filter(d => d >= effectiveStart)
           : window.datesList;
