@@ -1394,6 +1394,14 @@
       return false;
     }
 
+    // Função utilitária para garantir sempre números válidos e prevenir R$ NaN
+    function safeNum(val, fallback = 0) {
+      if (val === undefined || val === null || val === '') return fallback;
+      if (typeof val === 'number') return isNaN(val) ? fallback : val;
+      const parsed = parseFloat(String(val).replace(',', '.'));
+      return isNaN(parsed) ? fallback : parsed;
+    }
+
     // --- STATUS FINANCEIRO DO ATLETA ---
     function getAthleteFinancialStatus(athleteId) {
       if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
@@ -1407,11 +1415,11 @@
         const monthNum = mIndex + 1;
         const dueDate = new Date(2026, monthNum - 1, 15);
         const paymentData = payments[mKey];
-        const isPaid = paymentData && (paymentData.paid || paymentData.amount > 0);
+        const isPaid = paymentData && (paymentData.paid || safeNum(paymentData.amount) > 0);
         
         if (isSpecialInterestFreeMonth(athleteName, mKey)) {
-          const suggestedFee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
-          const paidAmt = paymentData ? (Number(paymentData.amount) || 0) : 0;
+          const suggestedFee = athlete ? safeNum(athlete.monthlyFee, 110) : 110;
+          const paidAmt = paymentData ? safeNum(paymentData.amount, 0) : 0;
           if (paidAmt < suggestedFee && now > dueDate) return 'overdue';
         } else {
           if (!isPaid && now > dueDate) return 'overdue';
@@ -1971,15 +1979,15 @@
         const isExpanded = window.expandedFinCards.has(athlete.id);
         const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
         const athleteName = athlete.name || '';
-        const suggestedFee = athlete.monthlyFee || 110;
+        const suggestedFee = safeNum(athlete.monthlyFee, 110);
 
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
           const dueDate = new Date(2026, mIndex, 15);
           const firstDayAfterDue = new Date(2026, mIndex, 16);
           let monthData = payments[mKey] || { paid: false, amount: 0 };
-          let isPaid = monthData.paid === true || Number(monthData.amount) > 0;
-          let paidAmount = Number(monthData.amount) || 0;
+          let isPaid = monthData.paid === true || safeNum(monthData.amount) > 0;
+          let paidAmount = safeNum(monthData.amount, 0);
           
           if (isPaid) athleteTotalPaid += paidAmount;
 
@@ -1995,7 +2003,8 @@
             }
           } else {
             if (!isPaid && now >= firstDayAfterDue) {
-              interest = (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00;
+              const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+              interest = Math.max(0, daysLate) * 1.00;
             }
             if (!athlete.isSuspended) {
               athleteTotalInterest += interest;
@@ -2029,12 +2038,13 @@
         athleteFines.forEach((fine, fineIdx) => {
           const fineDate = new Date(fine.date + 'T00:00:00');
           let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
-          if (daysPassed < 0) daysPassed = 0;
+          if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
+          const baseAmt = safeNum(fine.baseAmount, 30.00);
           const fineInterest = fine.paid ? 0 : daysPassed * 1.00;
-          const fineTotal = fine.baseAmount + fineInterest;
+          const fineTotal = baseAmt + fineInterest;
 
           if (!fine.paid && !athlete.isSuspended) {
-            athleteTotalFinesBase += fine.baseAmount;
+            athleteTotalFinesBase += baseAmt;
             athleteTotalFinesInterest += fineInterest;
             athleteTotalDue += fineTotal;
             athleteTotalInterest += fineInterest;
@@ -2045,7 +2055,7 @@
               <div class="flex items-center gap-2">
                 <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
                 <span class="font-bold text-slate-200">Falta em ${formatDateDisplay(fine.date)}</span>
-                <span class="text-[10px] text-slate-400">Base: R$ ${fine.baseAmount.toFixed(2)}</span>
+                <span class="text-[10px] text-slate-400">Base: R$ ${baseAmt.toFixed(2)}</span>
                 <span class="text-[10px] text-amber-400 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>
               </div>
               <div class="flex items-center gap-2">
@@ -2120,9 +2130,9 @@
           </div>`;
       });
 
-      document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
-      document.getElementById('finTotalInterest').innerText = `R$ ${totalGeneralInterest.toFixed(2)}`;
-      document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
+      document.getElementById('finTotalPaid').innerText = `R$ ${safeNum(totalGeneralPaid).toFixed(2)}`;
+      document.getElementById('finTotalInterest').innerText = `R$ ${safeNum(totalGeneralInterest).toFixed(2)}`;
+      document.getElementById('finTotalDue').innerText = `R$ ${safeNum(totalGeneralDue).toFixed(2)}`;
     };
 
     window.settleAbsenceFine = function(athleteId, fineIndex) {
