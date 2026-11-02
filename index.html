@@ -2119,15 +2119,16 @@
         let monthInterest = 0;
         let monthDue = 0;
 
+        // NÃO COBRAR PARCELAS QUE AINDA NÃO VENCERAM (APENAS PARCELAS VENCIDAS)
         if (isSpecialExempt) {
           const saldo = Math.max(0, suggestedFee - paidAmount);
-          if (saldo > 0) {
+          if (saldo > 0 && now > dueDate) {
             monthDue = saldo;
             debitsList.push(`• *${monthNamesFull[mKey]}*: R$ ${saldo.toFixed(2)} (Saldo devedor isento de juros)`);
             totalMensalidadesDue += saldo;
           }
         } else {
-          if (!isPaid) {
+          if (!isPaid && now > dueDate) {
             if (now >= firstDayAfterDue) {
               const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
               monthInterest = daysLate * 1.00;
