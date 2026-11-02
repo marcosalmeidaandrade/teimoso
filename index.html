@@ -58,6 +58,33 @@
     </div>
   </div>
 
+  <!-- FULLSCREEN ATHLETE PHOTO MODAL -->
+  <div id="fullscreenPhotoModal" onclick="closeFullscreenPhoto()" class="fixed inset-0 z-[300] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
+    <!-- TOP BAR -->
+    <div class="w-full flex items-center justify-between max-w-lg pt-2 text-slate-400">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-id-badge text-emerald-400"></i>
+        <span id="fullscreenPhotoAthleteName" class="text-sm font-black text-white uppercase tracking-wider">Nome do Atleta</span>
+      </div>
+      <button onclick="closeFullscreenPhoto()" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+    </div>
+
+    <!-- MAIN IMAGE CONTAINER -->
+    <div class="relative flex items-center justify-center my-auto p-2">
+      <img id="fullscreenPhotoImage" src="" alt="Foto do Atleta" class="max-h-[72vh] max-w-[90vw] md:max-w-md object-contain rounded-3xl shadow-2xl border-2 border-slate-700/80 transition-transform duration-300 transform scale-95" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=0f172a&color=34d399&bold=true&size=512'">
+    </div>
+
+    <!-- BOTTOM HELPER CAPTION -->
+    <div class="pb-4 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] font-bold text-slate-300 shadow-lg">
+        <i class="fa-solid fa-hand-pointer text-emerald-400 animate-pulse"></i>
+        <span>Toque novamente na imagem para retornar à tela principal</span>
+      </div>
+    </div>
+  </div>
+
   <!-- GLOBAL LOGIN OVERLAY -->
   <div id="globalLoginOverlay" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-4 backdrop-blur-md">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-6">
@@ -284,14 +311,14 @@
         </div>
       </section>
 
-      <!-- ================= TAB 3: FINANCEIRO (EXCLUSIVO PARA ADMINS) ================= -->
+      <!-- ================= TAB 3: FINANCEIRO ================= -->
       <section id="tab-financial" class="hidden space-y-6">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
               <i class="fa-solid fa-wallet text-emerald-400"></i> Gestão Financeira de Mensalidades
             </h3>
-            <p class="text-xs text-slate-400 mt-1">Clique nos cards abaixo para filtrar. Edição exclusiva para <strong>PABLO PADILHA</strong> e <strong>MARCÃO</strong>.</p>
+            <p class="text-xs text-slate-400 mt-1">Consulte seus pagamentos e mensalidades. Edição restrita para <strong>PABLO PADILHA</strong> e <strong>MARCÃO</strong>.</p>
           </div>
           <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
             <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes
@@ -398,7 +425,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-bell text-amber-400"></i> Auditoria de Interações e Alertas
+          <i class="fa-solid fa-bell text-amber-400"></i> Auditoria de Interações (90 Dias)
         </h3>
         <button onclick="closeActivityLogModal()" class="text-slate-500 hover:text-slate-300">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -423,11 +450,18 @@
         </div>
       </div>
 
-      <!-- LISTA DE LOGS EM TEMPO REAL -->
-      <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
-        <span>Últimas Interações dos Usuários:</span>
-        <button onclick="clearActivityLogs()" class="text-rose-400 hover:underline text-[10px]">Limpar Histórico</button>
+      <!-- FILTRO POR ATLETA/USUÁRIO & LIMPEZA -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-bold text-slate-400 px-1">
+        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+          <label for="logUserFilterSelect" class="text-[10px] uppercase text-slate-400">Filtrar Atleta:</label>
+          <select id="logUserFilterSelect" onchange="renderActivityLogList()" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-500 font-bold">
+            <option value="">Todos os Atletas</option>
+          </select>
+        </div>
+        <button onclick="clearActivityLogs()" class="text-rose-400 hover:underline text-[10px] shrink-0">Limpar Histórico</button>
       </div>
+
+      <!-- LISTA DE LOGS EM TEMPO REAL -->
       <div id="activityLogList" class="divide-y divide-slate-800/80 overflow-y-auto flex-grow pr-1 space-y-2 bg-slate-950/50 rounded-2xl p-3 border border-slate-800/80 min-h-[180px]">
         <!-- Preenchido dinamicamente -->
       </div>
@@ -458,7 +492,7 @@
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">URL da Foto (Opcional):</label>
           <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
-          <p class="text-[9px] text-slate-500 mt-1">Cole o link de uma imagem da internet ou deixe em branco para usar iniciais.</p>
+          <p class="text-[9px] text-slate-500 mt-1">Cole o link da foto de perfil do WhatsApp ou imagem da web.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -470,7 +504,7 @@
               <option value="Volante">Volante</option>
               <option value="Meia">Meia</option>
               <option value="Atacante">Atacante</option>
-              <option value="EXTRA">EXTRA (Resenha)</option>
+              <option value="EXTRA">EXTRA (Somente Resenha)</option>
             </select>
           </div>
           <div>
@@ -478,9 +512,15 @@
             <input type="text" id="athletePhoneInput" placeholder="22999998888" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
           </div>
         </div>
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nível de Habilidade (Estrelas):</label>
-          <div id="starRatingSelector" class="flex items-center gap-2 py-1"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nível (Estrelas):</label>
+            <div id="starRatingSelector" class="flex items-center gap-2 py-1"></div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Mensalidade (R$):</label>
+            <input type="number" id="athleteMonthlyFeeInput" value="110" step="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+          </div>
         </div>
         <div class="flex items-center gap-2 pt-2">
           <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0">
@@ -679,8 +719,8 @@
       { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 10, name: "Onofre", position: "Zagueiro", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 11, name: "Ziel", position: "Meia", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
+      { id: 10, name: "Onofre", position: "Lateral", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 11, name: "Ziel", position: "Atacante", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
     ];
 
     const initialMockFinancial = {
@@ -693,6 +733,18 @@
       7: { jan: { paid: true, amount: 110.00 }, fev: { paid: true, amount: 115.00 }, mar: { paid: true, amount: 134.00 }, abr: { paid: true, amount: 139.00 }, mai: { paid: true, amount: 135.00 }, jun: { paid: true, amount: 132.00 }, jul: { paid: true, amount: 110.00 }, ago: { paid: true, amount: 110.00 }, set: { paid: true, amount: 111.00 }, out: { paid: true, amount: 123.00 } }
     };
 
+    function pruneActivityLogs() {
+      if (!Array.isArray(window.activityLogs)) {
+        window.activityLogs = [];
+        return;
+      }
+      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000); // 90 dias
+      window.activityLogs = window.activityLogs.filter(entry => {
+        const entryTime = entry.id || (entry.timestamp ? new Date(entry.timestamp).getTime() : 0);
+        return entryTime >= cutoffTime;
+      });
+    }
+
     window.datesList = ["2026-11-03"];
     window.currentDate = window.datesList[0];
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
@@ -701,52 +753,20 @@
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
     window.absenceFines = JSON.parse(localStorage.getItem('teimoso_absenceFines')) || {};
 
-    if (!window.athletes.some(a => a.name.toUpperCase().includes('ANDINHO'))) {
-      window.athletes.push(defaultAthletes[6]);
-    }
-    if (!window.financialPayments[7]) {
-      window.financialPayments[7] = initialMockFinancial[7];
-    }
-
-    if (!window.athletes.some(a => a.name.toUpperCase().includes('JÚLIO') || a.name.toUpperCase().includes('JULIO'))) {
-      window.athletes.push(defaultAthletes[7]);
-    }
-    if (!window.athletes.some(a => a.name.toUpperCase().includes('SAPÃO') || a.name.toUpperCase().includes('SAPAO'))) {
-      window.athletes.push(defaultAthletes[8]);
-    }
-    if (!window.athletes.some(a => a.name.toUpperCase().includes('ONOFRE'))) {
-      window.athletes.push(defaultAthletes[9]);
-    }
-    if (!window.athletes.some(a => a.name.toUpperCase().includes('ZIEL'))) {
-      window.athletes.push(defaultAthletes[10]);
-    }
-
     function repairFinancialData(saved) {
       if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) return initialMockFinancial;
-      if (!saved[7]) saved[7] = initialMockFinancial[7];
       return saved;
     }
 
-    // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS (ÚLTIMOS 30 DIAS) ---
-    function pruneActivityLogs() {
-      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-      window.activityLogs = (window.activityLogs || []).filter(item => {
-        const itemTime = item.timestamp || item.id || 0;
-        return itemTime >= thirtyDaysAgo;
-      });
-    }
-
+    // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS ---
     window.recordUserInteraction = function(actorName, actionDescription) {
-      const nowMs = Date.now();
-      const timestamp = new Date(nowMs).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const entry = {
-        id: nowMs,
-        timestamp: nowMs,
+        id: Date.now(),
         actor: actorName || 'Usuário',
         description: actionDescription,
         time: timestamp
       };
-      if (!window.activityLogs) window.activityLogs = [];
       window.activityLogs.unshift(entry);
       pruneActivityLogs();
       updateActivityBadge();
@@ -775,12 +795,17 @@
 
     function updateActivityBadge() {
       const badge = document.getElementById('activityBadgeCount');
-      if (badge) badge.innerText = (window.activityLogs || []).length;
+      if (badge) badge.innerText = window.activityLogs.length;
     }
 
     window.openActivityLogModal = function() {
+      if (!window.isAdmin) {
+        window.showToast("Acesso restrito apenas aos administradores.", "error");
+        return;
+      }
       document.getElementById('notifyEmailInput').value = window.notificationSettings?.email || 'teimosofcc@gmail.com';
       document.getElementById('notifyWebhookInput').value = window.notificationSettings?.webhookUrl || '';
+      populateLogUserFilterOptions();
       renderActivityLogList();
       document.getElementById('activityLogModal').classList.remove('hidden');
     };
@@ -788,6 +813,21 @@
     window.closeActivityLogModal = function() {
       document.getElementById('activityLogModal').classList.add('hidden');
     };
+
+    function populateLogUserFilterOptions() {
+      const select = document.getElementById('logUserFilterSelect');
+      if (!select) return;
+      const currentSelected = select.value;
+      const uniqueUsers = Array.from(new Set(window.activityLogs.map(l => l.actor).filter(Boolean))).sort();
+      select.innerHTML = '<option value="">Todos os Atletas</option>';
+      uniqueUsers.forEach(user => {
+        const opt = document.createElement('option');
+        opt.value = user;
+        opt.innerText = user;
+        if (user === currentSelected) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
 
     window.saveNotificationSettings = function() {
       window.notificationSettings = {
@@ -808,12 +848,22 @@
     function renderActivityLogList() {
       const list = document.getElementById('activityLogList');
       if (!list) return;
-      if (window.activityLogs.length === 0) {
-        list.innerHTML = `<div class="text-center text-slate-500 py-10 text-xs">Nenhuma interação registrada ainda.</div>`;
+      const filterSelect = document.getElementById('logUserFilterSelect');
+      const selectedUser = filterSelect ? filterSelect.value : '';
+
+      pruneActivityLogs();
+
+      let displayedLogs = window.activityLogs;
+      if (selectedUser) {
+        displayedLogs = displayedLogs.filter(l => l.actor === selectedUser);
+      }
+
+      if (displayedLogs.length === 0) {
+        list.innerHTML = `<div class="text-center text-slate-500 py-10 text-xs">Nenhuma interação registrada nos últimos 90 dias.</div>`;
         return;
       }
       list.innerHTML = '';
-      window.activityLogs.forEach(item => {
+      displayedLogs.forEach(item => {
         list.innerHTML += `
           <div class="py-2 px-2.5 rounded-xl bg-slate-900/90 flex items-center justify-between gap-2 text-xs">
             <div>
@@ -850,6 +900,39 @@
       }, 3000);
     };
 
+    // --- VISUALIZADOR DE FOTO EM TELA CHEIA COM 1 TOQUE ---
+    window.openFullscreenPhoto = function(imageUrl, athleteName) {
+      const modal = document.getElementById('fullscreenPhotoModal');
+      const img = document.getElementById('fullscreenPhotoImage');
+      const nameEl = document.getElementById('fullscreenPhotoAthleteName');
+      
+      img.src = imageUrl;
+      nameEl.innerText = athleteName || 'Atleta';
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      modal.classList.add('opacity-100');
+      img.classList.remove('scale-95');
+      img.classList.add('scale-100');
+    };
+
+    window.closeFullscreenPhoto = function() {
+      const modal = document.getElementById('fullscreenPhotoModal');
+      const img = document.getElementById('fullscreenPhotoImage');
+      
+      modal.classList.remove('opacity-100');
+      modal.classList.add('opacity-0');
+      img.classList.remove('scale-100');
+      img.classList.add('scale-95');
+      
+      setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }, 300);
+    };
+
     // --- TOAST NOTIFICATION ---
     window.showToast = function(message, type = 'error') {
       const container = document.getElementById('toastContainer');
@@ -884,6 +967,7 @@
     // --- SALVAMENTO FIREBASE ---
     window.saveData = async function() {
       try {
+        pruneActivityLogs();
         localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
         localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
         localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
@@ -995,6 +1079,7 @@
         window.currentUser = { id: 0, name: "Admin Master", isKeeper: false };
         window.isAdmin = true;
         window.canEditFinancial = true;
+        window.recordUserInteraction("Admin Master", "Realizou login no sistema (0000)");
         completeLoginFlow();
         return;
       }
@@ -1006,6 +1091,7 @@
         const upperName = foundAthlete.name.toUpperCase();
         window.isAdmin = adminNames.some(adminName => upperName.includes(adminName));
         window.canEditFinancial = finEditorNames.some(finName => upperName.includes(finName));
+        window.recordUserInteraction(foundAthlete.name, `Realizou login no sistema`);
         completeLoginFlow();
       } else {
         window.showToast("Senha incorreta ou atleta suspenso/não encontrado.", "error");
@@ -1069,6 +1155,9 @@
     }
 
     window.logout = function() {
+      if (window.currentUser) {
+        window.recordUserInteraction(window.currentUser.name, "Efetuou logout do sistema");
+      }
       window.currentUser = null;
       window.isAdmin = false;
       window.canEditFinancial = false;
@@ -1077,7 +1166,6 @@
       document.getElementById('globalLoginOverlay').classList.add('flex');
       
       if (activeTab === 'financial') switchTab('presence');
-
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
@@ -1094,11 +1182,12 @@
           if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
           if (data.presences) window.presences = data.presences;
-          if (data.activityLogs) window.activityLogs = data.activityLogs;
-          if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
           if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.absenceFines) window.absenceFines = data.absenceFines;
+          if (data.activityLogs) window.activityLogs = data.activityLogs;
+          if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
           window.financialPayments = repairFinancialData(data.financialPayments);
+
           pruneActivityLogs();
 
           if (isFirstLoad) {
@@ -1199,7 +1288,7 @@
       renderAthletesList();
     };
 
-    // --- MARCAR / DESMARCAR PRESENÇA ---
+    // --- MARCAR / DESMARCAR PRESENÇA & GERAÇÃO DE MULTAS DE FALTA ---
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
@@ -1218,13 +1307,19 @@
       const currentAttended = window.presences[window.currentDate][athleteId]?.attended || false;
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
 
+      if (!window.absenceFines[athleteId]) window.absenceFines[athleteId] = [];
+
       if (current === newStatus) {
         window.presences[window.currentDate][athleteId] = { status: null, reason: '', attended: false };
-        window.recordUserInteraction(actor, `Desmarcou status de ${targetAthlete?.name || 'Atleta'} (${formatDateDisplay(window.currentDate)})`);
-        if (current === 'FALTA' && window.absenceFines[athleteId]) {
-          delete window.absenceFines[athleteId][window.currentDate];
+        if (current === 'FALTA') {
+          window.absenceFines[athleteId] = window.absenceFines[athleteId].filter(f => f.date !== window.currentDate);
         }
+        window.recordUserInteraction(actor, `Desmarcou status de ${targetAthlete?.name || 'Atleta'} (${formatDateDisplay(window.currentDate)})`);
       } else {
+        if (current === 'FALTA' && newStatus !== 'FALTA') {
+          window.absenceFines[athleteId] = window.absenceFines[athleteId].filter(f => f.date !== window.currentDate);
+        }
+
         if (newStatus === 'JUSTIFICADO') {
           currentJustifyAthleteId = athleteId;
           document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
@@ -1232,8 +1327,15 @@
           return;
         }
 
-        if (current === 'FALTA' && newStatus !== 'FALTA' && window.absenceFines[athleteId]) {
-          delete window.absenceFines[athleteId][window.currentDate];
+        if (newStatus === 'FALTA') {
+          const fineExists = window.absenceFines[athleteId].some(f => f.date === window.currentDate);
+          if (!fineExists) {
+            window.absenceFines[athleteId].push({
+              date: window.currentDate,
+              baseAmount: 30.00,
+              paid: false
+            });
+          }
         }
 
         window.presences[window.currentDate][athleteId] = { status: newStatus, reason: '', attended: newStatus === 'CONFIRMADO' ? currentAttended : false };
@@ -1241,17 +1343,6 @@
         
         if (newStatus === 'CONFIRMADO') {
           window.showAnimatedConfirmation();
-        } else if (newStatus === 'FALTA') {
-          if (!window.absenceFines[athleteId]) window.absenceFines[athleteId] = {};
-          if (!window.absenceFines[athleteId][window.currentDate]) {
-            window.absenceFines[athleteId][window.currentDate] = {
-              baseAmount: 30,
-              paid: false,
-              paidAmount: 0,
-              createdAt: window.currentDate
-            };
-          }
-          window.recordUserInteraction(actor, `Gerou multa de FALTA (R$ 30,00 + R$ 1/dia) para ${targetAthlete?.name || 'Atleta'} da data ${formatDateDisplay(window.currentDate)}`);
         }
       }
 
@@ -1267,10 +1358,16 @@
       const targetAthlete = window.athletes.find(a => a.id === currentJustifyAthleteId);
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
       window.presences[window.currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', reason: reason, attended: false };
+      
+      if (window.absenceFines[currentJustifyAthleteId]) {
+        window.absenceFines[currentJustifyAthleteId] = window.absenceFines[currentJustifyAthleteId].filter(f => f.date !== window.currentDate);
+      }
+
       window.recordUserInteraction(actor, `Justificou ausência de ${targetAthlete?.name || 'Atleta'}: "${reason}"`);
       window.saveData();
       closeJustifyModal();
       renderAthletesList();
+      renderFinancial();
       window.showToast("Justificativa registrada com sucesso!", "success");
     };
 
@@ -1278,47 +1375,61 @@
       document.getElementById('justifyModal').classList.add('hidden');
     };
 
+    // --- REGRAS ESPECIAIS DE ATLETAS (ISENÇÃO DE JUROS FUTUROS) ---
+    function isSpecialInterestFreeMonth(athleteName, mKey) {
+      if (!athleteName) return false;
+      const upper = athleteName.toUpperCase();
+      if (upper.includes('JÚLIO') || upper.includes('JULIO')) {
+        return mKey === 'out';
+      }
+      if (upper.includes('SAPÃO') || upper.includes('SAPAO')) {
+        return mKey === 'set';
+      }
+      if (upper.includes('ONOFRE')) {
+        return mKey === 'ago';
+      }
+      if (upper.includes('ZIEL')) {
+        return mKey === 'nov';
+      }
+      return false;
+    }
+
+    // --- STATUS FINANCEIRO DO ATLETA ---
     function getAthleteFinancialStatus(athleteId) {
-      if (window.alwaysUpToDateMap && window.alwaysUpToDateMap[athleteId] === true) {
-        return 'uptodate';
-      }
-      const fines = window.absenceFines?.[athleteId] || {};
-      for (const dateKey in fines) {
-        if (!fines[dateKey].paid) return 'overdue';
-      }
+      if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
       const now = new Date();
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const athleteName = athlete ? athlete.name : '';
       const payments = window.financialPayments[athleteId] || {};
+
       for (let mIndex = 0; mIndex < months.length; mIndex++) {
         const mKey = months[mIndex];
         const monthNum = mIndex + 1;
         const dueDate = new Date(2026, monthNum - 1, 15);
         const paymentData = payments[mKey];
         const isPaid = paymentData && (paymentData.paid || paymentData.amount > 0);
-        if (!isPaid && now > dueDate) return 'overdue';
+        
+        if (isSpecialInterestFreeMonth(athleteName, mKey)) {
+          const suggestedFee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
+          const paidAmt = paymentData ? (Number(paymentData.amount) || 0) : 0;
+          if (paidAmt < suggestedFee && now > dueDate) return 'overdue';
+        } else {
+          if (!isPaid && now > dueDate) return 'overdue';
+        }
       }
+
+      const rawFines = window.absenceFines[athleteId] || [];
+      const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
+      const hasUnpaidFine = athleteFines.some(f => !f.paid);
+      if (hasUnpaidFine) return 'overdue';
+
       return 'uptodate';
     }
-
-    window.toggleAlwaysUpToDate = function(athleteId, isChecked) {
-      if (!window.canEditFinancial) {
-        window.showToast("Apenas Marcão e Pablo Padilha podem alterar o status fixo.", "error");
-        return;
-      }
-      if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
-      window.alwaysUpToDateMap[athleteId] = isChecked;
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      window.recordUserInteraction(window.currentUser?.name || 'Admin', `${isChecked ? 'Marcou' : 'Desmarcou'} "Sempre em Dia" para ${athlete?.name || 'Atleta'}`);
-      window.saveData();
-      renderFinancial();
-      renderAthletesList();
-      renderReports();
-      window.showToast(`Status de ${athlete?.name || 'Atleta'} atualizado para ${isChecked ? 'EM DIA' : 'PADRÃO'}!`, "success");
-    };
 
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
       tbody.innerHTML = '';
-      let countConf = 0, countJust = 0, countOut = 0, countTotalActive = 0;
+      let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
       const dayPresences = window.presences[window.currentDate] || {};
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -1329,10 +1440,7 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
         const status = pRecord.status;
 
-        if (!athlete.isSuspended) {
-          countTotalActive++;
-        }
-
+        if (!athlete.isSuspended) countTotal++;
         if (status === 'CONFIRMADO') countConf++;
         else if (status === 'JUSTIFICADO') countJust++;
         else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
@@ -1388,8 +1496,11 @@
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-200">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-500/60' : 'border-slate-700'} overflow-hidden shrink-0 bg-slate-900 shadow-md">
+              <div onclick="openFullscreenPhoto('${avatarUrl}', '${athlete.name.replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-500/60' : 'border-slate-700 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-900 shadow-md cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
                 <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover ${athlete.isSuspended ? 'grayscale' : ''}">
+                <div class="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-white">
+                  <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </div>
               </div>
               <div class="flex flex-col gap-1">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -1422,7 +1533,7 @@
       document.getElementById('statConfirmed').innerText = countConf;
       document.getElementById('statJustified').innerText = countJust;
       document.getElementById('statOut').innerText = countOut;
-      document.getElementById('statTotal').innerText = countTotalActive;
+      document.getElementById('statTotal').innerText = countTotal;
     };
 
     window.toggleActualAttendance = function(athleteId, isChecked) {
@@ -1441,6 +1552,7 @@
       document.getElementById('athletePhoneInput').value = '';
       document.getElementById('athletePhotoUrlInput').value = '';
       document.getElementById('athletePositionSelect').value = 'Meia';
+      document.getElementById('athleteMonthlyFeeInput').value = '110';
       document.getElementById('athleteSuspendedCheckbox').checked = false;
       buildStarRatingSelector(5);
       document.getElementById('athleteModal').classList.remove('hidden');
@@ -1455,6 +1567,7 @@
       document.getElementById('athletePhoneInput').value = athlete.phone || '';
       document.getElementById('athletePhotoUrlInput').value = athlete.photoUrl || '';
       document.getElementById('athletePositionSelect').value = athlete.position;
+      document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
       buildStarRatingSelector(athlete.stars);
       document.getElementById('athleteModal').classList.remove('hidden');
@@ -1482,6 +1595,7 @@
       const phone = document.getElementById('athletePhoneInput').value.trim();
       const photoUrl = document.getElementById('athletePhotoUrlInput').value.trim();
       const position = document.getElementById('athletePositionSelect').value;
+      const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput').value) || 110;
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
       if (!name) return window.showToast("Digite o nome.");
@@ -1492,6 +1606,7 @@
           athlete.name = name; athlete.phone = phone; athlete.photoUrl = photoUrl;
           athlete.position = position; athlete.stars = selectedStarsForNewAthlete;
           athlete.isSuspended = isSuspended; athlete.isKeeper = (position === 'Goleiro');
+          athlete.monthlyFee = monthlyFee;
         }
         window.showToast("Atleta atualizado!", "success");
       } else {
@@ -1499,7 +1614,7 @@
         window.athletes.push({
           id: newId, name: name, position: position, stars: selectedStarsForNewAthlete,
           phone: phone, photoUrl: photoUrl, isKeeper: (position === 'Goleiro'),
-          monthlyFee: 110, isSuspended: isSuspended
+          monthlyFee: monthlyFee, isSuspended: isSuspended
         });
         window.showToast("Atleta cadastrado!", "success");
       }
@@ -1697,7 +1812,7 @@
         const p = dayPresences[a.id];
         const st = p?.status;
         if (a.position === 'EXTRA') {
-          if (!st || st === 'FORR' || st === 'FORA') {
+          if (!st || st === 'FORA') {
             text += `- ${a.name} (EXTRA): [FORA DA RESENHA]\n`;
           }
         } else {
@@ -1854,57 +1969,9 @@
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
         const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30' : 'text-rose-400 bg-rose-500/20 border border-rose-500/30';
         const isExpanded = window.expandedFinCards.has(athlete.id);
-        const isAlwaysUpToDate = window.alwaysUpToDateMap && window.alwaysUpToDateMap[athlete.id] === true;
-
-        // --- CÁLCULO DAS MULTAS POR FALTA (R$ 30 + R$ 1/dia) ---
-        const athleteFines = window.absenceFines?.[athlete.id] || {};
-        let finesTotalDue = 0, finesTotalInterest = 0, finesTotalPaid = 0;
-        let finesHtmlList = '';
-
-        for (const [fineDate, fineData] of Object.entries(athleteFines)) {
-          if (fineData.paid) {
-            finesTotalPaid += Number(fineData.paidAmount || fineData.baseAmount || 30);
-            finesHtmlList += `
-              <div class="flex items-center justify-between p-2.5 bg-slate-900 border border-emerald-500/30 rounded-xl text-xs">
-                <div>
-                  <span class="font-bold text-slate-200">Falta na Pelada: ${formatDateDisplay(fineDate)}</span>
-                  <div class="text-[10px] text-emerald-400 font-semibold">Quitado: R$ ${(fineData.paidAmount || fineData.baseAmount || 30).toFixed(2)}</div>
-                </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">PAGO</span>
-              </div>
-            `;
-          } else {
-            const [fy, fm, fd] = fineDate.split('-');
-            const fineDay = new Date(fy, fm - 1, fd, 23, 59, 59);
-            let daysLate = 0;
-            if (now > fineDay) {
-              daysLate = Math.floor((now - fineDay) / (1000 * 60 * 60 * 24));
-            }
-            const fineInterest = daysLate * 1.00;
-            const totalFine = (fineData.baseAmount || 30) + fineInterest;
-            finesTotalDue += totalFine;
-            finesTotalInterest += fineInterest;
-
-            finesHtmlList += `
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-rose-950/20 border border-rose-500/40 rounded-xl text-xs">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="font-black text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> Falta não justificada:</span>
-                    <span class="font-bold text-slate-200">${formatDateDisplay(fineDate)}</span>
-                  </div>
-                  <div class="text-[11px] text-slate-400 mt-0.5">
-                    Multa base: <strong class="text-slate-200">R$ 30,00</strong> + Juros (${daysLate} dias a R$ 1,00/dia): <strong class="text-amber-400">R$ ${fineInterest.toFixed(2)}</strong> = <strong class="text-rose-400">Total: R$ ${totalFine.toFixed(2)}</strong>
-                  </div>
-                </div>
-                ${window.canEditFinancial ? `
-                  <button onclick="settleAbsenceFine(${athlete.id}, '${fineDate}', ${totalFine})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] transition-all flex items-center gap-1.5 shrink-0 shadow">
-                    <i class="fa-solid fa-check"></i> Baixar Débito
-                  </button>
-                ` : '<span class="text-[10px] font-bold text-rose-400">Pendente</span>'}
-              </div>
-            `;
-          }
-        }
+        const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
+        const athleteName = athlete.name || '';
+        const suggestedFee = athlete.monthlyFee || 110;
 
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
@@ -1916,70 +1983,95 @@
           
           if (isPaid) athleteTotalPaid += paidAmount;
 
-          const athleteNameNorm = athlete.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const isJulioSpecial = athleteNameNorm.includes('JULIO') && mKey === 'out';
-          const isSapaoSpecial = athleteNameNorm.includes('SAPAO') && mKey === 'set';
-          const isOnofreSpecial = athleteNameNorm.includes('ONOFRE') && mKey === 'ago';
-          const isZielSpecial = athleteNameNorm.includes('ZIEL') && mKey === 'nov';
-          const isSpecialExempt = isJulioSpecial || isSapaoSpecial || isOnofreSpecial || isZielSpecial;
+          const isSpecialNoInterest = isSpecialInterestFreeMonth(athleteName, mKey);
 
           let interest = 0;
-          if (!isSpecialExempt && !isPaid && now >= firstDayAfterDue && !athlete.isSuspended) {
-            interest = (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00;
-          }
-          athleteTotalInterest += interest;
-
-          const suggestedFee = athlete.monthlyFee || 110;
-          let dueForThisMonth = 0;
-          if (isSpecialExempt) {
-            dueForThisMonth = Math.max(0, suggestedFee - paidAmount);
-            if (!athlete.isSuspended) {
-              athleteInstallmentsDue += dueForThisMonth;
-              athleteTotalDue += dueForThisMonth;
+          if (isSpecialNoInterest) {
+            interest = 0;
+            const remainingDue = Math.max(0, suggestedFee - paidAmount);
+            if (!athlete.isSuspended && remainingDue > 0 && now > dueDate) {
+              athleteInstallmentsDue += remainingDue;
+              athleteTotalDue += remainingDue;
             }
           } else {
-            if (!isPaid && !athlete.isSuspended) {
-              athleteInstallmentsDue += suggestedFee;
-              athleteTotalDue += (suggestedFee + interest);
+            if (!isPaid && now >= firstDayAfterDue) {
+              interest = (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00;
+            }
+            if (!athlete.isSuspended) {
+              athleteTotalInterest += interest;
+              if (!isPaid) {
+                athleteInstallmentsDue += suggestedFee;
+                athleteTotalDue += (suggestedFee + interest);
+              }
             }
           }
 
           let cellColorClass = isPaid ? "bg-sky-500/20 text-sky-300 border-sky-500/40" : (now > dueDate ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-slate-950/40 text-slate-500 border-slate-800");
 
           monthsGridHtml += `
-            <div class="flex flex-col gap-1 items-center bg-slate-950 border border-slate-800 p-2 rounded-xl shadow-inner ${isSpecialExempt ? 'ring-1 ring-amber-500/40' : ''}">
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] uppercase font-bold text-slate-400">${mKey}</span>
-                ${isSpecialExempt ? '<span class="text-[8px] text-amber-400 font-bold" title="Sem juros futuros. Saldo: Parcela original - Pago">*</span>' : ''}
-              </div>
+            <div class="flex flex-col gap-1 items-center bg-slate-950 border border-slate-800 p-2 rounded-xl shadow-inner relative">
+              <span class="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">${mKey} ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-400 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}</span>
               <div class="flex items-center gap-1.5 justify-center">
                 <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${isPaid ? paidAmount : (isSpecialExempt && paidAmount > 0 ? paidAmount : suggestedFee)}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-slate-900 border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="number" value="${isPaid ? paidAmount : suggestedFee}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-slate-900 border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
-              ${isSpecialExempt && paidAmount > 0 && dueForThisMonth > 0 ? `<span class="text-[8px] text-rose-400 font-bold">Resta R$ ${dueForThisMonth.toFixed(2)}</span>` : ''}
+              ${isSpecialNoInterest && paidAmount < suggestedFee ? `<span class="text-[8px] text-amber-400 font-bold">Resta: R$ ${(suggestedFee - paidAmount).toFixed(2)}</span>` : ''}
             </div>`;
         });
 
-        if (!athlete.isSuspended) {
-          totalGeneralPaid += (athleteTotalPaid + finesTotalPaid);
-          totalGeneralDue += (athleteTotalDue + finesTotalDue);
-          totalGeneralInterest += (athleteTotalInterest + finesTotalInterest);
-        } else {
-          totalGeneralPaid += (athleteTotalPaid + finesTotalPaid);
-        }
+        // --- CÁLCULO E RENDERIZAÇÃO DAS MULTAS POR FALTA (R$ 30,00 + R$ 1,00/dia) ---
+        const rawFines = window.absenceFines[athlete.id] || [];
+        const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
+        let athleteTotalFinesBase = 0;
+        let athleteTotalFinesInterest = 0;
+        let finesHtml = '';
 
-        // Se o usuário logado não for admin, exibe somente o seu próprio registro
+        athleteFines.forEach((fine, fineIdx) => {
+          const fineDate = new Date(fine.date + 'T00:00:00');
+          let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
+          if (daysPassed < 0) daysPassed = 0;
+          const fineInterest = fine.paid ? 0 : daysPassed * 1.00;
+          const fineTotal = fine.baseAmount + fineInterest;
+
+          if (!fine.paid && !athlete.isSuspended) {
+            athleteTotalFinesBase += fine.baseAmount;
+            athleteTotalFinesInterest += fineInterest;
+            athleteTotalDue += fineTotal;
+            athleteTotalInterest += fineInterest;
+          }
+
+          finesHtml += `
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-rose-500/30 text-xs">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                <span class="font-bold text-slate-200">Falta em ${formatDateDisplay(fine.date)}</span>
+                <span class="text-[10px] text-slate-400">Base: R$ ${fine.baseAmount.toFixed(2)}</span>
+                <span class="text-[10px] text-amber-400 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-black ${fine.paid ? 'text-emerald-400' : 'text-rose-400'}">Total: R$ ${fineTotal.toFixed(2)}</span>
+                ${window.canEditFinancial ? `
+                  <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold text-[10px] transition-all">
+                    ${fine.paid ? 'Quitada' : 'Baixar Débito'}
+                  </button>
+                ` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${fine.paid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${fine.paid ? 'Paga' : 'Pendente'}</span>`}
+              </div>
+            </div>
+          `;
+        });
+
+        totalGeneralPaid += athleteTotalPaid;
+        totalGeneralDue += athleteTotalDue;
+        totalGeneralInterest += athleteTotalInterest;
+
+        // Se o usuário logado for atleta (não admin), exibe apenas os seus dados
         if (!window.isAdmin && window.currentUser && window.currentUser.id !== athlete.id) {
           return;
         }
 
-        const athleteCombinedDue = athleteTotalDue + finesTotalDue;
-        const athleteCombinedPaid = athleteTotalPaid + finesTotalPaid;
-        const athleteCombinedInterest = athleteTotalInterest + finesTotalInterest;
-
-        if (activeFinancialFilter === 'paid' && athleteCombinedPaid <= 0) return;
-        if (activeFinancialFilter === 'interest' && athleteCombinedInterest <= 0) return;
-        if (activeFinancialFilter === 'due' && (athleteCombinedDue <= 0 || athlete.isSuspended)) return;
+        if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
+        if (activeFinancialFilter === 'interest' && athleteTotalInterest <= 0) return;
+        if (activeFinancialFilter === 'due' && athleteTotalDue <= 0) return;
 
         container.innerHTML += `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
@@ -1990,83 +2082,95 @@
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${finLabelColor} hidden sm:inline-block">${finLabel}</span>
               </div>
               <div class="flex items-center justify-between md:justify-end gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto">
-                <div class="flex flex-col text-slate-400"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-400 text-sm">R$ ${athleteCombinedPaid.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-400"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-400 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-200 text-sm">R$ ${athleteInstallmentsDue.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-400 text-sm">R$ ${athleteCombinedInterest.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-400 text-sm">R$ ${athleteCombinedDue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-400 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-400 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span></div>
                 <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-500 transition-transform ${isExpanded ? 'rotate-180 text-emerald-400' : 'group-hover:text-emerald-400'}"></i></div>
               </div>
             </button>
             <div class="${isExpanded ? 'block' : 'hidden'} border-t border-slate-800 bg-slate-950/50">
               <div class="p-4 space-y-4">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                  <div class="flex items-center gap-2">
-                    <input type="checkbox" id="chkAlways_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} ${!window.canEditFinancial ? 'disabled' : ''} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}">
-                    <label for="chkAlways_${athlete.id}" class="text-xs font-bold text-emerald-400 cursor-pointer">
-                      Considerar Sempre em Dia (Forçar status "Em Dia" em todo o app)
-                    </label>
+                ${window.canEditFinancial ? `
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+                    <div class="flex items-center gap-2">
+                      <input type="checkbox" id="always_up_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
+                      <label for="always_up_${athlete.id}" class="text-xs font-bold text-slate-200 cursor-pointer">Forçar Status: Considerar Sempre em Dia</label>
+                    </div>
+                    <span class="text-[10px] text-slate-400">Exclusivo Marcão / Pablo Padilha</span>
                   </div>
+                ` : ''}
+                
+                ${athleteFines.length > 0 ? `
+                  <div class="bg-rose-950/20 border border-rose-500/20 rounded-2xl p-3.5 space-y-2">
+                    <h5 class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
+                      <i class="fa-solid fa-gavel"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia)
+                    </h5>
+                    <div class="space-y-1.5">${finesHtml}</div>
+                  </div>
+                ` : ''}
+
+                <div class="flex justify-between items-center">
+                  <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades (R$ ${suggestedFee.toFixed(2)}/mês)</h4>
                   ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-500/30"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
                 </div>
-
-                <!-- SEÇÃO SEPARADA: MULTAS POR FALTA -->
-                <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 space-y-3">
-                  <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                    <h5 class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
-                      <i class="fa-solid fa-receipt text-rose-500"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia a contar a pelada)
-                    </h5>
-                    <span class="text-[11px] font-black ${finesTotalDue > 0 ? 'text-rose-400' : 'text-emerald-400'}">
-                      ${finesTotalDue > 0 ? `Débito em aberto: R$ ${finesTotalDue.toFixed(2)}` : 'Sem multas pendentes'}
-                    </span>
-                  </div>
-                  ${finesHtmlList ? `<div class="space-y-2">${finesHtmlList}</div>` : `<p class="text-[11px] text-slate-500 italic">Nenhuma falta registrada com multa para este atleta.</p>`}
-                </div>
-
-                <div>
-                  <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2 mb-3"><i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades Ordinárias</h4>
-                  <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
-                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
               </div>
             </div>
           </div>`;
       });
+
       document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
       document.getElementById('finTotalInterest').innerText = `R$ ${totalGeneralInterest.toFixed(2)}`;
       document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
     };
 
-    window.settleAbsenceFine = function(athleteId, fineDate, totalAmount) {
-      if (!window.canEditFinancial) return window.showToast("Apenas Marcão e Pablo Padilha podem baixar multas.");
-      if (!window.absenceFines[athleteId] || !window.absenceFines[athleteId][fineDate]) return;
-      window.absenceFines[athleteId][fineDate].paid = true;
-      window.absenceFines[athleteId][fineDate].paidAmount = totalAmount;
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Baixou multa por falta de ${athlete?.name || 'Atleta'} (${formatDateDisplay(fineDate)}) no valor de R$ ${totalAmount.toFixed(2)}`);
+    window.settleAbsenceFine = function(athleteId, fineIndex) {
+      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem quitar multas.");
+      if (window.absenceFines[athleteId] && window.absenceFines[athleteId][fineIndex]) {
+        window.absenceFines[athleteId][fineIndex].paid = true;
+        const target = window.athletes.find(a => a.id === athleteId);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de falta de ${target?.name || ''}`);
+        window.saveData();
+        renderFinancial();
+        renderAthletesList();
+        renderReports();
+        window.showToast("Multa liquidada com sucesso!", "success");
+      }
+    };
+
+    window.toggleAlwaysUpToDate = function(athleteId, isChecked) {
+      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem alterar esta opção.");
+      window.alwaysUpToDateMap[athleteId] = isChecked;
+      const target = window.athletes.find(a => a.id === athleteId);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Definiu "Sempre em Dia" como ${isChecked ? 'ATIVO' : 'INATIVO'} para ${target?.name || ''}`);
       window.saveData();
       renderFinancial();
       renderAthletesList();
       renderReports();
-      window.showToast("Multa por falta baixada com sucesso!", "success");
+      window.showToast("Status financeiro atualizado!", "success");
     };
 
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      const fee = athlete?.monthlyFee || 110;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
       window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: isChecked ? fee : 0 };
       window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `${isChecked ? 'Baixou' : 'Desmarcou'} mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''}`);
       window.saveData(); renderFinancial(); renderReports();
     };
+
     window.doubleClickSettleMonth = function(athleteId, mKey) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      const fee = athlete?.monthlyFee || 110;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
       window.financialPayments[athleteId][mKey] = { paid: true, amount: fee };
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''} no valor de R$ ${fee.toFixed(2)}`);
-      window.saveData(); renderFinancial(); renderReports(); window.showToast(`Parcela baixada (R$ ${fee.toFixed(2)})!`, "success");
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''}`);
+      window.saveData(); renderFinancial(); renderReports(); window.showToast("Parcela baixada!", "success");
     };
+
     window.updateFinancialValue = function(athleteId, mKey, val) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
       const numVal = parseFloat(val) || 0;
@@ -2080,120 +2184,74 @@
       if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone.");
       const status = getAthleteFinancialStatus(athleteId);
       const cleanPhone = athlete.phone.replace(/\D/g, '');
-      const now = new Date();
-
-      if (status === 'uptodate') {
-        const msgEmDia = `Fala meu craque *${athlete.name}*! ⚽🔥🎩\n\nPassando aqui rapidinho só pra tirar o chapéu! Você está 100% *EM DIA* com o *Teimoso F.C.C.*! 🏆✅\n\nPontualidade de camisa 10 dentro e fora das quatro linhas! Muito obrigado pela parceria e assiduidade. Que a nossa resenha continue daquele jeito e desejamos uma excelente festa e muitas comemorações a todos nós! 🍻🎉🥩🚀\n\n_🤖 Mensagem automática enviada pelo Sistema de Gestão do Teimoso F.C.C._`;
-        window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msgEmDia)}`, '_blank');
-        return;
-      }
-
-      // --- LEVANTAMENTO COMPLETO DE DÉBITOS E JUROS ---
       const payments = window.financialPayments[athleteId] || {};
-      const athleteNameNorm = athlete.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const now = new Date();
+      const athleteName = athlete.name || '';
       const suggestedFee = athlete.monthlyFee || 110;
 
-      let debitsList = [];
-      let totalMensalidadesDue = 0;
-      let totalJurosMensalidades = 0;
+      let msg = '';
+      if (status === 'uptodate') {
+        msg = `Fala meu camisa 10 *${athlete.name}*! ⚽🎩🏆\n\nPassando aqui para parabenizar pela pontualidade de craque exemplar! 🟢⚪✨ Suas mensalidades estão 100% em dia e o nosso caixa agradece demais! 🍻🥩\n\nDesejamos uma excelente resenha e boa festa a todos nós! Tamo junto! 🚀🥳\n\n_Mensagem automática do sistema de gestão do Teimoso F.C.C._`;
+      } else {
+        let totalMonthlyDue = 0;
+        let totalFinesDue = 0;
+        let pendingMonthsText = '';
 
-      const monthNamesFull = {
-        jan: 'Janeiro', fev: 'Fevereiro', mar: 'Março', abr: 'Abril',
-        mai: 'Maio', jun: 'Junho', jul: 'Julho', ago: 'Agosto',
-        set: 'Setembro', out: 'Outubro', nov: 'Novembro'
-      };
+        months.forEach((mKey, mIndex) => {
+          const dueDate = new Date(2026, mIndex, 15);
+          const firstDayAfterDue = new Date(2026, mIndex, 16);
+          let monthData = payments[mKey] || { paid: false, amount: 0 };
+          let isPaid = monthData.paid === true || Number(monthData.amount) > 0;
+          let paidAmount = Number(monthData.amount) || 0;
 
-      months.forEach((mKey, mIndex) => {
-        const dueDate = new Date(2026, mIndex, 15);
-        const firstDayAfterDue = new Date(2026, mIndex, 16);
-        const monthData = payments[mKey] || { paid: false, amount: 0 };
-        const isPaid = monthData.paid === true || Number(monthData.amount) > 0;
-        const paidAmount = Number(monthData.amount) || 0;
-
-        const isJulioSpecial = athleteNameNorm.includes('JULIO') && mKey === 'out';
-        const isSapaoSpecial = athleteNameNorm.includes('SAPAO') && mKey === 'set';
-        const isOnofreSpecial = athleteNameNorm.includes('ONOFRE') && mKey === 'ago';
-        const isZielSpecial = athleteNameNorm.includes('ZIEL') && mKey === 'nov';
-        const isSpecialExempt = isJulioSpecial || isSapaoSpecial || isOnofreSpecial || isZielSpecial;
-
-        let monthInterest = 0;
-        let monthDue = 0;
-
-        // NÃO COBRAR PARCELAS QUE AINDA NÃO VENCERAM (APENAS PARCELAS VENCIDAS)
-        if (isSpecialExempt) {
-          const saldo = Math.max(0, suggestedFee - paidAmount);
-          if (saldo > 0 && now > dueDate) {
-            monthDue = saldo;
-            debitsList.push(`• *${monthNamesFull[mKey]}*: R$ ${saldo.toFixed(2)} (Saldo devedor isento de juros)`);
-            totalMensalidadesDue += saldo;
-          }
-        } else {
-          if (!isPaid && now > dueDate) {
-            if (now >= firstDayAfterDue) {
-              const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
-              monthInterest = daysLate * 1.00;
+          if (now > dueDate) {
+            if (isSpecialInterestFreeMonth(athleteName, mKey)) {
+              const diff = Math.max(0, suggestedFee - paidAmount);
+              if (diff > 0) {
+                totalMonthlyDue += diff;
+                pendingMonthsText += `• *${mKey.toUpperCase()}*: R$ ${diff.toFixed(2)} (Parcela sem juros futuros)\n`;
+              }
+            } else if (!isPaid) {
+              let interest = now >= firstDayAfterDue ? (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
+              let monthTotal = suggestedFee + interest;
+              totalMonthlyDue += monthTotal;
+              pendingMonthsText += `• *${mKey.toUpperCase()}*: R$ ${suggestedFee.toFixed(2)} + R$ ${interest.toFixed(2)} (Juros) = *R$ ${monthTotal.toFixed(2)}*\n`;
             }
-            monthDue = suggestedFee + monthInterest;
-            totalMensalidadesDue += suggestedFee;
-            totalJurosMensalidades += monthInterest;
-
-            debitsList.push(`• *${monthNamesFull[mKey]}*: Mensalidade R$ ${suggestedFee.toFixed(2)} + Juros R$ ${monthInterest.toFixed(2)} = *R$ ${monthDue.toFixed(2)}*`);
           }
-        }
-      });
+        });
 
-      // --- MULTAS POR FALTA (R$ 30,00 + R$ 1,00/dia) ---
-      const fines = window.absenceFines?.[athleteId] || {};
-      let finesList = [];
-      let totalFinesBase = 0;
-      let totalFinesInterest = 0;
-
-      for (const [fineDate, fineData] of Object.entries(fines)) {
-        if (!fineData.paid) {
-          const [fy, fm, fd] = fineDate.split('-');
-          const fineDay = new Date(fy, fm - 1, fd, 23, 59, 59);
-          let daysLate = 0;
-          if (now > fineDay) {
-            daysLate = Math.floor((now - fineDay) / (1000 * 60 * 60 * 24));
+        const athleteFines = Array.isArray(window.absenceFines[athleteId])
+          ? window.absenceFines[athleteId]
+          : Object.values(window.absenceFines[athleteId] || {});
+        let finesText = '';
+        athleteFines.forEach(fine => {
+          if (!fine.paid) {
+            const fineDate = new Date(fine.date + 'T00:00:00');
+            let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
+            if (daysPassed < 0) daysPassed = 0;
+            const fineInterest = daysPassed * 1.00;
+            const fineTotal = fine.baseAmount + fineInterest;
+            totalFinesDue += fineTotal;
+            finesText += `• *Falta em ${formatDateDisplay(fine.date)}*: R$ ${fine.baseAmount.toFixed(2)} + R$ ${fineInterest.toFixed(2)} (${daysPassed} dias juros) = *R$ ${fineTotal.toFixed(2)}*\n`;
           }
-          const fineInterest = daysLate * 1.00;
-          const baseAmt = fineData.baseAmount || 30;
-          const fineTotal = baseAmt + fineInterest;
+        });
 
-          totalFinesBase += baseAmt;
-          totalFinesInterest += fineInterest;
+        const grandTotal = totalMonthlyDue + totalFinesDue;
 
-          finesList.push(`• Falta de ${formatDateDisplay(fineDate)}: R$ ${baseAmt.toFixed(2)} + Juros R$ ${fineInterest.toFixed(2)} (${daysLate} dias) = *R$ ${fineTotal.toFixed(2)}*`);
+        msg = `Fala meu craque *${athlete.name}*! ⚽🏃‍♂️💨\n\nPassando aqui com todo o carinho e aquele toque de bola refinado para te atualizar sobre os débitos pendentes no *Teimoso F.C.C.*! 📋😅\n\n`;
+
+        if (pendingMonthsText) {
+          msg += `🗓️ *MENSALIDADES VENCIDAS:*\n${pendingMonthsText}\n`;
         }
+        if (finesText) {
+          msg += `⚠️ *MULTAS POR FALTA:*\n${finesText}\n`;
+        }
+
+        msg += `💰 *TOTAL GERAL CONSOLIDADO: R$ ${grandTotal.toFixed(2)}*\n\n`;
+        msg += `Para regularizar e manter o churrasco e as chuteiras nos trinques, faça seu PIX para a chave oficial:\n🔑 *teimosofcc@gmail.com*\n\nAssim que fizer, envia o comprovante para a diretoria dar baixa! Tamo junto demais na próxima pelada! 🍻👊🟢⚪\n\n_Mensagem automática do sistema de gestão do Teimoso F.C.C._`;
       }
 
-      const totalGeralDevido = totalMensalidadesDue + totalJurosMensalidades + totalFinesBase + totalFinesInterest;
-
-      let msgCobranca = `Fala meu parceiro *${athlete.name}*! Beleza, artilheiro? ⚽🏃💨\n\n`;
-      msgCobranca += `Passando aqui com todo o respeito e carinho da diretoria do *Teimoso F.C.C.* para te dar uma forcinha na contabilidade e deixar você pronto pro próximo golaço! 🥅🍺\n\n`;
-      msgCobranca += `Identificamos que constam algumas pendências no seu histórico esportivo-financeiro:\n\n`;
-
-      if (debitsList.length > 0) {
-        msgCobranca += `📋 *MENSALIDADES EM ABERTO:*\n${debitsList.join('\n')}\n\n`;
-      }
-
-      if (finesList.length > 0) {
-        msgCobranca += `🚨 *MULTAS POR FALTA (R$ 30 + R$ 1/dia de juros):*\n${finesList.join('\n')}\n\n`;
-      }
-
-      msgCobranca += `💰 *RESUMO GERAL ATÉ HOJE:*`;
-      if (totalMensalidadesDue > 0) msgCobranca += `\n• Mensalidades: R$ ${totalMensalidadesDue.toFixed(2)}`;
-      if (totalJurosMensalidades > 0) msgCobranca += `\n• Juros de Mensalidades: R$ ${totalJurosMensalidades.toFixed(2)}`;
-      if (totalFinesBase > 0) msgCobranca += `\n• Multas por Falta: R$ ${totalFinesBase.toFixed(2)}`;
-      if (totalFinesInterest > 0) msgCobranca += `\n• Juros das Faltas: R$ ${totalFinesInterest.toFixed(2)}`;
-      msgCobranca += `\n🔥 *TOTAL GERAL CONSOLIDADO: R$ ${totalGeralDevido.toFixed(2)}*\n\n`;
-
-      msgCobranca += `Facilita no pix e vem pra resenha com o coração leve! 🍻\n`;
-      msgCobranca += `🔑 *Chave PIX:* teimosofcc@gmail.com\n\n`;
-      msgCobranca += `Assim que fizer a transferência, favor enviar o comprovante pra diretoria dar baixa imediata no app. Tamo junto demais! 👊⚽⚪🟢\n\n`;
-      msgCobranca += `_🤖 Esta é uma mensagem automática gerada pelo Sistema de Gestão de Peladas do Teimoso F.C.C._`;
-
-      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msgCobranca)}`, '_blank');
+      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     window.openWhatsappFinancialMassModal = function() {
