@@ -212,7 +212,7 @@
         </div>
 
         <!-- STATS CARDS (TOGGLEABLE FILTERS) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
           <div onclick="filterPresenceCards('CONFIRMADO')" id="cardStat-CONFIRMADO" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
             <div class="flex items-center justify-between text-slate-400 mb-1">
               <span class="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Confirmados</span>
@@ -235,6 +235,14 @@
               <i class="fa-solid fa-circle-xmark text-rose-400 text-sm"></i>
             </div>
             <div class="text-2xl font-black text-rose-400" id="statOut">0</div>
+          </div>
+
+          <div onclick="filterPresenceCards('FALTA')" id="cardStat-FALTA" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-purple-400 transition-colors">Faltas</span>
+              <i class="fa-solid fa-ban text-purple-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-purple-400" id="statFaltas">0</div>
           </div>
 
           <div onclick="filterPresenceCards(null)" class="bg-slate-900 border border-slate-800 hover:border-slate-600 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
@@ -1044,7 +1052,8 @@
           if (!window.presences[dataPelada]) window.presences[dataPelada] = {};
 
           if (acao === 'confirmar') {
-            window.presences[dataPelada][athleteId] = { status: 'CONFIRMADO', reason: '', attended: false };
+            const confirmedAt = new Date().toISOString();
+            window.presences[dataPelada][athleteId] = { status: 'CONFIRMADO', reason: '', attended: false, confirmedAt: confirmedAt };
             window.recordUserInteraction(athlete.name, `Confirmou presença via Link Mágico (${formatDateDisplay(dataPelada)})`);
             window.saveData();
             renderAthletesList();
@@ -1052,7 +1061,7 @@
             window.showToast(`Presença confirmada para ${athlete.name}!`, "success");
             window.history.replaceState({}, document.title, window.location.pathname);
           } else if (acao === 'fora') {
-            window.presences[dataPelada][athleteId] = { status: 'FORA', reason: '', attended: false };
+            window.presences[dataPelada][athleteId] = { status: 'FORA', reason: '', attended: false, confirmedAt: null };
             window.recordUserInteraction(athlete.name, `Marcou FORA via Link Mágico (${formatDateDisplay(dataPelada)})`);
             window.saveData();
             renderAthletesList();
@@ -1267,13 +1276,14 @@
         activeStatusFilter = status;
       }
 
-      ['CONFIRMADO', 'JUSTIFICADO', 'FORA'].forEach(st => {
+      ['CONFIRMADO', 'JUSTIFICADO', 'FORA', 'FALTA'].forEach(st => {
         const card = document.getElementById(`cardStat-${st}`);
         if (card) {
           if (activeStatusFilter === st) {
-            card.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-800/80');
+            const ringColor = st === 'FALTA' ? 'ring-purple-500' : 'ring-emerald-500';
+            card.classList.add('ring-2', ringColor, 'bg-slate-800/80');
           } else {
-            card.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-800/80');
+            card.classList.remove('ring-2', 'ring-emerald-500', 'ring-purple-500', 'bg-slate-800/80');
           }
         }
       });
@@ -1305,12 +1315,13 @@
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       const current = window.presences[window.currentDate][athleteId]?.status;
       const currentAttended = window.presences[window.currentDate][athleteId]?.attended || false;
+      const currentConfirmedAt = window.presences[window.currentDate][athleteId]?.confirmedAt || null;
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
 
       if (!window.absenceFines[athleteId]) window.absenceFines[athleteId] = [];
 
       if (current === newStatus) {
-        window.presences[window.currentDate][athleteId] = { status: null, reason: '', attended: false };
+        window.presences[window.currentDate][athleteId] = { status: null, reason: '', attended: false, confirmedAt: null };
         if (current === 'FALTA') {
           window.absenceFines[athleteId] = window.absenceFines[athleteId].filter(f => f.date !== window.currentDate);
         }
@@ -1338,7 +1349,15 @@
           }
         }
 
-        window.presences[window.currentDate][athleteId] = { status: newStatus, reason: '', attended: newStatus === 'CONFIRMADO' ? currentAttended : false };
+        const isConfirming = newStatus === 'CONFIRMADO';
+        const confirmedAt = isConfirming ? (currentConfirmedAt || new Date().toISOString()) : null;
+
+        window.presences[window.currentDate][athleteId] = { 
+          status: newStatus, 
+          reason: '', 
+          attended: isConfirming ? currentAttended : false,
+          confirmedAt: confirmedAt
+        };
         window.recordUserInteraction(actor, `Marcou ${newStatus} para ${targetAthlete?.name || 'Atleta'} (${formatDateDisplay(window.currentDate)})`);
         
         if (newStatus === 'CONFIRMADO') {
@@ -1357,7 +1376,7 @@
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       const targetAthlete = window.athletes.find(a => a.id === currentJustifyAthleteId);
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
-      window.presences[window.currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', reason: reason, attended: false };
+      window.presences[window.currentDate][currentJustifyAthleteId] = { status: 'JUSTIFICADO', reason: reason, attended: false, confirmedAt: null };
       
       if (window.absenceFines[currentJustifyAthleteId]) {
         window.absenceFines[currentJustifyAthleteId] = window.absenceFines[currentJustifyAthleteId].filter(f => f.date !== window.currentDate);
@@ -1437,20 +1456,38 @@
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
       tbody.innerHTML = '';
-      let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
+      let countConf = 0, countJust = 0, countOut = 0, countFaltas = 0, countTotal = 0;
       const dayPresences = window.presences[window.currentDate] || {};
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+      // Ordenar: Primeiro os confirmados em ordem cronológica (quem confirmou primeiro fica no topo),
+      // e em seguida os demais atletas por ordem alfabética.
+      const sortedAthletes = [...window.athletes].sort((a, b) => {
+        const pA = dayPresences[a.id];
+        const pB = dayPresences[b.id];
+        const aConfirmed = pA?.status === 'CONFIRMADO';
+        const bConfirmed = pB?.status === 'CONFIRMADO';
+
+        if (aConfirmed && bConfirmed) {
+          const timeA = pA.confirmedAt ? new Date(pA.confirmedAt).getTime() : 0;
+          const timeB = pB.confirmedAt ? new Date(pB.confirmedAt).getTime() : 0;
+          if (timeA !== timeB) return timeA - timeB;
+          return a.name.localeCompare(b.name);
+        }
+        if (aConfirmed) return -1;
+        if (bConfirmed) return 1;
+        return a.name.localeCompare(b.name);
+      });
 
       sortedAthletes.forEach(athlete => {
-        const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
+        const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false, confirmedAt: null };
         const status = pRecord.status;
 
         if (!athlete.isSuspended) countTotal++;
         if (status === 'CONFIRMADO') countConf++;
         else if (status === 'JUSTIFICADO') countJust++;
+        else if (status === 'FALTA') countFaltas++;
         else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
 
         if (searchTerm && !athlete.name.toLowerCase().includes(searchTerm)) return;
@@ -1461,6 +1498,18 @@
         const finDotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
         const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+
+        let confirmBadgeHtml = '';
+        if (status === 'CONFIRMADO' && pRecord.confirmedAt) {
+          const d = new Date(pRecord.confirmedAt);
+          const formattedDateTime = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          confirmBadgeHtml = `
+            <div class="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold mt-0.5">
+              <i class="fa-solid fa-clock-check"></i>
+              <span>Confirmou em: ${formattedDateTime}</span>
+            </div>
+          `;
+        }
 
         const tr = document.createElement('tr');
         tr.className = athlete.isSuspended ? "bg-rose-950/20 hover:bg-rose-900/30 transition-colors" : "hover:bg-slate-900/60 transition-colors";
@@ -1510,12 +1559,13 @@
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </div>
               </div>
-              <div class="flex flex-col gap-1">
+              <div class="flex flex-col gap-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-sm ${athlete.isSuspended ? 'text-rose-300' : ''}">${athlete.name}</span>
                   ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-600/20 text-rose-400 border border-rose-500/40 uppercase">Suspenso</span>` : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
                 </div>
+                ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
                   <div class="text-amber-400 text-[10px] tracking-widest">${'★'.repeat(athlete.stars)}${'☆'.repeat(5 - athlete.stars)}</div>
@@ -1541,6 +1591,8 @@
       document.getElementById('statConfirmed').innerText = countConf;
       document.getElementById('statJustified').innerText = countJust;
       document.getElementById('statOut').innerText = countOut;
+      const statFaltasEl = document.getElementById('statFaltas');
+      if (statFaltasEl) statFaltasEl.innerText = countFaltas;
       document.getElementById('statTotal').innerText = countTotal;
     };
 
