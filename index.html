@@ -167,11 +167,22 @@
         <!-- CONTROLS & DATE SELECTOR -->
         <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-              <label for="dateSelect" class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0">Data:</label>
-              <select id="dateSelect" onchange="changeDate(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500 w-full sm:w-48 shadow-inner">
+            <div class="flex items-center gap-1.5 w-full sm:w-auto">
+              <label for="dateSelect" class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1">Data:</label>
+              
+              <!-- BOTÃO NAVEGAÇÃO: PELADA ANTERIOR (-) -->
+              <button onclick="navigateDate(-1)" id="btnPrevDate" title="Pelada Anterior (-)" class="w-9 h-9 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-emerald-400 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-inner">
+                <i class="fa-solid fa-minus text-xs"></i>
+              </button>
+
+              <select id="dateSelect" onchange="changeDate(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500 w-full sm:w-48 shadow-inner">
                 <!-- Populado dinamicamente -->
               </select>
+
+              <!-- BOTÃO NAVEGAÇÃO: PRÓXIMA PELADA (+) -->
+              <button onclick="navigateDate(1)" id="btnNextDate" title="Próxima Pelada (+)" class="w-9 h-9 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-emerald-400 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-inner">
+                <i class="fa-solid fa-plus text-xs"></i>
+              </button>
             </div>
             
             <!-- ADMIN DATE CONTROLS -->
@@ -1337,8 +1348,85 @@
     window.changeDate = function(val) {
       window.currentDate = val;
       document.getElementById('massModalDate').innerText = formatDateDisplay(val);
+      updateDateNavButtons();
       checkDeadlinePassed();
       renderAthletesList();
+    };
+
+    // --- NAVEGAÇÃO RÁPIDA ENTRE PELADAS (- E +) ---
+    function getAvailableDates() {
+      const currentYear = new Date().getFullYear();
+      const sorted = [...window.datesList].sort();
+      return window.isAdmin
+        ? sorted
+        : sorted.filter(d => {
+            const y = parseInt(d.split('-')[0], 10);
+            return y >= currentYear;
+          });
+    }
+
+    function updateDateNavButtons() {
+      const available = getAvailableDates();
+      const currIdx = available.indexOf(window.currentDate);
+      const btnPrev = document.getElementById('btnPrevDate');
+      const btnNext = document.getElementById('btnNextDate');
+
+      if (btnPrev) {
+        if (currIdx <= 0) {
+          btnPrev.disabled = true;
+          btnPrev.classList.add('opacity-40', 'cursor-not-allowed');
+        } else {
+          btnPrev.disabled = false;
+          btnPrev.classList.remove('opacity-40', 'cursor-not-allowed');
+        }
+      }
+
+      if (btnNext) {
+        if (currIdx >= available.length - 1 || currIdx === -1) {
+          btnNext.disabled = true;
+          btnNext.classList.add('opacity-40', 'cursor-not-allowed');
+        } else {
+          btnNext.disabled = false;
+          btnNext.classList.remove('opacity-40', 'cursor-not-allowed');
+        }
+      }
+    }
+
+    window.navigateDate = function(direction) {
+      const available = getAvailableDates();
+      if (available.length === 0) return;
+      const currIdx = available.indexOf(window.currentDate);
+      let targetIdx = currIdx + direction;
+
+      if (targetIdx >= 0 && targetIdx < available.length) {
+        const targetDate = available[targetIdx];
+        const select = document.getElementById('dateSelect');
+        if (select) select.value = targetDate;
+        window.changeDate(targetDate);
+      }
+    };
+
+    window.populateDateSelect = function() {
+      const select = document.getElementById('dateSelect');
+      select.innerHTML = '';
+
+      const availableDates = getAvailableDates();
+
+      availableDates.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.innerText = formatDateDisplay(d);
+        if (d === window.currentDate) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      if (!availableDates.includes(window.currentDate) && availableDates.length > 0) {
+        window.currentDate = availableDates[availableDates.length - 1];
+        select.value = window.currentDate;
+      }
+
+      document.getElementById('massModalDate').innerText = formatDateDisplay(window.currentDate);
+      updateDateNavButtons();
     };
 
     function formatDateDisplay(dateStr) {
