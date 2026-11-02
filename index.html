@@ -831,7 +831,6 @@
       initAudioContext();
       const target = e.target.closest('button, select, input[type="checkbox"], [onclick], a');
       if (target && !target.dataset.noClickSound) {
-        // Se for um botão de confirmação específico, o som personalizado toca na própria função
         if (!target.getAttribute('onclick')?.includes('setPresenceStatus')) {
           window.playSelectionSound('click');
         }
@@ -867,6 +866,7 @@
       "EXTRA": { tag: "EXTRA", color: "bg-purple-500/20 text-purple-400 border-purple-500/40" }
     };
 
+    // Inclusão dos atletas Alexandre Boechat, Bruno Monteiro e Todinho com suas respectivas datas de início
     const defaultAthletes = [
       { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
@@ -878,8 +878,29 @@
       { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 10, name: "Onofre", position: "Lateral", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 11, name: "Ziel", position: "Atacante", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
+      { id: 11, name: "Ziel", position: "Atacante", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 12, name: "Alexandre Boechat", position: "Zagueiro", stars: 4, phone: "22999990012", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" },
+      { id: 13, name: "Bruno Monteiro", position: "Meia", stars: 4, phone: "22999990013", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-07-05" },
+      { id: 14, name: "Todinho", position: "Atacante", stars: 4, phone: "22999990014", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" }
     ];
+
+    // Helper: retorna a data inicial efetiva para estatísticas e assiduidade
+    function getAthleteEffectiveStartDate(athlete) {
+      if (!athlete) return null;
+      if (athlete.effectiveStartDate) return athlete.effectiveStartDate;
+
+      const upper = (athlete.name || '').toUpperCase();
+      if (upper.includes("ALEXANDRE BOECHAT") || upper.includes("BOECHAT")) {
+        return "2026-03-08";
+      }
+      if (upper.includes("BRUNO MONTEIRO")) {
+        return "2026-07-05";
+      }
+      if (upper.includes("TODINHO")) {
+        return "2026-03-08";
+      }
+      return null;
+    }
 
     const initialMockFinancial = {
       1: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
@@ -907,6 +928,17 @@
     window.peladaTimes = JSON.parse(localStorage.getItem('teimoso_peladaTimes')) || { "2026-11-03": "07:00" };
     window.currentDate = window.datesList[0];
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
+    
+    // Assegura que os atletas especiais tenham sua effectiveStartDate configurada mesmo ao carregar dados antigos
+    defaultAthletes.forEach(defA => {
+      const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
+      if (!existing) {
+        window.athletes.push(defA);
+      } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
+        existing.effectiveStartDate = defA.effectiveStartDate;
+      }
+    });
+
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
     window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || initialMockFinancial;
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
@@ -1404,7 +1436,18 @@
           const data = docSnap.data();
           if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
+          if (data.athletes && data.athletes.length > 0) {
+            window.athletes = data.athletes;
+            // Garante a presença dos novos atletas mesmo se a lista salva no banco for anterior
+            defaultAthletes.forEach(defA => {
+              const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
+              if (!existing) {
+                window.athletes.push(defA);
+              } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
+                existing.effectiveStartDate = defA.effectiveStartDate;
+              }
+            });
+          }
           if (data.presences) window.presences = data.presences;
           if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.absenceFines) window.absenceFines = data.absenceFines;
@@ -1473,9 +1516,8 @@
         if (y < currentYear) return false;
 
         const peladaDate = new Date(y, m - 1, day, 0, 0, 0);
-        if (peladaDate <= today) return true; // Peladas que já aconteceram ou hoje
+        if (peladaDate <= today) return true;
 
-        // Pelada futura: só libera a partir da véspera (1 dia antes)
         const eve = new Date(peladaDate);
         eve.setDate(eve.getDate() - 1);
         eve.setHours(0, 0, 0, 0);
@@ -1652,7 +1694,6 @@
         }
 
         // REGRA ESTRITA: Multa de R$ 30,00 só é aplicada a partir de 01/11/2026.
-        // Faltas em datas anteriores são mantidas estritamente para fins estatísticos.
         if (newStatus === 'FALTA' && window.currentDate >= '2026-11-01') {
           const fineExists = window.absenceFines[athleteId].some(f => f.date === window.currentDate);
           if (!fineExists) {
@@ -1762,7 +1803,6 @@
 
       const rawFines = window.absenceFines[athleteId] || [];
       const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
-      // Considera inadimplente apenas faltas não quitadas com data a partir de 01/11/2026
       const hasUnpaidFine = athleteFines.some(f => !f.paid && f.date >= '2026-11-01');
       if (hasUnpaidFine) return 'overdue';
 
@@ -1777,8 +1817,6 @@
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-      // Ordenar: Primeiro os confirmados em ordem cronológica (quem confirmou primeiro fica no topo),
-      // e em seguida os demais atletas por ordem alfabética.
       const sortedAthletes = [...window.athletes].sort((a, b) => {
         const pA = dayPresences[a.id];
         const pB = dayPresences[b.id];
@@ -1830,6 +1868,17 @@
           `;
         }
 
+        const effectiveStart = getAthleteEffectiveStartDate(athlete);
+        let startBadgeHtml = '';
+        if (effectiveStart) {
+          const [sy, sm, sd] = effectiveStart.split('-');
+          startBadgeHtml = `
+            <span class="text-[9px] font-bold text-sky-400 bg-sky-950/60 border border-sky-800/60 px-1.5 py-0.5 rounded" title="Estatísticas consideradas a partir desta data">
+              Início: ${sd}/${sm}/${sy}
+            </span>
+          `;
+        }
+
         const tr = document.createElement('tr');
         tr.className = athlete.isSuspended ? "bg-rose-950/20 hover:bg-rose-900/30 transition-colors" : "hover:bg-slate-900/60 transition-colors";
 
@@ -1847,7 +1896,6 @@
             </div>
           `;
         } else if (!canControlPresence) {
-          // Usuário comum visualizando outro atleta (apenas leitura do status)
           let currentStatusBadge = `<span class="text-[10px] text-slate-500 font-bold">Pendente</span>`;
           if (status === 'CONFIRMADO') {
             currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${athlete.position === 'EXTRA' ? 'Confirmado Resenha' : 'Confirmado'}</span>`;
@@ -1903,6 +1951,7 @@
                   <span class="text-sm ${athlete.isSuspended ? 'text-rose-300' : ''}">${athlete.name}</span>
                   ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase">Suspenso</span>` : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
+                  ${startBadgeHtml}
                 </div>
                 ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
@@ -2006,14 +2055,19 @@
           athlete.position = position; athlete.stars = selectedStarsForNewAthlete;
           athlete.isSuspended = isSuspended; athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
+          // Preserva ou atualiza a data efetiva se for um dos atletas de regra
+          const autoStart = getAthleteEffectiveStartDate({ name });
+          if (autoStart) athlete.effectiveStartDate = autoStart;
         }
         window.showToast("Atleta atualizado!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
+        const autoStart = getAthleteEffectiveStartDate({ name });
         window.athletes.push({
           id: newId, name: name, position: position, stars: selectedStarsForNewAthlete,
           phone: phone, photoUrl: photoUrl, isKeeper: (position === 'Goleiro'),
-          monthlyFee: monthlyFee, isSuspended: isSuspended
+          monthlyFee: monthlyFee, isSuspended: isSuspended,
+          effectiveStartDate: autoStart || null
         });
         window.showToast("Atleta cadastrado!", "success");
       }
@@ -2481,7 +2535,6 @@
         });
 
         // --- CÁLCULO E RENDERIZAÇÃO DAS MULTAS POR FALTA (R$ 30,00 + R$ 1,00/dia) ---
-        // Apenas para faltas datadas a partir de 01/11/2026
         const rawFines = window.absenceFines[athlete.id] || [];
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let athleteTotalFinesBase = 0;
@@ -2689,7 +2742,6 @@
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          // Apenas faltas a partir de 01/11/2026 entram na mensagem de cobrança
           if (!fine.paid && fine.date >= '2026-11-01') {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
@@ -2728,25 +2780,70 @@
       });
     };
 
+    // --- RELATÓRIOS (CONSIDERANDO DATA DE INÍCIO INDIVIDUAL) ---
     window.renderReports = function() {
-      const tbody = document.getElementById('reportsTableBody'); tbody.innerHTML = '';
-      const totalPeladas = window.datesList.length;
+      const tbody = document.getElementById('reportsTableBody');
+      tbody.innerHTML = '';
+
       window.athletes.sort((a, b) => a.name.localeCompare(b.name)).forEach(athlete => {
-        let confCount = window.datesList.reduce((acc, d) => acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0), 0);
+        const effectiveStart = getAthleteEffectiveStartDate(athlete);
+        
+        // Filtra apenas as peladas elegíveis para o atleta conforme sua data de início
+        const eligibleDates = effectiveStart
+          ? window.datesList.filter(d => d >= effectiveStart)
+          : window.datesList;
+
+        const totalPeladas = eligibleDates.length;
+        let confCount = eligibleDates.reduce((acc, d) => {
+          return acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0);
+        }, 0);
+
         const rate = totalPeladas > 0 ? Math.round((confCount / totalPeladas) * 100) : 0;
         const finStatus = getAthleteFinancialStatus(athlete.id);
-        const tr = document.createElement('tr'); tr.className = "hover:bg-slate-900/60";
-        tr.innerHTML = `<td class="py-3 px-4 font-bold text-slate-200">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase">Suspenso</span>' : ''}</td><td class="py-3 px-4 text-slate-400">${athlete.position}</td><td class="py-3 px-4 text-center font-bold text-slate-300">${confCount} / ${totalPeladas}</td><td class="py-3 px-4 text-center font-bold text-emerald-400">${rate}%</td><td class="py-3 px-4 text-right"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30'}">${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}</span></td>`;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/60";
+
+        let startHint = '';
+        if (effectiveStart) {
+          const [sy, sm, sd] = effectiveStart.split('-');
+          startHint = `<span class="block text-[9px] text-sky-400 font-normal">A partir de ${sd}/${sm}/${sy}</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-200">
+            ${athlete.name}
+            ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase ml-1">Suspenso</span>' : ''}
+            ${startHint}
+          </td>
+          <td class="py-3 px-4 text-slate-400">${athlete.position}</td>
+          <td class="py-3 px-4 text-center font-bold text-slate-300">${confCount} / ${totalPeladas}</td>
+          <td class="py-3 px-4 text-center font-bold text-emerald-400">${rate}%</td>
+          <td class="py-3 px-4 text-right">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30'}">
+              ${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}
+            </span>
+          </td>
+        `;
         tbody.appendChild(tr);
       });
     };
 
     window.exportReportsCSV = function() {
-      let csv = "Atleta,Posicao,Presencas,TotalPeladas,TaxaAssiduidade\n";
-      const totalPeladas = window.datesList.length;
+      let csv = "Atleta,Posicao,Presencas,TotalPeladasElegiveis,TaxaAssiduidade,DataInicioEstatistica\n";
       window.athletes.forEach(athlete => {
-        let confCount = window.datesList.reduce((acc, d) => acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0), 0);
-        csv += `"${athlete.name}","${athlete.position}",${confCount},${totalPeladas},"${Math.round((confCount / totalPeladas) * 100)}%"\n`;
+        const effectiveStart = getAthleteEffectiveStartDate(athlete);
+        const eligibleDates = effectiveStart
+          ? window.datesList.filter(d => d >= effectiveStart)
+          : window.datesList;
+
+        const totalPeladas = eligibleDates.length;
+        let confCount = eligibleDates.reduce((acc, d) => {
+          return acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0);
+        }, 0);
+
+        const rate = totalPeladas > 0 ? Math.round((confCount / totalPeladas) * 100) : 0;
+        const startStr = effectiveStart || "Inicio do Ano";
+        csv += `"${athlete.name}","${athlete.position}",${confCount},${totalPeladas},"${rate}%","${startStr}"\n`;
       });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       a.download = `relatorio_fcc.csv`; a.click(); window.showToast("Relatório exportado!", "success");
