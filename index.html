@@ -162,6 +162,9 @@
             <button onclick="openNewAthleteModal()" id="btnAddAthlete" class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
               <i class="fa-solid fa-user-plus"></i> Novo Atleta
             </button>
+            <button onclick="exportStandardReport()" id="btnExportStandard" class="hidden px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-950/50 flex items-center gap-2">
+              <i class="fa-solid fa-file-lines"></i> Exportar Modelo Padrão
+            </button>
             <button onclick="exportListToWhatsapp()" id="btnExportListWhatsapp" class="hidden px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
               <i class="fa-solid fa-list-check"></i> Lista p/ Grupo
             </button>
@@ -209,7 +212,7 @@
 
           <div onclick="filterPresenceCards(null)" class="bg-slate-900 border border-slate-800 hover:border-slate-600 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
             <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-slate-200 transition-colors">Total Atletas</span>
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-slate-200 transition-colors">Total Atletas (Ativos)</span>
               <i class="fa-solid fa-users text-slate-400 text-sm"></i>
             </div>
             <div class="text-2xl font-black text-slate-200" id="statTotal">0</div>
@@ -264,7 +267,7 @@
             <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
               <i class="fa-solid fa-shuffle text-emerald-400"></i> Sorteio Equilibrado de Times
             </h3>
-            <p class="text-xs text-slate-400 mt-1">O sistema distribui os goleiros e equilibrará as estrelas automaticamente em até 8 jogadores por equipe.</p>
+            <p class="text-xs text-slate-400 mt-1">O sistema distribui os goleiros e equilibrará as estrelas automaticamente em até 8 jogadores por equipe (Atletas Extras vão para a resenha).</p>
           </div>
           <button onclick="generateTeams()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
             <i class="fa-solid fa-dice text-sm"></i> Sortear Times Agora
@@ -467,6 +470,7 @@
               <option value="Volante">Volante</option>
               <option value="Meia">Meia</option>
               <option value="Atacante">Atacante</option>
+              <option value="EXTRA">EXTRA (Somente Resenha)</option>
             </select>
           </div>
           <div>
@@ -565,7 +569,7 @@
       </div>
 
       <p class="text-xs text-slate-400">
-        Pelada do dia <span id="massModalDate" class="font-bold text-emerald-400"></span>. Selecione o grupo abaixo para carregar a fila de espera e envie individualmente para cada atleta:
+        Pelada do dia <span id="massModalDate" class="font-bold text-emerald-400"></span>. Apenas atletas ativos participam do disparo automático:
       </p>
 
       <!-- BOTÕES DE FILTRO DA FILA -->
@@ -661,7 +665,8 @@
       "Lateral": { tag: "LAT", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/40" },
       "Volante": { tag: "VOL", color: "bg-indigo-500/20 text-indigo-400 border-indigo-500/40" },
       "Meia": { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" },
-      "Atacante": { tag: "ATA", color: "bg-rose-500/20 text-rose-400 border-rose-500/40" }
+      "Atacante": { tag: "ATA", color: "bg-rose-500/20 text-rose-400 border-rose-500/40" },
+      "EXTRA": { tag: "EXTRA", color: "bg-purple-500/20 text-purple-400 border-purple-500/40" }
     };
 
     const defaultAthletes = [
@@ -687,6 +692,7 @@
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
     window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || initialMockFinancial;
+    window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
 
     function repairFinancialData(saved) {
       if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) return initialMockFinancial;
@@ -842,11 +848,13 @@
         localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
         localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
         localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
+        localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
         await setDoc(dbDocRef, {
           datesList: window.datesList,
           athletes: window.athletes,
           presences: window.presences,
           financialPayments: window.financialPayments,
+          alwaysUpToDateMap: window.alwaysUpToDateMap,
           activityLogs: window.activityLogs,
           notificationSettings: window.notificationSettings,
           updatedAt: new Date().toISOString()
@@ -978,6 +986,7 @@
         document.getElementById('adminDateControls').classList.remove('hidden');
         document.getElementById('adminDateControls').classList.add('flex');
         document.getElementById('btnAddAthlete').classList.remove('hidden');
+        document.getElementById('btnExportStandard').classList.remove('hidden');
         document.getElementById('btnMassWhatsapp').classList.remove('hidden');
         document.getElementById('btnExportListWhatsapp').classList.remove('hidden');
         document.getElementById('btnActivityLog').classList.remove('hidden');
@@ -989,6 +998,7 @@
         document.getElementById('adminDateControls').classList.add('hidden');
         document.getElementById('adminDateControls').classList.remove('flex');
         document.getElementById('btnAddAthlete').classList.add('hidden');
+        document.getElementById('btnExportStandard').classList.add('hidden');
         document.getElementById('btnMassWhatsapp').classList.add('hidden');
         document.getElementById('btnExportListWhatsapp').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.add('hidden');
@@ -1046,6 +1056,7 @@
           if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
           if (data.presences) window.presences = data.presences;
+          if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.activityLogs) window.activityLogs = data.activityLogs;
           if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
           window.financialPayments = repairFinancialData(data.financialPayments);
@@ -1212,6 +1223,7 @@
     };
 
     function getAthleteFinancialStatus(athleteId) {
+      if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
       const now = new Date();
       const payments = window.financialPayments[athleteId] || {};
       for (let mIndex = 0; mIndex < months.length; mIndex++) {
@@ -1239,10 +1251,10 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
         const status = pRecord.status;
 
-        countTotal++;
+        if (!athlete.isSuspended) countTotal++;
         if (status === 'CONFIRMADO') countConf++;
         else if (status === 'JUSTIFICADO') countJust++;
-        else if (status === 'FORA') countOut++;
+        else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
 
         if (searchTerm && !athlete.name.toLowerCase().includes(searchTerm)) return;
         if (activeStatusFilter && status !== activeStatusFilter) return;
@@ -1272,7 +1284,7 @@
               ${athlete.isSuspended ? `<span class="text-[9px] font-black px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 uppercase">Suspenso (Admin Liberado)</span>` : ''}
               <div class="grid grid-cols-2 gap-1 sm:gap-1.5 w-full max-w-[155px] mx-auto">
                 <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">CONFIRMADO</button>
+                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
                   <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'JUSTIFICADO' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">JUSTIFICAR</button>
                 </div>
                 <div class="flex flex-col gap-1 sm:gap-1.5">
@@ -1456,7 +1468,7 @@
       });
     };
 
-    // --- MENSAGEM INDIVIDUAL E FILA DE ESPERA WHATSAPP ---
+    // --- MENSAGEM INDIVIDUAL E FILA DE ESPERA WHATSAPP (APENAS ATIVOS) ---
     function buildInviteMessageForAthlete(athlete) {
       const currentUrl = window.location.href.split('?')[0];
       const linkConfirmar = `${currentUrl}?acao=confirmar&atleta=${athlete.id}&data=${window.currentDate}`;
@@ -1478,7 +1490,7 @@
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
 
-    // --- FILA DE ESPERA DE DISPARO EM MASSA ---
+    // --- FILA DE ESPERA DE DISPARO EM MASSA (APENAS ATLETAS ATIVOS) ---
     window.openWhatsappMassModal = function() {
       if (!window.isAdmin) {
         window.showToast("Apenas administradores podem enviar mensagens de convocação.", "error");
@@ -1499,7 +1511,7 @@
 
       const sorted = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
       sorted.forEach(a => {
-        if (a.isSuspended || !a.phone) return;
+        if (a.isSuspended || a.position === 'EXTRA' || !a.phone) return;
         const p = dayPresences[a.id]?.status;
         if (type === 'confirmed' && p === 'CONFIRMADO') window.whatsappQueueList.push(a);
         else if (type === 'pending' && (!p || p === '')) window.whatsappQueueList.push(a);
@@ -1517,7 +1529,7 @@
       if (window.whatsappQueueList.length === 0) {
         header.classList.add('hidden');
         header.classList.remove('flex');
-        container.innerHTML = `<div class="text-center text-slate-500 py-10 text-xs font-bold">Nenhum atleta encontrado para este filtro com telefone cadastrado.</div>`;
+        container.innerHTML = `<div class="text-center text-slate-500 py-10 text-xs font-bold">Nenhum atleta ativo encontrado para este filtro com telefone cadastrado.</div>`;
         return;
       }
 
@@ -1565,21 +1577,84 @@
       window.triggerQueueItemSend(nextAthlete.id);
     };
 
-    // --- EXPORTAR LISTA FORMATADA PARA GRUPO (2 GOLEIROS PRIMEIRO + LINHA + EXTRAS COM CHOPP) ---
+    // --- EXPORTAR MODELO PADRÃO (SEPARANDO EXTRAS PARA RESENHA) ---
+    window.exportStandardReport = function() {
+      if (!window.isAdmin) {
+        window.showToast("Apenas administradores podem exportar o modelo padrão.", "error");
+        return;
+      }
+      const dayPresences = window.presences[window.currentDate] || {};
+      let text = `========================================\n`;
+      text += `⚽ RELATÓRIO PADRÃO - TEIMOSO F.C.C. ⚽\n`;
+      text += `📅 Data da Pelada: ${formatDateDisplay(window.currentDate)}\n`;
+      text += `========================================\n\n`;
+
+      text += `--- ATLETAS CONFIRMADOS ---\n`;
+      let confCount = 0;
+      window.athletes.forEach(a => {
+        const st = dayPresences[a.id]?.status;
+        if (st === 'CONFIRMADO' && a.position !== 'EXTRA') {
+          confCount++;
+          text += `${confCount}. ${a.name} (${a.position}) - ⭐${a.stars}\n`;
+        }
+      });
+      if (confCount === 0) text += `Nenhum confirmado.\n`;
+
+      text += `\n--- EXTRAS (CONFIRMADOS PARA A RESENHA) ---\n`;
+      let extraConfCount = 0;
+      window.athletes.forEach(a => {
+        const st = dayPresences[a.id]?.status;
+        if (a.position === 'EXTRA' && st === 'CONFIRMADO') {
+          extraConfCount++;
+          text += `${extraConfCount}. ${a.name} - 🍺 Confirmado para a Resenha ✅\n`;
+        }
+      });
+      if (extraConfCount === 0) text += `Nenhum extra confirmado para a resenha.\n`;
+
+      text += `\n--- JUSTIFICADOS / FORA ---\n`;
+      window.athletes.forEach(a => {
+        const p = dayPresences[a.id];
+        const st = p?.status;
+        if (a.position === 'EXTRA') {
+          if (!st || st === 'FORR' || st === 'FORA') {
+            text += `- ${a.name} (EXTRA): [FORA DA RESENHA]\n`;
+          }
+        } else {
+          if (st && st !== 'CONFIRMADO') {
+            text += `- ${a.name}: [${st}] ${p.reason ? 'Motivo: ' + p.reason : ''}\n`;
+          }
+        }
+      });
+
+      text += `\n========================================\n`;
+      text += `Gerado por Teimoso F.C.C. System 2026\n`;
+
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `relatorio_padrao_teimoso_${window.currentDate}.txt`;
+      a.click();
+      window.showToast("Modelo padrão exportado com sucesso!", "success");
+    };
+
+    // --- EXPORTAR LISTA FORMATADA PARA GRUPO (EXTRAS SEPARADOS) ---
     window.exportListToWhatsapp = function() {
       if (!window.isAdmin) {
         window.showToast("Apenas administradores podem exportar a lista.", "error");
         return;
       }
       const dayPresences = window.presences[window.currentDate] || {};
-      const activeAthletes = window.athletes.filter(a => !a.isSuspended).sort((a, b) => a.name.localeCompare(b.name));
+      const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort((a, b) => a.name.localeCompare(b.name));
+      const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort((a, b) => a.name.localeCompare(b.name));
 
       const confirmedKeepers = activeAthletes.filter(a => (a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO');
       const confirmedOutfield = activeAthletes.filter(a => !(a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO');
+      const confirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status === 'CONFIRMADO');
+      const unconfirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status !== 'CONFIRMADO');
 
       const mainKeepers = confirmedKeepers.slice(0, 2);
       const extraKeepers = confirmedKeepers.slice(2);
-      const extrasAndOut = activeAthletes.filter(a => dayPresences[a.id]?.status !== 'CONFIRMADO').concat(extraKeepers);
+      const extrasAndOut = activeAthletes.filter(a => dayPresences[a.id]?.status !== 'CONFIRMADO').concat(extraKeepers).concat(unconfirmedExtras);
 
       let text = `⚽ *LISTA OFICIAL - TEIMOSO F.C.C.* ⚽\n📅 *Data:* ${formatDateDisplay(window.currentDate)}\n\n`;
       text += `🧤 *GOLEIROS CONFIRMADOS:*\n`;
@@ -1595,11 +1670,17 @@
         confirmedOutfield.forEach((p, i) => { text += `${i + 1}. ${p.name} ✅\n`; });
       }
 
-      text += `\n🍺 *EXTRAS / FORA DA PELADA (${extrasAndOut.length}):*\n`;
+      if (confirmedExtras.length > 0) {
+        text += `\n🍺 *EXTRAS (SOMENTE RESENHA - CONFIRMADOS):*\n`;
+        confirmedExtras.forEach((ex, i) => { text += `${i + 1}. ${ex.name} ✅ (Resenha)\n`; });
+      }
+
+      text += `\n❌ *OUTROS / FORA DA PELADA (${extrasAndOut.length}):*\n`;
       extrasAndOut.forEach((x, i) => {
         const st = dayPresences[x.id]?.status;
         const reason = dayPresences[x.id]?.reason ? ` (${dayPresences[x.id].reason})` : '';
-        text += `${i + 1}. ${x.name} 🍺 ${st === 'JUSTIFICADO' ? '⚠️' + reason : '❌'}\n`;
+        const isExtraLabel = x.position === 'EXTRA' ? ' [EXTRA]' : '';
+        text += `${i + 1}. ${x.name}${isExtraLabel} ❌ ${st === 'JUSTIFICADO' ? '⚠️' + reason : ''}\n`;
       });
 
       text += `\n⏰ _Lembrando: Confirmações encerram às 18h do dia anterior. Após esse horário, falar com a direção ou presidência!_`;
@@ -1607,10 +1688,10 @@
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // --- SORTEIO DE TIMES ---
+    // --- SORTEIO DE TIMES (IGNORA EXTRAS) ---
     window.generateTeams = function() {
       const dayPresences = window.presences[window.currentDate] || {};
-      const confirmedAthletes = window.athletes.filter(a => !a.isSuspended && dayPresences[a.id]?.status === 'CONFIRMADO');
+      const confirmedAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA' && dayPresences[a.id]?.status === 'CONFIRMADO');
       if (confirmedAthletes.length === 0) {
         document.getElementById('teamsContainer').innerHTML = `<div class="col-span-2 bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 text-center text-slate-500"><i class="fa-solid fa-triangle-exclamation text-4xl mb-3 text-amber-500"></i><p class="text-xs font-medium text-slate-300">Nenhum atleta confirmado.</p></div>`;
         return window.showToast("Nenhum atleta confirmado.");
@@ -1639,7 +1720,7 @@
       window.showToast("Sorteio realizado!", "success");
     };
 
-    // --- FINANCEIRO (FILTROS E RESTRIÇÃO DE EDIÇÃO A PABLO PADILHA E MARCÃO) ---
+    // --- FINANCEIRO ---
     window.setFinancialFilter = function(filterType) {
       if (activeFinancialFilter === filterType) {
         activeFinancialFilter = null;
@@ -1693,6 +1774,7 @@
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
         const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30' : 'text-rose-400 bg-rose-500/20 border border-rose-500/30';
         const isExpanded = window.expandedFinCards.has(athlete.id);
+        const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
 
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
@@ -1749,8 +1831,15 @@
               </div>
             </button>
             <div class="${isExpanded ? 'block' : 'hidden'} border-t border-slate-800 bg-slate-950/50">
-              <div class="p-4">
-                <div class="flex justify-between mb-4">
+              <div class="p-4 space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox" id="always_up_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} ${disableInput} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
+                    <label for="always_up_${athlete.id}" class="text-xs font-bold text-slate-200 ${window.canEditFinancial ? 'cursor-pointer' : ''}">Forçar Status: Considerar Sempre em Dia</label>
+                  </div>
+                  <span class="text-[10px] text-slate-400">Exclusivo Marcão / Pablo Padilha</span>
+                </div>
+                <div class="flex justify-between">
                   <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades</h4>
                   ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-500/30"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
                 </div>
@@ -1762,6 +1851,18 @@
       document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
       document.getElementById('finTotalInterest').innerText = `R$ ${totalGeneralInterest.toFixed(2)}`;
       document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
+    };
+
+    window.toggleAlwaysUpToDate = function(athleteId, isChecked) {
+      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem alterar esta opção.");
+      window.alwaysUpToDateMap[athleteId] = isChecked;
+      const target = window.athletes.find(a => a.id === athleteId);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Definiu "Sempre em Dia" como ${isChecked ? 'ATIVO' : 'INATIVO'} para ${target?.name || ''}`);
+      window.saveData();
+      renderFinancial();
+      renderAthletesList();
+      renderReports();
+      window.showToast("Status financeiro atualizado!", "success");
     };
 
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
