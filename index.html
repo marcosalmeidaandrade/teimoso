@@ -679,7 +679,8 @@
       { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 10, name: "Onofre", position: "Zagueiro", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
+      { id: 10, name: "Onofre", position: "Zagueiro", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 11, name: "Ziel", position: "Meia", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
     ];
 
     const initialMockFinancial = {
@@ -714,6 +715,9 @@
     }
     if (!window.athletes.some(a => a.name.toUpperCase().includes('ONOFRE'))) {
       window.athletes.push(defaultAthletes[9]);
+    }
+    if (!window.athletes.some(a => a.name.toUpperCase().includes('ZIEL'))) {
+      window.athletes.push(defaultAthletes[10]);
     }
 
     function repairFinancialData(saved) {
@@ -1834,7 +1838,8 @@
           const isJulioSpecial = athleteNameNorm.includes('JULIO') && mKey === 'out';
           const isSapaoSpecial = athleteNameNorm.includes('SAPAO') && mKey === 'set';
           const isOnofreSpecial = athleteNameNorm.includes('ONOFRE') && mKey === 'ago';
-          const isSpecialExempt = isJulioSpecial || isSapaoSpecial || isOnofreSpecial;
+          const isZielSpecial = athleteNameNorm.includes('ZIEL') && mKey === 'nov';
+          const isSpecialExempt = isJulioSpecial || isSapaoSpecial || isOnofreSpecial || isZielSpecial;
 
           let interest = 0;
           if (!isSpecialExempt && !isPaid && now >= firstDayAfterDue && !athlete.isSuspended) {
