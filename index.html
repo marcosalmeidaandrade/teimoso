@@ -699,6 +699,7 @@
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
     window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || initialMockFinancial;
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
+    window.absenceFines = JSON.parse(localStorage.getItem('teimoso_absenceFines')) || {};
 
     if (!window.athletes.some(a => a.name.toUpperCase().includes('ANDINHO'))) {
       window.athletes.push(defaultAthletes[6]);
@@ -887,12 +888,14 @@
         localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
         localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
         localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
+        localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
         await setDoc(dbDocRef, {
           datesList: window.datesList,
           athletes: window.athletes,
           presences: window.presences,
           financialPayments: window.financialPayments,
           alwaysUpToDateMap: window.alwaysUpToDateMap,
+          absenceFines: window.absenceFines,
           activityLogs: window.activityLogs,
           notificationSettings: window.notificationSettings,
           updatedAt: new Date().toISOString()
@@ -1094,6 +1097,7 @@
           if (data.activityLogs) window.activityLogs = data.activityLogs;
           if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
           if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
+          if (data.absenceFines) window.absenceFines = data.absenceFines;
           window.financialPayments = repairFinancialData(data.financialPayments);
           pruneActivityLogs();
 
@@ -1217,6 +1221,9 @@
       if (current === newStatus) {
         window.presences[window.currentDate][athleteId] = { status: null, reason: '', attended: false };
         window.recordUserInteraction(actor, `Desmarcou status de ${targetAthlete?.name || 'Atleta'} (${formatDateDisplay(window.currentDate)})`);
+        if (current === 'FALTA' && window.absenceFines[athleteId]) {
+          delete window.absenceFines[athleteId][window.currentDate];
+        }
       } else {
         if (newStatus === 'JUSTIFICADO') {
           currentJustifyAthleteId = athleteId;
@@ -1224,16 +1231,33 @@
           document.getElementById('justifyModal').classList.remove('hidden');
           return;
         }
+
+        if (current === 'FALTA' && newStatus !== 'FALTA' && window.absenceFines[athleteId]) {
+          delete window.absenceFines[athleteId][window.currentDate];
+        }
+
         window.presences[window.currentDate][athleteId] = { status: newStatus, reason: '', attended: newStatus === 'CONFIRMADO' ? currentAttended : false };
         window.recordUserInteraction(actor, `Marcou ${newStatus} para ${targetAthlete?.name || 'Atleta'} (${formatDateDisplay(window.currentDate)})`);
         
         if (newStatus === 'CONFIRMADO') {
           window.showAnimatedConfirmation();
+        } else if (newStatus === 'FALTA') {
+          if (!window.absenceFines[athleteId]) window.absenceFines[athleteId] = {};
+          if (!window.absenceFines[athleteId][window.currentDate]) {
+            window.absenceFines[athleteId][window.currentDate] = {
+              baseAmount: 30,
+              paid: false,
+              paidAmount: 0,
+              createdAt: window.currentDate
+            };
+          }
+          window.recordUserInteraction(actor, `Gerou multa de FALTA (R$ 30,00 + R$ 1/dia) para ${targetAthlete?.name || 'Atleta'} da data ${formatDateDisplay(window.currentDate)}`);
         }
       }
 
       window.saveData();
       renderAthletesList();
+      renderFinancial();
     };
 
     window.saveJustification = function() {
@@ -1257,6 +1281,10 @@
     function getAthleteFinancialStatus(athleteId) {
       if (window.alwaysUpToDateMap && window.alwaysUpToDateMap[athleteId] === true) {
         return 'uptodate';
+      }
+      const fines = window.absenceFines?.[athleteId] || {};
+      for (const dateKey in fines) {
+        if (!fines[dateKey].paid) return 'overdue';
       }
       const now = new Date();
       const payments = window.financialPayments[athleteId] || {};
@@ -1828,6 +1856,56 @@
         const isExpanded = window.expandedFinCards.has(athlete.id);
         const isAlwaysUpToDate = window.alwaysUpToDateMap && window.alwaysUpToDateMap[athlete.id] === true;
 
+        // --- CÁLCULO DAS MULTAS POR FALTA (R$ 30 + R$ 1/dia) ---
+        const athleteFines = window.absenceFines?.[athlete.id] || {};
+        let finesTotalDue = 0, finesTotalInterest = 0, finesTotalPaid = 0;
+        let finesHtmlList = '';
+
+        for (const [fineDate, fineData] of Object.entries(athleteFines)) {
+          if (fineData.paid) {
+            finesTotalPaid += Number(fineData.paidAmount || fineData.baseAmount || 30);
+            finesHtmlList += `
+              <div class="flex items-center justify-between p-2.5 bg-slate-900 border border-emerald-500/30 rounded-xl text-xs">
+                <div>
+                  <span class="font-bold text-slate-200">Falta na Pelada: ${formatDateDisplay(fineDate)}</span>
+                  <div class="text-[10px] text-emerald-400 font-semibold">Quitado: R$ ${(fineData.paidAmount || fineData.baseAmount || 30).toFixed(2)}</div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">PAGO</span>
+              </div>
+            `;
+          } else {
+            const [fy, fm, fd] = fineDate.split('-');
+            const fineDay = new Date(fy, fm - 1, fd, 23, 59, 59);
+            let daysLate = 0;
+            if (now > fineDay) {
+              daysLate = Math.floor((now - fineDay) / (1000 * 60 * 60 * 24));
+            }
+            const fineInterest = daysLate * 1.00;
+            const totalFine = (fineData.baseAmount || 30) + fineInterest;
+            finesTotalDue += totalFine;
+            finesTotalInterest += fineInterest;
+
+            finesHtmlList += `
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-rose-950/20 border border-rose-500/40 rounded-xl text-xs">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-black text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> Falta não justificada:</span>
+                    <span class="font-bold text-slate-200">${formatDateDisplay(fineDate)}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">
+                    Multa base: <strong class="text-slate-200">R$ 30,00</strong> + Juros (${daysLate} dias a R$ 1,00/dia): <strong class="text-amber-400">R$ ${fineInterest.toFixed(2)}</strong> = <strong class="text-rose-400">Total: R$ ${totalFine.toFixed(2)}</strong>
+                  </div>
+                </div>
+                ${window.canEditFinancial ? `
+                  <button onclick="settleAbsenceFine(${athlete.id}, '${fineDate}', ${totalFine})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] transition-all flex items-center gap-1.5 shrink-0 shadow">
+                    <i class="fa-solid fa-check"></i> Baixar Débito
+                  </button>
+                ` : '<span class="text-[10px] font-bold text-rose-400">Pendente</span>'}
+              </div>
+            `;
+          }
+        }
+
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
           const dueDate = new Date(2026, mIndex, 15);
@@ -1883,11 +1961,11 @@
         });
 
         if (!athlete.isSuspended) {
-          totalGeneralPaid += athleteTotalPaid;
-          totalGeneralDue += athleteTotalDue;
-          totalGeneralInterest += athleteTotalInterest;
+          totalGeneralPaid += (athleteTotalPaid + finesTotalPaid);
+          totalGeneralDue += (athleteTotalDue + finesTotalDue);
+          totalGeneralInterest += (athleteTotalInterest + finesTotalInterest);
         } else {
-          totalGeneralPaid += athleteTotalPaid;
+          totalGeneralPaid += (athleteTotalPaid + finesTotalPaid);
         }
 
         // Se o usuário logado não for admin, exibe somente o seu próprio registro
@@ -1895,9 +1973,13 @@
           return;
         }
 
-        if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
-        if (activeFinancialFilter === 'interest' && athleteTotalInterest <= 0) return;
-        if (activeFinancialFilter === 'due' && (athleteTotalDue <= 0 || athlete.isSuspended)) return;
+        const athleteCombinedDue = athleteTotalDue + finesTotalDue;
+        const athleteCombinedPaid = athleteTotalPaid + finesTotalPaid;
+        const athleteCombinedInterest = athleteTotalInterest + finesTotalInterest;
+
+        if (activeFinancialFilter === 'paid' && athleteCombinedPaid <= 0) return;
+        if (activeFinancialFilter === 'interest' && athleteCombinedInterest <= 0) return;
+        if (activeFinancialFilter === 'due' && (athleteCombinedDue <= 0 || athlete.isSuspended)) return;
 
         container.innerHTML += `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
@@ -1908,10 +1990,10 @@
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${finLabelColor} hidden sm:inline-block">${finLabel}</span>
               </div>
               <div class="flex items-center justify-between md:justify-end gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto">
-                <div class="flex flex-col text-slate-400"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-400 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-400"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-400 text-sm">R$ ${athleteCombinedPaid.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-200 text-sm">R$ ${athleteInstallmentsDue.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-400 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-400 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-400 text-sm">R$ ${athleteCombinedInterest.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-400 text-sm">R$ ${athleteCombinedDue.toFixed(2)}</span></div>
                 <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-500 transition-transform ${isExpanded ? 'rotate-180 text-emerald-400' : 'group-hover:text-emerald-400'}"></i></div>
               </div>
             </button>
@@ -1926,7 +2008,24 @@
                   </div>
                   ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-500/30"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
+
+                <!-- SEÇÃO SEPARADA: MULTAS POR FALTA -->
+                <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                  <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                    <h5 class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+                      <i class="fa-solid fa-receipt text-rose-500"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia a contar a pelada)
+                    </h5>
+                    <span class="text-[11px] font-black ${finesTotalDue > 0 ? 'text-rose-400' : 'text-emerald-400'}">
+                      ${finesTotalDue > 0 ? `Débito em aberto: R$ ${finesTotalDue.toFixed(2)}` : 'Sem multas pendentes'}
+                    </span>
+                  </div>
+                  ${finesHtmlList ? `<div class="space-y-2">${finesHtmlList}</div>` : `<p class="text-[11px] text-slate-500 italic">Nenhuma falta registrada com multa para este atleta.</p>`}
+                </div>
+
+                <div>
+                  <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2 mb-3"><i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades Ordinárias</h4>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
+                </div>
               </div>
             </div>
           </div>`;
@@ -1934,6 +2033,20 @@
       document.getElementById('finTotalPaid').innerText = `R$ ${totalGeneralPaid.toFixed(2)}`;
       document.getElementById('finTotalInterest').innerText = `R$ ${totalGeneralInterest.toFixed(2)}`;
       document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
+    };
+
+    window.settleAbsenceFine = function(athleteId, fineDate, totalAmount) {
+      if (!window.canEditFinancial) return window.showToast("Apenas Marcão e Pablo Padilha podem baixar multas.");
+      if (!window.absenceFines[athleteId] || !window.absenceFines[athleteId][fineDate]) return;
+      window.absenceFines[athleteId][fineDate].paid = true;
+      window.absenceFines[athleteId][fineDate].paidAmount = totalAmount;
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Baixou multa por falta de ${athlete?.name || 'Atleta'} (${formatDateDisplay(fineDate)}) no valor de R$ ${totalAmount.toFixed(2)}`);
+      window.saveData();
+      renderFinancial();
+      renderAthletesList();
+      renderReports();
+      window.showToast("Multa por falta baixada com sucesso!", "success");
     };
 
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
