@@ -1676,11 +1676,14 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false, confirmedAt: null };
         const status = pRecord.status;
 
-        if (!athlete.isSuspended) countTotal++;
-        if (status === 'CONFIRMADO') countConf++;
-        else if (status === 'JUSTIFICADO') countJust++;
-        else if (status === 'FALTA') countFaltas++;
-        else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
+        // Atletas suspensos NÃO são somados em nenhum botão/contador da aba Presença
+        if (!athlete.isSuspended) {
+          countTotal++;
+          if (status === 'CONFIRMADO') countConf++;
+          else if (status === 'JUSTIFICADO') countJust++;
+          else if (status === 'FALTA') countFaltas++;
+          else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
+        }
 
         if (searchTerm && !athlete.name.toLowerCase().includes(searchTerm)) return;
         if (activeStatusFilter && status !== activeStatusFilter) return;
