@@ -678,7 +678,8 @@
       { id: 6, name: "Tiago Boquete", position: "Lateral", stars: 4, phone: "22999990006", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
+      { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 10, name: "Onofre", position: "Zagueiro", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" }
     ];
 
     const initialMockFinancial = {
@@ -710,6 +711,9 @@
     }
     if (!window.athletes.some(a => a.name.toUpperCase().includes('SAPÃO') || a.name.toUpperCase().includes('SAPAO'))) {
       window.athletes.push(defaultAthletes[8]);
+    }
+    if (!window.athletes.some(a => a.name.toUpperCase().includes('ONOFRE'))) {
+      window.athletes.push(defaultAthletes[9]);
     }
 
     function repairFinancialData(saved) {
@@ -1829,7 +1833,8 @@
           const athleteNameNorm = athlete.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
           const isJulioSpecial = athleteNameNorm.includes('JULIO') && mKey === 'out';
           const isSapaoSpecial = athleteNameNorm.includes('SAPAO') && mKey === 'set';
-          const isSpecialExempt = isJulioSpecial || isSapaoSpecial;
+          const isOnofreSpecial = athleteNameNorm.includes('ONOFRE') && mKey === 'ago';
+          const isSpecialExempt = isJulioSpecial || isSapaoSpecial || isOnofreSpecial;
 
           let interest = 0;
           if (!isSpecialExempt && !isPaid && now >= firstDayAfterDue && !athlete.isSuspended) {
