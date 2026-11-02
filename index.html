@@ -866,12 +866,12 @@
       "EXTRA": { tag: "EXTRA", color: "bg-purple-500/20 text-purple-400 border-purple-500/40" }
     };
 
-    // Inclusão dos atletas Alexandre Boechat, Bruno Monteiro e Todinho com suas respectivas datas de início
+    // Atleta Cláudio participa desde o início do ano (sem restrição de data de início)
     const defaultAthletes = [
       { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 3, name: "Felipe Macaco", position: "Goleiro", stars: 5, phone: "22999990003", isKeeper: true, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 4, name: "Cláudio", position: "Atacante", stars: 4, phone: "22999990004", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 4, name: "Cláudio", position: "Atacante", stars: 4, phone: "22999990004", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
       { id: 5, name: "Davi", position: "Volante", stars: 4, phone: "22999990005", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 6, name: "Tiago Boquete", position: "Lateral", stars: 4, phone: "22999990006", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
       { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
@@ -885,11 +885,16 @@
     ];
 
     // Helper: retorna a data inicial efetiva para estatísticas e assiduidade
+    // O atleta Cláudio retorna explicitamente null (início do ano / todas as peladas)
     function getAthleteEffectiveStartDate(athlete) {
       if (!athlete) return null;
-      if (athlete.effectiveStartDate) return athlete.effectiveStartDate;
 
       const upper = (athlete.name || '').toUpperCase();
+      if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
+        return null;
+      }
+      if (athlete.effectiveStartDate) return athlete.effectiveStartDate;
+
       if (upper.includes("ALEXANDRE BOECHAT") || upper.includes("BOECHAT")) {
         return "2026-03-08";
       }
@@ -929,13 +934,18 @@
     window.currentDate = window.datesList[0];
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     
-    // Assegura que os atletas especiais tenham sua effectiveStartDate configurada mesmo ao carregar dados antigos
+    // Assegura a integridade das datas de início para todos os atletas
     defaultAthletes.forEach(defA => {
       const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
       if (!existing) {
         window.athletes.push(defA);
-      } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
-        existing.effectiveStartDate = defA.effectiveStartDate;
+      } else {
+        const upper = existing.name.toUpperCase();
+        if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
+          existing.effectiveStartDate = null;
+        } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
+          existing.effectiveStartDate = defA.effectiveStartDate;
+        }
       }
     });
 
@@ -956,7 +966,6 @@
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Encontra a próxima pelada no futuro (ou hoje)
       const futureDates = sorted.filter(d => {
         const [y, m, day] = d.split('-');
         return new Date(y, m - 1, day, 23, 59, 59) >= today;
@@ -967,7 +976,6 @@
         const [ny, nm, nd] = nextDateStr.split('-');
         const nextPeladaDate = new Date(ny, nm - 1, nd, 0, 0, 0);
 
-        // Usuário comum só vê a próxima a partir do dia que antecede a pelada (véspera)
         const eveOfPelada = new Date(nextPeladaDate);
         eveOfPelada.setDate(eveOfPelada.getDate() - 1);
         eveOfPelada.setHours(0, 0, 0, 0);
@@ -977,7 +985,6 @@
         }
       }
 
-      // Caso contrário, retorna a última pelada realizada (mais recente que já passou)
       const pastDates = sorted.filter(d => {
         const [y, m, day] = d.split('-');
         return new Date(y, m - 1, day, 23, 59, 59) < today;
@@ -1388,7 +1395,6 @@
         document.getElementById('btnMassFinWhatsapp').classList.add('hidden');
       }
 
-      // Aplica a regra de data padrão inteligente ao efetuar login
       window.currentDate = getSmartDefaultDate();
       populateDateSelect();
 
@@ -1438,13 +1444,17 @@
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
           if (data.athletes && data.athletes.length > 0) {
             window.athletes = data.athletes;
-            // Garante a presença dos novos atletas mesmo se a lista salva no banco for anterior
             defaultAthletes.forEach(defA => {
               const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
               if (!existing) {
                 window.athletes.push(defA);
-              } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
-                existing.effectiveStartDate = defA.effectiveStartDate;
+              } else {
+                const upper = existing.name.toUpperCase();
+                if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
+                  existing.effectiveStartDate = null;
+                } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
+                  existing.effectiveStartDate = defA.effectiveStartDate;
+                }
               }
             });
           }
@@ -1505,9 +1515,6 @@
         return sorted;
       }
 
-      // Usuários comuns:
-      // - Peladas do ano corrente até a data de hoje/passadas
-      // - Peladas futuras SOMENTE a partir do dia que antecede a pelada (véspera)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -1645,7 +1652,6 @@
         return;
       }
 
-      // Usuário comum só pode alterar a presença do seu próprio perfil
       if (!window.isAdmin) {
         if (!window.currentUser || window.currentUser.id !== athleteId) {
           window.playSelectionSound('cancel');
@@ -1693,7 +1699,6 @@
           window.playSelectionSound('cancel');
         }
 
-        // REGRA ESTRITA: Multa de R$ 30,00 só é aplicada a partir de 01/11/2026.
         if (newStatus === 'FALTA' && window.currentDate >= '2026-11-01') {
           const fineExists = window.absenceFines[athleteId].some(f => f.date === window.currentDate);
           if (!fineExists) {
@@ -1838,7 +1843,6 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false, confirmedAt: null };
         const status = pRecord.status;
 
-        // Atletas suspensos NÃO são somados em nenhum botão/contador da aba Presença
         if (!athlete.isSuspended) {
           countTotal++;
           if (status === 'CONFIRMADO') countConf++;
@@ -2055,9 +2059,8 @@
           athlete.position = position; athlete.stars = selectedStarsForNewAthlete;
           athlete.isSuspended = isSuspended; athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
-          // Preserva ou atualiza a data efetiva se for um dos atletas de regra
           const autoStart = getAthleteEffectiveStartDate({ name });
-          if (autoStart) athlete.effectiveStartDate = autoStart;
+          athlete.effectiveStartDate = autoStart;
         }
         window.showToast("Atleta atualizado!", "success");
       } else {
@@ -2542,7 +2545,7 @@
         let finesHtml = '';
 
         athleteFines.forEach((fine, fineIdx) => {
-          if (fine.date < '2026-11-01') return; // Isenção estrita antes de 01/11/2026
+          if (fine.date < '2026-11-01') return;
 
           const fineDate = new Date(fine.date + 'T00:00:00');
           let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
@@ -2582,7 +2585,6 @@
         totalGeneralDue += athleteTotalDue;
         totalGeneralInterest += athleteTotalInterest;
 
-        // Se o usuário logado for atleta (não admin), exibe apenas os seus dados
         if (!window.isAdmin && window.currentUser && window.currentUser.id !== athlete.id) {
           return;
         }
