@@ -2,22 +2,20 @@
 <html lang="pt-BR" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Teimoso F.C.C. - Gestão Inteligente de Peladas</title>
-
-  <!-- PWA & APPLE SAFARI HOME SCREEN META TAGS -->
-  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- META TAGS PWA & APPLE FULLSCREEN -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Teimoso FCC">
   <meta name="theme-color" content="#020617">
-  
-  <!-- FAVICON & APPLE TOUCH ICON -->
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="icon" type="image/png" href="logo.png">
 
-  <!-- ANDROID WEB APP MANIFEST (PWA) -->
-  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22Teimoso%20F.C.C.%22%2C%22short_name%22%3A%22Teimoso%20FCC%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%2C%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+  <!-- WEB APP MANIFEST INLINE -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Teimoso F.C.C.","short_name":"Teimoso FCC","start_url":"/","display":"standalone","background_color":"#020617","theme_color":"#020617","icons":[{"src":"logo.png","sizes":"192x192","type":"image/png"},{"src":"logo.png","sizes":"512x512","type":"image/png"}]}'>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -25,10 +23,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      -webkit-touch-callout: none;
       -webkit-tap-highlight-color: transparent;
     }
     ::-webkit-scrollbar {
@@ -59,28 +57,27 @@
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed top-5 right-5 z-[250] flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- ANIMATED CONFIRMATION OVERLAY WITH ATHLETE PHOTO -->
+  <!-- ANIMATED CONFIRMATION OVERLAY COM FOTO DO ATLETA -->
   <div id="animatedConfirmOverlay" class="fixed inset-0 z-[200] pointer-events-none hidden flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-500 opacity-0">
     <div id="animatedConfirmContent" class="transform scale-0 transition-transform duration-500 ease-out flex flex-col items-center text-center p-6">
       
       <!-- FOTO DO ATLETA CONFIRMADO -->
       <div class="relative mb-3">
-        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-emerald-400 overflow-hidden shadow-[0_0_25px_rgba(52,211,153,0.7)] bg-slate-900 shrink-0 mx-auto">
-          <img id="confirmAthletePhoto" src="" alt="Foto do Atleta" class="w-full h-full object-cover">
+        <div class="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-emerald-400 overflow-hidden shadow-[0_0_25px_rgba(52,211,153,0.7)] bg-slate-900 mx-auto">
+          <img id="confirmAthletePhoto" src="" alt="Atleta Confirmado" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=0f172a&color=34d399&bold=true&size=256'">
         </div>
-        <div class="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 rounded-full w-8 h-8 flex items-center justify-center text-base font-black shadow-lg">
+        <div class="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 w-9 h-9 rounded-full flex items-center justify-center text-lg shadow-lg border-2 border-slate-950 animate-bounce">
           ⚽
         </div>
       </div>
 
-      <div class="text-4xl sm:text-5xl animate-bounce mb-2">🚀🔥</div>
-      <h2 class="text-4xl sm:text-6xl font-black text-emerald-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(52,211,153,0.8)] mb-1">
+      <h2 class="text-4xl md:text-6xl font-black text-emerald-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(52,211,153,0.8)] mb-1">
         TÁ LÁ!
       </h2>
-      <h3 id="confirmAthleteName" class="text-xl sm:text-2xl font-black text-emerald-300 uppercase tracking-wider mb-1">Nome do Atleta</h3>
-      <p class="text-base sm:text-xl font-bold text-white mb-5 tracking-wide">Presença Confirmada, craque! 🏆👟</p>
+      <div id="confirmAthleteName" class="text-lg md:text-2xl font-black text-white uppercase tracking-wider mb-2"></div>
+      <p class="text-base md:text-xl font-bold text-slate-300 mb-6 tracking-wide">Presença Confirmada, craque! 🏆👟</p>
       
-      <div class="flex gap-6 text-4xl">
+      <div class="flex gap-8 text-4xl">
         <span class="animate-[spin_4s_linear_infinite]">⚽</span>
         <span class="animate-pulse">🔥</span>
         <span class="animate-[spin_4s_linear_infinite_reverse]">⚽</span>
@@ -128,11 +125,11 @@
       <div class="w-full mt-2">
         <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-4 text-3xl font-black text-emerald-400 focus:outline-none focus:border-emerald-500 text-center tracking-[0.5em] placeholder-slate-700 shadow-inner">
       </div>
-      <button onclick="performLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-950/40 uppercase tracking-wider">
+      <button onclick="performLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-950/40 uppercase tracking-wider active:scale-95">
         Entrar na Pelada
       </button>
     </div>
-    <div class="mt-8 text-slate-600 text-[10px] font-bold">
+    <div class="mt-8 text-slate-600 text-[10px] font-bold tracking-wider">
       DEVELOPER BY MARCOS ALMEIDA®
     </div>
   </div>
@@ -171,26 +168,32 @@
           </button>
         </nav>
 
-        <!-- LOGGED USER CONTROLS, EXCLUSIVE CONTROLS, SOUND TOGGLE & NOTIFICATION BELL -->
-        <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
-          <!-- BOTÃO EXCLUSIVO MARCÃO: ATIVAR / DESATIVAR ANIMAÇÃO DE CONFIRMAÇÃO -->
-          <button onclick="toggleConfirmAnimationSetting()" id="btnToggleAnimationMarcao" title="Controle de Animação de Confirmação (Exclusivo Marcão)" class="hidden px-2.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/70 border border-purple-700/60 text-purple-300 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm">
-            <i id="animIconMarcao" class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
-            <span id="animLabelMarcao" class="hidden md:inline text-[10px]">Animações: ON</span>
+        <!-- CONTROLES DO USUÁRIO LOGADO & BOTÕES RÁPIDOS -->
+        <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto flex-wrap">
+          
+          <!-- BOTÃO TOGGLE DE ANIMAÇÃO EXCLUSIVO DO MARCÃO -->
+          <button onclick="toggleMarcaoAnimationSetting()" id="btnToggleAnimationMarcao" title="Ativar/Desativar Animação de Confirmação (Exclusivo Marcão)" class="hidden px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 text-xs font-bold items-center gap-1.5 transition-all shrink-0">
+            <i id="iconToggleAnim" class="fa-solid fa-wand-magic-sparkles"></i>
+            <span id="textToggleAnim" class="text-[10px] uppercase font-black">Anim: ON</span>
           </button>
 
-          <!-- BOTÃO LIGAR/DESLIGAR SOM -->
-          <button onclick="toggleAudioSound()" id="btnSoundToggle" title="Ativar/Desativar Sons de Clique" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center shrink-0">
-            <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+          <!-- BOTÃO MUDO / CONTROLE DE SOM NATIVO -->
+          <button onclick="toggleAudioFeedback()" id="btnSoundToggle" title="Ativar/Desativar Efeitos Sonoros" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold transition-all flex items-center justify-center shrink-0">
+            <i id="soundToggleIcon" class="fa-solid fa-volume-high text-emerald-400"></i>
           </button>
 
-          <button onclick="openActivityLogModal()" id="btnActivityLog" title="Histórico de Interações e Alertas" class="hidden relative px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0">
+          <!-- SININHO DE AUDITORIA INTERNA (90 DIAS) -->
+          <button onclick="openActivityLogModal()" id="btnActivityLog" title="Histórico de Interações (90 Dias)" class="hidden relative px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0">
             <i class="fa-solid fa-bell"></i>
             <span id="activityBadgeCount" class="bg-emerald-500 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full">0</span>
           </button>
+
+          <!-- BADGE DE USUÁRIO -->
           <div id="userBadge" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0">
             <i id="userBadgeIcon" class="fa-solid fa-user text-emerald-400"></i> <span id="userBadgeName">Atleta</span>
           </div>
+
+          <!-- BOTÃO SAIR -->
           <button onclick="logout()" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-950 hover:bg-rose-950 hover:border-rose-900 text-slate-400 hover:text-rose-400 transition-all flex items-center gap-2 shadow-sm shrink-0">
             <i class="fa-solid fa-right-from-bracket"></i> Sair
           </button>
@@ -258,7 +261,7 @@
           <div class="flex items-center gap-3">
             <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
             <div>
-              <span class="font-bold">Prazo encerrado:</span> O horário limite para confirmação/alteração online foi às 18:00 do dia anterior. Entre em contato com o <strong>presidente</strong> para alterar sua presença.
+              <span class="font-bold">Prazo encerrado:</span> O horário limite para confirmação/alteração online foi às 18:00 do dia anterior. Entre em contato com a <strong>diretoria ou presidência</strong> para alterar sua presença.
             </div>
           </div>
         </div>
@@ -356,7 +359,7 @@
             </h3>
             <p class="text-xs text-slate-400 mt-1">O sistema distribui os goleiros e equilibrará as estrelas automaticamente em até 8 jogadores por equipe (Atletas Extras vão para a resenha).</p>
           </div>
-          <button onclick="generateTeams()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
+          <button onclick="generateTeams()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0 active:scale-95">
             <i class="fa-solid fa-dice text-sm"></i> Sortear Times Agora
           </button>
         </div>
@@ -450,7 +453,7 @@
                 <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
                   <th class="py-3 px-4">Atleta</th>
                   <th class="py-3 px-4">Posição</th>
-                  <th class="py-3 px-4 text-center">Presenças Confirmadas</th>
+                  <th class="py-3 px-4 text-center">Presenças / Elegíveis</th>
                   <th class="py-3 px-4 text-center">Taxa de Assiduidade</th>
                   <th class="py-3 px-4 text-right">Status Atual</th>
                 </tr>
@@ -480,7 +483,7 @@
 
   <!-- ================= MODALS ================= -->
 
-  <!-- ACTIVITY LOG & NOTIFICATION SETTINGS MODAL (SININHO ADMIN) -->
+  <!-- ACTIVITY LOG MODAL (AUDITORIA 90 DIAS 100% INTERNA) -->
   <div id="activityLogModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
@@ -490,24 +493,6 @@
         <button onclick="closeActivityLogModal()" class="text-slate-500 hover:text-slate-300">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
-      </div>
-
-      <!-- CONFIGURAÇÃO DE ALERTA EXTERNO (E-MAIL / WHATSAPP CALLMEBOT) -->
-      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Avisos Automáticos em 2º Plano</span>
-          <button onclick="saveNotificationSettings()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition-all">Salvar Config</button>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[9px] font-bold uppercase text-slate-400 mb-1">E-mail p/ Alerta (FormSubmit):</label>
-            <input type="email" id="notifyEmailInput" placeholder="Ex: teimosofcc@gmail.com" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
-          </div>
-          <div>
-            <label class="block text-[9px] font-bold uppercase text-slate-400 mb-1">Webhook / CallMeBot URL (Opcional):</label>
-            <input type="text" id="notifyWebhookInput" placeholder="https://api.callmebot.com/..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
-          </div>
-        </div>
       </div>
 
       <!-- FILTRO POR ATLETA/USUÁRIO & LIMPEZA -->
@@ -581,6 +566,11 @@
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Mensalidade (R$):</label>
             <input type="number" id="athleteMonthlyFeeInput" value="110" step="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
           </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Início da Assiduidade (Opcional):</label>
+          <input type="date" id="athleteEffectiveDateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+          <p class="text-[9px] text-slate-500 mt-1">Deixe em branco para atletas que jogam desde o início do ano.</p>
         </div>
         <div class="flex items-center gap-2 pt-2">
           <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0">
@@ -750,9 +740,9 @@
     const db = getFirestore(app);
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
-    // --- SISTEMA DE ÁUDIO WEB NATIVO (EFEITOS SONOROS DE CLIQUE) ---
+    // --- SISTEMA DE FEEDBACK SONORO SINTETIZADO (WEB AUDIO API NATIVA) ---
     let audioCtx = null;
-    window.isSoundEnabled = localStorage.getItem('teimoso_soundEnabled') !== 'false';
+    let isSoundMuted = localStorage.getItem('teimoso_soundMuted') === 'true';
 
     function initAudioContext() {
       if (!audioCtx) {
@@ -767,7 +757,7 @@
     }
 
     window.playSelectionSound = function(type = 'click') {
-      if (!window.isSoundEnabled) return;
+      if (isSoundMuted) return;
       try {
         initAudioContext();
         if (!audioCtx) return;
@@ -775,6 +765,7 @@
         const now = audioCtx.currentTime;
 
         if (type === 'click') {
+          // Clique discreto estilo pop
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
@@ -786,76 +777,71 @@
           gain.connect(audioCtx.destination);
           osc.start(now);
           osc.stop(now + 0.045);
-
         } else if (type === 'confirm') {
-          [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          // Acorde alegre de celebração esportiva (4 notas ascendentes)
+          const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          notes.forEach((freq, idx) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
+            const startTime = now + (idx * 0.07);
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, now + (i * 0.04));
-            gain.gain.setValueAtTime(0.15, now + (i * 0.04));
-            gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.04) + 0.18);
+            osc.frequency.setValueAtTime(freq, startTime);
+            gain.gain.setValueAtTime(0.18, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            osc.start(now + (i * 0.04));
-            osc.stop(now + (i * 0.04) + 0.2);
+            osc.start(startTime);
+            osc.stop(startTime + 0.2);
           });
-
         } else if (type === 'cancel') {
+          // Tom grave curto
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sine';
           osc.frequency.setValueAtTime(280, now);
-          osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.07);
           gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start(now);
-          osc.stop(now + 0.085);
+          osc.stop(now + 0.08);
         }
       } catch (err) {
-        console.warn("Audio playback prevented:", err);
+        // Fallback silencioso caso áudio seja bloqueado
       }
     };
 
-    window.toggleAudioSound = function() {
-      window.isSoundEnabled = !window.isSoundEnabled;
-      localStorage.setItem('teimoso_soundEnabled', window.isSoundEnabled ? 'true' : 'false');
-      updateSoundButtonUI();
-      if (window.isSoundEnabled) {
-        window.playSelectionSound('confirm');
-        window.showToast("Efeitos sonoros ativados! 🔊", "success");
+    window.toggleAudioFeedback = function() {
+      isSoundMuted = !isSoundMuted;
+      localStorage.setItem('teimoso_soundMuted', isSoundMuted ? 'true' : 'false');
+      updateAudioToggleUI();
+      if (!isSoundMuted) {
+        window.playSelectionSound('click');
+        window.showToast("Sons do aplicativo ATIVADOS!", "success");
       } else {
-        window.showToast("Efeitos sonoros desativados 🔇", "error");
+        window.showToast("Sons do aplicativo SILENCIADOS.", "error");
       }
     };
 
-    function updateSoundButtonUI() {
-      const btn = document.getElementById('btnSoundToggle');
-      const icon = document.getElementById('soundIcon');
-      if (!btn || !icon) return;
-      if (window.isSoundEnabled) {
-        icon.className = "fa-solid fa-volume-high text-emerald-400";
-        btn.classList.remove('opacity-60', 'text-slate-500');
-        btn.title = "Sons de clique: ATIVADOS (Toque para silenciar)";
-      } else {
-        icon.className = "fa-solid fa-volume-xmark text-slate-500";
-        btn.classList.add('opacity-60', 'text-slate-500');
-        btn.title = "Sons de clique: DESATIVADOS (Toque para ativar)";
+    function updateAudioToggleUI() {
+      const icon = document.getElementById('soundToggleIcon');
+      if (icon) {
+        if (isSoundMuted) {
+          icon.className = "fa-solid fa-volume-xmark text-slate-500";
+        } else {
+          icon.className = "fa-solid fa-volume-high text-emerald-400";
+        }
       }
     }
 
-    // Ouvinte global para emitir o som em qualquer elemento clicável
+    // Interceptador global de cliques para disparar o som pop
     document.addEventListener('click', (e) => {
-      initAudioContext();
-      const target = e.target.closest('button, select, input[type="checkbox"], [onclick], a');
-      if (target && !target.dataset.noClickSound) {
-        if (!target.getAttribute('onclick')?.includes('setPresenceStatus')) {
-          window.playSelectionSound('click');
-        }
+      const interactiveEl = e.target.closest('button, a, input[type="checkbox"], select, [onclick]');
+      if (interactiveEl) {
+        window.playSelectionSound('click');
       }
-    }, true);
+    });
 
     // --- ESTADO GLOBAL ---
     window.currentUser = null;
@@ -872,7 +858,6 @@
     window.whatsappQueueList = [];
     window.whatsappSentIds = new Set();
     window.activityLogs = [];
-    window.notificationSettings = { email: 'teimosofcc@gmail.com', webhookUrl: '' };
     
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
     const finEditorNames = ['PABLO PADILHA', 'MARCÃO', 'MARCAO'];
@@ -889,41 +874,21 @@
     };
 
     const defaultAthletes = [
-      { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 3, name: "Felipe Macaco", position: "Goleiro", stars: 5, phone: "22999990003", isKeeper: true, monthlyFee: 110, isSuspended: false, photoUrl: "" },
+      { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 3, name: "Felipe Macaco", position: "Goleiro", stars: 5, phone: "22999990003", isKeeper: true, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
       { id: 4, name: "Cláudio", position: "Atacante", stars: 4, phone: "22999990004", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 5, name: "Davi", position: "Volante", stars: 4, phone: "22999990005", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 6, name: "Tiago Boquete", position: "Lateral", stars: 4, phone: "22999990006", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 10, name: "Onofre", position: "Lateral", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 11, name: "Ziel", position: "Atacante", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "" },
-      { id: 12, name: "Alexandre Boechat", position: "Zagueiro", stars: 4, phone: "22999990012", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" },
-      { id: 13, name: "Bruno Monteiro", position: "Meia", stars: 4, phone: "22999990013", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-07-05" },
+      { id: 5, name: "Davi", position: "Volante", stars: 4, phone: "22999990005", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 6, name: "Tiago Boquete", position: "Lateral", stars: 4, phone: "22999990006", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 10, name: "Onofre", position: "Lateral", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 11, name: "Ziel", position: "Atacante", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
+      { id: 12, name: "Alexandre Boechat", position: "Meia", stars: 4, phone: "22999990012", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" },
+      { id: 13, name: "Bruno Monteiro", position: "Zagueiro", stars: 4, phone: "22999990013", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-07-05" },
       { id: 14, name: "Todinho", position: "Atacante", stars: 4, phone: "22999990014", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" }
     ];
-
-    function getAthleteEffectiveStartDate(athlete) {
-      if (!athlete) return null;
-      const upper = (athlete.name || '').toUpperCase();
-      if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
-        return null;
-      }
-      if (athlete.effectiveStartDate) return athlete.effectiveStartDate;
-
-      if (upper.includes("ALEXANDRE BOECHAT") || upper.includes("BOECHAT")) {
-        return "2026-03-08";
-      }
-      if (upper.includes("BRUNO MONTEIRO")) {
-        return "2026-07-05";
-      }
-      if (upper.includes("TODINHO")) {
-        return "2026-03-08";
-      }
-      return null;
-    }
 
     const initialMockFinancial = {
       1: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
@@ -940,7 +905,7 @@
         window.activityLogs = [];
         return;
       }
-      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000);
+      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000); // 90 dias
       window.activityLogs = window.activityLogs.filter(entry => {
         const entryTime = entry.id || (entry.timestamp ? new Date(entry.timestamp).getTime() : 0);
         return entryTime >= cutoffTime;
@@ -951,21 +916,6 @@
     window.peladaTimes = JSON.parse(localStorage.getItem('teimoso_peladaTimes')) || { "2026-11-03": "07:00" };
     window.currentDate = window.datesList[0];
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
-    
-    defaultAthletes.forEach(defA => {
-      const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
-      if (!existing) {
-        window.athletes.push(defA);
-      } else {
-        const upper = existing.name.toUpperCase();
-        if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
-          existing.effectiveStartDate = null;
-        } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
-          existing.effectiveStartDate = defA.effectiveStartDate;
-        }
-      }
-    });
-
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
     window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || initialMockFinancial;
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
@@ -976,7 +926,7 @@
       return saved;
     }
 
-    // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN ---
+    // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN (SÁBADO ANTECEDENTE / ÚLTIMA PELADA) ---
     function getSmartDefaultDate() {
       if (!window.datesList || window.datesList.length === 0) return "";
       const sorted = [...window.datesList].sort();
@@ -1014,53 +964,7 @@
       return sorted[sorted.length - 1];
     }
 
-    // --- CONTROLE EXCLUSIVO DE ANIMAÇÕES PARA MARCÃO ---
-    window.updateAnimationButtonUI = function() {
-      const btn = document.getElementById('btnToggleAnimationMarcao');
-      const icon = document.getElementById('animIconMarcao');
-      const label = document.getElementById('animLabelMarcao');
-      if (!btn) return;
-
-      if (window.isMarcaoUser) {
-        btn.classList.remove('hidden');
-        btn.classList.add('flex');
-        if (window.animationsEnabled) {
-          btn.className = "flex px-2.5 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/70 border border-purple-700/60 text-purple-300 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm";
-          icon.className = "fa-solid fa-wand-magic-sparkles text-purple-400";
-          if (label) label.innerText = "Animações: ATIVAS";
-          btn.title = "Animações de Confirmação: ATIVAS (Clique para desativar)";
-        } else {
-          btn.className = "flex px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm opacity-70";
-          icon.className = "fa-solid fa-ban text-rose-400";
-          if (label) label.innerText = "Animações: OFF";
-          btn.title = "Animações de Confirmação: DESATIVADAS (Clique para ativar)";
-        }
-      } else {
-        btn.classList.add('hidden');
-        btn.classList.remove('flex');
-      }
-    };
-
-    window.toggleConfirmAnimationSetting = function() {
-      if (!window.isMarcaoUser) {
-        window.showToast("Opção exclusiva para o usuário Marcão.", "error");
-        return;
-      }
-      window.animationsEnabled = !window.animationsEnabled;
-      localStorage.setItem('teimoso_animationsEnabled', window.animationsEnabled ? 'true' : 'false');
-      window.updateAnimationButtonUI();
-      window.saveData();
-
-      if (window.animationsEnabled) {
-        window.showToast("Animações de confirmação ativadas no sistema! ✨", "success");
-        window.recordUserInteraction("Marcão", "Ativou as animações de confirmação do sistema");
-      } else {
-        window.showToast("Animações de confirmação desativadas! 🚫", "error");
-        window.recordUserInteraction("Marcão", "Desativou as animações de confirmação do sistema");
-      }
-    };
-
-    // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS ---
+    // --- REGISTRO DE AUDITORIA INTERNO (90 DIAS) ---
     window.recordUserInteraction = function(actorName, actionDescription) {
       const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const entry = {
@@ -1072,27 +976,6 @@
       window.activityLogs.unshift(entry);
       pruneActivityLogs();
       updateActivityBadge();
-
-      if (window.notificationSettings?.email) {
-        fetch(`https://formsubmit.co/ajax/${encodeURIComponent(window.notificationSettings.email)}`, {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            _subject: `⚽ Teimoso F.C.C. - ${actorName}`,
-            Atleta_Usuario: actorName,
-            Interacao: actionDescription,
-            Horario: timestamp
-          })
-        }).catch(() => {});
-      }
-
-      if (window.notificationSettings?.webhookUrl) {
-        const textMsg = encodeURIComponent(`⚽ *Teimoso FCC*: ${actorName} - ${actionDescription} (${timestamp})`);
-        const url = window.notificationSettings.webhookUrl.includes('{text}')
-          ? window.notificationSettings.webhookUrl.replace('{text}', textMsg)
-          : `${window.notificationSettings.webhookUrl}&text=${textMsg}`;
-        fetch(url, { mode: 'no-cors' }).catch(() => {});
-      }
     };
 
     function updateActivityBadge() {
@@ -1105,8 +988,6 @@
         window.showToast("Acesso restrito apenas aos administradores.", "error");
         return;
       }
-      document.getElementById('notifyEmailInput').value = window.notificationSettings?.email || 'teimosofcc@gmail.com';
-      document.getElementById('notifyWebhookInput').value = window.notificationSettings?.webhookUrl || '';
       populateLogUserFilterOptions();
       renderActivityLogList();
       document.getElementById('activityLogModal').classList.remove('hidden');
@@ -1130,15 +1011,6 @@
         select.appendChild(opt);
       });
     }
-
-    window.saveNotificationSettings = function() {
-      window.notificationSettings = {
-        email: document.getElementById('notifyEmailInput').value.trim(),
-        webhookUrl: document.getElementById('notifyWebhookInput').value.trim()
-      };
-      window.saveData();
-      window.showToast("Configurações de alerta salvas!", "success");
-    };
 
     window.clearActivityLogs = function() {
       window.activityLogs = [];
@@ -1178,26 +1050,23 @@
       });
     }
 
-    // --- ANIMAÇÃO DE CONFIRMAÇÃO COM IMAGEM DO ATLETA (RESPEITA CONFIGURAÇÃO DO MARCÃO) ---
-    window.showAnimatedConfirmation = function(athlete) {
+    // --- ANIMAÇÃO DE CONFIRMAÇÃO COM FOTO DO ATLETA ---
+    window.showAnimatedConfirmation = function(targetAthlete = null) {
       window.playSelectionSound('confirm');
+
       if (!window.animationsEnabled) {
         return;
       }
 
+      const athlete = targetAthlete || window.currentUser;
       const overlay = document.getElementById('animatedConfirmOverlay');
       const content = document.getElementById('animatedConfirmContent');
       const photoEl = document.getElementById('confirmAthletePhoto');
       const nameEl = document.getElementById('confirmAthleteName');
 
-      const target = athlete || window.currentUser;
-      const athleteName = target ? target.name : 'Craque';
-      const avatarUrl = (target && target.photoUrl)
-        ? target.photoUrl
-        : `https://ui-avatars.com/api/?name=${encodeURIComponent(athleteName)}&background=0f172a&color=34d399&bold=true&size=256`;
-
-      if (photoEl) photoEl.src = avatarUrl;
-      if (nameEl) nameEl.innerText = athleteName;
+      const avatarUrl = athlete?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete?.name || 'TFCC')}&background=0f172a&color=34d399&bold=true&size=256`;
+      photoEl.src = avatarUrl;
+      nameEl.innerText = athlete?.name ? athlete.name.toUpperCase() : 'CRAQUE';
 
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
@@ -1218,6 +1087,46 @@
         }, 500);
       }, 3000);
     };
+
+    // --- CONTROLE DE ANIMAÇÃO EXCLUSIVO DO USUÁRIO MARCÃO ---
+    window.toggleMarcaoAnimationSetting = function() {
+      if (!window.isMarcaoUser) return;
+      window.animationsEnabled = !window.animationsEnabled;
+      localStorage.setItem('teimoso_animationsEnabled', window.animationsEnabled ? 'true' : 'false');
+      updateMarcaoAnimationButtonUI();
+      window.saveData();
+      if (window.animationsEnabled) {
+        window.showToast("Animações de confirmação ATIVADAS!", "success");
+      } else {
+        window.showToast("Animações de confirmação DESATIVADAS.", "error");
+      }
+    };
+
+    function updateMarcaoAnimationButtonUI() {
+      const btn = document.getElementById('btnToggleAnimationMarcao');
+      const text = document.getElementById('textToggleAnim');
+      const icon = document.getElementById('iconToggleAnim');
+      if (!btn) return;
+
+      if (!window.isMarcaoUser) {
+        btn.classList.add('hidden');
+        btn.classList.remove('flex');
+        return;
+      }
+
+      btn.classList.remove('hidden');
+      btn.classList.add('flex');
+
+      if (window.animationsEnabled) {
+        btn.className = "flex px-2.5 py-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/50 text-emerald-400 text-xs font-bold items-center gap-1.5 transition-all shrink-0 shadow-sm";
+        icon.className = "fa-solid fa-wand-magic-sparkles text-emerald-400";
+        text.innerText = "Anim: ON";
+      } else {
+        btn.className = "flex px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 text-xs font-bold items-center gap-1.5 transition-all shrink-0 shadow-sm";
+        icon.className = "fa-solid fa-wand-magic text-slate-500";
+        text.innerText = "Anim: OFF";
+      }
+    }
 
     // --- VISUALIZADOR DE FOTO EM TELA CHEIA COM 1 TOQUE ---
     window.openFullscreenPhoto = function(imageUrl, athleteName) {
@@ -1302,7 +1211,6 @@
           alwaysUpToDateMap: window.alwaysUpToDateMap,
           absenceFines: window.absenceFines,
           activityLogs: window.activityLogs,
-          notificationSettings: window.notificationSettings,
           animationsEnabled: window.animationsEnabled,
           updatedAt: new Date().toISOString()
         });
@@ -1360,7 +1268,7 @@
           }
 
           if (window.isPastDeadlineForDate(dataPelada)) {
-            window.showToast("Prazo encerrado às 18h do dia anterior! Entre em contato com o presidente.", "error");
+            window.showToast("Prazo encerrado às 18h do dia anterior! Entre em contato com a diretoria.", "error");
             window.history.replaceState({}, document.title, window.location.pathname);
             return;
           }
@@ -1401,7 +1309,7 @@
       }
 
       if (pin === '0000') {
-        window.currentUser = { id: 0, name: "Admin Master", isKeeper: false };
+        window.currentUser = { id: 0, name: "Marcão (Admin Master)", isKeeper: false };
         window.isAdmin = true;
         window.canEditFinancial = true;
         window.isMarcaoUser = true;
@@ -1465,8 +1373,9 @@
         document.getElementById('btnMassFinWhatsapp').classList.add('hidden');
       }
 
-      window.updateAnimationButtonUI();
+      updateMarcaoAnimationButtonUI();
 
+      // Aplica a regra de data padrão inteligente ao efetuar login
       window.currentDate = getSmartDefaultDate();
       populateDateSelect();
 
@@ -1494,12 +1403,12 @@
       window.isAdmin = false;
       window.canEditFinancial = false;
       window.isMarcaoUser = false;
-      window.updateAnimationButtonUI();
-
       document.getElementById('loginPinInput').value = '';
       document.getElementById('globalLoginOverlay').classList.remove('hidden');
       document.getElementById('globalLoginOverlay').classList.add('flex');
       
+      updateMarcaoAnimationButtonUI();
+
       if (activeTab === 'financial') switchTab('presence');
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
@@ -1509,7 +1418,7 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
       populateDateSelect();
       buildStarRatingSelector(5);
-      updateSoundButtonUI();
+      updateAudioToggleUI();
 
       let isFirstLoad = true;
       onSnapshot(dbDocRef, (docSnap) => {
@@ -1517,31 +1426,15 @@
           const data = docSnap.data();
           if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (data.athletes && data.athletes.length > 0) {
-            window.athletes = data.athletes;
-            defaultAthletes.forEach(defA => {
-              const existing = window.athletes.find(a => a.id === defA.id || a.name.toUpperCase() === defA.name.toUpperCase());
-              if (!existing) {
-                window.athletes.push(defA);
-              } else {
-                const upper = existing.name.toUpperCase();
-                if (upper.includes("CLÁUDIO") || upper.includes("CLAUDIO")) {
-                  existing.effectiveStartDate = null;
-                } else if (defA.effectiveStartDate && !existing.effectiveStartDate) {
-                  existing.effectiveStartDate = defA.effectiveStartDate;
-                }
-              }
-            });
-          }
+          if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
           if (data.presences) window.presences = data.presences;
           if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.absenceFines) window.absenceFines = data.absenceFines;
           if (data.activityLogs) window.activityLogs = data.activityLogs;
-          if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
-          if (typeof data.animationsEnabled === 'boolean') {
+          if (data.animationsEnabled !== undefined) {
             window.animationsEnabled = data.animationsEnabled;
-            localStorage.setItem('teimoso_animationsEnabled', data.animationsEnabled ? 'true' : 'false');
-            window.updateAnimationButtonUI();
+            localStorage.setItem('teimoso_animationsEnabled', window.animationsEnabled ? 'true' : 'false');
+            updateMarcaoAnimationButtonUI();
           }
           window.financialPayments = repairFinancialData(data.financialPayments);
 
@@ -1723,18 +1616,16 @@
       renderAthletesList();
     };
 
-    // --- MARCAR / DESMARCAR PRESENÇA & GERAÇÃO DE MULTAS DE FALTA (A PARTIR DE 01/11/2026) ---
+    // --- MARCAR / DESMARCAR PRESENÇA & GERAÇÃO DE MULTAS DE FALTA ---
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
-        window.playSelectionSound('cancel');
         window.showToast("Atleta suspenso. Apenas administradores podem realizar ações para este atleta.", "error");
         return;
       }
 
       if (!window.isAdmin) {
         if (!window.currentUser || window.currentUser.id !== athleteId) {
-          window.playSelectionSound('cancel');
           window.showToast("Você só pode confirmar ou alterar a presença do seu próprio login.", "error");
           return;
         }
@@ -1742,8 +1633,7 @@
 
       const isPastDeadline = checkDeadlinePassed();
       if (isPastDeadline && !window.isAdmin) {
-        window.playSelectionSound('cancel');
-        window.showToast("Prazo encerrado às 18h do dia anterior! Entre em contato com o presidente.", "error");
+        window.showToast("Prazo encerrado às 18h do dia anterior! Entre em contato com a diretoria.", "error");
         return;
       }
 
@@ -1768,25 +1658,23 @@
         }
 
         if (newStatus === 'JUSTIFICADO') {
-          window.playSelectionSound('click');
           currentJustifyAthleteId = athleteId;
           document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
           document.getElementById('justifyModal').classList.remove('hidden');
           return;
         }
 
-        if (newStatus === 'FORA' || newStatus === 'FALTA') {
-          window.playSelectionSound('cancel');
-        }
-
-        if (newStatus === 'FALTA' && window.currentDate >= '2026-11-01') {
-          const fineExists = window.absenceFines[athleteId].some(f => f.date === window.currentDate);
-          if (!fineExists) {
-            window.absenceFines[athleteId].push({
-              date: window.currentDate,
-              baseAmount: 30.00,
-              paid: false
-            });
+        if (newStatus === 'FALTA') {
+          // REGRA DE DATA DE CORTE: Faltas só geram multa a partir de 01/11/2026
+          if (window.currentDate >= '2026-11-01') {
+            const fineExists = window.absenceFines[athleteId].some(f => f.date === window.currentDate);
+            if (!fineExists) {
+              window.absenceFines[athleteId].push({
+                date: window.currentDate,
+                baseAmount: 30.00,
+                paid: false
+              });
+            }
           }
         }
 
@@ -1803,6 +1691,8 @@
         
         if (newStatus === 'CONFIRMADO') {
           window.showAnimatedConfirmation(targetAthlete);
+        } else if (newStatus === 'FORA' || newStatus === 'FALTA') {
+          window.playSelectionSound('cancel');
         }
       }
 
@@ -1854,7 +1744,6 @@
       return false;
     }
 
-    // Função utilitária para garantir sempre números válidos e prevenir R$ NaN
     function safeNum(val, fallback = 0) {
       if (val === undefined || val === null || val === '') return fallback;
       if (typeof val === 'number') return isNaN(val) ? fallback : val;
@@ -1888,6 +1777,7 @@
 
       const rawFines = window.absenceFines[athleteId] || [];
       const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
+      // Considera apenas multas a partir de 01/11/2026
       const hasUnpaidFine = athleteFines.some(f => !f.paid && f.date >= '2026-11-01');
       if (hasUnpaidFine) return 'overdue';
 
@@ -1902,6 +1792,8 @@
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
+      // Ordenar: Primeiro os confirmados em ordem cronológica de confirmação,
+      // e em seguida os demais por ordem alfabética.
       const sortedAthletes = [...window.athletes].sort((a, b) => {
         const pA = dayPresences[a.id];
         const pB = dayPresences[b.id];
@@ -1923,6 +1815,7 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false, confirmedAt: null };
         const status = pRecord.status;
 
+        // Atletas suspensos NÃO são somados em nenhum botão/contador da aba Presença
         if (!athlete.isSuspended) {
           countTotal++;
           if (status === 'CONFIRMADO') countConf++;
@@ -1952,15 +1845,10 @@
           `;
         }
 
-        const effectiveStart = getAthleteEffectiveStartDate(athlete);
-        let startBadgeHtml = '';
-        if (effectiveStart) {
-          const [sy, sm, sd] = effectiveStart.split('-');
-          startBadgeHtml = `
-            <span class="text-[9px] font-bold text-sky-400 bg-sky-950/60 border border-sky-800/60 px-1.5 py-0.5 rounded" title="Estatísticas consideradas a partir desta data">
-              Início: ${sd}/${sm}/${sy}
-            </span>
-          `;
+        let effectiveDateBadge = '';
+        if (athlete.effectiveStartDate) {
+          const [ey, em, ed] = athlete.effectiveStartDate.split('-');
+          effectiveDateBadge = `<span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">Início: ${ed}/${em}/${ey}</span>`;
         }
 
         const tr = document.createElement('tr');
@@ -2001,12 +1889,12 @@
               ${athlete.isSuspended ? `<span class="text-[9px] font-black px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 uppercase">Suspenso (Admin Liberado)</span>` : ''}
               <div class="grid grid-cols-2 gap-1 sm:gap-1.5 w-full max-w-[155px] mx-auto">
                 <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
-                  <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'JUSTIFICADO' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">JUSTIFICAR</button>
+                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
+                  <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${status === 'JUSTIFICADO' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">JUSTIFICAR</button>
                 </div>
                 <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FORA' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">FORA</button>
-                  ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white ring-2 ring-purple-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">FALTA</button>` : ''}
+                  <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${status === 'FORA' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">FORA</button>
+                  ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${status === 'FALTA' ? 'bg-purple-600 text-white ring-2 ring-purple-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">FALTA</button>` : ''}
                 </div>
               </div>
               ${(window.isAdmin && status === 'CONFIRMADO') ? `
@@ -2033,9 +1921,9 @@
               <div class="flex flex-col gap-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-sm ${athlete.isSuspended ? 'text-rose-300' : ''}">${athlete.name}</span>
-                  ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase">Suspenso</span>` : ''}
+                  ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-600/20 text-rose-400 border border-rose-500/40 uppercase">Suspenso</span>` : ''}
+                  ${effectiveDateBadge}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
-                  ${startBadgeHtml}
                 </div>
                 ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
@@ -2085,6 +1973,7 @@
       document.getElementById('athletePhotoUrlInput').value = '';
       document.getElementById('athletePositionSelect').value = 'Meia';
       document.getElementById('athleteMonthlyFeeInput').value = '110';
+      document.getElementById('athleteEffectiveDateInput').value = '';
       document.getElementById('athleteSuspendedCheckbox').checked = false;
       buildStarRatingSelector(5);
       document.getElementById('athleteModal').classList.remove('hidden');
@@ -2100,6 +1989,7 @@
       document.getElementById('athletePhotoUrlInput').value = athlete.photoUrl || '';
       document.getElementById('athletePositionSelect').value = athlete.position;
       document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
+      document.getElementById('athleteEffectiveDateInput').value = athlete.effectiveStartDate || '';
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
       buildStarRatingSelector(athlete.stars);
       document.getElementById('athleteModal').classList.remove('hidden');
@@ -2128,6 +2018,7 @@
       const photoUrl = document.getElementById('athletePhotoUrlInput').value.trim();
       const position = document.getElementById('athletePositionSelect').value;
       const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput').value) || 110;
+      const effectiveStartDate = document.getElementById('athleteEffectiveDateInput').value || null;
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
       if (!name) return window.showToast("Digite o nome.");
@@ -2138,19 +2029,15 @@
           athlete.name = name; athlete.phone = phone; athlete.photoUrl = photoUrl;
           athlete.position = position; athlete.stars = selectedStarsForNewAthlete;
           athlete.isSuspended = isSuspended; athlete.isKeeper = (position === 'Goleiro');
-          athlete.monthlyFee = monthlyFee;
-          const autoStart = getAthleteEffectiveStartDate({ name });
-          athlete.effectiveStartDate = autoStart;
+          athlete.monthlyFee = monthlyFee; athlete.effectiveStartDate = effectiveStartDate;
         }
         window.showToast("Atleta atualizado!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
-        const autoStart = getAthleteEffectiveStartDate({ name });
         window.athletes.push({
           id: newId, name: name, position: position, stars: selectedStarsForNewAthlete,
           phone: phone, photoUrl: photoUrl, isKeeper: (position === 'Goleiro'),
-          monthlyFee: monthlyFee, isSuspended: isSuspended,
-          effectiveStartDate: autoStart || null
+          monthlyFee: monthlyFee, isSuspended: isSuspended, effectiveStartDate: effectiveStartDate
         });
         window.showToast("Atleta cadastrado!", "success");
       }
@@ -2268,7 +2155,7 @@
       const linkFora = `${currentUrl}?acao=fora&atleta=${athlete.id}&data=${window.currentDate}`;
       const linkJustificar = `${currentUrl}?acao=justificar&atleta=${athlete.id}&data=${window.currentDate}`;
 
-      return `Fala meu craque *${athlete.name}*! ⚽🔥🚀\n\nConvocação oficial para a pelada do *Teimoso F.C.C.* no dia *${formatDateDisplay(window.currentDate)}*! 🏆👟\n\nEscolha uma das opções abaixo clicando no link:\n\n🟢 *CONFIRMADO (Estou dentro!):*\n${linkConfirmar}\n\n⚠️ *JUSTIFICAR (Justificar ausência no App):*\n${linkJustificar}\n\n❌ *FORA (Não vou participar):*\n${linkFora}\n\n⏰ *Atenção:* O prazo para confirmar pelo link vai até as *18:00h do dia anterior*. Após esse horário, só será possível confirmar presença diretamente com um membro da direção ou a presidência! 👊🟢⚪`;
+      return `Fala meu craque *${athlete.name}*! ⚽🔥🚀\n\nConvocação oficial para a pelada do *Teimoso F.C.C.* no dia *${formatDateDisplay(window.currentDate)}*! 🏆👟\n\nEscolha uma das opções abaixo clicando no link:\n\n🟢 *CONFIRMADO (Estou dentro!):*\n${linkConfirmar}\n\n⚠️ *JUSTIFICAR (Justificar ausência no App):*\n${linkJustificar}\n\n❌ *FORA (Não vou participar):*\n${linkFora}\n\n⏰ *Atenção:* O prazo para confirmar pelo link vai até as *18:00h do dia anterior*. Após esse horário, só será possível confirmar presença diretamente com a diretoria ou presidência! 👊🟢⚪`;
     }
 
     window.openWhatsappIndividual = function(athleteId, phone, name) {
@@ -2283,7 +2170,6 @@
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
 
-    // --- FILA DE ESPERA DE DISPARO EM MASSA (APENAS ATLETAS ATIVOS) ---
     window.openWhatsappMassModal = function() {
       if (!window.isAdmin) {
         window.showToast("Apenas administradores podem enviar mensagens de convocação.", "error");
@@ -2617,7 +2503,7 @@
             </div>`;
         });
 
-        // --- CÁLCULO E RENDERIZAÇÃO DAS MULTAS POR FALTA (R$ 30,00 + R$ 1,00/dia) ---
+        // --- CÁLCULO E RENDERIZAÇÃO DAS MULTAS POR FALTA (APENAS >= 01/11/2026) ---
         const rawFines = window.absenceFines[athlete.id] || [];
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let athleteTotalFinesBase = 0;
@@ -2701,7 +2587,7 @@
                   </div>
                 ` : ''}
                 
-                ${finesHtml ? `
+                ${athleteFines.some(f => f.date >= '2026-11-01') ? `
                   <div class="bg-rose-950/20 border border-rose-500/20 rounded-2xl p-3.5 space-y-2">
                     <h5 class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
                       <i class="fa-solid fa-gavel"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia)
@@ -2820,11 +2706,15 @@
           }
         });
 
-        const rawFines = window.absenceFines[athleteId] || [];
-        const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
+        const athleteFines = Array.isArray(window.absenceFines[athleteId])
+          ? window.absenceFines[athleteId]
+          : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (!fine.paid && fine.date >= '2026-11-01') {
+          // Multas antes de 01/11/2026 não são cobradas
+          if (fine.date < '2026-11-01') return;
+
+          if (!fine.paid) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0) daysPassed = 0;
@@ -2862,69 +2752,56 @@
       });
     };
 
-    // --- RELATÓRIOS (CONSIDERANDO DATA DE INÍCIO INDIVIDUAL) ---
     window.renderReports = function() {
-      const tbody = document.getElementById('reportsTableBody');
+      const tbody = document.getElementById('reportsTableBody'); 
       tbody.innerHTML = '';
-
+      
       window.athletes.sort((a, b) => a.name.localeCompare(b.name)).forEach(athlete => {
-        const effectiveStart = getAthleteEffectiveStartDate(athlete);
-        
-        const eligibleDates = effectiveStart
-          ? window.datesList.filter(d => d >= effectiveStart)
-          : window.datesList;
+        // Peladas elegíveis respeitando a data de início de cada atleta
+        const eligibleDates = window.datesList.filter(d => {
+          if (!athlete.effectiveStartDate) return true;
+          return d >= athlete.effectiveStartDate;
+        });
 
-        const totalPeladas = eligibleDates.length;
-        let confCount = eligibleDates.reduce((acc, d) => {
-          return acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0);
-        }, 0);
-
-        const rate = totalPeladas > 0 ? Math.round((confCount / totalPeladas) * 100) : 0;
+        const totalEligible = eligibleDates.length;
+        let confCount = eligibleDates.reduce((acc, d) => acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0), 0);
+        const rate = totalEligible > 0 ? Math.round((confCount / totalEligible) * 100) : 0;
         const finStatus = getAthleteFinancialStatus(athlete.id);
-        const tr = document.createElement('tr');
+        const tr = document.createElement('tr'); 
         tr.className = "hover:bg-slate-900/60";
 
-        let startHint = '';
-        if (effectiveStart) {
-          const [sy, sm, sd] = effectiveStart.split('-');
-          startHint = `<span class="block text-[9px] text-sky-400 font-normal">A partir de ${sd}/${sm}/${sy}</span>`;
+        let startDateInfo = '';
+        if (athlete.effectiveStartDate) {
+          const [ey, em, ed] = athlete.effectiveStartDate.split('-');
+          startDateInfo = `<div class="text-[9px] text-sky-400 font-normal">Contagem a partir de: ${ed}/${em}/${ey}</div>`;
         }
 
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-200">
-            ${athlete.name}
-            ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase ml-1">Suspenso</span>' : ''}
-            ${startHint}
+            <div>${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase">Suspenso</span>' : ''}</div>
+            ${startDateInfo}
           </td>
           <td class="py-3 px-4 text-slate-400">${athlete.position}</td>
-          <td class="py-3 px-4 text-center font-bold text-slate-300">${confCount} / ${totalPeladas}</td>
+          <td class="py-3 px-4 text-center font-bold text-slate-300">${confCount} / ${totalEligible}</td>
           <td class="py-3 px-4 text-center font-bold text-emerald-400">${rate}%</td>
-          <td class="py-3 px-4 text-right">
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30'}">
-              ${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}
-            </span>
-          </td>
+          <td class="py-3 px-4 text-right"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30'}">${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}</span></td>
         `;
         tbody.appendChild(tr);
       });
     };
 
     window.exportReportsCSV = function() {
-      let csv = "Atleta,Posicao,Presencas,TotalPeladasElegiveis,TaxaAssiduidade,DataInicioEstatistica\n";
+      let csv = "Atleta,Posicao,InicioContagem,Presencas,PeladasElegiveis,TaxaAssiduidade\n";
       window.athletes.forEach(athlete => {
-        const effectiveStart = getAthleteEffectiveStartDate(athlete);
-        const eligibleDates = effectiveStart
-          ? window.datesList.filter(d => d >= effectiveStart)
-          : window.datesList;
-
-        const totalPeladas = eligibleDates.length;
-        let confCount = eligibleDates.reduce((acc, d) => {
-          return acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0);
-        }, 0);
-
-        const rate = totalPeladas > 0 ? Math.round((confCount / totalPeladas) * 100) : 0;
-        const startStr = effectiveStart || "Inicio do Ano";
-        csv += `"${athlete.name}","${athlete.position}",${confCount},${totalPeladas},"${rate}%","${startStr}"\n`;
+        const eligibleDates = window.datesList.filter(d => {
+          if (!athlete.effectiveStartDate) return true;
+          return d >= athlete.effectiveStartDate;
+        });
+        const totalEligible = eligibleDates.length;
+        let confCount = eligibleDates.reduce((acc, d) => acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0), 0);
+        const rate = totalEligible > 0 ? Math.round((confCount / totalEligible) * 100) : 0;
+        const startStr = athlete.effectiveStartDate || "Inicio do Ano";
+        csv += `"${athlete.name}","${athlete.position}","${startStr}",${confCount},${totalEligible},"${rate}%"\n`;
       });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       a.download = `relatorio_fcc.csv`; a.click(); window.showToast("Relatório exportado!", "success");
