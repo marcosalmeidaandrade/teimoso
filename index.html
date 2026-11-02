@@ -154,8 +154,13 @@
           </button>
         </nav>
 
-        <!-- LOGGED USER CONTROLS & NOTIFICATION BELL -->
+        <!-- LOGGED USER CONTROLS, SOUND TOGGLE & NOTIFICATION BELL -->
         <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
+          <!-- BOTÃO LIGAR/DESLIGAR SOM -->
+          <button onclick="toggleAudioSound()" id="btnSoundToggle" title="Ativar/Desativar Sons de Clique" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-emerald-400 text-xs font-bold transition-all flex items-center justify-center shrink-0">
+            <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+          </button>
+
           <button onclick="openActivityLogModal()" id="btnActivityLog" title="Histórico de Interações e Alertas" class="hidden relative px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0">
             <i class="fa-solid fa-bell"></i>
             <span id="activityBadgeCount" class="bg-emerald-500 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full">0</span>
@@ -722,6 +727,117 @@
     const db = getFirestore(app);
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
+    // --- SISTEMA DE ÁUDIO WEB NATIVO (EFEITOS SONOROS DE CLIQUE) ---
+    let audioCtx = null;
+    window.isSoundEnabled = localStorage.getItem('teimoso_soundEnabled') !== 'false';
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    window.playSelectionSound = function(type = 'click') {
+      if (!window.isSoundEnabled) return;
+      try {
+        initAudioContext();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+          // Clique sutil e suave (pop de seleção)
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(320, now + 0.04);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.045);
+
+        } else if (type === 'confirm') {
+          // Acorde alegre de confirmação/sucesso
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + (i * 0.04));
+            gain.gain.setValueAtTime(0.15, now + (i * 0.04));
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.04) + 0.18);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + (i * 0.04));
+            osc.stop(now + (i * 0.04) + 0.2);
+          });
+
+        } else if (type === 'cancel') {
+          // Tom grave para desmarcações ou alertas
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(280, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.085);
+        }
+      } catch (err) {
+        console.warn("Audio playback prevented:", err);
+      }
+    };
+
+    window.toggleAudioSound = function() {
+      window.isSoundEnabled = !window.isSoundEnabled;
+      localStorage.setItem('teimoso_soundEnabled', window.isSoundEnabled ? 'true' : 'false');
+      updateSoundButtonUI();
+      if (window.isSoundEnabled) {
+        window.playSelectionSound('confirm');
+        window.showToast("Efeitos sonoros ativados! 🔊", "success");
+      } else {
+        window.showToast("Efeitos sonoros desativados 🔇", "error");
+      }
+    };
+
+    function updateSoundButtonUI() {
+      const btn = document.getElementById('btnSoundToggle');
+      const icon = document.getElementById('soundIcon');
+      if (!btn || !icon) return;
+      if (window.isSoundEnabled) {
+        icon.className = "fa-solid fa-volume-high text-emerald-400";
+        btn.classList.remove('opacity-60', 'text-slate-500');
+        btn.title = "Sons de clique: ATIVADOS (Toque para silenciar)";
+      } else {
+        icon.className = "fa-solid fa-volume-xmark text-slate-500";
+        btn.classList.add('opacity-60', 'text-slate-500');
+        btn.title = "Sons de clique: DESATIVADOS (Toque para ativar)";
+      }
+    }
+
+    // Ouvinte global para emitir o som em qualquer elemento clicável
+    document.addEventListener('click', (e) => {
+      initAudioContext();
+      const target = e.target.closest('button, select, input[type="checkbox"], [onclick], a');
+      if (target && !target.dataset.noClickSound) {
+        // Se for um botão de confirmação específico, o som personalizado toca na própria função
+        if (!target.getAttribute('onclick')?.includes('setPresenceStatus')) {
+          window.playSelectionSound('click');
+        }
+      }
+    }, true);
+
     // --- ESTADO GLOBAL ---
     window.currentUser = null;
     window.isAdmin = false;
@@ -962,6 +1078,7 @@
 
     // --- ANIMAÇÃO DE CONFIRMAÇÃO COM IMAGEM DO ATLETA ---
     window.showAnimatedConfirmation = function(athlete) {
+      window.playSelectionSound('confirm');
       const overlay = document.getElementById('animatedConfirmOverlay');
       const content = document.getElementById('animatedConfirmContent');
       const photoEl = document.getElementById('confirmAthletePhoto');
@@ -1279,6 +1396,7 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
       populateDateSelect();
       buildStarRatingSelector(5);
+      updateSoundButtonUI();
 
       let isFirstLoad = true;
       onSnapshot(dbDocRef, (docSnap) => {
@@ -1480,6 +1598,7 @@
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
+        window.playSelectionSound('cancel');
         window.showToast("Atleta suspenso. Apenas administradores podem realizar ações para este atleta.", "error");
         return;
       }
@@ -1487,6 +1606,7 @@
       // Usuário comum só pode alterar a presença do seu próprio perfil
       if (!window.isAdmin) {
         if (!window.currentUser || window.currentUser.id !== athleteId) {
+          window.playSelectionSound('cancel');
           window.showToast("Você só pode confirmar ou alterar a presença do seu próprio login.", "error");
           return;
         }
@@ -1494,6 +1614,7 @@
 
       const isPastDeadline = checkDeadlinePassed();
       if (isPastDeadline && !window.isAdmin) {
+        window.playSelectionSound('cancel');
         window.showToast("Prazo encerrado às 18h do dia anterior! Entre em contato com o presidente.", "error");
         return;
       }
@@ -1507,6 +1628,7 @@
       if (!window.absenceFines[athleteId]) window.absenceFines[athleteId] = [];
 
       if (current === newStatus) {
+        window.playSelectionSound('cancel');
         window.presences[window.currentDate][athleteId] = { status: null, reason: '', attended: false, confirmedAt: null };
         if (current === 'FALTA') {
           window.absenceFines[athleteId] = window.absenceFines[athleteId].filter(f => f.date !== window.currentDate);
@@ -1518,10 +1640,15 @@
         }
 
         if (newStatus === 'JUSTIFICADO') {
+          window.playSelectionSound('click');
           currentJustifyAthleteId = athleteId;
           document.getElementById('justifyReasonInput').value = window.presences[window.currentDate][athleteId]?.reason || '';
           document.getElementById('justifyModal').classList.remove('hidden');
           return;
+        }
+
+        if (newStatus === 'FORA' || newStatus === 'FALTA') {
+          window.playSelectionSound('cancel');
         }
 
         // REGRA ESTRITA: Multa de R$ 30,00 só é aplicada a partir de 01/11/2026.
