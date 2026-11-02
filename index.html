@@ -575,9 +575,15 @@
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <div>
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Data da Pelada:</label>
-        <input type="date" id="newDateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Data da Pelada:</label>
+          <input type="date" id="newDateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Horário da Pelada:</label>
+          <input type="time" id="newTimeInput" value="07:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+        </div>
       </div>
       <div class="flex items-center gap-2 pt-2">
         <button onclick="closeNewDateModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
@@ -754,6 +760,7 @@
     }
 
     window.datesList = ["2026-11-03"];
+    window.peladaTimes = JSON.parse(localStorage.getItem('teimoso_peladaTimes')) || { "2026-11-03": "07:00" };
     window.currentDate = window.datesList[0];
     window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
@@ -764,6 +771,50 @@
     function repairFinancialData(saved) {
       if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) return initialMockFinancial;
       return saved;
+    }
+
+    // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN (SÁBADO ANTECEDENTE / ÚLTIMA PELADA) ---
+    function getSmartDefaultDate() {
+      if (!window.datesList || window.datesList.length === 0) return "";
+      const sorted = [...window.datesList].sort();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Encontra a próxima pelada no futuro (ou hoje)
+      const futureDates = sorted.filter(d => {
+        const [y, m, day] = d.split('-');
+        return new Date(y, m - 1, day, 23, 59, 59) >= today;
+      });
+
+      if (futureDates.length > 0) {
+        const nextDateStr = futureDates[0];
+        const [ny, nm, nd] = nextDateStr.split('-');
+        const nextPeladaDate = new Date(ny, nm - 1, nd, 0, 0, 0);
+
+        // Calcula o sábado imediatamente anterior à próxima pelada
+        const targetSaturday = new Date(nextPeladaDate);
+        let dayOfWeek = targetSaturday.getDay(); // 0: domingo, 1: segunda, ..., 6: sábado
+        let daysToSaturday = (dayOfWeek + 1) % 7;
+        targetSaturday.setDate(targetSaturday.getDate() - daysToSaturday);
+        targetSaturday.setHours(0, 0, 0, 0);
+
+        // Se hoje já é o sábado que antecede ou depois, seleciona a próxima pelada
+        if (today >= targetSaturday) {
+          return nextDateStr;
+        }
+      }
+
+      // Caso contrário, retorna a última pelada realizada (mais recente que já passou)
+      const pastDates = sorted.filter(d => {
+        const [y, m, day] = d.split('-');
+        return new Date(y, m - 1, day, 23, 59, 59) < today;
+      });
+
+      if (pastDates.length > 0) {
+        return pastDates[pastDates.length - 1];
+      }
+
+      return sorted[sorted.length - 1];
     }
 
     // --- REGISTRO DE AUDITORIA E DISPARO DE ALERTAS AUTOMÁTICOS ---
@@ -981,8 +1032,10 @@
         localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
         localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
         localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
+        localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
         await setDoc(dbDocRef, {
           datesList: window.datesList,
+          peladaTimes: window.peladaTimes,
           athletes: window.athletes,
           presences: window.presences,
           financialPayments: window.financialPayments,
@@ -1001,7 +1054,9 @@
     window.isPastDeadlineForDate = function(dateStr) {
       if (!dateStr) return false;
       const [y, m, d] = dateStr.split('-');
-      const peladaDate = new Date(y, m - 1, d, 20, 0, 0);
+      const peladaTime = window.peladaTimes?.[dateStr] || "07:00";
+      const [hr, min] = peladaTime.split(':').map(Number);
+      const peladaDate = new Date(y, m - 1, d, hr || 7, min || 0, 0);
       const deadlineDate = new Date(peladaDate);
       deadlineDate.setDate(peladaDate.getDate() - 1);
       deadlineDate.setHours(18, 0, 0, 0);
@@ -1147,6 +1202,10 @@
         document.getElementById('btnMassFinWhatsapp').classList.add('hidden');
       }
 
+      // Aplica a regra de data padrão inteligente ao efetuar login
+      window.currentDate = getSmartDefaultDate();
+      populateDateSelect();
+
       window.showToast(`Bem-vindo, ${firstName}!`, "success");
       renderAthletesList();
       renderFinancial();
@@ -1189,6 +1248,7 @@
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
+          if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
           if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
           if (data.presences) window.presences = data.presences;
           if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
@@ -1200,9 +1260,7 @@
           pruneActivityLogs();
 
           if (isFirstLoad) {
-            if (!window.datesList.includes(window.currentDate)) {
-              window.currentDate = window.datesList[0] || "";
-            }
+            window.currentDate = getSmartDefaultDate();
             isFirstLoad = false;
             window.checkMagicLink();
           }
@@ -1244,13 +1302,31 @@
     window.populateDateSelect = function() {
       const select = document.getElementById('dateSelect');
       select.innerHTML = '';
-      window.datesList.forEach(d => {
+
+      const currentYear = new Date().getFullYear();
+      const sorted = [...window.datesList].sort();
+
+      // Usuários comuns podem navegar entre peladas anteriores até o início do ano corrente
+      const availableDates = window.isAdmin
+        ? sorted
+        : sorted.filter(d => {
+            const y = parseInt(d.split('-')[0], 10);
+            return y >= currentYear;
+          });
+
+      availableDates.forEach(d => {
         const opt = document.createElement('option');
         opt.value = d;
         opt.innerText = formatDateDisplay(d);
         if (d === window.currentDate) opt.selected = true;
         select.appendChild(opt);
       });
+
+      if (!availableDates.includes(window.currentDate) && availableDates.length > 0) {
+        window.currentDate = availableDates[availableDates.length - 1];
+        select.value = window.currentDate;
+      }
+
       document.getElementById('massModalDate').innerText = formatDateDisplay(window.currentDate);
     };
 
@@ -1265,7 +1341,8 @@
       if(!dateStr) return "";
       const [y, m, d] = dateStr.split('-');
       const dateObj = new Date(y, m - 1, d);
-      return dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase();
+      const timeStr = window.peladaTimes?.[dateStr] ? ` às ${window.peladaTimes[dateStr]}` : ' às 07:00';
+      return dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase() + timeStr;
     }
 
     // --- FILTRO DOS CARDS DE PRESENÇA (TOGGLEABLE) ---
@@ -1698,19 +1775,39 @@
     };
 
     // --- GERENCIAR DATAS ---
-    window.openNewDateModal = function() { document.getElementById('newDateInput').value = ''; document.getElementById('newDateModal').classList.remove('hidden'); };
+    window.openNewDateModal = function() { 
+      document.getElementById('newDateInput').value = ''; 
+      document.getElementById('newTimeInput').value = '07:00'; 
+      document.getElementById('newDateModal').classList.remove('hidden'); 
+    };
     window.closeNewDateModal = function() { document.getElementById('newDateModal').classList.add('hidden'); };
     window.addNewDate = function() {
       const val = document.getElementById('newDateInput').value;
+      const timeVal = document.getElementById('newTimeInput').value || '07:00';
       if (!val || window.datesList.includes(val)) return window.showToast("Data inválida ou existente.");
-      window.datesList.push(val); window.datesList.sort(); window.currentDate = val;
-      window.saveData(); closeNewDateModal(); populateDateSelect(); renderAthletesList();
-      window.showToast("Data adicionada!", "success");
+      
+      if (!window.peladaTimes) window.peladaTimes = {};
+      window.peladaTimes[val] = timeVal;
+      window.datesList.push(val); 
+      window.datesList.sort(); 
+      window.currentDate = val;
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Criou a pelada para ${formatDateDisplay(val)}`);
+      
+      window.saveData(); 
+      closeNewDateModal(); 
+      populateDateSelect(); 
+      renderAthletesList();
+      window.showToast("Data adicionada com sucesso!", "success");
     };
     window.openManageDatesModal = function() {
       const list = document.getElementById('manageDatesList'); list.innerHTML = '';
       window.datesList.forEach(d => {
-        list.innerHTML += `<div class="py-2.5 flex items-center justify-between text-xs"><span class="font-bold text-slate-200">${formatDateDisplay(d)}</span><button onclick="deleteDate('${d}')" class="px-3 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-600 rounded-lg font-bold">Excluir</button></div>`;
+        list.innerHTML += `
+          <div class="py-2.5 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-200">${formatDateDisplay(d)}</span>
+            <button onclick="deleteDate('${d}')" class="px-3 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-600 rounded-lg font-bold">Excluir</button>
+          </div>
+        `;
       });
       document.getElementById('manageDatesModal').classList.remove('hidden');
     };
@@ -1719,7 +1816,10 @@
       if (window.datesList.length <= 1) return window.showToast("Mantenha ao menos uma data.");
       showConfirm("Excluir data?", () => {
         window.datesList = window.datesList.filter(item => item !== d);
-        if (window.currentDate === d) window.currentDate = window.datesList[0];
+        if (window.peladaTimes && window.peladaTimes[d]) {
+          delete window.peladaTimes[d];
+        }
+        if (window.currentDate === d) window.currentDate = getSmartDefaultDate();
         window.saveData(); populateDateSelect(); renderAthletesList(); openManageDatesModal(); window.showToast("Excluída.", "success");
       });
     };
