@@ -470,7 +470,7 @@
               <option value="Volante">Volante</option>
               <option value="Meia">Meia</option>
               <option value="Atacante">Atacante</option>
-              <option value="EXTRA">EXTRA (Somente Resenha)</option>
+              <option value="EXTRA">EXTRA (Resenha)</option>
             </select>
           </div>
           <div>
@@ -696,8 +696,16 @@
     window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || initialMockFinancial;
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
 
+    if (!window.athletes.some(a => a.name.toUpperCase().includes('ANDINHO'))) {
+      window.athletes.push(defaultAthletes[6]);
+    }
+    if (!window.financialPayments[7]) {
+      window.financialPayments[7] = initialMockFinancial[7];
+    }
+
     function repairFinancialData(saved) {
       if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) return initialMockFinancial;
+      if (!saved[7]) saved[7] = initialMockFinancial[7];
       return saved;
     }
 
@@ -1058,9 +1066,9 @@
           if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
           if (data.presences) window.presences = data.presences;
-          if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.activityLogs) window.activityLogs = data.activityLogs;
           if (data.notificationSettings) window.notificationSettings = data.notificationSettings;
+          if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           window.financialPayments = repairFinancialData(data.financialPayments);
 
           if (isFirstLoad) {
@@ -1225,7 +1233,9 @@
     };
 
     function getAthleteFinancialStatus(athleteId) {
-      if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
+      if (window.alwaysUpToDateMap && window.alwaysUpToDateMap[athleteId] === true) {
+        return 'uptodate';
+      }
       const now = new Date();
       const payments = window.financialPayments[athleteId] || {};
       for (let mIndex = 0; mIndex < months.length; mIndex++) {
@@ -1239,10 +1249,26 @@
       return 'uptodate';
     }
 
+    window.toggleAlwaysUpToDate = function(athleteId, isChecked) {
+      if (!window.canEditFinancial) {
+        window.showToast("Apenas Marcão e Pablo Padilha podem alterar o status fixo.", "error");
+        return;
+      }
+      if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
+      window.alwaysUpToDateMap[athleteId] = isChecked;
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `${isChecked ? 'Marcou' : 'Desmarcou'} "Sempre em Dia" para ${athlete?.name || 'Atleta'}`);
+      window.saveData();
+      renderFinancial();
+      renderAthletesList();
+      renderReports();
+      window.showToast(`Status de ${athlete?.name || 'Atleta'} atualizado para ${isChecked ? 'EM DIA' : 'PADRÃO'}!`, "success");
+    };
+
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
       tbody.innerHTML = '';
-      let countConf = 0, countJust = 0, countOut = 0, countTotal = 0;
+      let countConf = 0, countJust = 0, countOut = 0, countTotalActive = 0;
       const dayPresences = window.presences[window.currentDate] || {};
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -1253,7 +1279,10 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false };
         const status = pRecord.status;
 
-        if (!athlete.isSuspended) countTotal++;
+        if (!athlete.isSuspended) {
+          countTotalActive++;
+        }
+
         if (status === 'CONFIRMADO') countConf++;
         else if (status === 'JUSTIFICADO') countJust++;
         else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
@@ -1343,7 +1372,7 @@
       document.getElementById('statConfirmed').innerText = countConf;
       document.getElementById('statJustified').innerText = countJust;
       document.getElementById('statOut').innerText = countOut;
-      document.getElementById('statTotal').innerText = countTotal;
+      document.getElementById('statTotal').innerText = countTotalActive;
     };
 
     window.toggleActualAttendance = function(athleteId, isChecked) {
@@ -1776,7 +1805,7 @@
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
         const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30' : 'text-rose-400 bg-rose-500/20 border border-rose-500/30';
         const isExpanded = window.expandedFinCards.has(athlete.id);
-        const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
+        const isAlwaysUpToDate = window.alwaysUpToDateMap && window.alwaysUpToDateMap[athlete.id] === true;
 
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
@@ -1787,11 +1816,11 @@
           let paidAmount = Number(monthData.amount) || 0;
           
           if (isPaid) athleteTotalPaid += paidAmount;
-          let interest = (!isPaid && now >= firstDayAfterDue) ? (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
+          let interest = (!isPaid && now >= firstDayAfterDue && !athlete.isSuspended) ? (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
           athleteTotalInterest += interest;
 
           const suggestedFee = athlete.monthlyFee || 110;
-          if (!isPaid) {
+          if (!isPaid && !athlete.isSuspended) {
             athleteInstallmentsDue += suggestedFee;
             athleteTotalDue += (suggestedFee + interest);
           }
@@ -1808,13 +1837,17 @@
             </div>`;
         });
 
-        totalGeneralPaid += athleteTotalPaid;
-        totalGeneralDue += athleteTotalDue;
-        totalGeneralInterest += athleteTotalInterest;
+        if (!athlete.isSuspended) {
+          totalGeneralPaid += athleteTotalPaid;
+          totalGeneralDue += athleteTotalDue;
+          totalGeneralInterest += athleteTotalInterest;
+        } else {
+          totalGeneralPaid += athleteTotalPaid;
+        }
 
         if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
         if (activeFinancialFilter === 'interest' && athleteTotalInterest <= 0) return;
-        if (activeFinancialFilter === 'due' && athleteTotalDue <= 0) return;
+        if (activeFinancialFilter === 'due' && (athleteTotalDue <= 0 || athlete.isSuspended)) return;
 
         container.innerHTML += `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
@@ -1834,15 +1867,13 @@
             </button>
             <div class="${isExpanded ? 'block' : 'hidden'} border-t border-slate-800 bg-slate-950/50">
               <div class="p-4 space-y-4">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
                   <div class="flex items-center gap-2">
-                    <input type="checkbox" id="always_up_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} ${disableInput} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                    <label for="always_up_${athlete.id}" class="text-xs font-bold text-slate-200 ${window.canEditFinancial ? 'cursor-pointer' : ''}">Forçar Status: Considerar Sempre em Dia</label>
+                    <input type="checkbox" id="chkAlways_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} ${!window.canEditFinancial ? 'disabled' : ''} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}">
+                    <label for="chkAlways_${athlete.id}" class="text-xs font-bold text-emerald-400 cursor-pointer">
+                      Considerar Sempre em Dia (Forçar status "Em Dia" em todo o app)
+                    </label>
                   </div>
-                  <span class="text-[10px] text-slate-400">Exclusivo Marcão / Pablo Padilha</span>
-                </div>
-                <div class="flex justify-between">
-                  <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades</h4>
                   ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-500/30"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
@@ -1855,33 +1886,23 @@
       document.getElementById('finTotalDue').innerText = `R$ ${totalGeneralDue.toFixed(2)}`;
     };
 
-    window.toggleAlwaysUpToDate = function(athleteId, isChecked) {
-      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem alterar esta opção.");
-      window.alwaysUpToDateMap[athleteId] = isChecked;
-      const target = window.athletes.find(a => a.id === athleteId);
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Definiu "Sempre em Dia" como ${isChecked ? 'ATIVO' : 'INATIVO'} para ${target?.name || ''}`);
-      window.saveData();
-      renderFinancial();
-      renderAthletesList();
-      renderReports();
-      window.showToast("Status financeiro atualizado!", "success");
-    };
-
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const fee = athlete?.monthlyFee || 110;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
-      window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: isChecked ? 110 : 0 };
-      const target = window.athletes.find(a => a.id === athleteId);
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `${isChecked ? 'Baixou' : 'Desmarcou'} mensalidade (${mKey.toUpperCase()}) de ${target?.name || ''}`);
+      window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: isChecked ? fee : 0 };
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `${isChecked ? 'Baixou' : 'Desmarcou'} mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''}`);
       window.saveData(); renderFinancial(); renderReports();
     };
     window.doubleClickSettleMonth = function(athleteId, mKey) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const fee = athlete?.monthlyFee || 110;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
-      window.financialPayments[athleteId][mKey] = { paid: true, amount: 110 };
-      const target = window.athletes.find(a => a.id === athleteId);
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${target?.name || ''}`);
-      window.saveData(); renderFinancial(); renderReports(); window.showToast("Parcela baixada!", "success");
+      window.financialPayments[athleteId][mKey] = { paid: true, amount: fee };
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''} no valor de R$ ${fee.toFixed(2)}`);
+      window.saveData(); renderFinancial(); renderReports(); window.showToast(`Parcela baixada (R$ ${fee.toFixed(2)})!`, "success");
     };
     window.updateFinancialValue = function(athleteId, mKey, val) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
