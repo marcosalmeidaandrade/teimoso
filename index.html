@@ -8,16 +8,16 @@
   <!-- PWA & Mobile Web App Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Teimoso FCC">
-  <meta name="theme-color" content="#020617">
+  <meta name="theme-color" content="#ffffff">
   
   <!-- Apple Touch Icon & Favicon -->
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="icon" type="image/png" href="logo.png">
 
   <!-- Web App Manifest (Data URI) -->
-  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Teimoso%20F.C.C.%22%2C%22short_name%22%3A%22TeimosoFCC%22%2C%22description%22%3A%22Gest%C3%A3o%20Inteligente%20de%20Peladas%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%2C%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Teimoso%20F.C.C.%22%2C%22short_name%22%3A%22TeimosoFCC%22%2C%22description%22%3A%22Gest%C3%A3o%20Inteligente%20de%20Peladas%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%2310b981%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%2C%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -32,18 +32,18 @@
       -webkit-tap-highlight-color: transparent;
     }
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
     }
     ::-webkit-scrollbar-track {
-      background: #0f172a;
+      background: #f1f5f9;
     }
     ::-webkit-scrollbar-thumb {
-      background: #334155;
+      background: #cbd5e1;
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
+      background: #94a3b8;
     }
     .hide-scrollbar::-webkit-scrollbar {
       display: none;
@@ -54,31 +54,31 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+<body class="bg-slate-100 text-slate-800 h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white antialiased">
 
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed top-5 right-5 z-[250] flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- ANIMATED CONFIRMATION OVERLAY (COM FOTO E NOME DO ATLETA) -->
-  <div id="animatedConfirmOverlay" class="fixed inset-0 z-[200] pointer-events-none hidden flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-500 opacity-0">
-    <div id="animatedConfirmContent" class="transform scale-0 transition-transform duration-500 ease-out flex flex-col items-center text-center p-6 max-w-sm">
+  <div id="animatedConfirmOverlay" class="fixed inset-0 z-[200] pointer-events-none hidden flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md transition-all duration-500 opacity-0">
+    <div id="animatedConfirmContent" class="transform scale-0 transition-transform duration-500 ease-out flex flex-col items-center text-center p-8 max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200">
       
       <!-- FOTO DO ATLETA CONFIRMADO -->
       <div class="relative mb-3">
-        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-emerald-400 overflow-hidden shadow-[0_0_25px_rgba(52,211,153,0.7)] bg-slate-900 flex items-center justify-center">
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-emerald-500 overflow-hidden shadow-[0_0_25px_rgba(16,185,129,0.5)] bg-slate-100 flex items-center justify-center">
           <img id="confirmAthleteAvatar" src="" alt="Atleta" class="w-full h-full object-cover">
         </div>
-        <div class="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 w-8 h-8 rounded-full flex items-center justify-center shadow-lg text-sm">
+        <div class="absolute -bottom-1 -right-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg text-sm border-2 border-white">
           ⚽
         </div>
       </div>
 
-      <h2 class="text-4xl sm:text-5xl font-black text-emerald-400 uppercase tracking-widest drop-shadow-[0_0_15px_rgba(52,211,153,0.8)] mb-1">
+      <h2 class="text-4xl sm:text-5xl font-black text-emerald-600 uppercase tracking-widest drop-shadow-sm mb-1">
         TÁ LÁ!
       </h2>
       
-      <p id="confirmAthleteName" class="text-lg sm:text-xl font-black text-white tracking-wide uppercase mb-1">Craque Confirmado</p>
-      <p class="text-xs sm:text-sm font-semibold text-emerald-300/80 mb-5 tracking-wide">Presença confirmada na pelada! 🏆👟</p>
+      <p id="confirmAthleteName" class="text-lg sm:text-xl font-black text-slate-800 tracking-wide uppercase mb-1">Craque Confirmado</p>
+      <p class="text-xs sm:text-sm font-semibold text-slate-600 mb-5 tracking-wide">Presença confirmada na pelada! 🏆👟</p>
       
       <div class="flex gap-6 text-3xl">
         <span class="animate-[spin_4s_linear_infinite]">⚽</span>
@@ -88,27 +88,27 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN ATHLETE PHOTO MODAL (VISUALIZAÇÃO COM 1 TOQUE) -->
-  <div id="fullscreenPhotoModal" onclick="closeFullscreenPhoto()" class="fixed inset-0 z-[300] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
+  <!-- FULLSCREEN ATHLETE PHOTO MODAL -->
+  <div id="fullscreenPhotoModal" onclick="closeFullscreenPhoto()" class="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
     <!-- TOP BAR -->
-    <div class="w-full flex items-center justify-between max-w-lg pt-2 text-slate-400">
+    <div class="w-full flex items-center justify-between max-w-lg pt-2 text-slate-200">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-id-badge text-emerald-400"></i>
         <span id="fullscreenPhotoAthleteName" class="text-sm font-black text-white uppercase tracking-wider">Nome do Atleta</span>
       </div>
-      <button onclick="closeFullscreenPhoto()" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+      <button onclick="closeFullscreenPhoto()" class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
     </div>
 
     <!-- MAIN IMAGE CONTAINER -->
     <div class="relative flex items-center justify-center my-auto p-2">
-      <img id="fullscreenPhotoImage" src="" alt="Foto do Atleta" class="max-h-[72vh] max-w-[90vw] md:max-w-md object-contain rounded-3xl shadow-2xl border-2 border-slate-700/80 transition-transform duration-300 transform scale-95" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=0f172a&color=34d399&bold=true&size=512'">
+      <img id="fullscreenPhotoImage" src="" alt="Foto do Atleta" class="max-h-[72vh] max-w-[90vw] md:max-w-md object-contain rounded-3xl shadow-2xl border-4 border-white/20 transition-transform duration-300 transform scale-95" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=e2e8f0&color=059669&bold=true&size=512'">
     </div>
 
     <!-- BOTTOM HELPER CAPTION -->
     <div class="pb-4 text-center">
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] font-bold text-slate-300 shadow-lg">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/95 border border-slate-700 text-[11px] font-bold text-slate-200 shadow-xl">
         <i class="fa-solid fa-hand-pointer text-emerald-400 animate-pulse"></i>
         <span>Toque na imagem ou no fundo para retornar</span>
       </div>
@@ -116,23 +116,23 @@
   </div>
 
   <!-- GLOBAL LOGIN OVERLAY -->
-  <div id="globalLoginOverlay" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-4 backdrop-blur-md">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-6">
-      <div class="w-24 h-24 rounded-2xl bg-white border border-slate-700 overflow-hidden flex items-center justify-center shadow-lg shadow-emerald-950/40 shrink-0">
+  <div id="globalLoginOverlay" class="fixed inset-0 z-[100] bg-slate-900/60 flex flex-col items-center justify-center p-4 backdrop-blur-md">
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-6">
+      <div class="w-24 h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shadow-md shrink-0">
         <img src="logo.png" alt="Teimoso F.C.C. Logo" class="w-full h-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=10b981&color=fff&bold=true'">
       </div>
       <div class="text-center space-y-1">
-        <h2 class="text-xl font-black text-emerald-400 uppercase tracking-wider">Acesso ao Sistema</h2>
-        <p class="text-xs text-slate-400 font-medium">Sua senha são os <strong class="text-slate-200">4 últimos dígitos</strong> do seu telefone.</p>
+        <h2 class="text-xl font-black text-slate-800 uppercase tracking-wider">Acesso ao Sistema</h2>
+        <p class="text-xs text-slate-500 font-medium">Sua senha são os <strong class="text-slate-800">4 últimos dígitos</strong> do seu telefone.</p>
       </div>
       <div class="w-full mt-2">
-        <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-4 text-3xl font-black text-emerald-400 focus:outline-none focus:border-emerald-500 text-center tracking-[0.5em] placeholder-slate-700 shadow-inner">
+        <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-4 text-3xl font-black text-emerald-600 focus:outline-none focus:border-emerald-500 focus:bg-white text-center tracking-[0.5em] placeholder-slate-300 shadow-inner">
       </div>
-      <button onclick="performLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-950/40 uppercase tracking-wider active:scale-95">
+      <button onclick="performLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-black transition-all shadow-lg shadow-emerald-600/30 uppercase tracking-wider active:scale-95">
         Entrar na Pelada
       </button>
     </div>
-    <div class="mt-8 text-slate-600 text-[10px] font-bold">
+    <div class="mt-8 text-slate-500 text-[10px] font-bold">
       DEVELOPER BY MARCOS ALMEIDA®
     </div>
   </div>
@@ -140,33 +140,33 @@
   <!-- MAIN WRAPPER -->
   <div class="flex-grow flex flex-col">
     <!-- HEADER -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
         
         <!-- LOGO & TITLE -->
         <div class="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-          <div class="w-12 h-12 rounded-2xl bg-white border border-slate-700 overflow-hidden flex items-center justify-center shadow-lg shadow-emerald-950/40 shrink-0">
+          <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center shadow-sm shrink-0">
             <img src="logo.png" alt="Teimoso F.C.C. Logo" class="w-full h-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=10b981&color=fff&bold=true'">
           </div>
           <div>
-            <h1 class="text-lg sm:text-xl font-black tracking-wider text-emerald-400 uppercase leading-tight">TEIMOSO F.C.C.</h1>
-            <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Gestão Inteligente de Peladas</p>
-            <p class="text-[9px] sm:text-[10px] text-emerald-500/80 font-semibold tracking-wide">Developer by Marcos Almeida®</p>
+            <h1 class="text-lg sm:text-xl font-black tracking-wider text-emerald-700 uppercase leading-tight">TEIMOSO F.C.C.</h1>
+            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Gestão Inteligente de Peladas</p>
+            <p class="text-[9px] sm:text-[10px] text-emerald-600 font-semibold tracking-wide">Developer by Marcos Almeida®</p>
           </div>
         </div>
 
         <!-- NAVIGATION TABS -->
-        <nav class="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 w-full sm:w-auto overflow-x-auto hide-scrollbar snap-x">
-          <button onclick="switchTab('presence')" id="tabBtn-presence" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-lg shadow-emerald-900/30 shrink-0 snap-start">
+        <nav class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto overflow-x-auto hide-scrollbar snap-x">
+          <button onclick="switchTab('presence')" id="tabBtn-presence" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-sm shrink-0 snap-start">
             <i class="fa-solid fa-users"></i> Presença
           </button>
-          <button onclick="switchTab('draw')" id="tabBtn-draw" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
+          <button onclick="switchTab('draw')" id="tabBtn-draw" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
             <i class="fa-solid fa-shuffle"></i> Sorteio
           </button>
-          <button onclick="switchTab('financial')" id="tabBtn-financial" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
+          <button onclick="switchTab('financial')" id="tabBtn-financial" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
             <i class="fa-solid fa-wallet"></i> Financeiro
           </button>
-          <button onclick="switchTab('reports')" id="tabBtn-reports" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start">
+          <button onclick="switchTab('reports')" id="tabBtn-reports" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
             <i class="fa-solid fa-chart-pie"></i> Relatórios
           </button>
         </nav>
@@ -174,30 +174,30 @@
         <!-- LOGGED USER CONTROLS, TOGGLES & NOTIFICATIONS -->
         <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto flex-wrap">
           
-          <!-- BOTÃO EXCLUSIVO MARCÃO: LIGAR/DESLIGAR ANIMAÇÕES -->
-          <button onclick="toggleMarcaoAnimations()" id="btnToggleAnimationMarcao" title="Ativar/Desativar Animações (Exclusivo Marcão)" class="hidden px-2.5 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-purple-300 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm">
-            <i id="iconToggleAnim" class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+          <!-- BOTÃO EXCLUSIVO MARCÃO -->
+          <button onclick="toggleMarcaoAnimations()" id="btnToggleAnimationMarcao" title="Ativar/Desativar Animações (Exclusivo Marcão)" class="hidden px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm">
+            <i id="iconToggleAnim" class="fa-solid fa-wand-magic-sparkles text-purple-600"></i>
             <span id="labelToggleAnim" class="text-[10px] hidden md:inline">Animações: ON</span>
           </button>
 
-          <!-- BOTÃO MUDO / EFEITOS SONOROS -->
-          <button onclick="toggleSoundSystem()" id="btnSoundToggle" title="Ativar / Desativar Sons do App" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1 shrink-0">
+          <!-- BOTÃO MUDO -->
+          <button onclick="toggleSoundSystem()" id="btnSoundToggle" title="Ativar / Desativar Sons do App" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1 shrink-0">
             <i id="soundToggleIcon" class="fa-solid fa-volume-high text-xs"></i>
           </button>
 
           <!-- SININHO AUDITORIA (ADMINS) -->
-          <button onclick="openActivityLogModal()" id="btnActivityLog" title="Histórico de Auditoria (90 Dias)" class="hidden relative px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0">
+          <button onclick="openActivityLogModal()" id="btnActivityLog" title="Histórico de Auditoria (90 Dias)" class="hidden relative px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-amber-600 text-xs font-bold transition-all items-center gap-1.5 shrink-0">
             <i class="fa-solid fa-bell"></i>
-            <span id="activityBadgeCount" class="bg-emerald-500 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full">0</span>
+            <span id="activityBadgeCount" class="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">0</span>
           </button>
 
           <!-- IDENTIFICAÇÃO DO USUÁRIO LOGADO -->
-          <div id="userBadge" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0">
-            <i id="userBadgeIcon" class="fa-solid fa-user text-emerald-400"></i> <span id="userBadgeName">Atleta</span>
+          <div id="userBadge" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shrink-0">
+            <i id="userBadgeIcon" class="fa-solid fa-user text-emerald-600"></i> <span id="userBadgeName">Atleta</span>
           </div>
 
           <!-- BOTÃO SAIR -->
-          <button onclick="logout()" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-950 hover:bg-rose-950 hover:border-rose-900 text-slate-400 hover:text-rose-400 transition-all flex items-center gap-2 shadow-sm shrink-0">
+          <button onclick="logout()" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 text-slate-600 hover:text-rose-600 transition-all flex items-center gap-2 shadow-sm shrink-0">
             <i class="fa-solid fa-right-from-bracket"></i> Sair
           </button>
         </div>
@@ -212,125 +212,125 @@
       <section id="tab-presence" class="space-y-6">
         
         <!-- CONTROLS & DATE SELECTOR -->
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
             <div class="flex items-center gap-1.5 w-full sm:w-auto">
-              <label for="dateSelect" class="text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1">Data:</label>
+              <label for="dateSelect" class="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mr-1">Data:</label>
               
               <!-- BOTÃO NAVEGAÇÃO: PELADA ANTERIOR (-) -->
-              <button onclick="navigateDate(-1)" id="btnPrevDate" title="Pelada Anterior (-)" class="w-9 h-9 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-emerald-400 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-inner">
+              <button onclick="navigateDate(-1)" id="btnPrevDate" title="Pelada Anterior (-)" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-emerald-600 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-sm">
                 <i class="fa-solid fa-minus text-xs"></i>
               </button>
 
-              <select id="dateSelect" onchange="changeDate(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500 w-full sm:w-52 shadow-inner">
+              <select id="dateSelect" onchange="changeDate(this.value)" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white w-full sm:w-56 shadow-sm">
                 <!-- Populado dinamicamente -->
               </select>
 
               <!-- BOTÃO NAVEGAÇÃO: PRÓXIMA PELADA (+) -->
-              <button onclick="navigateDate(1)" id="btnNextDate" title="Próxima Pelada (+)" class="w-9 h-9 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-emerald-400 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-inner">
+              <button onclick="navigateDate(1)" id="btnNextDate" title="Próxima Pelada (+)" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-emerald-600 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-sm">
                 <i class="fa-solid fa-plus text-xs"></i>
               </button>
             </div>
             
             <!-- ADMIN DATE CONTROLS -->
             <div id="adminDateControls" class="hidden items-center gap-2 w-full sm:w-auto">
-              <button onclick="openNewDateModal()" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
+              <button onclick="openNewDateModal()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
                 <i class="fa-solid fa-calendar-plus"></i> Nova Data
               </button>
-              <button onclick="openManageDatesModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
+              <button onclick="openManageDatesModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
                 <i class="fa-solid fa-calendar-days"></i> Gerenciar Datas
               </button>
             </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-end">
-            <button onclick="openNewAthleteModal()" id="btnAddAthlete" class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
+            <button onclick="openNewAthleteModal()" id="btnAddAthlete" class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
               <i class="fa-solid fa-user-plus"></i> Novo Atleta
             </button>
-            <button onclick="exportStandardReport()" id="btnExportStandard" class="hidden px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-950/50 flex items-center gap-2">
+            <button onclick="exportStandardReport()" id="btnExportStandard" class="hidden px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
               <i class="fa-solid fa-file-lines"></i> Exportar Padrão
             </button>
-            <button onclick="exportListToWhatsapp()" id="btnExportListWhatsapp" class="hidden px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+            <button onclick="exportListToWhatsapp()" id="btnExportListWhatsapp" class="hidden px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-emerald-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
               <i class="fa-solid fa-list-check"></i> Lista p/ Grupo
             </button>
-            <button onclick="openWhatsappMassModal()" id="btnMassWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2">
+            <button onclick="openWhatsappMassModal()" id="btnMassWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
               <i class="fa-brands fa-whatsapp"></i> Fila de Disparo
             </button>
           </div>
         </div>
 
         <!-- DEADLINE WARNING BANNER -->
-        <div id="deadlineBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-300 flex items-center justify-between gap-3">
+        <div id="deadlineBanner" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs text-amber-800 flex items-center justify-between gap-3 shadow-sm">
           <div class="flex items-center gap-3">
-            <i class="fa-solid fa-triangle-exclamation text-base shrink-0"></i>
+            <i class="fa-solid fa-triangle-exclamation text-base text-amber-600 shrink-0"></i>
             <div>
               <span class="font-bold">Prazo encerrado:</span> O horário limite para confirmação/alteração online foi às 18:00 do dia anterior. Entre em contato com o <strong>presidente</strong> para alterar sua presença.
             </div>
           </div>
         </div>
 
-        <!-- STATS CARDS (TOGGLEABLE FILTERS) -->
+        <!-- STATS CARDS -->
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
-          <div onclick="filterPresenceCards('CONFIRMADO')" id="cardStat-CONFIRMADO" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
-            <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Confirmados</span>
-              <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+          <div onclick="filterPresenceCards('CONFIRMADO')" id="cardStat-CONFIRMADO" class="bg-white border border-slate-200 hover:border-emerald-500 p-4 rounded-2xl shadow-sm cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-emerald-700 transition-colors">Confirmados</span>
+              <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
             </div>
-            <div class="text-2xl font-black text-emerald-400" id="statConfirmed">0</div>
+            <div class="text-2xl font-black text-emerald-600" id="statConfirmed">0</div>
           </div>
 
-          <div onclick="filterPresenceCards('JUSTIFICADO')" id="cardStat-JUSTIFICADO" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
-            <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-amber-400 transition-colors">Justificados</span>
-              <i class="fa-solid fa-circle-exclamation text-amber-400 text-sm"></i>
+          <div onclick="filterPresenceCards('JUSTIFICADO')" id="cardStat-JUSTIFICADO" class="bg-white border border-slate-200 hover:border-amber-500 p-4 rounded-2xl shadow-sm cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-amber-700 transition-colors">Justificados</span>
+              <i class="fa-solid fa-circle-exclamation text-amber-500 text-sm"></i>
             </div>
-            <div class="text-2xl font-black text-amber-400" id="statJustified">0</div>
+            <div class="text-2xl font-black text-amber-600" id="statJustified">0</div>
           </div>
 
-          <div onclick="filterPresenceCards('FORA')" id="cardStat-FORA" class="bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
-            <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-rose-400 transition-colors">Fora</span>
-              <i class="fa-solid fa-circle-xmark text-rose-400 text-sm"></i>
+          <div onclick="filterPresenceCards('FORA')" id="cardStat-FORA" class="bg-white border border-slate-200 hover:border-rose-500 p-4 rounded-2xl shadow-sm cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-rose-700 transition-colors">Fora</span>
+              <i class="fa-solid fa-circle-xmark text-rose-500 text-sm"></i>
             </div>
-            <div class="text-2xl font-black text-rose-400" id="statOut">0</div>
+            <div class="text-2xl font-black text-rose-600" id="statOut">0</div>
           </div>
 
-          <div onclick="filterPresenceCards('FALTA')" id="cardStat-FALTA" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
-            <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-purple-400 transition-colors">Faltas</span>
-              <i class="fa-solid fa-ban text-purple-400 text-sm"></i>
+          <div onclick="filterPresenceCards('FALTA')" id="cardStat-FALTA" class="bg-white border border-slate-200 hover:border-purple-500 p-4 rounded-2xl shadow-sm cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-purple-700 transition-colors">Faltas</span>
+              <i class="fa-solid fa-ban text-purple-500 text-sm"></i>
             </div>
-            <div class="text-2xl font-black text-purple-400" id="statFaltas">0</div>
+            <div class="text-2xl font-black text-purple-600" id="statFaltas">0</div>
           </div>
 
-          <div onclick="filterPresenceCards(null)" class="bg-slate-900 border border-slate-800 hover:border-slate-600 p-4 rounded-2xl shadow-lg cursor-pointer transition-all group">
-            <div class="flex items-center justify-between text-slate-400 mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-slate-200 transition-colors">Total Ativos</span>
+          <div onclick="filterPresenceCards(null)" class="bg-white border border-slate-200 hover:border-slate-400 p-4 rounded-2xl shadow-sm cursor-pointer transition-all group">
+            <div class="flex items-center justify-between text-slate-500 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider group-hover:text-slate-900 transition-colors">Total Ativos</span>
               <i class="fa-solid fa-users text-slate-400 text-sm"></i>
             </div>
-            <div class="text-2xl font-black text-slate-200" id="statTotal">0</div>
+            <div class="text-2xl font-black text-slate-800" id="statTotal">0</div>
           </div>
         </div>
 
         <!-- ATHLETES LIST TABLE -->
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
-          <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 w-full sm:w-auto">
-              <i class="fa-solid fa-clipboard-user text-emerald-400"></i> Lista de Presença da Pelada
+        <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/60">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 w-full sm:w-auto">
+              <i class="fa-solid fa-clipboard-user text-emerald-600"></i> Lista de Presença da Pelada
             </h3>
             
             <div class="flex items-center justify-end gap-3 w-full sm:w-auto">
-              <span id="activeFilterBadge" class="hidden text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+              <span id="activeFilterBadge" class="hidden text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300 whitespace-nowrap">
                 Filtro: <span id="filterName"></span> 
-                <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-400 hover:text-rose-300 focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-600 hover:text-rose-700 focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
               </span>
               
               <!-- CAMPO DE PESQUISA POR NOME -->
               <div class="relative w-full sm:w-56 shrink-0">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i class="fa-solid fa-search text-slate-500 text-xs"></i>
+                  <i class="fa-solid fa-search text-slate-400 text-xs"></i>
                 </div>
-                <input type="text" id="searchAthleteInput" oninput="renderAthletesList()" placeholder="Buscar atleta..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500 placeholder-slate-600 shadow-inner">
+                <input type="text" id="searchAthleteInput" oninput="renderAthletesList()" placeholder="Buscar atleta..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 placeholder-slate-400 shadow-sm">
               </div>
             </div>
           </div>
@@ -338,13 +338,13 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                   <th class="py-3 px-4">Atleta / Info</th>
                   <th class="py-3 px-4 text-center">Ações de Presença</th>
                   <th id="thPresenceOptions" class="py-3 px-4 text-right">Opções</th>
                 </tr>
               </thead>
-              <tbody id="athletesTableBody" class="divide-y divide-slate-800/60 text-xs">
+              <tbody id="athletesTableBody" class="divide-y divide-slate-100 text-xs">
                 <!-- Preenchido dinamicamente -->
               </tbody>
             </table>
@@ -355,78 +355,78 @@
 
       <!-- ================= TAB 2: SORTEIO ================= -->
       <section id="tab-draw" class="hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
-              <i class="fa-solid fa-shuffle text-emerald-400"></i> Sorteio Equilibrado de Times
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-shuffle text-emerald-600"></i> Sorteio Equilibrado de Times
             </h3>
-            <p class="text-xs text-slate-400 mt-1">O sistema distribui os goleiros e equilibra as estrelas automaticamente em até 8 jogadores por equipe (Atletas Extras vão para a resenha).</p>
+            <p class="text-xs text-slate-500 mt-1">O sistema distribui os goleiros e equilibra as estrelas automaticamente em até 8 jogadores por equipe (Atletas Extras vão para a resenha).</p>
           </div>
-          <button onclick="generateTeams()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0 active:scale-95">
+          <button onclick="generateTeams()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/30 flex items-center gap-2 shrink-0 active:scale-95">
             <i class="fa-solid fa-dice text-sm"></i> Sortear Times Agora
           </button>
         </div>
 
         <!-- TEAMS RESULT CONTAINER -->
         <div id="teamsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 text-center text-slate-500 flex flex-col items-center justify-center py-16">
-            <i class="fa-solid fa-people-group text-4xl mb-3 text-slate-700"></i>
-            <p class="text-xs font-medium">Nenhum sorteio realizado para esta data ainda.</p>
-            <p class="text-[11px] text-slate-600 mt-1">Clique em "Sortear Times Agora" acima.</p>
+          <div class="bg-white border border-slate-200 rounded-3xl p-6 text-center text-slate-500 flex flex-col items-center justify-center py-16 shadow-sm">
+            <i class="fa-solid fa-people-group text-4xl mb-3 text-slate-300"></i>
+            <p class="text-xs font-medium text-slate-600">Nenhum sorteio realizado para esta data ainda.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Clique em "Sortear Times Agora" acima.</p>
           </div>
         </div>
       </section>
 
       <!-- ================= TAB 3: FINANCEIRO ================= -->
       <section id="tab-financial" class="hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
-              <i class="fa-solid fa-wallet text-emerald-400"></i> Gestão Financeira de Mensalidades
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-emerald-600"></i> Gestão Financeira de Mensalidades
             </h3>
-            <p class="text-xs text-slate-400 mt-1">Consulte seus pagamentos e mensalidades. Edição restrita para <strong>PABLO PADILHA</strong> e <strong>MARCÃO</strong>.</p>
+            <p class="text-xs text-slate-500 mt-1">Consulte seus pagamentos e mensalidades. Edição restrita para <strong>PABLO PADILHA</strong> e <strong>MARCÃO</strong>.</p>
           </div>
-          <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 shrink-0">
+          <button onclick="openWhatsappFinancialMassModal()" id="btnMassFinWhatsapp" class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 shrink-0">
             <i class="fa-brands fa-whatsapp"></i> Cobrar Inadimplentes
           </button>
         </div>
 
-        <!-- TOTALIZADORES FINANCEIROS INTERATIVOS -->
+        <!-- TOTALIZADORES FINANCEIROS -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div onclick="setFinancialFilter('paid')" id="finCard-paid" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer transition-all">
+          <div onclick="setFinancialFilter('paid')" id="finCard-paid" class="bg-white border border-slate-200 hover:border-emerald-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Geral Pago</span>
-              <div class="text-2xl font-black text-emerald-400 mt-1" id="finTotalPaid">R$ 0,00</div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Geral Pago</span>
+              <div class="text-2xl font-black text-emerald-600 mt-1" id="finTotalPaid">R$ 0,00</div>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
               <i class="fa-solid fa-circle-check text-lg"></i>
             </div>
           </div>
 
-          <div onclick="setFinancialFilter('interest')" id="finCard-interest" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer transition-all">
+          <div onclick="setFinancialFilter('interest')" id="finCard-interest" class="bg-white border border-slate-200 hover:border-amber-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total de Juros Devidos</span>
-              <div class="text-2xl font-black text-amber-400 mt-1" id="finTotalInterest">R$ 0,00</div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total de Juros Devidos</span>
+              <div class="text-2xl font-black text-amber-600 mt-1" id="finTotalInterest">R$ 0,00</div>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
               <i class="fa-solid fa-clock text-lg"></i>
             </div>
           </div>
 
-          <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-slate-900 border border-slate-800 hover:border-rose-500/50 p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer transition-all">
+          <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-white border border-slate-200 hover:border-rose-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total a Receber</span>
-              <div class="text-2xl font-black text-rose-400 mt-1" id="finTotalDue">R$ 0,00</div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total a Receber</span>
+              <div class="text-2xl font-black text-rose-600 mt-1" id="finTotalDue">R$ 0,00</div>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
               <i class="fa-solid fa-triangle-exclamation text-lg"></i>
             </div>
           </div>
         </div>
 
-        <div id="finFilterActiveBar" class="hidden items-center justify-between bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs">
-          <span class="font-bold text-slate-300">Exibindo filtro financeiro: <strong id="finFilterLabel" class="text-emerald-400 uppercase"></strong></span>
-          <button onclick="setFinancialFilter(null)" class="px-3 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-xl font-bold transition-all">Limpar Filtro</button>
+        <div id="finFilterActiveBar" class="hidden items-center justify-between bg-white border border-slate-200 px-4 py-2.5 rounded-2xl text-xs shadow-sm">
+          <span class="font-bold text-slate-700">Exibindo filtro financeiro: <strong id="finFilterLabel" class="text-emerald-700 uppercase"></strong></span>
+          <button onclick="setFinancialFilter(null)" class="px-3 py-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200 rounded-xl font-bold transition-all">Limpar Filtro</button>
         </div>
 
         <!-- FINANCIAL ACCORDION LIST -->
@@ -437,23 +437,23 @@
 
       <!-- ================= TAB 4: RELATÓRIOS ================= -->
       <section id="tab-reports" class="hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
-              <i class="fa-solid fa-chart-pie text-emerald-400"></i> Relatórios e Estatísticas Gerais
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-emerald-600"></i> Relatórios e Estatísticas Gerais
             </h3>
-            <p class="text-xs text-slate-400 mt-1">Acompanhe a frequência histórica de presença dos atletas considerando as datas de início de cada atleta.</p>
+            <p class="text-xs text-slate-500 mt-1">Acompanhe a frequência histórica de presença dos atletas considerando as datas de início de cada atleta.</p>
           </div>
-          <button onclick="exportReportsCSV()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-            <i class="fa-solid fa-file-excel text-emerald-400"></i> Exportar CSV
+          <button onclick="exportReportsCSV()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i> Exportar CSV
           </button>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-xl overflow-hidden">
+        <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                   <th class="py-3 px-4">Atleta</th>
                   <th class="py-3 px-4">Posição</th>
                   <th class="py-3 px-4 text-center">Presenças / Peladas Elegíveis</th>
@@ -461,7 +461,7 @@
                   <th class="py-3 px-4 text-right">Status Atual</th>
                 </tr>
               </thead>
-              <tbody id="reportsTableBody" class="divide-y divide-slate-800/60 text-xs">
+              <tbody id="reportsTableBody" class="divide-y divide-slate-100 text-xs">
                 <!-- Preenchido dinamicamente -->
               </tbody>
             </table>
@@ -472,12 +472,12 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-900 border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-400">
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
       <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div>
-          <span class="font-bold text-emerald-400">Teimoso F.C.C.</span> &copy; 2026 - Todos os direitos reservados.
+          <span class="font-bold text-emerald-700">Teimoso F.C.C.</span> &copy; 2026 - Todos os direitos reservados.
         </div>
-        <div class="text-slate-500 font-medium">
+        <div class="text-slate-400 font-medium">
           Developer by Marcos Almeida®
         </div>
       </div>
@@ -486,66 +486,66 @@
 
   <!-- ================= MODALS ================= -->
 
-  <!-- ACTIVITY LOG MODAL (SININHO ADMIN 90 DIAS) -->
-  <div id="activityLogModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+  <!-- ACTIVITY LOG MODAL (90 DIAS) -->
+  <div id="activityLogModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-bell text-amber-400"></i> Auditoria de Interações (90 Dias)
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-bell text-amber-500"></i> Auditoria de Interações (90 Dias)
         </h3>
-        <button onclick="closeActivityLogModal()" class="text-slate-500 hover:text-slate-300">
+        <button onclick="closeActivityLogModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <!-- FILTRO POR ATLETA/USUÁRIO & LIMPEZA -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-bold text-slate-400 px-1">
+      <!-- FILTRO POR ATLETA & LIMPEZA -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-bold text-slate-600 px-1">
         <div class="flex items-center gap-1.5 w-full sm:w-auto">
-          <label for="logUserFilterSelect" class="text-[10px] uppercase text-slate-400">Filtrar Atleta:</label>
-          <select id="logUserFilterSelect" onchange="renderActivityLogList()" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-500 font-bold">
+          <label for="logUserFilterSelect" class="text-[10px] uppercase text-slate-500">Filtrar Atleta:</label>
+          <select id="logUserFilterSelect" onchange="renderActivityLogList()" class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-[11px] text-slate-800 focus:outline-none focus:border-emerald-500 font-bold">
             <option value="">Todos os Atletas</option>
           </select>
         </div>
-        <button onclick="clearActivityLogs()" class="text-rose-400 hover:underline text-[10px] shrink-0">Limpar Histórico</button>
+        <button onclick="clearActivityLogs()" class="text-rose-600 hover:underline text-[10px] shrink-0">Limpar Histórico</button>
       </div>
 
-      <!-- LISTA DE LOGS EM TEMPO REAL -->
-      <div id="activityLogList" class="divide-y divide-slate-800/80 overflow-y-auto flex-grow pr-1 space-y-2 bg-slate-950/50 rounded-2xl p-3 border border-slate-800/80 min-h-[180px]">
+      <!-- LISTA DE LOGS -->
+      <div id="activityLogList" class="divide-y divide-slate-100 overflow-y-auto flex-grow pr-1 space-y-2 bg-slate-50 rounded-2xl p-3 border border-slate-200 min-h-[180px]">
         <!-- Preenchido dinamicamente -->
       </div>
 
-      <div class="pt-2 text-right border-t border-slate-800">
-        <button onclick="closeActivityLogModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Fechar</button>
+      <div class="pt-2 text-right border-t border-slate-200">
+        <button onclick="closeActivityLogModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
   </div>
 
   <!-- NEW/EDIT ATHLETE MODAL -->
-  <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+  <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
-        <h3 id="athleteModalTitle" class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-user-plus text-emerald-400"></i> Cadastrar Novo Atleta
+        <h3 id="athleteModalTitle" class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-emerald-600"></i> Cadastrar Novo Atleta
         </h3>
-        <button onclick="closeAthleteModal()" class="text-slate-500 hover:text-slate-300">
+        <button onclick="closeAthleteModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
       <input type="hidden" id="editAthleteId">
       <div class="space-y-3">
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nome Completo:</label>
-          <input type="text" id="athleteNameInput" placeholder="Ex: Carlos Alberto" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Nome Completo:</label>
+          <input type="text" id="athleteNameInput" placeholder="Ex: Carlos Alberto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">URL da Foto (Opcional):</label>
-          <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">URL da Foto (Opcional):</label>
+          <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
           <p class="text-[9px] text-slate-500 mt-1">Cole o link da foto de perfil da web ou do WhatsApp.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Posição:</label>
-            <select id="athletePositionSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Posição:</label>
+            <select id="athletePositionSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
               <option value="Goleiro">Goleiro</option>
               <option value="Zagueiro">Zagueiro</option>
               <option value="Lateral">Lateral</option>
@@ -556,165 +556,165 @@
             </select>
           </div>
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">WhatsApp / Telefone:</label>
-            <input type="text" id="athletePhoneInput" placeholder="22999998888" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">WhatsApp / Telefone:</label>
+            <input type="text" id="athletePhoneInput" placeholder="22999998888" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nível (Estrelas):</label>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Nível (Estrelas):</label>
             <div id="starRatingSelector" class="flex items-center gap-2 py-1"></div>
           </div>
           <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Mensalidade (R$):</label>
-            <input type="number" id="athleteMonthlyFeeInput" value="110" step="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Mensalidade (R$):</label>
+            <input type="number" id="athleteMonthlyFeeInput" value="110" step="1" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
         </div>
         <div class="flex items-center gap-2 pt-2">
-          <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-950 border-slate-800 text-emerald-600 focus:ring-0">
-          <label for="athleteSuspendedCheckbox" class="text-xs font-bold text-rose-400">SUSPENSO / SAIU (Bloquear ações para não-admins)</label>
+          <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-50 border-slate-300 text-emerald-600 focus:ring-0">
+          <label for="athleteSuspendedCheckbox" class="text-xs font-bold text-rose-600">SUSPENSO / SAIU (Bloquear ações para não-admins)</label>
         </div>
       </div>
       <div class="flex items-center gap-2 pt-2">
-        <button onclick="closeAthleteModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
-        <button onclick="saveAthlete()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/40">Salvar Atleta</button>
+        <button onclick="closeAthleteModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="saveAthlete()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Salvar Atleta</button>
       </div>
     </div>
   </div>
 
   <!-- JUSTIFICATION MODAL -->
-  <div id="justifyModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+  <div id="justifyModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-comment-dots text-amber-400"></i> Justificativa Obrigatória
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-comment-dots text-amber-500"></i> Justificativa Obrigatória
         </h3>
-        <button onclick="closeJustifyModal()" class="text-slate-500 hover:text-slate-300">
+        <button onclick="closeJustifyModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
       <div>
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Motivo da Ausência:</label>
-        <textarea id="justifyReasonInput" rows="3" placeholder="Informe obrigatoriamente o motivo (Ex: Viagem, trabalho, lesão)..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">Motivo da Ausência:</label>
+        <textarea id="justifyReasonInput" rows="3" placeholder="Informe obrigatoriamente o motivo (Ex: Viagem, trabalho, lesão)..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white"></textarea>
       </div>
       <div class="flex items-center gap-2 pt-2">
-        <button onclick="closeJustifyModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
-        <button onclick="saveJustification()" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-950/40">Salvar Justificativa</button>
+        <button onclick="closeJustifyModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="saveJustification()" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Salvar Justificativa</button>
       </div>
     </div>
   </div>
 
   <!-- NEW DATE MODAL -->
-  <div id="newDateModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+  <div id="newDateModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-plus text-emerald-400"></i> Adicionar Nova Data
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-plus text-emerald-600"></i> Adicionar Nova Data
         </h3>
-        <button onclick="closeNewDateModal()" class="text-slate-500 hover:text-slate-300">
+        <button onclick="closeNewDateModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
       <div class="space-y-3">
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Data da Pelada:</label>
-          <input type="date" id="newDateInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">Data da Pelada:</label>
+          <input type="date" id="newDateInput" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Horário da Pelada:</label>
-          <input type="time" id="newTimeInput" value="07:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">Horário da Pelada:</label>
+          <input type="time" id="newTimeInput" value="07:00" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
       </div>
       <div class="flex items-center gap-2 pt-2">
-        <button onclick="closeNewDateModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
-        <button onclick="addNewDate()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/40">Adicionar</button>
+        <button onclick="closeNewDateModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="addNewDate()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Adicionar</button>
       </div>
     </div>
   </div>
 
   <!-- MANAGE DATES MODAL -->
-  <div id="manageDatesModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+  <div id="manageDatesModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-days text-emerald-400"></i> Gerenciar Datas e Horários
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-days text-emerald-600"></i> Gerenciar Datas e Horários
         </h3>
-        <button onclick="closeManageDatesModal()" class="text-slate-500 hover:text-slate-300">
+        <button onclick="closeManageDatesModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <p class="text-xs text-slate-400">
+      <p class="text-xs text-slate-500">
         Ajuste o horário de cada pelada diretamente no campo abaixo ou remova datas que não serão utilizadas:
       </p>
-      <div id="manageDatesList" class="divide-y divide-slate-800 overflow-y-auto flex-grow space-y-2 pr-1"></div>
-      <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+      <div id="manageDatesList" class="divide-y divide-slate-100 overflow-y-auto flex-grow space-y-2 pr-1"></div>
+      <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
         <span class="text-[10px] text-slate-500">Alterações de horário são salvas automaticamente.</span>
-        <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Fechar</button>
+        <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
   </div>
 
   <!-- WHATSAPP MASS QUEUE MODAL -->
-  <div id="whatsappMassModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+  <div id="whatsappMassModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <i class="fa-brands fa-whatsapp text-emerald-400 text-lg"></i> Fila de Disparo Individual
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-emerald-600 text-lg"></i> Fila de Disparo Individual
         </h3>
-        <button onclick="closeWhatsappMassModal()" class="text-slate-500 hover:text-slate-300">
+        <button onclick="closeWhatsappMassModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <p class="text-xs text-slate-400">
-        Pelada do dia <span id="massModalDate" class="font-bold text-emerald-400"></span>. Apenas atletas ativos participam do disparo:
+      <p class="text-xs text-slate-500">
+        Pelada do dia <span id="massModalDate" class="font-bold text-emerald-700"></span>. Apenas atletas ativos participam do disparo:
       </p>
 
       <!-- BOTÕES DE FILTRO DA FILA -->
       <div class="grid grid-cols-3 gap-2">
-        <button onclick="prepareWhatsappQueue('pending')" class="py-2.5 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 rounded-xl text-[11px] font-bold transition-all">
+        <button onclick="prepareWhatsappQueue('pending')" class="py-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-700 rounded-xl text-[11px] font-bold transition-all">
           Pendentes
         </button>
-        <button onclick="prepareWhatsappQueue('confirmed')" class="py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 rounded-xl text-[11px] font-bold transition-all">
+        <button onclick="prepareWhatsappQueue('confirmed')" class="py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 rounded-xl text-[11px] font-bold transition-all">
           Confirmados
         </button>
-        <button onclick="prepareWhatsappQueue('all')" class="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-[11px] font-bold transition-all">
+        <button onclick="prepareWhatsappQueue('all')" class="py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl text-[11px] font-bold transition-all">
           Todos Ativos
         </button>
       </div>
 
       <!-- STATUS DA FILA -->
-      <div id="queueStatusHeader" class="hidden items-center justify-between bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 text-[11px] font-bold">
-        <span class="text-slate-400">Progresso da Fila: <strong id="queueProgressText" class="text-emerald-400">0/0</strong></span>
-        <button onclick="sendNextInQueue()" id="btnSendNextQueue" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all flex items-center gap-1.5 shadow">
+      <div id="queueStatusHeader" class="hidden items-center justify-between bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 text-[11px] font-bold">
+        <span class="text-slate-600">Progresso da Fila: <strong id="queueProgressText" class="text-emerald-700">0/0</strong></span>
+        <button onclick="sendNextInQueue()" id="btnSendNextQueue" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-paper-plane"></i> Enviar Próximo da Fila
         </button>
       </div>
 
       <!-- LISTA DA FILA DE ESPERA -->
-      <div id="whatsappQueueContainer" class="divide-y divide-slate-800/80 overflow-y-auto flex-grow pr-1 space-y-1.5 min-h-[180px] bg-slate-950/50 rounded-2xl p-3 border border-slate-800/80">
-        <div class="text-center text-slate-500 py-12 text-xs">
+      <div id="whatsappQueueContainer" class="divide-y divide-slate-100 overflow-y-auto flex-grow pr-1 space-y-1.5 min-h-[180px] bg-slate-50 rounded-2xl p-3 border border-slate-200">
+        <div class="text-center text-slate-400 py-12 text-xs font-bold">
           Clique em uma das opções acima para gerar a fila de espera.
         </div>
       </div>
 
-      <div class="pt-2 flex items-center justify-between border-t border-slate-800">
+      <div class="pt-2 flex items-center justify-between border-t border-slate-200">
         <span class="text-[10px] text-slate-500">Cada clique abre o WhatsApp individual sem bloqueio.</span>
-        <button onclick="closeWhatsappMassModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Fechar</button>
+        <button onclick="closeWhatsappMassModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
   </div>
 
   <!-- CUSTOM CONFIRM MODAL -->
-  <div id="customConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
-      <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto text-lg">
+  <div id="customConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mx-auto text-lg">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <h3 id="confirmMessage" class="text-xs font-bold text-slate-200 leading-relaxed">Confirma esta operação?</h3>
+      <h3 id="confirmMessage" class="text-xs font-bold text-slate-800 leading-relaxed">Confirma esta operação?</h3>
       <div class="flex items-center gap-2 pt-2">
-        <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
-        <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-950/40">Confirmar</button>
+        <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Confirmar</button>
       </div>
     </div>
   </div>
@@ -761,7 +761,6 @@
         const now = ctx.currentTime;
 
         if (type === 'click') {
-          // Clique padrão (pop sutil)
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
@@ -774,8 +773,7 @@
           osc.start(now);
           osc.stop(now + 0.04);
         } else if (type === 'confirm') {
-          // Acorde comemorativo ascendente
-          const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          const notes = [523.25, 659.25, 783.99, 1046.50];
           notes.forEach((freq, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -790,7 +788,6 @@
             osc.stop(noteStart + 0.22);
           });
         } else if (type === 'alert') {
-          // Aviso / Desmarcação suave
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
@@ -819,10 +816,10 @@
       const icon = document.getElementById('soundToggleIcon');
       if (!btn || !icon) return;
       if (soundEnabled) {
-        icon.className = "fa-solid fa-volume-high text-xs text-emerald-400";
+        icon.className = "fa-solid fa-volume-high text-xs text-emerald-600";
         btn.title = "Efeitos Sonoros: Ativados";
       } else {
-        icon.className = "fa-solid fa-volume-xmark text-xs text-slate-500";
+        icon.className = "fa-solid fa-volume-xmark text-xs text-slate-400";
         btn.title = "Efeitos Sonoros: Mudo";
       }
     }
@@ -856,16 +853,15 @@
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
 
     const positionBadges = {
-      "Goleiro": { tag: "GK", color: "bg-amber-500/20 text-amber-400 border-amber-500/40" },
-      "Zagueiro": { tag: "ZAG", color: "bg-blue-500/20 text-blue-400 border-blue-500/40" },
-      "Lateral": { tag: "LAT", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/40" },
-      "Volante": { tag: "VOL", color: "bg-indigo-500/20 text-indigo-400 border-indigo-500/40" },
-      "Meia": { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" },
-      "Atacante": { tag: "ATA", color: "bg-rose-500/20 text-rose-400 border-rose-500/40" },
-      "EXTRA": { tag: "EXTRA", color: "bg-purple-500/20 text-purple-400 border-purple-500/40" }
+      "Goleiro": { tag: "GK", color: "bg-amber-50 text-amber-700 border-amber-300" },
+      "Zagueiro": { tag: "ZAG", color: "bg-blue-50 text-blue-700 border-blue-300" },
+      "Lateral": { tag: "LAT", color: "bg-cyan-50 text-cyan-700 border-cyan-300" },
+      "Volante": { tag: "VOL", color: "bg-indigo-50 text-indigo-700 border-indigo-300" },
+      "Meia": { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" },
+      "Atacante": { tag: "ATA", color: "bg-rose-50 text-rose-700 border-rose-300" },
+      "EXTRA": { tag: "EXTRA", color: "bg-purple-50 text-purple-700 border-purple-300" }
     };
 
-    // ATLETAS PADRÃO (Com Alexandre Boechat, Bruno Monteiro, Todinho e Cláudio)
     const defaultAthletes = [
       { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
       { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
@@ -898,7 +894,7 @@
         window.activityLogs = [];
         return;
       }
-      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000); // 90 dias
+      const cutoffTime = Date.now() - (90 * 24 * 60 * 60 * 1000);
       window.activityLogs = window.activityLogs.filter(entry => {
         const entryTime = entry.id || (entry.timestamp ? new Date(entry.timestamp).getTime() : 0);
         return entryTime >= cutoffTime;
@@ -914,7 +910,6 @@
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
     window.absenceFines = JSON.parse(localStorage.getItem('teimoso_absenceFines')) || {};
 
-    // Sincroniza e aplica regras de início para atletas específicos
     function syncSpecialAthleteDates() {
       if (!Array.isArray(window.athletes)) return;
       window.athletes.forEach(a => {
@@ -1038,16 +1033,16 @@
       }
 
       if (displayedLogs.length === 0) {
-        list.innerHTML = `<div class="text-center text-slate-500 py-10 text-xs">Nenhuma interação registrada nos últimos 90 dias.</div>`;
+        list.innerHTML = `<div class="text-center text-slate-400 py-10 text-xs">Nenhuma interação registrada nos últimos 90 dias.</div>`;
         return;
       }
       list.innerHTML = '';
       displayedLogs.forEach(item => {
         list.innerHTML += `
-          <div class="py-2 px-2.5 rounded-xl bg-slate-900/90 flex items-center justify-between gap-2 text-xs">
+          <div class="py-2 px-2.5 rounded-xl bg-white flex items-center justify-between gap-2 text-xs border border-slate-200 shadow-sm">
             <div>
-              <span class="font-bold text-emerald-400">${item.actor}:</span>
-              <span class="text-slate-200 ml-1">${item.description}</span>
+              <span class="font-bold text-emerald-700">${item.actor}:</span>
+              <span class="text-slate-800 ml-1">${item.description}</span>
             </div>
             <span class="text-[10px] text-slate-500 font-bold shrink-0">${item.time}</span>
           </div>
@@ -1071,11 +1066,11 @@
       const label = document.getElementById('labelToggleAnim');
       if (!btn) return;
       if (window.animationsEnabled) {
-        btn.className = "px-2.5 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-600/70 text-purple-300 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm";
-        icon.className = "fa-solid fa-wand-magic-sparkles text-purple-400";
+        btn.className = "px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm";
+        icon.className = "fa-solid fa-wand-magic-sparkles text-purple-600";
         if (label) label.innerText = "Animações: ON";
       } else {
-        btn.className = "px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 text-xs font-bold transition-all items-center gap-1.5 shrink-0";
+        btn.className = "px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-500 text-xs font-bold transition-all items-center gap-1.5 shrink-0";
         icon.className = "fa-solid fa-ban text-slate-400";
         if (label) label.innerText = "Animações: OFF";
       }
@@ -1093,10 +1088,10 @@
 
       if (athleteObj) {
         nameEl.innerText = athleteObj.name;
-        avatarEl.src = athleteObj.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(athleteObj.name)}&background=0f172a&color=34d399&bold=true&size=256`;
+        avatarEl.src = athleteObj.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(athleteObj.name)}&background=e2e8f0&color=059669&bold=true&size=256`;
       } else if (window.currentUser) {
         nameEl.innerText = window.currentUser.name;
-        avatarEl.src = window.currentUser.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(window.currentUser.name)}&background=0f172a&color=34d399&bold=true&size=256`;
+        avatarEl.src = window.currentUser.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(window.currentUser.name)}&background=e2e8f0&color=059669&bold=true&size=256`;
       }
 
       overlay.classList.remove('hidden');
@@ -1158,7 +1153,7 @@
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       const bgColor = type === 'error' ? 'bg-rose-600' : 'bg-emerald-600';
-      toast.className = `${bgColor} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-x-10 opacity-0 pointer-events-auto`;
+      toast.className = `${bgColor} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-x-10 opacity-0 pointer-events-auto border border-white/20`;
       toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i> <span>${message}</span>`;
       container.appendChild(toast);
       
@@ -1336,7 +1331,6 @@
       const tabFinancialBtn = document.getElementById('tabBtn-financial');
       if (tabFinancialBtn) tabFinancialBtn.classList.remove('hidden');
 
-      // Botão exclusivo do Marcão
       const btnToggleAnim = document.getElementById('btnToggleAnimationMarcao');
       if (window.isMarcaoUser) {
         btnToggleAnim.classList.remove('hidden');
@@ -1348,8 +1342,8 @@
       }
 
       if (window.isAdmin) {
-        document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 text-xs font-bold shrink-0 shadow-inner";
-        document.getElementById('userBadgeIcon').className = "fa-solid fa-shield-halved text-emerald-500";
+        document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold shrink-0 shadow-sm";
+        document.getElementById('userBadgeIcon').className = "fa-solid fa-shield-halved text-emerald-600";
         document.getElementById('adminDateControls').classList.remove('hidden');
         document.getElementById('adminDateControls').classList.add('flex');
         document.getElementById('btnAddAthlete').classList.remove('hidden');
@@ -1359,8 +1353,8 @@
         document.getElementById('btnActivityLog').classList.remove('hidden');
         document.getElementById('btnActivityLog').classList.add('flex');
       } else {
-        document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold shrink-0";
-        document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-400";
+        document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shrink-0";
+        document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-600";
         document.getElementById('adminDateControls').classList.add('hidden');
         document.getElementById('adminDateControls').classList.remove('flex');
         document.getElementById('btnAddAthlete').classList.add('hidden');
@@ -1477,10 +1471,10 @@
         const btn = document.getElementById(`tabBtn-${t}`);
         if (t === tab) {
           el.classList.remove('hidden');
-          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-lg shadow-emerald-900/30 shrink-0 snap-start";
+          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-sm shrink-0 snap-start";
         } else {
           el.classList.add('hidden');
-          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/50 shrink-0 snap-start";
+          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start";
         }
       });
       if (tab === 'financial') renderFinancial();
@@ -1604,9 +1598,9 @@
         if (card) {
           if (activeStatusFilter === st) {
             const ringColor = st === 'FALTA' ? 'ring-purple-500' : 'ring-emerald-500';
-            card.classList.add('ring-2', ringColor, 'bg-slate-800/80');
+            card.classList.add('ring-2', ringColor, 'bg-slate-50');
           } else {
-            card.classList.remove('ring-2', 'ring-emerald-500', 'ring-purple-500', 'bg-slate-800/80');
+            card.classList.remove('ring-2', 'ring-emerald-500', 'ring-purple-500', 'bg-slate-50');
           }
         }
       });
@@ -1648,7 +1642,6 @@
       const currentConfirmedAt = window.presences[window.currentDate][athleteId]?.confirmedAt || null;
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
 
-      // Garantia defensiva contra erro .some is not a function
       if (!window.absenceFines[athleteId] || !Array.isArray(window.absenceFines[athleteId])) {
         window.absenceFines[athleteId] = Object.values(window.absenceFines[athleteId] || {});
       }
@@ -1793,7 +1786,6 @@
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-      // Ordenação: primeiro os confirmados por ordem de chegada; depois os demais em ordem alfabética
       const sortedAthletes = [...window.athletes].sort((a, b) => {
         const pA = dayPresences[a.id];
         const pB = dayPresences[b.id];
@@ -1815,7 +1807,6 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false, confirmedAt: null };
         const status = pRecord.status;
 
-        // Atletas suspensos NÃO são somados em nenhum botão da aba Presença
         if (!athlete.isSuspended) {
           countTotal++;
           if (status === 'CONFIRMADO') countConf++;
@@ -1827,18 +1818,18 @@
         if (searchTerm && !athlete.name.toLowerCase().includes(searchTerm)) return;
         if (activeStatusFilter && status !== activeStatusFilter) return;
 
-        const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" };
+        const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
         const finStatus = getAthleteFinancialStatus(athlete.id);
-        const finDotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
+        const finDotColor = finStatus === 'uptodate' ? 'bg-emerald-500' : 'bg-rose-500';
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
-        const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+        const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-700 bg-emerald-50 border-emerald-300' : 'text-rose-700 bg-rose-50 border-rose-300';
 
         let confirmBadgeHtml = '';
         if (status === 'CONFIRMADO' && pRecord.confirmedAt) {
           const d = new Date(pRecord.confirmedAt);
           const formattedDateTime = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           confirmBadgeHtml = `
-            <div class="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold mt-0.5">
+            <div class="flex items-center gap-1.5 text-[10px] text-emerald-700 font-bold mt-0.5">
               <i class="fa-solid fa-clock-check"></i>
               <span>Confirmou em: ${formattedDateTime}</span>
             </div>
@@ -1848,11 +1839,11 @@
         let startDateBadge = '';
         if (athlete.effectiveStartDate) {
           const [sy, sm, sd] = athlete.effectiveStartDate.split('-');
-          startDateBadge = `<span class="text-[9px] font-bold text-sky-400 bg-sky-950/60 border border-sky-800/80 px-1.5 py-0.2 rounded-md" title="Início da contagem de assiduidade">Início: ${sd}/${sm}/${sy}</span>`;
+          startDateBadge = `<span class="text-[9px] font-bold text-sky-700 bg-sky-50 border border-sky-300 px-1.5 py-0.2 rounded-md" title="Início da contagem de assiduidade">Início: ${sd}/${sm}/${sy}</span>`;
         }
 
         const tr = document.createElement('tr');
-        tr.className = athlete.isSuspended ? "bg-rose-950/20 hover:bg-rose-900/30 transition-colors" : "hover:bg-slate-900/60 transition-colors";
+        tr.className = athlete.isSuspended ? "bg-rose-50/70 hover:bg-rose-100/60 transition-colors" : "hover:bg-slate-50 transition-colors";
 
         let actionsHtml = '';
         const isSelf = window.currentUser && window.currentUser.id === athlete.id;
@@ -1861,22 +1852,22 @@
         if (athlete.isSuspended && !window.isAdmin) {
           actionsHtml = `
             <div class="flex flex-col items-center justify-center gap-1">
-              <span class="text-[10px] font-black px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="text-[10px] font-black px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-300 uppercase tracking-wider flex items-center gap-1.5">
                 <i class="fa-solid fa-ban"></i> Suspenso
               </span>
-              ${status ? `<span class="text-[9px] font-bold text-slate-400">Status: ${status}</span>` : ''}
+              ${status ? `<span class="text-[9px] font-bold text-slate-500">Status: ${status}</span>` : ''}
             </div>
           `;
         } else if (!canControlPresence) {
           let currentStatusBadge = `<span class="text-[10px] text-slate-500 font-bold">Pendente</span>`;
           if (status === 'CONFIRMADO') {
-            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${athlete.position === 'EXTRA' ? 'Confirmado Resenha' : 'Confirmado'}</span>`;
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${athlete.position === 'EXTRA' ? 'Confirmado Resenha' : 'Confirmado'}</span>`;
           } else if (status === 'JUSTIFICADO') {
-            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-600/20 text-amber-400 border border-amber-500/30 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Justificado</span>`;
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Justificado</span>`;
           } else if (status === 'FORA') {
-            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-600/20 text-rose-400 border border-rose-500/30 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Fora</span>`;
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-300 flex items-center gap-1"><i class="fa-solid fa-xmark"></i> Fora</span>`;
           } else if (status === 'FALTA') {
-            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center gap-1"><i class="fa-solid fa-ban"></i> Faltou</span>`;
+            currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-300 flex items-center gap-1"><i class="fa-solid fa-ban"></i> Faltou</span>`;
           }
           actionsHtml = `
             <div class="flex flex-col items-center justify-center py-1">
@@ -1886,61 +1877,61 @@
         } else {
           actionsHtml = `
             <div class="flex flex-col items-center justify-center gap-1.5 w-full">
-              ${athlete.isSuspended ? `<span class="text-[9px] font-black px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 uppercase">Suspenso (Admin Liberado)</span>` : ''}
+              ${athlete.isSuspended ? `<span class="text-[9px] font-black px-2 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase">Suspenso (Admin Liberado)</span>` : ''}
               <div class="grid grid-cols-2 gap-1 sm:gap-1.5 w-full max-w-[155px] mx-auto">
                 <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
-                  <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'JUSTIFICADO' ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">JUSTIFICAR</button>
+                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
+                  <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'JUSTIFICADO' ? 'bg-amber-500 text-white ring-2 ring-amber-400 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">JUSTIFICAR</button>
                 </div>
                 <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FORA' ? 'bg-rose-600 text-white ring-2 ring-rose-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">FORA</button>
-                  ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white ring-2 ring-purple-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">FALTA</button>` : ''}
+                  <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FORA' ? 'bg-rose-600 text-white ring-2 ring-rose-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">FORA</button>
+                  ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white ring-2 ring-purple-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">FALTA</button>` : ''}
                 </div>
               </div>
               ${(window.isAdmin && status === 'CONFIRMADO') ? `
-                <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-lg w-full max-w-[155px] justify-center mt-1">
-                  <input type="checkbox" id="chk_att_${athlete.id}" ${pRecord.attended ? 'checked' : ''} onchange="toggleActualAttendance(${athlete.id}, this.checked)" class="w-3 h-3 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
-                  <label for="chk_att_${athlete.id}" class="text-[9px] font-bold uppercase tracking-wider text-emerald-400 cursor-pointer text-center leading-tight">Validou?</label>
+                <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg w-full max-w-[155px] justify-center mt-1 shadow-sm">
+                  <input type="checkbox" id="chk_att_${athlete.id}" ${pRecord.attended ? 'checked' : ''} onchange="toggleActualAttendance(${athlete.id}, this.checked)" class="w-3 h-3 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 cursor-pointer">
+                  <label for="chk_att_${athlete.id}" class="text-[9px] font-bold uppercase tracking-wider text-emerald-800 cursor-pointer text-center leading-tight">Validou?</label>
                 </div>
               ` : ''}
             </div>
           `;
         }
 
-        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name)}&background=0f172a&color=34d399&bold=true&size=128`;
+        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name)}&background=e2e8f0&color=059669&bold=true&size=128`;
 
         tr.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-200">
+          <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-3">
-              <div onclick="openFullscreenPhoto('${avatarUrl}', '${athlete.name.replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-500/60' : 'border-slate-700 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-900 shadow-md cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
+              <div onclick="openFullscreenPhoto('${avatarUrl}', '${athlete.name.replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-400' : 'border-slate-300 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
                 <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover ${athlete.isSuspended ? 'grayscale' : ''}">
-                <div class="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-white">
+                <div class="absolute inset-0 bg-emerald-600/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-emerald-800">
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </div>
               </div>
               <div class="flex flex-col gap-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm ${athlete.isSuspended ? 'text-rose-300' : ''}">${athlete.name}</span>
-                  ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-600/20 text-rose-400 border border-rose-500/40 uppercase">Suspenso</span>` : ''}
+                  <span class="text-sm ${athlete.isSuspended ? 'text-rose-700' : 'text-slate-800'}">${athlete.name}</span>
+                  ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 border border-rose-300 uppercase">Suspenso</span>` : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
                   ${startDateBadge}
                 </div>
                 ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
-                  <div class="text-amber-400 text-[10px] tracking-widest">${'★'.repeat(athlete.stars)}${'☆'.repeat(5 - athlete.stars)}</div>
+                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars)}${'☆'.repeat(5 - athlete.stars)}</div>
                 </div>
-                ${pRecord.reason ? `<div class="text-[10px] text-amber-400 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
+                ${pRecord.reason ? `<div class="text-[10px] text-amber-700 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
               </div>
             </div>
           </td>
           <td class="py-3 px-4 text-center">${actionsHtml}</td>
           <td class="py-3 px-4 text-right">
             <div class="flex items-center justify-end gap-2">
-              <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone}', '${athlete.name}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs"><i class="fa-brands fa-whatsapp"></i></button>
+              <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone}', '${athlete.name}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
               ${window.isAdmin ? `
-                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all flex items-center justify-center text-xs"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="confirmDeleteAthlete(${athlete.id})" title="Excluir" class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="confirmDeleteAthlete(${athlete.id})" title="Excluir" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center text-xs border border-rose-300"><i class="fa-solid fa-trash"></i></button>
               ` : ''}
             </div>
           </td>
@@ -1966,7 +1957,7 @@
 
     // --- CADASTRO E EDIÇÃO DE ATLETAS ---
     window.openNewAthleteModal = function() {
-      document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-400"></i> Cadastrar Novo Atleta`;
+      document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-600"></i> Cadastrar Novo Atleta`;
       document.getElementById('editAthleteId').value = '';
       document.getElementById('athleteNameInput').value = '';
       document.getElementById('athletePhoneInput').value = '';
@@ -1981,7 +1972,7 @@
     window.openEditAthleteModal = function(id) {
       const athlete = window.athletes.find(a => a.id === id);
       if (!athlete) return;
-      document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-pen text-emerald-400"></i> Editar Atleta`;
+      document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-pen text-emerald-600"></i> Editar Atleta`;
       document.getElementById('editAthleteId').value = athlete.id;
       document.getElementById('athleteNameInput').value = athlete.name;
       document.getElementById('athletePhoneInput').value = athlete.phone || '';
@@ -2002,7 +1993,7 @@
       for (let i = 1; i <= 5; i++) {
         const star = document.createElement('button');
         star.type = 'button';
-        star.className = `text-lg transition-colors ${i <= currentStars ? 'text-amber-400' : 'text-slate-700'}`;
+        star.className = `text-lg transition-colors ${i <= currentStars ? 'text-amber-500' : 'text-slate-300'}`;
         star.innerHTML = '★';
         star.onclick = () => buildStarRatingSelector(i);
         container.appendChild(star);
@@ -2096,21 +2087,21 @@
         const dayLabel = dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase();
 
         list.innerHTML += `
-          <div class="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+          <div class="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <div class="flex items-center gap-2.5">
-              <i class="fa-solid fa-calendar-check text-emerald-400 text-sm shrink-0"></i>
+              <i class="fa-solid fa-calendar-check text-emerald-600 text-sm shrink-0"></i>
               <div>
-                <div class="font-bold text-slate-200 text-xs">${dayLabel}</div>
+                <div class="font-bold text-slate-800 text-xs">${dayLabel}</div>
                 <div class="text-[10px] text-slate-500 font-mono">${d}</div>
               </div>
             </div>
             <div class="flex items-center gap-2 self-end sm:self-auto">
-              <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl">
-                <i class="fa-solid fa-clock text-emerald-400 text-xs"></i>
-                <label class="text-[10px] uppercase font-bold text-slate-400">Horário:</label>
-                <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-100 focus:outline-none cursor-pointer">
+              <div class="flex items-center gap-1.5 bg-white border border-slate-300 px-2.5 py-1 rounded-xl shadow-sm">
+                <i class="fa-solid fa-clock text-emerald-600 text-xs"></i>
+                <label class="text-[10px] uppercase font-bold text-slate-500">Horário:</label>
+                <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               </div>
-              <button onclick="deleteDate('${d}')" title="Excluir data" class="px-3 py-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0">
+              <button onclick="deleteDate('${d}')" title="Excluir data" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0 border border-rose-200">
                 <i class="fa-solid fa-trash-can text-xs"></i>
               </button>
             </div>
@@ -2207,7 +2198,7 @@
       if (window.whatsappQueueList.length === 0) {
         header.classList.add('hidden');
         header.classList.remove('flex');
-        container.innerHTML = `<div class="text-center text-slate-500 py-10 text-xs font-bold">Nenhum atleta ativo encontrado para este filtro com telefone cadastrado.</div>`;
+        container.innerHTML = `<div class="text-center text-slate-400 py-10 text-xs font-bold">Nenhum atleta ativo encontrado para este filtro com telefone cadastrado.</div>`;
         return;
       }
 
@@ -2219,16 +2210,16 @@
       window.whatsappQueueList.forEach((athlete, idx) => {
         const isSent = window.whatsappSentIds.has(athlete.id);
         const item = document.createElement('div');
-        item.className = `flex items-center justify-between py-2.5 px-3 rounded-xl transition-all ${isSent ? 'bg-emerald-950/30 opacity-60' : 'bg-slate-900 hover:bg-slate-800/80'}`;
+        item.className = `flex items-center justify-between py-2.5 px-3 rounded-xl transition-all ${isSent ? 'bg-emerald-50 border border-emerald-200 opacity-80' : 'bg-white hover:bg-slate-50 border border-slate-200 shadow-sm'}`;
         item.innerHTML = `
           <div class="flex items-center gap-2.5">
-            <span class="w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${isSent ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}">${idx + 1}</span>
+            <span class="w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${isSent ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">${idx + 1}</span>
             <div>
-              <div class="text-xs font-bold text-slate-200">${athlete.name}</div>
+              <div class="text-xs font-bold text-slate-800">${athlete.name}</div>
               <div class="text-[10px] text-slate-500">${athlete.phone}</div>
             </div>
           </div>
-          <button onclick="triggerQueueItemSend(${athlete.id})" class="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${isSent ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow'}">
+          <button onclick="triggerQueueItemSend(${athlete.id})" class="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 ${isSent ? 'bg-slate-100 text-emerald-700 border border-emerald-300' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
             <i class="fa-brands fa-whatsapp"></i> ${isSent ? 'Reenviar' : 'Enviar Agora'}
           </button>
         `;
@@ -2371,7 +2362,7 @@
       const dayPresences = window.presences[window.currentDate] || {};
       const confirmedAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA' && dayPresences[a.id]?.status === 'CONFIRMADO');
       if (confirmedAthletes.length === 0) {
-        document.getElementById('teamsContainer').innerHTML = `<div class="col-span-2 bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 text-center text-slate-500"><i class="fa-solid fa-triangle-exclamation text-4xl mb-3 text-amber-500"></i><p class="text-xs font-medium text-slate-300">Nenhum atleta confirmado.</p></div>`;
+        document.getElementById('teamsContainer').innerHTML = `<div class="col-span-2 bg-white border border-slate-200 rounded-3xl p-6 text-center text-slate-500 shadow-sm"><i class="fa-solid fa-triangle-exclamation text-4xl mb-3 text-amber-500"></i><p class="text-xs font-medium text-slate-700">Nenhum atleta confirmado.</p></div>`;
         return window.showToast("Nenhum atleta confirmado.");
       }
       const keepers = confirmedAthletes.filter(a => a.isKeeper || a.position === 'Goleiro');
@@ -2390,10 +2381,10 @@
       teams.forEach((team, idx) => {
         let playersHtml = '';
         team.players.forEach(p => {
-          const posInfo = positionBadges[p.position] || { tag: "MEI", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" };
-          playersHtml += `<div class="flex items-center justify-between py-2 px-3 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs"><div class="flex items-center gap-2"><span class="font-bold text-slate-200">${p.name}</span><span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span></div><div class="text-amber-400 text-[10px]">${'★'.repeat(p.stars)}</div></div>`;
+          const posInfo = positionBadges[p.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
+          playersHtml += `<div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"><div class="flex items-center gap-2"><span class="font-bold text-slate-800">${p.name}</span><span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span></div><div class="text-amber-500 text-[10px]">${'★'.repeat(p.stars)}</div></div>`;
         });
-        container.innerHTML += `<div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4"><div class="flex items-center justify-between border-b border-slate-800 pb-3"><h4 class="text-sm font-black uppercase text-emerald-400"><i class="fa-solid fa-shield-halved"></i> Time ${idx + 1}</h4><span class="text-[11px] font-bold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800">${team.players.length} Atletas (${team.totalStars} ★)</span></div><div class="space-y-2">${playersHtml}</div></div>`;
+        container.innerHTML += `<div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4"><div class="flex items-center justify-between border-b border-slate-200 pb-3"><h4 class="text-sm font-black uppercase text-emerald-700"><i class="fa-solid fa-shield-halved"></i> Time ${idx + 1}</h4><span class="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200">${team.players.length} Atletas (${team.totalStars} ★)</span></div><div class="space-y-2">${playersHtml}</div></div>`;
       });
       window.showToast("Sorteio realizado!", "success");
     };
@@ -2409,8 +2400,8 @@
       ['paid', 'interest', 'due'].forEach(ft => {
         const c = document.getElementById(`finCard-${ft}`);
         if (c) {
-          if (activeFinancialFilter === ft) c.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-800/80');
-          else c.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-800/80');
+          if (activeFinancialFilter === ft) c.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-50');
+          else c.classList.remove('ring-2', 'ring-emerald-500', 'bg-slate-50');
         }
       });
 
@@ -2447,9 +2438,9 @@
         const payments = window.financialPayments[athlete.id] || {};
         let athleteTotalPaid = 0, athleteTotalDue = 0, athleteTotalInterest = 0, athleteInstallmentsDue = 0;
         const finStatus = getAthleteFinancialStatus(athlete.id);
-        const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50';
+        const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500' : 'bg-rose-500';
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
-        const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30' : 'text-rose-400 bg-rose-500/20 border border-rose-500/30';
+        const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-700 bg-emerald-50 border border-emerald-300' : 'text-rose-700 bg-rose-50 border border-rose-300';
         const isExpanded = window.expandedFinCards.has(athlete.id);
         const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
         const athleteName = athlete.name || '';
@@ -2489,16 +2480,16 @@
             }
           }
 
-          let cellColorClass = isPaid ? "bg-sky-500/20 text-sky-300 border-sky-500/40" : (now > dueDate ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-slate-950/40 text-slate-500 border-slate-800");
+          let cellColorClass = isPaid ? "bg-sky-50 text-sky-800 border-sky-300" : (now > dueDate ? "bg-rose-50 text-rose-800 border-rose-300" : "bg-slate-50 text-slate-500 border-slate-200");
 
           monthsGridHtml += `
-            <div class="flex flex-col gap-1 items-center bg-slate-950 border border-slate-800 p-2 rounded-xl shadow-inner relative">
-              <span class="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">${mKey} ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-400 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}</span>
+            <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative">
+              <span class="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">${mKey} ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-600 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}</span>
               <div class="flex items-center gap-1.5 justify-center">
-                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${isPaid ? paidAmount : suggestedFee}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-slate-900 border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
+                <input type="number" value="${isPaid ? paidAmount : suggestedFee}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
-              ${isSpecialNoInterest && paidAmount < suggestedFee ? `<span class="text-[8px] text-amber-400 font-bold">Resta: R$ ${(suggestedFee - paidAmount).toFixed(2)}</span>` : ''}
+              ${isSpecialNoInterest && paidAmount < suggestedFee ? `<span class="text-[8px] text-amber-600 font-bold">Resta: R$ ${(suggestedFee - paidAmount).toFixed(2)}</span>` : ''}
             </div>`;
         });
 
@@ -2508,7 +2499,7 @@
         let finesHtml = '';
 
         athleteFines.forEach((fine, fineIdx) => {
-          if (!fine || fine.date < '2026-11-01') return; // Anterior a 01/11/2026 não gera cobrança
+          if (!fine || fine.date < '2026-11-01') return;
           
           const fineDate = new Date(fine.date + 'T00:00:00');
           let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
@@ -2523,20 +2514,20 @@
           }
 
           finesHtml += `
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-slate-950 p-2.5 rounded-xl border border-rose-500/30 text-xs">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-rose-300 text-xs shadow-sm">
               <div class="flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
-                <span class="font-bold text-slate-200">Falta em ${formatDateDisplay(fine.date)}</span>
-                <span class="text-[10px] text-slate-400">Base: R$ ${baseAmt.toFixed(2)}</span>
-                <span class="text-[10px] text-amber-400 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>
+                <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                <span class="font-bold text-slate-800">Falta em ${formatDateDisplay(fine.date)}</span>
+                <span class="text-[10px] text-slate-500">Base: R$ ${baseAmt.toFixed(2)}</span>
+                <span class="text-[10px] text-amber-600 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-black ${fine.paid ? 'text-emerald-400' : 'text-rose-400'}">Total: R$ ${fineTotal.toFixed(2)}</span>
+                <span class="text-xs font-black ${fine.paid ? 'text-emerald-600' : 'text-rose-600'}">Total: R$ ${fineTotal.toFixed(2)}</span>
                 ${window.canEditFinancial ? `
-                  <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold text-[10px] transition-all">
+                  <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 font-bold text-[10px] transition-all">
                     ${fine.paid ? 'Quitada' : 'Baixar Débito'}
                   </button>
-                ` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${fine.paid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${fine.paid ? 'Paga' : 'Pendente'}</span>`}
+                ` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${fine.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${fine.paid ? 'Paga' : 'Pendente'}</span>`}
               </div>
             </div>
           `;
@@ -2555,36 +2546,36 @@
         if (activeFinancialFilter === 'due' && athleteTotalDue <= 0) return;
 
         container.innerHTML += `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
-            <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-800/50 transition-colors focus:outline-none">
+          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden group shadow-sm">
+            <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-50 transition-colors focus:outline-none">
               <div class="flex items-center gap-3">
                 <span class="w-3 h-3 rounded-full ${dotColor} shrink-0"></span>
-                <span class="font-bold text-slate-200 text-sm md:w-48 truncate">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase shrink-0">Suspenso</span>' : ''}</span>
+                <span class="font-bold text-slate-800 text-sm md:w-48 truncate">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">Suspenso</span>' : ''}</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${finLabelColor} hidden sm:inline-block">${finLabel}</span>
               </div>
               <div class="flex items-center justify-between md:justify-end gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto">
-                <div class="flex flex-col text-slate-400"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-400 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-200 text-sm">R$ ${athleteInstallmentsDue.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-400 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-400 border-l border-slate-700 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-400 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span></div>
-                <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-500 transition-transform ${isExpanded ? 'rotate-180 text-emerald-400' : 'group-hover:text-emerald-400'}"></i></div>
+                <div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-sm">R$ ${athleteInstallmentsDue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-600 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-600 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span></div>
+                <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-emerald-600' : 'group-hover:text-emerald-600'}"></i></div>
               </div>
             </button>
-            <div class="${isExpanded ? 'block' : 'hidden'} border-t border-slate-800 bg-slate-950/50">
+            <div class="${isExpanded ? 'block' : 'hidden'} border-t border-slate-200 bg-slate-50/70">
               <div class="p-4 space-y-4">
                 ${window.canEditFinancial ? `
-                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-slate-200 p-3 rounded-xl shadow-sm">
                     <div class="flex items-center gap-2">
-                      <input type="checkbox" id="always_up_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer">
-                      <label for="always_up_${athlete.id}" class="text-xs font-bold text-slate-200 cursor-pointer">Forçar Status: Considerar Sempre em Dia</label>
+                      <input type="checkbox" id="always_up_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 cursor-pointer">
+                      <label for="always_up_${athlete.id}" class="text-xs font-bold text-slate-800 cursor-pointer">Forçar Status: Considerar Sempre em Dia</label>
                     </div>
-                    <span class="text-[10px] text-slate-400">Exclusivo Marcão / Pablo Padilha</span>
+                    <span class="text-[10px] text-slate-500">Exclusivo Marcão / Pablo Padilha</span>
                   </div>
                 ` : ''}
                 
                 ${finesHtml ? `
-                  <div class="bg-rose-950/20 border border-rose-500/20 rounded-2xl p-3.5 space-y-2">
-                    <h5 class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
+                  <div class="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 space-y-2">
+                    <h5 class="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-2">
                       <i class="fa-solid fa-gavel"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia)
                     </h5>
                     <div class="space-y-1.5">${finesHtml}</div>
@@ -2592,8 +2583,8 @@
                 ` : ''}
 
                 <div class="flex justify-between items-center">
-                  <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-500"></i> Mensalidades (R$ ${suggestedFee.toFixed(2)}/mês)</h4>
-                  ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-500/30"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
+                  <h4 class="text-xs font-bold text-slate-700 uppercase flex items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-600"></i> Mensalidades (R$ ${suggestedFee.toFixed(2)}/mês)</h4>
+                  ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-300"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
               </div>
@@ -2761,24 +2752,24 @@
         const rate = totalEligible > 0 ? Math.round((confCount / totalEligible) * 100) : 0;
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const tr = document.createElement('tr'); 
-        tr.className = "hover:bg-slate-900/60";
+        tr.className = "hover:bg-slate-50 transition-colors";
         
         let startInfo = '';
         if (athlete.effectiveStartDate) {
           const [ey, em, ed] = athlete.effectiveStartDate.split('-');
-          startInfo = `<div class="text-[9px] text-sky-400 font-semibold">Conta a partir de ${ed}/${em}/${ey}</div>`;
+          startInfo = `<div class="text-[9px] text-sky-700 font-semibold">Conta a partir de ${ed}/${em}/${ey}</div>`;
         }
 
         tr.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-200">
+          <td class="py-3 px-4 font-bold text-slate-800">
             ${athlete.name} 
-            ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-600/30 uppercase">Suspenso</span>' : ''}
+            ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase">Suspenso</span>' : ''}
             ${startInfo}
           </td>
-          <td class="py-3 px-4 text-slate-400">${athlete.position}</td>
-          <td class="py-3 px-4 text-center font-bold text-slate-300">${confCount} / ${totalEligible}</td>
-          <td class="py-3 px-4 text-center font-bold text-emerald-400">${rate}%</td>
-          <td class="py-3 px-4 text-right"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finStatus === 'uptodate' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-rose-400 bg-rose-500/10 border-rose-500/30'}">${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}</span></td>
+          <td class="py-3 px-4 text-slate-600">${athlete.position}</td>
+          <td class="py-3 px-4 text-center font-bold text-slate-800">${confCount} / ${totalEligible}</td>
+          <td class="py-3 px-4 text-center font-bold text-emerald-600">${rate}%</td>
+          <td class="py-3 px-4 text-right"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${finStatus === 'uptodate' ? 'text-emerald-700 bg-emerald-50 border-emerald-300' : 'text-rose-700 bg-rose-50 border-rose-300'}">${finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso'}</span></td>
         `;
         tbody.appendChild(tr);
       });
