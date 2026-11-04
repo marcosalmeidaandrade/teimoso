@@ -837,6 +837,7 @@
     window.canEditFinancial = false;
     window.isMarcaoUser = false;
     window.animationsEnabled = localStorage.getItem('teimoso_animations_enabled') !== 'false';
+    let isFirestoreSynced = false; // TRAVA DE SEGURANÇA: Só salva após ler com sucesso os dados reais do Firestore
 
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
@@ -862,33 +863,6 @@
       "EXTRA": { tag: "EXTRA", color: "bg-purple-50 text-purple-700 border-purple-300" }
     };
 
-    const defaultAthletes = [
-      { id: 1, name: "Marcão", position: "Zagueiro", stars: 5, phone: "22999990001", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 2, name: "Pablo Padilha", position: "Meia", stars: 5, phone: "22999990002", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 3, name: "Felipe Macaco", position: "Goleiro", stars: 5, phone: "22999990003", isKeeper: true, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 4, name: "Cláudio", position: "Atacante", stars: 4, phone: "22999990004", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 5, name: "Davi", position: "Volante", stars: 4, phone: "22999990005", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 6, name: "Tiago Boquete", position: "Lateral", stars: 4, phone: "22999990006", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 7, name: "Andinho", position: "Meia", stars: 5, phone: "22999990007", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 8, name: "Júlio", position: "Meia", stars: 4, phone: "22999990008", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 9, name: "Sapão", position: "Zagueiro", stars: 4, phone: "22999990009", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 10, name: "Onofre", position: "Lateral", stars: 4, phone: "22999990010", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 11, name: "Ziel", position: "Atacante", stars: 4, phone: "22999990011", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: null },
-      { id: 12, name: "Alexandre Boechat", position: "Meia", stars: 4, phone: "22999990012", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" },
-      { id: 13, name: "Bruno Monteiro", position: "Zagueiro", stars: 4, phone: "22999990013", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-07-05" },
-      { id: 14, name: "Todinho", position: "Atacante", stars: 4, phone: "22999990014", isKeeper: false, monthlyFee: 110, isSuspended: false, photoUrl: "", effectiveStartDate: "2026-03-08" }
-    ];
-
-    const initialMockFinancial = {
-      1: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
-      2: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
-      3: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
-      4: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
-      5: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
-      6: { jan: { paid: true, amount: 110 }, fev: { paid: true, amount: 110 }, mar: { paid: true, amount: 110 }, abr: { paid: true, amount: 110 }, mai: { paid: true, amount: 110 }, jun: { paid: true, amount: 110 }, jul: { paid: true, amount: 110 }, ago: { paid: true, amount: 110 }, set: { paid: true, amount: 110 }, out: { paid: true, amount: 110 } },
-      7: { jan: { paid: true, amount: 110.00 }, fev: { paid: true, amount: 115.00 }, mar: { paid: true, amount: 134.00 }, abr: { paid: true, amount: 139.00 }, mai: { paid: true, amount: 135.00 }, jun: { paid: true, amount: 132.00 }, jul: { paid: true, amount: 110.00 }, ago: { paid: true, amount: 110.00 }, set: { paid: true, amount: 111.00 }, out: { paid: true, amount: 123.00 } }
-    };
-
     function pruneActivityLogs() {
       if (!Array.isArray(window.activityLogs)) {
         window.activityLogs = [];
@@ -901,30 +875,15 @@
       });
     }
 
-    window.datesList = ["2026-11-03"];
+    // Inicialização direta do cache (sem substituições falsas)
+    window.datesList = JSON.parse(localStorage.getItem('teimoso_datesList')) || ["2026-11-03"];
     window.peladaTimes = JSON.parse(localStorage.getItem('teimoso_peladaTimes')) || { "2026-11-03": "07:00" };
-    window.currentDate = window.datesList[0];
-    window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [...defaultAthletes];
+    window.currentDate = window.datesList[0] || "2026-11-03";
+    window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [];
     window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
-    window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || initialMockFinancial;
+    window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || {};
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
     window.absenceFines = JSON.parse(localStorage.getItem('teimoso_absenceFines')) || {};
-
-    function syncSpecialAthleteDates() {
-      if (!Array.isArray(window.athletes)) return;
-      window.athletes.forEach(a => {
-        const u = (a.name || '').toUpperCase();
-        if (u.includes('ALEXANDRE BOECHAT')) a.effectiveStartDate = '2026-03-08';
-        else if (u.includes('BRUNO MONTEIRO')) a.effectiveStartDate = '2026-07-05';
-        else if (u.includes('TODINHO')) a.effectiveStartDate = '2026-03-08';
-        else if (u.includes('CLÁUDIO') || u.includes('CLAUDIO')) a.effectiveStartDate = null;
-      });
-    }
-
-    function repairFinancialData(saved) {
-      if (!saved || typeof saved !== 'object' || Object.keys(saved).length === 0) return initialMockFinancial;
-      return saved;
-    }
 
     // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN ---
     function getSmartDefaultDate() {
@@ -1179,17 +1138,22 @@
       window.closeConfirm();
     });
 
-    // --- SALVAMENTO FIREBASE ---
+    // --- SALVAMENTO SEGURO FIREBASE (BLINDADO COM MERGE) ---
     window.saveData = async function() {
+      if (!isFirestoreSynced) {
+        console.warn("Aguardando sincronização inicial com o Firestore para evitar sobrescrita.");
+        return;
+      }
       try {
         pruneActivityLogs();
-        syncSpecialAthleteDates();
         localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
         localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
         localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
         localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
         localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
         localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
+        localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
+        
         await setDoc(dbDocRef, {
           datesList: window.datesList,
           peladaTimes: window.peladaTimes,
@@ -1201,7 +1165,7 @@
           activityLogs: window.activityLogs,
           animationsEnabled: window.animationsEnabled,
           updatedAt: new Date().toISOString()
-        });
+        }, { merge: true });
       } catch (error) {
         console.error("Erro ao salvar no Firebase:", error);
       }
@@ -1412,11 +1376,10 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
-    // --- INICIALIZAÇÃO ---
+    // --- INICIALIZAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL ---
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
       updateSoundButtonUI();
-      syncSpecialAthleteDates();
       populateDateSelect();
       buildStarRatingSelector(5);
 
@@ -1424,21 +1387,32 @@
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.datesList && data.datesList.length > 0) window.datesList = data.datesList;
+          if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (data.athletes && data.athletes.length > 0) window.athletes = data.athletes;
-          if (data.presences) window.presences = data.presences;
-          if (data.alwaysUpToDateMap) window.alwaysUpToDateMap = data.alwaysUpToDateMap;
-          if (data.absenceFines) window.absenceFines = data.absenceFines;
-          if (data.activityLogs) window.activityLogs = data.activityLogs;
+          if (data.athletes && Array.isArray(data.athletes) && data.athletes.length > 0) window.athletes = data.athletes;
+          if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
+          if (data.alwaysUpToDateMap && typeof data.alwaysUpToDateMap === 'object') window.alwaysUpToDateMap = data.alwaysUpToDateMap;
+          if (data.absenceFines && typeof data.absenceFines === 'object') window.absenceFines = data.absenceFines;
+          if (data.activityLogs && Array.isArray(data.activityLogs)) window.activityLogs = data.activityLogs;
           if (typeof data.animationsEnabled === 'boolean') {
             window.animationsEnabled = data.animationsEnabled;
             localStorage.setItem('teimoso_animations_enabled', window.animationsEnabled);
           }
-          window.financialPayments = repairFinancialData(data.financialPayments);
+          if (data.financialPayments && typeof data.financialPayments === 'object') {
+            window.financialPayments = data.financialPayments;
+          }
 
-          syncSpecialAthleteDates();
+          isFirestoreSynced = true; // Dados reais carregados do Firestore com sucesso!
           pruneActivityLogs();
+
+          // Espelha no cache seguro
+          localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
+          localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
+          localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
+          localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
+          localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
+          localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
+          localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
 
           if (isFirstLoad) {
             window.currentDate = getSmartDefaultDate();
@@ -1454,10 +1428,12 @@
           renderReports();
           checkDeadlinePassed();
         } else {
+          isFirestoreSynced = true;
           window.saveData();
         }
       }, (error) => {
         console.error("Falha ao escutar Firestore:", error);
+        isFirestoreSynced = true;
         renderAthletesList();
         renderFinancial();
         renderReports();
@@ -1548,6 +1524,7 @@
 
     window.populateDateSelect = function() {
       const select = document.getElementById('dateSelect');
+      if (!select) return;
       select.innerHTML = '';
 
       const availableDates = getAvailableDates();
@@ -1565,13 +1542,15 @@
         select.value = window.currentDate;
       }
 
-      document.getElementById('massModalDate').innerText = formatDateDisplay(window.currentDate);
+      const modalDate = document.getElementById('massModalDate');
+      if (modalDate) modalDate.innerText = formatDateDisplay(window.currentDate);
       updateDateNavButtons();
     };
 
     window.changeDate = function(val) {
       window.currentDate = val;
-      document.getElementById('massModalDate').innerText = formatDateDisplay(val);
+      const modalDate = document.getElementById('massModalDate');
+      if (modalDate) modalDate.innerText = formatDateDisplay(val);
       updateDateNavButtons();
       checkDeadlinePassed();
       renderAthletesList();
@@ -1780,6 +1759,7 @@
     // --- RENDERIZAÇÃO DA TABELA DE PRESENÇA ---
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
       let countConf = 0, countJust = 0, countOut = 0, countFaltas = 0, countTotal = 0;
       const dayPresences = window.presences[window.currentDate] || {};
@@ -1796,11 +1776,11 @@
           const timeA = pA.confirmedAt ? new Date(pA.confirmedAt).getTime() : 0;
           const timeB = pB.confirmedAt ? new Date(pB.confirmedAt).getTime() : 0;
           if (timeA !== timeB) return timeA - timeB;
-          return a.name.localeCompare(b.name);
+          return (a.name || '').localeCompare(b.name || '');
         }
         if (aConfirmed) return -1;
         if (bConfirmed) return 1;
-        return a.name.localeCompare(b.name);
+        return (a.name || '').localeCompare(b.name || '');
       });
 
       sortedAthletes.forEach(athlete => {
@@ -1815,7 +1795,7 @@
           else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
         }
 
-        if (searchTerm && !athlete.name.toLowerCase().includes(searchTerm)) return;
+        if (searchTerm && !(athlete.name || '').toLowerCase().includes(searchTerm)) return;
         if (activeStatusFilter && status !== activeStatusFilter) return;
 
         const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
@@ -1898,12 +1878,12 @@
           `;
         }
 
-        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name)}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
 
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-3">
-              <div onclick="openFullscreenPhoto('${avatarUrl}', '${athlete.name.replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-400' : 'border-slate-300 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
+              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-400' : 'border-slate-300 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
                 <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover ${athlete.isSuspended ? 'grayscale' : ''}">
                 <div class="absolute inset-0 bg-emerald-600/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-emerald-800">
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
@@ -1919,7 +1899,7 @@
                 ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
-                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars)}${'☆'.repeat(5 - athlete.stars)}</div>
+                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars || 4)}${'☆'.repeat(5 - (athlete.stars || 4))}</div>
                 </div>
                 ${pRecord.reason ? `<div class="text-[10px] text-amber-700 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
               </div>
@@ -1928,7 +1908,7 @@
           <td class="py-3 px-4 text-center">${actionsHtml}</td>
           <td class="py-3 px-4 text-right">
             <div class="flex items-center justify-end gap-2">
-              <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone}', '${athlete.name}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
+              <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone || ''}', '${athlete.name || ''}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
               ${window.isAdmin ? `
                 <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="confirmDeleteAthlete(${athlete.id})" title="Excluir" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center text-xs border border-rose-300"><i class="fa-solid fa-trash"></i></button>
@@ -1980,7 +1960,7 @@
       document.getElementById('athletePositionSelect').value = athlete.position;
       document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
-      buildStarRatingSelector(athlete.stars);
+      buildStarRatingSelector(athlete.stars || 4);
       document.getElementById('athleteModal').classList.remove('hidden');
     };
 
@@ -2030,7 +2010,6 @@
         window.showToast("Atleta cadastrado!", "success");
       }
 
-      syncSpecialAthleteDates();
       window.saveData();
       closeAthleteModal();
       renderAthletesList();
@@ -2178,7 +2157,7 @@
       window.whatsappQueueList = [];
       window.whatsappSentIds.clear();
 
-      const sorted = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+      const sorted = [...window.athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       sorted.forEach(a => {
         if (a.isSuspended || a.position === 'EXTRA' || !a.phone) return;
         const p = dayPresences[a.id]?.status;
@@ -2264,7 +2243,7 @@
         const st = dayPresences[a.id]?.status;
         if (st === 'CONFIRMADO' && a.position !== 'EXTRA') {
           confCount++;
-          text += `${confCount}. ${a.name} (${a.position}) - ⭐${a.stars}\n`;
+          text += `${confCount}. ${a.name} (${a.position}) - ⭐${a.stars || 4}\n`;
         }
       });
       if (confCount === 0) text += `Nenhum confirmado.\n`;
@@ -2313,8 +2292,8 @@
         return;
       }
       const dayPresences = window.presences[window.currentDate] || {};
-      const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort((a, b) => a.name.localeCompare(b.name));
-      const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort((a, b) => a.name.localeCompare(b.name));
+      const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
       const confirmedKeepers = activeAthletes.filter(a => (a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO');
       const confirmedOutfield = activeAthletes.filter(a => !(a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO');
@@ -2372,17 +2351,17 @@
       if (numTeams < 2 && totalConfirmed >= 10) numTeams = 2;
       if (numTeams < 1) numTeams = 1;
       const teams = Array.from({ length: numTeams }, () => ({ players: [], totalStars: 0 }));
-      keepers.forEach((keeper, idx) => { teams[idx % numTeams].players.push(keeper); teams[idx % numTeams].totalStars += keeper.stars; });
+      keepers.forEach((keeper, idx) => { teams[idx % numTeams].players.push(keeper); teams[idx % numTeams].totalStars += (keeper.stars || 4); });
       outfield.forEach(player => {
         teams.sort((a, b) => a.players.length !== b.players.length ? a.players.length - b.players.length : a.totalStars - b.totalStars);
-        teams[0].players.push(player); teams[0].totalStars += player.stars;
+        teams[0].players.push(player); teams[0].totalStars += (player.stars || 4);
       });
       const container = document.getElementById('teamsContainer'); container.innerHTML = '';
       teams.forEach((team, idx) => {
         let playersHtml = '';
         team.players.forEach(p => {
           const posInfo = positionBadges[p.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
-          playersHtml += `<div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"><div class="flex items-center gap-2"><span class="font-bold text-slate-800">${p.name}</span><span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span></div><div class="text-amber-500 text-[10px]">${'★'.repeat(p.stars)}</div></div>`;
+          playersHtml += `<div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"><div class="flex items-center gap-2"><span class="font-bold text-slate-800">${p.name}</span><span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span></div><div class="text-amber-500 text-[10px]">${'★'.repeat(p.stars || 4)}</div></div>`;
         });
         container.innerHTML += `<div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4"><div class="flex items-center justify-between border-b border-slate-200 pb-3"><h4 class="text-sm font-black uppercase text-emerald-700"><i class="fa-solid fa-shield-halved"></i> Time ${idx + 1}</h4><span class="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200">${team.players.length} Atletas (${team.totalStars} ★)</span></div><div class="space-y-2">${playersHtml}</div></div>`;
       });
@@ -2428,9 +2407,10 @@
 
     window.renderFinancial = function() {
       const container = document.getElementById('financialAccordionContainer');
+      if (!container) return;
       container.innerHTML = '';
       let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralInterest = 0;
-      const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+      const sortedAthletes = [...window.athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       const now = new Date();
       const disableInput = !window.canEditFinancial ? 'disabled readonly' : '';
 
@@ -2738,9 +2718,10 @@
     // --- RELATÓRIOS E ASSIDUIDADE ---
     window.renderReports = function() {
       const tbody = document.getElementById('reportsTableBody'); 
+      if (!tbody) return;
       tbody.innerHTML = '';
       
-      const sorted = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
+      const sorted = [...window.athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       sorted.forEach(athlete => {
         const eligibleDates = window.datesList.filter(d => {
           if (!athlete.effectiveStartDate) return true;
