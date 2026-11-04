@@ -852,6 +852,37 @@
     window.isMarcaoUser = false;
     window.animationsEnabled = localStorage.getItem('teimoso_animations_enabled') !== 'false';
 
+    // --- LOGOUT AUTOMÁTICO APÓS 3 MINUTOS DE INATIVIDADE ---
+    const INACTIVITY_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutos
+    let inactivityTimer = null;
+
+    function resetInactivityTimer() {
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+      }
+      if (window.currentUser) {
+        inactivityTimer = setTimeout(() => {
+          triggerAutoLogoutDueToInactivity();
+        }, INACTIVITY_TIMEOUT_MS);
+      }
+    }
+
+    function triggerAutoLogoutDueToInactivity() {
+      if (!window.currentUser) return;
+      const userName = window.currentUser.name || 'Atleta';
+      window.recordUserInteraction(userName, "Logout automático por 3 minutos de inatividade");
+      window.logout();
+      window.showToast("Sessão encerrada por 3 minutos de inatividade.", "error");
+    }
+
+    // Monitora interações ativas do usuário para reiniciar o temporizador
+    ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'].forEach(evtName => {
+      window.addEventListener(evtName, () => {
+        resetInactivityTimer();
+      }, { passive: true });
+    });
+
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
@@ -1393,6 +1424,9 @@
       renderFinancial();
       checkDeadlinePassed();
 
+      // Inicia a contagem regressiva de inatividade ao logar
+      resetInactivityTimer();
+
       if (window.pendingJustifyFromLink) {
         const { athleteId, dataPelada } = window.pendingJustifyFromLink;
         window.currentDate = dataPelada;
@@ -1405,6 +1439,10 @@
     }
 
     window.logout = function() {
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+      }
       if (window.currentUser) {
         window.recordUserInteraction(window.currentUser.name, "Efetuou logout do sistema");
       }
