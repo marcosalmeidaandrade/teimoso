@@ -823,6 +823,9 @@
     window.isMarcaoUser = false;
     window.animationsEnabled = localStorage.getItem('teimoso_animations_enabled') !== 'false';
 
+    // Flag de controle: NUNCA permitir que o cliente grave no Firestore antes de ler o estado real do banco!
+    let isFirestoreLoaded = false;
+
     // --- LOGOUT AUTOMÁTICO APÓS 3 MINUTOS DE INATIVIDADE ---
     const INACTIVITY_TIMEOUT_MS = 3 * 60 * 1000;
     let inactivityTimer = null;
@@ -889,7 +892,7 @@
       });
     }
 
-    // Inicialização conservadora para não sobrescrever o que já existe no Firestore/localStorage
+    // Inicialização segura com dados gravados previamente (sem sobrescrever valores do Firebase)
     window.datesList = JSON.parse(localStorage.getItem('teimoso_datesList')) || ["2026-11-03"];
     window.peladaTimes = JSON.parse(localStorage.getItem('teimoso_peladaTimes')) || { "2026-11-03": "07:00" };
     window.currentDate = window.datesList[0] || "2026-11-03";
@@ -1152,8 +1155,13 @@
       window.closeConfirm();
     });
 
-    // --- SALVAMENTO NO FIRESTORE & LOCALSTORAGE ---
+    // --- SALVAMENTO NO FIRESTORE COM PROTEÇÃO DE INTEGRIDADE ---
     window.saveData = async function() {
+      // Bloqueia gravação prematura se o Firestore ainda não tiver feito o load inicial
+      if (!isFirestoreLoaded) {
+        console.warn("Bloqueando saveData(): Firestore ainda carregando dados oficiais.");
+        return;
+      }
       try {
         pruneActivityLogs();
         localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
@@ -1174,7 +1182,7 @@
           activityLogs: window.activityLogs,
           animationsEnabled: window.animationsEnabled,
           updatedAt: new Date().toISOString()
-        });
+        }, { merge: true });
       } catch (error) {
         console.error("Erro ao salvar no Firebase:", error);
       }
@@ -1391,7 +1399,7 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
-    // --- CONEXÃO COM O FIRESTORE (SEGURA, SEM SOBRESCREVER DADOS EXISTENTES) ---
+    // --- CONEXÃO COM O FIRESTORE E PRESERVAÇÃO TOTAL DOS DADOS REAIS ---
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
       updateSoundButtonUI();
@@ -1402,6 +1410,8 @@
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
+          
+          // Preserva estritamente o que foi salvo pelos administradores
           if (Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes && typeof data.peladaTimes === 'object') window.peladaTimes = data.peladaTimes;
           if (Array.isArray(data.athletes) && data.athletes.length > 0) window.athletes = data.athletes;
@@ -1415,6 +1425,16 @@
             localStorage.setItem('teimoso_animations_enabled', window.animationsEnabled);
           }
 
+          // Sincroniza localmente como cópia de backup
+          localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
+          localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
+          localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
+          localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
+          localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
+          localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
+          localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
+
+          isFirestoreLoaded = true;
           pruneActivityLogs();
 
           if (isFirstLoad) {
@@ -1431,11 +1451,13 @@
           renderReports();
           checkDeadlinePassed();
         } else {
-          console.warn("Documento Firestore não encontrado. Mantendo dados locais sem sobrescrever.");
+          console.warn("Documento Firestore não encontrado no banco.");
+          isFirestoreLoaded = true;
         }
       }, (error) => {
         console.error("Falha ao escutar Firestore:", error);
         window.showToast("Falha na sincronização em tempo real com o banco de dados.", "error");
+        isFirestoreLoaded = true;
         renderAthletesList();
         renderFinancial();
         renderReports();
