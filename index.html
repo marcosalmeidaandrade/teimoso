@@ -391,8 +391,9 @@
           </button>
         </div>
 
-        <!-- TOTALIZADORES FINANCEIROS -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- TOTALIZADORES FINANCEIROS (VISÍVEIS PARA TODOS OS USUÁRIOS) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- CARD 1: PAGO -->
           <div onclick="setFinancialFilter('paid')" id="finCard-paid" class="bg-white border border-slate-200 hover:border-emerald-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
               <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Geral Pago</span>
@@ -403,6 +404,29 @@
             </div>
           </div>
 
+          <!-- CARD 2: TOTAL GERAL A RECEBER ATÉ NOVEMBRO -->
+          <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-white border border-slate-200 hover:border-rose-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Geral a Receber Até Novembro</span>
+              <div class="text-2xl font-black text-rose-600 mt-1" id="finTotalDue">R$ 0,00</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+              <i class="fa-solid fa-wallet text-lg"></i>
+            </div>
+          </div>
+
+          <!-- CARD 3: TOTAL EM ATRASO (NOVO) -->
+          <div onclick="setFinancialFilter('overdue')" id="finCard-overdue" class="bg-white border border-slate-200 hover:border-red-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total em Atraso</span>
+              <div class="text-2xl font-black text-red-600 mt-1" id="finTotalOverdue">R$ 0,00</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600">
+              <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            </div>
+          </div>
+
+          <!-- CARD 4: TOTAL DE JUROS DEVIDOS -->
           <div onclick="setFinancialFilter('interest')" id="finCard-interest" class="bg-white border border-slate-200 hover:border-amber-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
               <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total de Juros Devidos</span>
@@ -410,16 +434,6 @@
             </div>
             <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
               <i class="fa-solid fa-clock text-lg"></i>
-            </div>
-          </div>
-
-          <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-white border border-slate-200 hover:border-rose-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
-            <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total a Receber</span>
-              <div class="text-2xl font-black text-rose-600 mt-1" id="finTotalDue">R$ 0,00</div>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
-              <i class="fa-solid fa-triangle-exclamation text-lg"></i>
             </div>
           </div>
         </div>
@@ -2397,7 +2411,7 @@
         activeFinancialFilter = filterType;
       }
 
-      ['paid', 'interest', 'due'].forEach(ft => {
+      ['paid', 'interest', 'due', 'overdue'].forEach(ft => {
         const c = document.getElementById(`finCard-${ft}`);
         if (c) {
           if (activeFinancialFilter === ft) c.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-50');
@@ -2410,7 +2424,12 @@
       if (activeFinancialFilter) {
         bar.classList.remove('hidden');
         bar.classList.add('flex');
-        const mapNames = { paid: 'Atletas com Pagamentos Realizados', interest: 'Atletas com Juros Devidos', due: 'Atletas Devendo (Parcelas + Juros)' };
+        const mapNames = { 
+          paid: 'Atletas com Pagamentos Realizados', 
+          interest: 'Atletas com Juros Devidos', 
+          due: 'Total Geral a Receber Até Novembro (Parcelas + Juros + Multas)',
+          overdue: 'Atletas com Débitos Vencidos em Atraso'
+        };
         label.innerText = mapNames[activeFinancialFilter] || '';
       } else {
         bar.classList.add('hidden');
@@ -2429,14 +2448,14 @@
     window.renderFinancial = function() {
       const container = document.getElementById('financialAccordionContainer');
       container.innerHTML = '';
-      let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralInterest = 0;
+      let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralOverdue = 0, totalGeneralInterest = 0;
       const sortedAthletes = [...window.athletes].sort((a, b) => a.name.localeCompare(b.name));
       const now = new Date();
       const disableInput = !window.canEditFinancial ? 'disabled readonly' : '';
 
       sortedAthletes.forEach(athlete => {
         const payments = window.financialPayments[athlete.id] || {};
-        let athleteTotalPaid = 0, athleteTotalDue = 0, athleteTotalInterest = 0, athleteInstallmentsDue = 0;
+        let athleteTotalPaid = 0, athleteTotalDue = 0, athleteTotalOverdue = 0, athleteTotalInterest = 0, athleteInstallmentsDue = 0;
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500' : 'bg-rose-500';
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
@@ -2462,9 +2481,12 @@
           if (isSpecialNoInterest) {
             interest = 0;
             const remainingDue = Math.max(0, suggestedFee - paidAmount);
-            if (!athlete.isSuspended && remainingDue > 0 && now > dueDate) {
+            if (!athlete.isSuspended && remainingDue > 0) {
               athleteInstallmentsDue += remainingDue;
               athleteTotalDue += remainingDue;
+              if (now > dueDate) {
+                athleteTotalOverdue += remainingDue;
+              }
             }
           } else {
             if (!isPaid && now >= firstDayAfterDue) {
@@ -2476,6 +2498,9 @@
               if (!isPaid) {
                 athleteInstallmentsDue += suggestedFee;
                 athleteTotalDue += (suggestedFee + interest);
+                if (now > dueDate) {
+                  athleteTotalOverdue += (suggestedFee + interest);
+                }
               }
             }
           }
@@ -2510,6 +2535,7 @@
 
           if (!fine.paid && !athlete.isSuspended) {
             athleteTotalDue += fineTotal;
+            athleteTotalOverdue += fineTotal;
             athleteTotalInterest += fineInterest;
           }
 
@@ -2535,6 +2561,7 @@
 
         totalGeneralPaid += athleteTotalPaid;
         totalGeneralDue += athleteTotalDue;
+        totalGeneralOverdue += athleteTotalOverdue;
         totalGeneralInterest += athleteTotalInterest;
 
         if (!window.isAdmin && window.currentUser && window.currentUser.id !== athlete.id) {
@@ -2544,20 +2571,22 @@
         if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
         if (activeFinancialFilter === 'interest' && athleteTotalInterest <= 0) return;
         if (activeFinancialFilter === 'due' && athleteTotalDue <= 0) return;
+        if (activeFinancialFilter === 'overdue' && athleteTotalOverdue <= 0) return;
 
         container.innerHTML += `
           <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden group shadow-sm">
             <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-50 transition-colors focus:outline-none">
               <div class="flex items-center gap-3">
                 <span class="w-3 h-3 rounded-full ${dotColor} shrink-0"></span>
-                <span class="font-bold text-slate-800 text-sm md:w-48 truncate">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">Suspenso</span>' : ''}</span>
+                <span class="font-bold text-slate-800 text-sm md:w-44 truncate">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">Suspenso</span>' : ''}</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${finLabelColor} hidden sm:inline-block">${finLabel}</span>
               </div>
-              <div class="flex items-center justify-between md:justify-end gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto">
+              <div class="flex items-center justify-between md:justify-end gap-3 sm:gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto flex-wrap sm:flex-nowrap">
                 <div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-sm">R$ ${athleteInstallmentsDue.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-600 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-600 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase text-red-600 font-black">Total em Atraso</span><span class="text-red-600 text-sm font-black">R$ ${athleteTotalOverdue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase text-rose-600">Total Geral Até Novembro</span><span class="text-rose-600 text-sm font-black">R$ ${athleteTotalDue.toFixed(2)}</span></div>
                 <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-emerald-600' : 'group-hover:text-emerald-600'}"></i></div>
               </div>
             </button>
@@ -2595,6 +2624,8 @@
       document.getElementById('finTotalPaid').innerText = `R$ ${safeNum(totalGeneralPaid).toFixed(2)}`;
       document.getElementById('finTotalInterest').innerText = `R$ ${safeNum(totalGeneralInterest).toFixed(2)}`;
       document.getElementById('finTotalDue').innerText = `R$ ${safeNum(totalGeneralDue).toFixed(2)}`;
+      const overdueEl = document.getElementById('finTotalOverdue');
+      if (overdueEl) overdueEl.innerText = `R$ ${safeNum(totalGeneralOverdue).toFixed(2)}`;
     };
 
     window.settleAbsenceFine = function(athleteId, fineIndex) {
