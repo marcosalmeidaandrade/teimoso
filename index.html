@@ -1497,7 +1497,47 @@
     };
 
     function getAvailableDates() {
-      return [...window.datesList].sort();
+      const allDates = [...window.datesList].sort();
+      // Se for admin, tem acesso a todas as datas cadastradas
+      if (window.isAdmin) {
+        return allDates;
+      }
+
+      // Para atletas comuns: exibir da última pelada realizada até o próximo sábado
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Calcular o próximo sábado
+      const nextSaturday = new Date(today);
+      const dayOfWeek = today.getDay(); // 0: Dom, 1: Seg, ..., 6: Sab
+      const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+      nextSaturday.setDate(today.getDate() + daysUntilSaturday);
+      nextSaturday.setHours(23, 59, 59, 999);
+
+      // Pegar as datas passadas para achar a última pelada
+      const pastDates = allDates.filter(d => {
+        const [y, m, day] = d.split('-');
+        return new Date(y, m - 1, day, 23, 59, 59) < today;
+      });
+      const lastPastDate = pastDates.length > 0 ? pastDates[pastDates.length - 1] : null;
+
+      // Filtrar datas elegíveis: última pelada anterior até o próximo sábado
+      const visibleDates = allDates.filter(d => {
+        const [y, m, day] = d.split('-');
+        const dateObj = new Date(y, m - 1, day, 0, 0, 0);
+
+        if (d === lastPastDate) return true;
+        // Peladas de hoje até o próximo sábado
+        if (dateObj >= today && dateObj <= nextSaturday) return true;
+        return false;
+      });
+
+      // Fallback seguro caso não caia em nenhuma regra
+      if (visibleDates.length === 0) {
+        return allDates.slice(-2);
+      }
+
+      return visibleDates;
     }
 
     function updateDateNavButtons() {
@@ -1820,7 +1860,10 @@
       const searchInput = document.getElementById('searchAthleteInput');
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-      const sortedAthletes = [...window.athletes].sort((a, b) => {
+      // Ocultar 100% os atletas suspensos da aba PRESENÇA
+      const activeAthletesList = window.athletes.filter(a => !a.isSuspended);
+
+      const sortedAthletes = [...activeAthletesList].sort((a, b) => {
         const pA = dayPresences[a.id];
         const pB = dayPresences[b.id];
         const aConfirmed = pA?.status === 'CONFIRMADO';
@@ -1841,13 +1884,11 @@
         const pRecord = dayPresences[athlete.id] || { status: null, reason: '', attended: false, confirmedAt: null };
         const status = pRecord.status;
 
-        if (!athlete.isSuspended) {
-          countTotal++;
-          if (status === 'CONFIRMADO') countConf++;
-          else if (status === 'JUSTIFICADO') countJust++;
-          else if (status === 'FALTA') countFaltas++;
-          else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
-        }
+        countTotal++;
+        if (status === 'CONFIRMADO') countConf++;
+        else if (status === 'JUSTIFICADO') countJust++;
+        else if (status === 'FALTA') countFaltas++;
+        else if (status === 'FORA' || (athlete.position === 'EXTRA' && (!status || status === ''))) countOut++;
 
         if (searchTerm && !(athlete.name || '').toLowerCase().includes(searchTerm)) return;
         if (activeStatusFilter && status !== activeStatusFilter) return;
@@ -1877,22 +1918,13 @@
         }
 
         const tr = document.createElement('tr');
-        tr.className = athlete.isSuspended ? "bg-rose-50/70 hover:bg-rose-100/60 transition-colors" : "hover:bg-slate-50 transition-colors";
+        tr.className = "hover:bg-slate-50 transition-colors";
 
         let actionsHtml = '';
         const isSelf = window.currentUser && window.currentUser.id === athlete.id;
         const canControlPresence = window.isAdmin || isSelf;
 
-        if (athlete.isSuspended && !window.isAdmin) {
-          actionsHtml = `
-            <div class="flex flex-col items-center justify-center gap-1">
-              <span class="text-[10px] font-black px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-ban"></i> Suspenso
-              </span>
-              ${status ? `<span class="text-[9px] font-bold text-slate-500">Status: ${status}</span>` : ''}
-            </div>
-          `;
-        } else if (!canControlPresence) {
+        if (!canControlPresence) {
           let currentStatusBadge = `<span class="text-[10px] text-slate-500 font-bold">Pendente</span>`;
           if (status === 'CONFIRMADO') {
             currentStatusBadge = `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${athlete.position === 'EXTRA' ? 'Confirmado Resenha' : 'Confirmado'}</span>`;
@@ -1911,7 +1943,6 @@
         } else {
           actionsHtml = `
             <div class="flex flex-col items-center justify-center gap-1.5 w-full">
-              ${athlete.isSuspended ? `<span class="text-[9px] font-black px-2 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase">Suspenso (Admin Liberado)</span>` : ''}
               <div class="grid grid-cols-2 gap-1 sm:gap-1.5 w-full max-w-[155px] mx-auto">
                 <div class="flex flex-col gap-1 sm:gap-1.5">
                   <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
@@ -1937,16 +1968,15 @@
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-3">
-              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${athlete.isSuspended ? 'border-rose-400' : 'border-slate-300 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
-                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover ${athlete.isSuspended ? 'grayscale' : ''}">
+              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 hover:border-emerald-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
+                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-emerald-600/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-emerald-800">
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </div>
               </div>
               <div class="flex flex-col gap-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm ${athlete.isSuspended ? 'text-rose-700' : 'text-slate-800'}">${athlete.name}</span>
-                  ${athlete.isSuspended ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 border border-rose-300 uppercase">Suspenso</span>` : ''}
+                  <span class="text-sm text-slate-800">${athlete.name}</span>
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
                   ${startDateBadge}
                 </div>
