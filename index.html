@@ -56,6 +56,15 @@
 </head>
 <body class="bg-slate-100 text-slate-800 h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white antialiased">
 
+  <!-- CLOUD LOADING OVERLAY (IMPEDE USO ENQUANTO NÃO CARREGAR 100% DA NUVEM) -->
+  <div id="cloudLoadingOverlay" class="fixed inset-0 z-[400] bg-white flex flex-col items-center justify-center p-6 space-y-4">
+    <div class="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+    <div class="text-center">
+      <h3 class="text-base font-black text-slate-800 uppercase tracking-wider">Conectando à Nuvem</h3>
+      <p class="text-xs text-slate-500 mt-1 font-medium">Carregando dados oficiais diretamente do Firestore...</p>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed top-5 right-5 z-[250] flex flex-col gap-2 pointer-events-none"></div>
 
@@ -381,7 +390,7 @@
           </button>
         </div>
 
-        <!-- TOTALIZADORES FINANCEIROS (VISÍVEIS PARA TODOS) -->
+        <!-- TOTALIZADORES FINANCEIROS (TODOS VISÍVEIS) -->
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div onclick="setFinancialFilter('paid')" id="finCard-paid" class="bg-white border border-slate-200 hover:border-emerald-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
@@ -395,7 +404,7 @@
 
           <div onclick="setFinancialFilter('interest')" id="finCard-interest" class="bg-white border border-slate-200 hover:border-amber-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Juros Devidos</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total de Juros Devidos</span>
               <div class="text-xl font-black text-amber-600 mt-1" id="finTotalInterest">R$ 0,00</div>
             </div>
             <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
@@ -415,7 +424,7 @@
 
           <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-white border border-slate-200 hover:border-purple-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700">A Receber Até Nov</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700">Total Geral a Receber Até Novembro</span>
               <div class="text-xl font-black text-purple-700 mt-1" id="finTotalDue">R$ 0,00</div>
             </div>
             <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700">
@@ -641,7 +650,7 @@
       </p>
       <div id="manageDatesList" class="divide-y divide-slate-100 overflow-y-auto flex-grow space-y-2 pr-1"></div>
       <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-        <span class="text-[10px] text-slate-500">Alterações de horário são salvas automaticamente.</span>
+        <span class="text-[10px] text-slate-500">Alterações de horário são salvas automaticamente na nuvem.</span>
         <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
@@ -709,7 +718,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT APPLICATION CORE -->
+  <!-- JAVASCRIPT APPLICATION CORE (NUVEM PURA - ZERO LOCALSTORAGE PARA ESTADO) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -728,123 +737,20 @@
     const db = getFirestore(app);
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
-    // --- DADOS REAIS RESGATADOS COM 100% DE FIDELIDADE (BACKUP PABLO PADILHA) ---
-    const recoveredAthletes = [
-      {"id":1,"isKeeper":false,"position":"Zagueiro","stars":5,"monthlyFee":110,"name":"ADALBERTO","phone":"(22) 99870-8348"},
-      {"isKeeper":false,"monthlyFee":110,"position":"Zagueiro","stars":5,"id":38,"phone":"(22) 99968-6208","name":"ALBINOS"},
-      {"position":"Lateral","monthlyFee":90,"stars":5,"phone":"(22) 99833-4202","isKeeper":false,"name":"ALEXANDRE ALEIXO","id":2},
-      {"name":"ALEXANDRE BOECHAT","id":3,"phone":"(21) 98881-1626","isKeeper":false,"effectiveStartDate":"2026-03-08","stars":5,"monthlyFee":110,"position":"Meia"},
-      {"id":1793391772367,"monthlyFee":110,"isKeeper":false,"name":"ANDINHO","position":"Meia","isSuspended":true,"phone":"(22) 99815-8502","stars":5},
-      {"stars":5,"monthlyFee":110,"id":4,"phone":"(22) 99770-7382","isKeeper":false,"position":"Meia","name":"ARTHUR"},
-      {"id":5,"name":"BRASIL","monthlyFee":110,"position":"Zagueiro","phone":"(22) 98806-5028","stars":5,"isKeeper":false},
-      {"name":"BRAULINHO","isKeeper":false,"phone":"(22) 99916-2356","stars":5,"monthlyFee":110,"position":"Zagueiro","id":6},
-      {"stars":5,"id":44,"position":"Volante","isKeeper":false,"phone":"(22) 99804-4619","monthlyFee":110,"name":"BRITO"},
-      {"name":"BRUNO","monthlyFee":90,"phone":"(22) 99807-7024","position":"Goleiro","id":9,"isKeeper":true,"stars":5},
-      {"monthlyFee":110,"position":"Volante","name":"BRUNO ALVES","stars":5,"phone":"(22) 99871-1522","isKeeper":false,"id":8},
-      {"id":7,"name":"BRUNO MONTEIRO","isKeeper":false,"effectiveStartDate":"2026-07-05","phone":"(22) 98146-1479","monthlyFee":110,"stars":5,"position":"Meia"},
-      {"phone":"(22) 99752-0630","stars":5,"name":"CARLINHOS","isKeeper":false,"position":"Lateral","id":10,"monthlyFee":110},
-      {"monthlyFee":90,"stars":5,"isKeeper":false,"phone":"(22) 99805-1141","position":"Atacante","id":11,"name":"CASCOLA"},
-      {"name":"CELINHO","id":12,"phone":"(22) 99738-3303","isKeeper":false,"monthlyFee":90,"stars":5,"position":"Meia"},
-      {"position":"Lateral","stars":5,"phone":"(22) 99870-9734","isKeeper":false,"name":"CHATUBA","monthlyFee":110,"id":13},
-      {"name":"CLÁUDIO","effectiveStartDate":null,"phone":"(22) 99809-6045","position":"Atacante","id":14,"isKeeper":false,"monthlyFee":110,"stars":5},
-      {"position":"Lateral","name":"COPINHO","id":15,"isKeeper":false,"phone":"(22) 99711-7592","stars":5,"monthlyFee":110},
-      {"monthlyFee":110,"name":"CORUJA","isKeeper":false,"phone":"(22) 98857-4123","id":45,"position":"Meia","stars":5},
-      {"phone":"(22) 99829-8992","name":"CRIS","id":16,"stars":5,"monthlyFee":110,"position":"Meia","isKeeper":false},
-      {"name":"DAVI","monthlyFee":110,"id":17,"phone":"(22) 99807-1160","position":"Volante","isKeeper":false,"stars":5},
-      {"stars":5,"phone":"(22) 98866-8357","id":18,"isKeeper":false,"name":"DEIVID","position":"Lateral","monthlyFee":110},
-      {"name":"DIBOI","phone":"(22) 99933-7744","isKeeper":false,"monthlyFee":90,"id":19,"position":"Lateral","stars":5},
-      {"isKeeper":false,"phone":"(22) 99778-7160","stars":5,"position":"Zagueiro","name":"DIDI","monthlyFee":110,"id":20},
-      {"monthlyFee":110,"stars":5,"isKeeper":false,"name":"DIEGO","phone":"(22) 99830-3519","position":"Volante","id":21},
-      {"id":22,"monthlyFee":110,"stars":5,"phone":"(22) 99932-2147","name":"EDMAR","position":"Atacante","isKeeper":false},
-      {"isKeeper":false,"monthlyFee":90,"phone":"(22) 99919-1605","stars":5,"position":"Atacante","name":"FABIANO","isSuspended":true,"id":1793392440351},
-      {"id":24,"stars":5,"monthlyFee":110,"isKeeper":false,"name":"FEIJÃO","phone":"(22) 99818-8828","position":"Volante"},
-      {"id":25,"position":"Meia","stars":5,"isKeeper":false,"name":"FELIPE MACACO","monthlyFee":110,"phone":"(22) 99955-1745"},
-      {"monthlyFee":110,"name":"JONILSON","id":29,"position":"Lateral","phone":"(22) 99921-0018","isKeeper":false,"stars":5},
-      {"isKeeper":false,"monthlyFee":90,"phone":"(22) 99879-1999","name":"JOSÉ AMÉRICO","stars":5,"position":"EXTRA","id":27},
-      {"monthlyFee":90,"position":"EXTRA","isKeeper":false,"name":"JOSÉ ANTÔNIO","stars":5,"id":28,"phone":"(22) 99838-0184"},
-      {"isKeeper":false,"name":"JÚLIO","position":"Meia","id":31,"phone":"(22) 98859-9790","monthlyFee":110,"stars":5},
-      {"monthlyFee":110,"isKeeper":false,"stars":5,"position":"Atacante","id":30,"name":"JUNINHO","phone":"(22) 99888-8704"},
-      {"isSuspended":true,"phone":"(22) 98151-4835","position":"Volante","name":"LACRAIA","stars":5,"isKeeper":false,"id":1793392486308,"monthlyFee":110},
-      {"stars":5,"phone":"(22) 99905-9602","isKeeper":true,"name":"LAMIADO","id":32,"monthlyFee":90,"position":"Goleiro"},
-      {"position":"Goleiro","stars":5,"id":33,"isKeeper":true,"phone":"(22) 99776-4402","monthlyFee":90,"name":"LUAN"},
-      {"phone":"(22) 99909-6516","stars":5,"name":"LUCAS LOPES","monthlyFee":110,"isKeeper":false,"id":35,"position":"Meia"},
-      {"monthlyFee":90,"stars":5,"id":34,"isKeeper":true,"position":"Goleiro","phone":"(22) 99939-3728","name":"LUIZ FERNANDO"},
-      {"position":"Atacante","isKeeper":false,"id":36,"monthlyFee":90,"stars":5,"name":"MANINHO","phone":"(22) 99869-6856"},
-      {"monthlyFee":110,"position":"Zagueiro","id":37,"isKeeper":false,"name":"MARCÃO","stars":5,"phone":"(22) 98139-1262"},
-      {"position":"EXTRA","phone":"(22) 98854-5701","monthlyFee":110,"stars":5,"isKeeper":false,"name":"MATEUS MARTINS","id":39},
-      {"monthlyFee":110,"phone":"(22) 99921-0655","stars":5,"name":"MONTANHA","id":23,"position":"Goleiro","isKeeper":true},
-      {"phone":"(22) 99826-2546","id":41,"name":"NANDI","stars":5,"monthlyFee":90,"isKeeper":false,"position":"Lateral"},
-      {"position":"Meia","stars":5,"isKeeper":false,"phone":"(22) 99838-8033","id":40,"name":"ONOFRE","monthlyFee":110},
-      {"phone":"(22) 99889-1720","name":"PABLO PADILHA","id":42,"isKeeper":false,"stars":5,"position":"Lateral","monthlyFee":110},
-      {"phone":"(22) 99723-4009","isKeeper":false,"stars":5,"name":"PABLO PICANÇO","position":"EXTRA","monthlyFee":110,"id":43},
-      {"isSuspended":true,"position":"Meia","stars":5,"phone":"(21) 99957-3592","id":1793392532224,"isKeeper":false,"name":"PEDRO","monthlyFee":110},
-      {"phone":"(22) 98876-3826","name":"RANIERI","monthlyFee":110,"stars":5,"position":"Meia","isKeeper":false,"id":26},
-      {"monthlyFee":110,"isKeeper":false,"id":47,"name":"RICARDO","position":"Meia","phone":"","stars":5},
-      {"stars":5,"monthlyFee":90,"id":48,"phone":"(22) 99878-3976","position":"Zagueiro","isKeeper":false,"name":"SANDRO"},
-      {"name":"SAPÃO","id":49,"phone":"(22) 98849-6777","position":"Atacante","monthlyFee":110,"isKeeper":false,"stars":5},
-      {"name":"SILZIMAR","id":50,"phone":"(22) 99921-5001","monthlyFee":110,"stars":5,"position":"Atacante","isKeeper":false},
-      {"monthlyFee":110,"name":"TIAGO BOQUETE","isKeeper":false,"phone":"(22) 99611-1636","id":52,"stars":5,"position":"Meia"},
-      {"position":"Lateral","name":"TIAGO CONECTA","isKeeper":false,"monthlyFee":110,"phone":"(22) 99808-2991","id":51,"stars":5},
-      {"phone":"(32) 9951-3809","stars":5,"name":"TIAGO SERRA","id":53,"isKeeper":false,"monthlyFee":110,"position":"Volante"},
-      {"name":"TODINHO","monthlyFee":110,"phone":"(22) 99226-8500","isKeeper":false,"effectiveStartDate":"2026-03-08","stars":5,"id":46,"position":"Volante"},
-      {"phone":"(22) 99758-6481","name":"WALLACE","id":54,"stars":5,"monthlyFee":110,"position":"Lateral","isKeeper":false},
-      {"monthlyFee":110,"id":55,"position":"Meia","name":"ZIEL","stars":5,"isKeeper":false,"phone":"(22) 99932-0185"}
-    ];
+    // Limpeza mandatória de qualquer cache residual antigo do navegador
+    try {
+      localStorage.removeItem('teimoso_athletes');
+      localStorage.removeItem('teimoso_presences');
+      localStorage.removeItem('teimoso_financialPayments');
+      localStorage.removeItem('teimoso_alwaysUpToDateMap');
+      localStorage.removeItem('teimoso_absenceFines');
+      localStorage.removeItem('teimoso_peladaTimes');
+      localStorage.removeItem('teimoso_datesList');
+    } catch (e) {}
 
-    const recoveredPresences = {
-      "2026-11-01": {
-        "1":{"status":"CONFIRMADO","attended":false,"reason":""},
-        "2":{"reason":"Estou viajando galera!!!","attended":false,"status":"JUSTIFICADO"},
-        "3":{"fault":false,"reason":"","status":"PENDENTE","checked":false},
-        "4":{"reason":"","attended":false,"status":"CONFIRMADO"},
-        "5":{"reason":"","status":"CONFIRMADO","attended":false},
-        "6":{"status":"CONFIRMADO","attended":false,"reason":""},
-        "9":{"reason":"","status":"CONFIRMADO","attended":false},
-        "11":{"status":"CONFIRMADO","reason":"","attended":false},
-        "12":{"status":"JUSTIFICADO","reason":"Viajem","attended":false},
-        "13":{"status":"CONFIRMADO","attended":false,"reason":""},
-        "15":{"reason":"","attended":false,"status":null},
-        "16":{"attended":false,"status":"CONFIRMADO","reason":""},
-        "17":{"attended":false,"reason":"","status":"CONFIRMADO"},
-        "19":{"reason":"","attended":false,"status":"CONFIRMADO"},
-        "20":{"reason":"","status":null,"attended":false},
-        "21":{"status":"JUSTIFICADO","attended":false,"reason":"Estarei com minha mãe"},
-        "23":{"reason":"Vou disputar um campeonato no domingo de jiu-jítsu","attended":false,"status":"JUSTIFICADO"},
-        "24":{"status":"CONFIRMADO","reason":"","attended":false},
-        "25":{"reason":"","attended":false,"status":"CONFIRMADO"},
-        "26":{"status":"CONFIRMADO","attended":false,"reason":""},
-        "27":{"reason":"","attended":false,"status":"CONFIRMADO"},
-        "28":{"attended":false,"reason":"","status":"CONFIRMADO"},
-        "29":{"reason":"Estou em viagem","attended":false,"status":"JUSTIFICADO"},
-        "31":{"reason":"","status":"CONFIRMADO","attended":false},
-        "32":{"reason":"","attended":false,"status":null},
-        "35":{"attended":false,"reason":"Viagem","status":"JUSTIFICADO"},
-        "37":{"attended":false,"status":"CONFIRMADO","reason":""},
-        "38":{"attended":false,"status":"CONFIRMADO","reason":""},
-        "40":{"reason":"","attended":false,"status":"FORA"},
-        "41":{"status":"JUSTIFICADO","attended":false,"reason":"Estarei comemorando o aniversário do meu amor"},
-        "42":{"reason":"","attended":false,"status":"CONFIRMADO"},
-        "44":{"reason":"","status":null,"attended":false},
-        "45":{"attended":false,"reason":"Trabalho","status":"JUSTIFICADO"},
-        "49":{"attended":false,"status":null,"reason":""},
-        "51":{"reason":"","attended":false,"status":"CONFIRMADO"},
-        "53":{"reason":"Viagem","attended":false,"status":"JUSTIFICADO"},
-        "55":{"status":"JUSTIFICADO","attended":false,"reason":"Operação. Tendão."}
-      }
-    };
-
-    const recoveredFinancial = {
-      "1":{"set":{"paid":true,"amount":110},"jun":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"ago":{"paid":true,"amount":110},"fev":{"amount":110,"paid":true},"jan":{"paid":true,"amount":110},"mar":{"paid":true,"amount":110},"jul":{"amount":110,"paid":true},"mai":{"amount":110,"paid":true},"out":{"paid":true,"amount":110}},
-      "2":{"mar":{"paid":true,"amount":110},"jan":{"paid":true,"amount":110},"out":{"amount":110,"paid":true},"mai":{"paid":true,"amount":110},"jul":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"jun":{"amount":110,"paid":true},"set":{"amount":110,"paid":true},"fev":{"paid":true,"amount":110},"ago":{"paid":true,"amount":110}},
-      "3":{"jan":{"amount":110,"paid":true},"mar":{"paid":true,"amount":110},"jul":{"paid":true,"amount":110},"mai":{"paid":true,"amount":110},"out":{"amount":110,"paid":true},"set":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"jun":{"paid":true,"amount":110},"ago":{"paid":true,"amount":110},"fev":{"paid":true,"amount":110}},
-      "4":{"ago":{"paid":true,"amount":110},"fev":{"paid":true,"amount":110},"set":{"paid":true,"amount":110},"jun":{"paid":true,"amount":110},"abr":{"amount":110,"paid":true},"jul":{"amount":110,"paid":true},"out":{"amount":110,"paid":true},"mai":{"paid":true,"amount":110},"jan":{"amount":110,"paid":true},"mar":{"paid":true,"amount":110}},
-      "5":{"fev":{"amount":110,"paid":true},"ago":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"jun":{"paid":true,"amount":110},"set":{"amount":110,"paid":true},"mai":{"paid":true,"amount":110},"out":{"amount":110,"paid":true},"jul":{"paid":true,"amount":110},"mar":{"amount":110,"paid":true},"jan":{"amount":110,"paid":true}},
-      "6":{"jan":{"paid":true,"amount":110},"mar":{"amount":110,"paid":true},"jul":{"paid":true,"amount":110},"out":{"paid":true,"amount":110},"mai":{"amount":110,"paid":true},"set":{"paid":true,"amount":110},"jun":{"amount":110,"paid":true},"abr":{"paid":true,"amount":110},"ago":{"paid":true,"amount":110},"fev":{"paid":true,"amount":110}}
-    };
-
-    // --- SISTEMA DE FEEDBACK SONORO ---
+    // --- SISTEMA DE FEEDBACK SONORO (WEB AUDIO) ---
     let audioCtx = null;
-    let soundEnabled = localStorage.getItem('teimoso_sound_enabled') !== 'false';
+    let soundEnabled = true;
 
     function getAudioContext() {
       if (!audioCtx) {
@@ -897,7 +803,6 @@
 
     window.toggleSoundSystem = function() {
       soundEnabled = !soundEnabled;
-      localStorage.setItem('teimoso_sound_enabled', soundEnabled);
       updateSoundButtonUI();
       if (soundEnabled) window.playAppSound('click');
       window.showToast(soundEnabled ? "Efeitos sonoros ativados!" : "Efeitos sonoros silenciados.", "success");
@@ -923,13 +828,35 @@
       }
     }, true);
 
-    // --- ESTADO GLOBAL & PERMISSÕES ---
+    // --- MONITOR DE INATIVIDADE (3 MINUTOS = LOGOUT AUTOMÁTICO) ---
+    let inactivityTimer = null;
+    const INACTIVITY_LIMIT_MS = 3 * 60 * 1000; // 3 minutos
+
+    function resetInactivityTimer() {
+      if (!window.currentUser) return;
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(triggerAutoLogoutDueToInactivity, INACTIVITY_LIMIT_MS);
+    }
+
+    function triggerAutoLogoutDueToInactivity() {
+      if (!window.currentUser) return;
+      const userName = window.currentUser.name || 'Atleta';
+      window.recordUserInteraction(userName, "Sessão expirada por 3 minutos de inatividade");
+      window.logout();
+      window.showToast("Sessão encerrada por 3 minutos de inatividade.", "error");
+    }
+
+    ['touchstart', 'mousedown', 'mousemove', 'keydown', 'scroll', 'click', 'wheel'].forEach(evt => {
+      window.addEventListener(evt, resetInactivityTimer, { passive: true });
+    });
+
+    // --- ESTADO GLOBAL (MEMÓRIA NATIVA ALIMENTADA PELO FIRESTORE) ---
     window.currentUser = null;
     window.isAdmin = false;
     window.canEditFinancial = false;
     window.isMarcaoUser = false;
-    window.animationsEnabled = localStorage.getItem('teimoso_animations_enabled') !== 'false';
-    let isFirestoreSynced = false;
+    window.animationsEnabled = true;
+    let isCloudReady = false;
 
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
@@ -940,7 +867,17 @@
     window.whatsappQueueList = [];
     window.whatsappSentIds = new Set();
     window.activityLogs = [];
-    
+
+    // Chaves de estado 100% em memória
+    window.datesList = ["2026-11-01", "2026-11-03"];
+    window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00" };
+    window.currentDate = "2026-11-01";
+    window.athletes = [];
+    window.presences = {};
+    window.financialPayments = {};
+    window.alwaysUpToDateMap = {};
+    window.absenceFines = {};
+
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
     const finEditorNames = ['PABLO PADILHA', 'MARCÃO', 'MARCAO'];
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
@@ -967,18 +904,32 @@
       });
     }
 
-    // Inicializa com as datas reais resgatadas
-    const rawDates = ["2026-11-01", "2026-11-03"];
-    window.datesList = rawDates;
-    window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00" };
-    window.currentDate = "2026-11-01";
-    window.athletes = recoveredAthletes;
-    window.presences = recoveredPresences;
-    window.financialPayments = recoveredFinancial;
-    window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
-    window.absenceFines = {};
+    // --- GRAVAÇÃO DIRETA NA NUVEM FIRESTORE ---
+    window.saveData = async function() {
+      if (!isCloudReady) {
+        console.warn("Aguardando carregamento da nuvem antes de autorizar gravação.");
+        return;
+      }
+      try {
+        pruneActivityLogs();
+        await setDoc(dbDocRef, {
+          datesList: window.datesList,
+          peladaTimes: window.peladaTimes,
+          athletes: window.athletes,
+          presences: window.presences,
+          financialPayments: window.financialPayments,
+          alwaysUpToDateMap: window.alwaysUpToDateMap,
+          absenceFines: window.absenceFines,
+          activityLogs: window.activityLogs,
+          animationsEnabled: window.animationsEnabled,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (error) {
+        console.error("Erro ao salvar diretamente no Firestore:", error);
+        window.showToast("Erro ao conectar à nuvem. Verifique sua conexão.", "error");
+      }
+    };
 
-    // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN ---
     function getSmartDefaultDate() {
       if (!window.datesList || window.datesList.length === 0) return "2026-11-01";
       const sorted = [...window.datesList].sort();
@@ -990,13 +941,10 @@
         return new Date(y, m - 1, day, 23, 59, 59) >= today;
       });
 
-      if (futureDates.length > 0) {
-        return futureDates[0];
-      }
+      if (futureDates.length > 0) return futureDates[0];
       return sorted[sorted.length - 1];
     }
 
-    // --- AUDITORIA DE INTERAÇÕES (90 DIAS) ---
     window.recordUserInteraction = function(actorName, actionDescription) {
       const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const entry = {
@@ -1079,11 +1027,9 @@
       });
     }
 
-    // --- CONTROLE EXCLUSIVO DE ANIMAÇÃO MARCÃO ---
     window.toggleMarcaoAnimations = function() {
       if (!window.isMarcaoUser) return;
       window.animationsEnabled = !window.animationsEnabled;
-      localStorage.setItem('teimoso_animations_enabled', window.animationsEnabled);
       updateMarcaoAnimationButtonUI();
       window.saveData();
       window.showToast(window.animationsEnabled ? "Animações ativadas!" : "Animações desativadas.", "success");
@@ -1105,7 +1051,6 @@
       }
     }
 
-    // --- ANIMAÇÃO DE CONFIRMAÇÃO COM FOTO E SOM ---
     window.showAnimatedConfirmation = function(athleteObj) {
       window.playAppSound('confirm');
       if (!window.animationsEnabled) return;
@@ -1143,7 +1088,6 @@
       }, 3000);
     };
 
-    // --- VISUALIZADOR DE FOTO EM TELA CHEIA (1 TOQUE) ---
     window.openFullscreenPhoto = function(imageUrl, athleteName) {
       window.playAppSound('click');
       const modal = document.getElementById('fullscreenPhotoModal');
@@ -1177,7 +1121,6 @@
       }, 300);
     };
 
-    // --- TOAST NOTIFICATION ---
     window.showToast = function(message, type = 'error') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -1208,36 +1151,6 @@
       window.closeConfirm();
     });
 
-    // --- SALVAMENTO SEGURO FIREBASE ---
-    window.saveData = async function() {
-      try {
-        pruneActivityLogs();
-        localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
-        localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
-        localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
-        localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
-        localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
-        localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
-        localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
-        
-        await setDoc(dbDocRef, {
-          datesList: window.datesList,
-          peladaTimes: window.peladaTimes,
-          athletes: window.athletes,
-          presences: window.presences,
-          financialPayments: window.financialPayments,
-          alwaysUpToDateMap: window.alwaysUpToDateMap,
-          absenceFines: window.absenceFines,
-          activityLogs: window.activityLogs,
-          animationsEnabled: window.animationsEnabled,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      } catch (error) {
-        console.error("Erro ao salvar no Firebase:", error);
-      }
-    };
-
-    // --- VERIFICAÇÃO DE PRAZO (18H DO DIA ANTERIOR) ---
     window.isPastDeadlineForDate = function(dateStr) {
       if (!dateStr) return false;
       const [y, m, d] = dateStr.split('-');
@@ -1264,7 +1177,6 @@
       }
     };
 
-    // --- LOGIN ---
     window.performLogin = function() {
       const pin = document.getElementById('loginPinInput').value.trim();
       if (pin.length !== 4) {
@@ -1354,9 +1266,11 @@
       renderAthletesList();
       renderFinancial();
       checkDeadlinePassed();
+      resetInactivityTimer();
     }
 
     window.logout = function() {
+      clearTimeout(inactivityTimer);
       if (window.currentUser) {
         window.recordUserInteraction(window.currentUser.name, "Efetuou logout do sistema");
       }
@@ -1378,87 +1292,49 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
-    // --- INICIALIZAÇÃO E SINCRONIZAÇÃO AUTOMÁTICA COM O BANCO ---
-    window.addEventListener('DOMContentLoaded', async () => {
-      setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
+    // --- CONEXÃO TEMPO REAL EXCLUSIVA AO FIRESTORE (SEM LOCALSTORAGE) ---
+    window.addEventListener('DOMContentLoaded', () => {
       updateSoundButtonUI();
-      populateDateSelect();
       buildStarRatingSelector(5);
 
-      // Persiste no LocalStorage imediatamente os 59 atletas e presenças
-      localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
-      localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
-      localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
-      localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
-      localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
-
-      // Sincroniza e grava na nuvem Firestore para restabelecer os dados para todos
-      try {
-        await setDoc(dbDocRef, {
-          datesList: window.datesList,
-          peladaTimes: window.peladaTimes,
-          athletes: window.athletes,
-          presences: window.presences,
-          financialPayments: window.financialPayments,
-          alwaysUpToDateMap: window.alwaysUpToDateMap,
-          absenceFines: window.absenceFines,
-          activityLogs: window.activityLogs,
-          animationsEnabled: window.animationsEnabled,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-        console.log("Banco de dados do Firestore sincronizado com sucesso!");
-      } catch (e) {
-        console.error("Tentativa de sincronização inicial com Firestore:", e);
-      }
-
-      let isFirstLoad = true;
+      let isFirstSync = true;
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (data.athletes && Array.isArray(data.athletes) && data.athletes.length > 0) window.athletes = data.athletes;
+          if (data.athletes && Array.isArray(data.athletes)) window.athletes = data.athletes;
           if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
+          if (data.financialPayments && typeof data.financialPayments === 'object') window.financialPayments = data.financialPayments;
           if (data.alwaysUpToDateMap && typeof data.alwaysUpToDateMap === 'object') window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.absenceFines && typeof data.absenceFines === 'object') window.absenceFines = data.absenceFines;
           if (data.activityLogs && Array.isArray(data.activityLogs)) window.activityLogs = data.activityLogs;
-          if (typeof data.animationsEnabled === 'boolean') {
-            window.animationsEnabled = data.animationsEnabled;
-            localStorage.setItem('teimoso_animations_enabled', window.animationsEnabled);
-          }
-          if (data.financialPayments && typeof data.financialPayments === 'object') {
-            window.financialPayments = data.financialPayments;
-          }
-
-          isFirestoreSynced = true;
-          pruneActivityLogs();
-
-          localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
-          localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
-          localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
-          localStorage.setItem('teimoso_alwaysUpToDateMap', JSON.stringify(window.alwaysUpToDateMap));
-          localStorage.setItem('teimoso_absenceFines', JSON.stringify(window.absenceFines));
-          localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
-          localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
-
-          if (isFirstLoad) {
-            window.currentDate = getSmartDefaultDate();
-            isFirstLoad = false;
-          }
-
-          updateActivityBadge();
-          updateMarcaoAnimationButtonUI();
-          populateDateSelect();
-          renderAthletesList();
-          renderFinancial();
-          renderReports();
-          checkDeadlinePassed();
+          if (typeof data.animationsEnabled === 'boolean') window.animationsEnabled = data.animationsEnabled;
         }
-      }, (error) => {
-        console.error("Falha ao escutar Firestore:", error);
+
+        isCloudReady = true;
+        const loader = document.getElementById('cloudLoadingOverlay');
+        if (loader) {
+          loader.classList.add('hidden');
+          loader.classList.remove('flex');
+        }
+
+        if (isFirstSync) {
+          window.currentDate = getSmartDefaultDate();
+          isFirstSync = false;
+          setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
+        }
+
+        updateActivityBadge();
+        updateMarcaoAnimationButtonUI();
+        populateDateSelect();
         renderAthletesList();
         renderFinancial();
         renderReports();
+        checkDeadlinePassed();
+      }, (error) => {
+        console.error("Falha ao sincronizar com Firestore:", error);
+        window.showToast("Falha na conexão com a nuvem. Tentando reconectar...", "error");
       });
     });
 
@@ -1479,10 +1355,8 @@
       if (tab === 'reports') renderReports();
     };
 
-    // --- NAVEGAÇÃO DE DATAS ---
     function getAvailableDates() {
-      const sorted = [...window.datesList].sort();
-      return sorted;
+      return [...window.datesList].sort();
     }
 
     function updateDateNavButtons() {
@@ -1492,23 +1366,16 @@
       const btnNext = document.getElementById('btnNextDate');
 
       if (btnPrev) {
-        if (currIdx <= 0) {
-          btnPrev.disabled = true;
-          btnPrev.classList.add('opacity-40', 'cursor-not-allowed');
-        } else {
-          btnPrev.disabled = false;
-          btnPrev.classList.remove('opacity-40', 'cursor-not-allowed');
-        }
+        btnPrev.disabled = (currIdx <= 0);
+        btnPrev.classList.toggle('opacity-40', currIdx <= 0);
+        btnPrev.classList.toggle('cursor-not-allowed', currIdx <= 0);
       }
 
       if (btnNext) {
-        if (currIdx >= available.length - 1 || currIdx === -1) {
-          btnNext.disabled = true;
-          btnNext.classList.add('opacity-40', 'cursor-not-allowed');
-        } else {
-          btnNext.disabled = false;
-          btnNext.classList.remove('opacity-40', 'cursor-not-allowed');
-        }
+        const isEnd = (currIdx >= available.length - 1 || currIdx === -1);
+        btnNext.disabled = isEnd;
+        btnNext.classList.toggle('opacity-40', isEnd);
+        btnNext.classList.toggle('cursor-not-allowed', isEnd);
       }
     }
 
@@ -1568,7 +1435,6 @@
       return dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase() + timeStr;
     }
 
-    // --- FILTRO DOS CARDS DE PRESENÇA ---
     window.filterPresenceCards = function(status) {
       if (activeStatusFilter === status) {
         activeStatusFilter = null;
@@ -1598,7 +1464,7 @@
       renderAthletesList();
     };
 
-    // --- MARCAR PRESENÇA & REGRAS DE MULTA COM TRAVA DEFENSIVA ---
+    // --- REGRAS DE MULTA COM SUPORTE DEFENSIVO A ARRAY ---
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
@@ -1647,6 +1513,7 @@
           return;
         }
 
+        // REGRA DE CORTE DE MULTA: Somente a partir de 01/11/2026
         if (newStatus === 'FALTA') {
           const isFinesActiveDate = window.currentDate >= '2026-11-01';
           if (isFinesActiveDate) {
@@ -1684,7 +1551,7 @@
 
     window.saveJustification = function() {
       const reason = document.getElementById('justifyReasonInput').value.trim();
-      if (!reason) return window.showToast("Informe o motivo.");
+      if (!reason) return window.showToast("Informe o motivo da justificativa.");
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       const targetAthlete = window.athletes.find(a => a.id === currentJustifyAthleteId);
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
@@ -1709,7 +1576,6 @@
       document.getElementById('justifyModal').classList.add('hidden');
     };
 
-    // --- REGRAS ESPECIAIS DE ATLETAS (ISENÇÃO DE JUROS) ---
     function isSpecialInterestFreeMonth(athleteName, mKey) {
       if (!athleteName) return false;
       const upper = athleteName.toUpperCase();
@@ -1727,7 +1593,6 @@
       return isNaN(parsed) ? fallback : parsed;
     }
 
-    // --- STATUS FINANCEIRO DO ATLETA ---
     function getAthleteFinancialStatus(athleteId) {
       if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
       const now = new Date();
@@ -2002,7 +1867,7 @@
           athlete.isSuspended = isSuspended; athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
         }
-        window.showToast("Atleta atualizado!", "success");
+        window.showToast("Atleta atualizado na nuvem!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
         window.athletes.push({
@@ -2010,7 +1875,7 @@
           phone: phone, photoUrl: photoUrl, isKeeper: (position === 'Goleiro'),
           monthlyFee: monthlyFee, isSuspended: isSuspended, effectiveStartDate: null
         });
-        window.showToast("Atleta cadastrado!", "success");
+        window.showToast("Atleta cadastrado na nuvem!", "success");
       }
 
       window.saveData();
@@ -2021,13 +1886,13 @@
     };
 
     window.confirmDeleteAthlete = function(id) {
-      showConfirm("Excluir este atleta?", () => {
+      showConfirm("Excluir este atleta definitivamente da nuvem?", () => {
         window.athletes = window.athletes.filter(a => a.id !== id);
         window.saveData();
         renderAthletesList();
         renderFinancial();
         renderReports();
-        window.showToast("Excluído.", "success");
+        window.showToast("Excluído com sucesso.", "success");
       });
     };
 
@@ -2041,7 +1906,7 @@
     window.addNewDate = function() {
       const val = document.getElementById('newDateInput').value;
       const timeVal = document.getElementById('newTimeInput').value || '07:00';
-      if (!val || window.datesList.includes(val)) return window.showToast("Data inválida ou existente.");
+      if (!val || window.datesList.includes(val)) return window.showToast("Data inválida ou já cadastrada.");
       
       if (!window.peladaTimes) window.peladaTimes = {};
       window.peladaTimes[val] = timeVal;
@@ -2054,7 +1919,7 @@
       closeNewDateModal(); 
       populateDateSelect(); 
       renderAthletesList();
-      window.showToast("Data adicionada com sucesso!", "success");
+      window.showToast("Data adicionada com sucesso na nuvem!", "success");
     };
 
     window.openManageDatesModal = function() {
@@ -2100,7 +1965,7 @@
       }
       if (!window.peladaTimes) window.peladaTimes = {};
       window.peladaTimes[dateStr] = newTime || '07:00';
-      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Alterou o horário da pelada de ${dateStr} para ${newTime}`);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Alterou o horário de ${dateStr} para ${newTime}`);
       window.saveData();
       populateDateSelect();
       renderAthletesList();
@@ -2109,8 +1974,8 @@
 
     window.closeManageDatesModal = function() { document.getElementById('manageDatesModal').classList.add('hidden'); };
     window.deleteDate = function(d) {
-      if (window.datesList.length <= 1) return window.showToast("Mantenha ao menos uma data.");
-      showConfirm("Excluir data?", () => {
+      if (window.datesList.length <= 1) return window.showToast("Mantenha ao menos uma data cadastrada.");
+      showConfirm("Excluir esta data permanentemente da nuvem?", () => {
         window.datesList = window.datesList.filter(item => item !== d);
         if (window.peladaTimes && window.peladaTimes[d]) {
           delete window.peladaTimes[d];
@@ -2144,7 +2009,7 @@
 
     window.openWhatsappMassModal = function() {
       if (!window.isAdmin) {
-        window.showToast("Apenas administradores podem enviar mensagens de convocação.", "error");
+        window.showToast("Apenas administradores podem acessar a fila de disparo.", "error");
         return;
       }
       document.getElementById('whatsappMassModal').classList.remove('hidden');
@@ -2365,7 +2230,7 @@
       window.showToast("Sorteio realizado!", "success");
     };
 
-    // --- FINANCEIRO ---
+    // --- FINANCEIRO REVISADO (VISÍVEL PARA TODOS, CÁLCULO ATÉ NOVEMBRO & ATRASO ESTRITO) ---
     window.setFinancialFilter = function(filterType) {
       if (activeFinancialFilter === filterType) {
         activeFinancialFilter = null;
@@ -2389,8 +2254,8 @@
         const mapNames = { 
           paid: 'Atletas com Pagamentos Realizados', 
           interest: 'Atletas com Juros Devidos', 
-          overdue: 'Atletas com Parcelas Vencidas em Atraso',
-          due: 'Atletas com Valores a Receber até Novembro' 
+          overdue: 'Atletas com Valores Vencidos em Atraso',
+          due: 'Atletas com Valores a Receber Até Novembro' 
         };
         label.innerText = mapNames[activeFinancialFilter] || '';
       } else {
@@ -2411,7 +2276,11 @@
       const container = document.getElementById('financialAccordionContainer');
       if (!container) return;
       container.innerHTML = '';
-      let totalGeneralPaid = 0, totalGeneralDueUntilNov = 0, totalGeneralInterest = 0, totalGeneralStrictOverdue = 0;
+      let totalGeneralPaid = 0;
+      let totalGeneralInterest = 0;
+      let totalGeneralStrictOverdue = 0;
+      let totalGeneralDueUntilNov = 0;
+
       const sortedAthletes = [...window.athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       const now = new Date();
       const disableInput = !window.canEditFinancial ? 'disabled readonly' : '';
@@ -2422,7 +2291,6 @@
         let athleteTotalInterest = 0;
         let athleteStrictOverdue = 0;
         let athleteTotalDueUntilNov = 0;
-        let athletePendingInstallmentsCount = 0;
         let athletePendingInstallmentsAmount = 0;
 
         const finStatus = getAthleteFinancialStatus(athlete.id);
@@ -2451,7 +2319,6 @@
             interest = 0;
             const remainingDue = Math.max(0, suggestedFee - paidAmount);
             if (!athlete.isSuspended && remainingDue > 0) {
-              athletePendingInstallmentsCount++;
               athletePendingInstallmentsAmount += remainingDue;
               athleteTotalDueUntilNov += remainingDue;
               if (now > dueDate) {
@@ -2466,7 +2333,6 @@
             if (!athlete.isSuspended) {
               athleteTotalInterest += interest;
               if (!isPaid) {
-                athletePendingInstallmentsCount++;
                 athletePendingInstallmentsAmount += suggestedFee;
                 athleteTotalDueUntilNov += (suggestedFee + interest);
                 if (now > dueDate) {
@@ -2489,7 +2355,7 @@
             </div>`;
         });
 
-        // Multas por Falta (R$ 30,00 a partir de 01/11/2026)
+        // Multas por Falta (R$ 30,00 aplicadas estritamente a partir de 01/11/2026)
         const rawFines = window.absenceFines[athlete.id] || [];
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let finesHtml = '';
@@ -2556,8 +2422,8 @@
                 <div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-sm">R$ ${athletePendingInstallmentsAmount.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-600 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
-                <div class="flex flex-col text-rose-700 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase text-rose-600 font-bold">Em Atraso</span><span class="text-rose-600 text-sm font-black">R$ ${athleteStrictOverdue.toFixed(2)}</span></div>
-                <div class="flex flex-col text-purple-800 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase text-purple-700 font-bold">Total Até Nov</span><span class="text-purple-700 text-sm font-black">R$ ${athleteTotalDueUntilNov.toFixed(2)}</span></div>
+                <div class="flex flex-col text-rose-700 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase text-rose-600 font-bold">Total Em Atraso</span><span class="text-rose-600 text-sm font-black">R$ ${athleteStrictOverdue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-purple-800 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase text-purple-700 font-bold">Total Geral Até Novembro</span><span class="text-purple-700 text-sm font-black">R$ ${athleteTotalDueUntilNov.toFixed(2)}</span></div>
                 <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-emerald-600' : 'group-hover:text-emerald-600'}"></i></div>
               </div>
             </button>
@@ -2608,7 +2474,7 @@
         renderFinancial();
         renderAthletesList();
         renderReports();
-        window.showToast("Multa liquidada com sucesso!", "success");
+        window.showToast("Multa liquidada na nuvem!", "success");
       }
     };
 
@@ -2621,7 +2487,7 @@
       renderFinancial();
       renderAthletesList();
       renderReports();
-      window.showToast("Status financeiro atualizado!", "success");
+      window.showToast("Status financeiro atualizado na nuvem!", "success");
     };
 
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
@@ -2641,7 +2507,7 @@
       const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
       window.financialPayments[athleteId][mKey] = { paid: true, amount: fee };
       window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''}`);
-      window.saveData(); renderFinancial(); renderReports(); window.showToast("Parcela baixada!", "success");
+      window.saveData(); renderFinancial(); renderReports(); window.showToast("Parcela baixada na nuvem!", "success");
     };
 
     window.updateFinancialValue = function(athleteId, mKey, val) {
