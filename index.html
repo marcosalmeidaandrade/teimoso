@@ -90,7 +90,6 @@
 
   <!-- FULLSCREEN ATHLETE PHOTO MODAL -->
   <div id="fullscreenPhotoModal" onclick="closeFullscreenPhoto()" class="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
-    <!-- TOP BAR -->
     <div class="w-full flex items-center justify-between max-w-lg pt-2 text-slate-200">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-id-badge text-emerald-400"></i>
@@ -101,12 +100,10 @@
       </button>
     </div>
 
-    <!-- MAIN IMAGE CONTAINER -->
     <div class="relative flex items-center justify-center my-auto p-2">
       <img id="fullscreenPhotoImage" src="" alt="Foto do Atleta" class="max-h-[72vh] max-w-[90vw] md:max-w-md object-contain rounded-3xl shadow-2xl border-4 border-white/20 transition-transform duration-300 transform scale-95" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=e2e8f0&color=059669&bold=true&size=512'">
     </div>
 
-    <!-- BOTTOM HELPER CAPTION -->
     <div class="pb-4 text-center">
       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/95 border border-slate-700 text-[11px] font-bold text-slate-200 shadow-xl">
         <i class="fa-solid fa-hand-pointer text-emerald-400 animate-pulse"></i>
@@ -217,22 +214,18 @@
             <div class="flex items-center gap-1.5 w-full sm:w-auto">
               <label for="dateSelect" class="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mr-1">Data:</label>
               
-              <!-- BOTÃO NAVEGAÇÃO: PELADA ANTERIOR (-) -->
               <button onclick="navigateDate(-1)" id="btnPrevDate" title="Pelada Anterior (-)" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-emerald-600 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-sm">
                 <i class="fa-solid fa-minus text-xs"></i>
               </button>
 
               <select id="dateSelect" onchange="changeDate(this.value)" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white w-full sm:w-56 shadow-sm">
-                <!-- Populado dinamicamente -->
               </select>
 
-              <!-- BOTÃO NAVEGAÇÃO: PRÓXIMA PELADA (+) -->
               <button onclick="navigateDate(1)" id="btnNextDate" title="Próxima Pelada (+)" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-emerald-600 flex items-center justify-center font-black text-base transition-all shrink-0 active:scale-95 shadow-sm">
                 <i class="fa-solid fa-plus text-xs"></i>
               </button>
             </div>
             
-            <!-- ADMIN DATE CONTROLS -->
             <div id="adminDateControls" class="hidden items-center gap-2 w-full sm:w-auto">
               <button onclick="openNewDateModal()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center">
                 <i class="fa-solid fa-calendar-plus"></i> Nova Data
@@ -325,7 +318,6 @@
                 <button onclick="filterPresenceCards(null)" class="ml-1 text-rose-600 hover:text-rose-700 focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
               </span>
               
-              <!-- CAMPO DE PESQUISA POR NOME -->
               <div class="relative w-full sm:w-56 shrink-0">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <i class="fa-solid fa-search text-slate-400 text-xs"></i>
@@ -345,7 +337,6 @@
                 </tr>
               </thead>
               <tbody id="athletesTableBody" class="divide-y divide-slate-100 text-xs">
-                <!-- Preenchido dinamicamente -->
               </tbody>
             </table>
           </div>
@@ -367,7 +358,6 @@
           </button>
         </div>
 
-        <!-- TEAMS RESULT CONTAINER -->
         <div id="teamsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white border border-slate-200 rounded-3xl p-6 text-center text-slate-500 flex flex-col items-center justify-center py-16 shadow-sm">
             <i class="fa-solid fa-people-group text-4xl mb-3 text-slate-300"></i>
@@ -391,35 +381,45 @@
           </button>
         </div>
 
-        <!-- TOTALIZADORES FINANCEIROS -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- TOTALIZADORES FINANCEIROS (VISÍVEIS PARA TODOS) -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div onclick="setFinancialFilter('paid')" id="finCard-paid" class="bg-white border border-slate-200 hover:border-emerald-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Geral Pago</span>
-              <div class="text-2xl font-black text-emerald-600 mt-1" id="finTotalPaid">R$ 0,00</div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Geral Pago</span>
+              <div class="text-xl font-black text-emerald-600 mt-1" id="finTotalPaid">R$ 0,00</div>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-              <i class="fa-solid fa-circle-check text-lg"></i>
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+              <i class="fa-solid fa-circle-check text-base"></i>
             </div>
           </div>
 
           <div onclick="setFinancialFilter('interest')" id="finCard-interest" class="bg-white border border-slate-200 hover:border-amber-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total de Juros Devidos</span>
-              <div class="text-2xl font-black text-amber-600 mt-1" id="finTotalInterest">R$ 0,00</div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Juros Devidos</span>
+              <div class="text-xl font-black text-amber-600 mt-1" id="finTotalInterest">R$ 0,00</div>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-              <i class="fa-solid fa-clock text-lg"></i>
+            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+              <i class="fa-solid fa-clock text-base"></i>
             </div>
           </div>
 
-          <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-white border border-slate-200 hover:border-rose-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
+          <div onclick="setFinancialFilter('overdue')" id="finCard-overdue" class="bg-white border border-slate-200 hover:border-rose-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total a Receber</span>
-              <div class="text-2xl font-black text-rose-600 mt-1" id="finTotalDue">R$ 0,00</div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-rose-600">Total em Atraso</span>
+              <div class="text-xl font-black text-rose-600 mt-1" id="finTotalOverdue">R$ 0,00</div>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
-              <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            <div class="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+              <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            </div>
+          </div>
+
+          <div onclick="setFinancialFilter('due')" id="finCard-due" class="bg-white border border-slate-200 hover:border-purple-500 p-4 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer transition-all">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700">A Receber Até Nov</span>
+              <div class="text-xl font-black text-purple-700 mt-1" id="finTotalDue">R$ 0,00</div>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700">
+              <i class="fa-solid fa-calendar-check text-base"></i>
             </div>
           </div>
         </div>
@@ -431,7 +431,6 @@
 
         <!-- FINANCIAL ACCORDION LIST -->
         <div id="financialAccordionContainer" class="space-y-3">
-          <!-- Preenchido dinamicamente -->
         </div>
       </section>
 
@@ -462,7 +461,6 @@
                 </tr>
               </thead>
               <tbody id="reportsTableBody" class="divide-y divide-slate-100 text-xs">
-                <!-- Preenchido dinamicamente -->
               </tbody>
             </table>
           </div>
@@ -484,8 +482,6 @@
     </footer>
   </div>
 
-  <!-- ================= MODALS ================= -->
-
   <!-- ACTIVITY LOG MODAL (90 DIAS) -->
   <div id="activityLogModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
@@ -498,7 +494,6 @@
         </button>
       </div>
 
-      <!-- FILTRO POR ATLETA & LIMPEZA -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-bold text-slate-600 px-1">
         <div class="flex items-center gap-1.5 w-full sm:w-auto">
           <label for="logUserFilterSelect" class="text-[10px] uppercase text-slate-500">Filtrar Atleta:</label>
@@ -509,9 +504,7 @@
         <button onclick="clearActivityLogs()" class="text-rose-600 hover:underline text-[10px] shrink-0">Limpar Histórico</button>
       </div>
 
-      <!-- LISTA DE LOGS -->
       <div id="activityLogList" class="divide-y divide-slate-100 overflow-y-auto flex-grow pr-1 space-y-2 bg-slate-50 rounded-2xl p-3 border border-slate-200 min-h-[180px]">
-        <!-- Preenchido dinamicamente -->
       </div>
 
       <div class="pt-2 text-right border-t border-slate-200">
@@ -670,7 +663,6 @@
         Pelada do dia <span id="massModalDate" class="font-bold text-emerald-700"></span>. Apenas atletas ativos participam do disparo:
       </p>
 
-      <!-- BOTÕES DE FILTRO DA FILA -->
       <div class="grid grid-cols-3 gap-2">
         <button onclick="prepareWhatsappQueue('pending')" class="py-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-700 rounded-xl text-[11px] font-bold transition-all">
           Pendentes
@@ -683,7 +675,6 @@
         </button>
       </div>
 
-      <!-- STATUS DA FILA -->
       <div id="queueStatusHeader" class="hidden items-center justify-between bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 text-[11px] font-bold">
         <span class="text-slate-600">Progresso da Fila: <strong id="queueProgressText" class="text-emerald-700">0/0</strong></span>
         <button onclick="sendNextInQueue()" id="btnSendNextQueue" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
@@ -691,7 +682,6 @@
         </button>
       </div>
 
-      <!-- LISTA DA FILA DE ESPERA -->
       <div id="whatsappQueueContainer" class="divide-y divide-slate-100 overflow-y-auto flex-grow pr-1 space-y-1.5 min-h-[180px] bg-slate-50 rounded-2xl p-3 border border-slate-200">
         <div class="text-center text-slate-400 py-12 text-xs font-bold">
           Clique em uma das opções acima para gerar a fila de espera.
@@ -738,7 +728,121 @@
     const db = getFirestore(app);
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
-    // --- SISTEMA DE FEEDBACK SONORO (WEB AUDIO API NATIVA) ---
+    // --- DADOS REAIS RESGATADOS COM 100% DE FIDELIDADE (BACKUP PABLO PADILHA) ---
+    const recoveredAthletes = [
+      {"id":1,"isKeeper":false,"position":"Zagueiro","stars":5,"monthlyFee":110,"name":"ADALBERTO","phone":"(22) 99870-8348"},
+      {"isKeeper":false,"monthlyFee":110,"position":"Zagueiro","stars":5,"id":38,"phone":"(22) 99968-6208","name":"ALBINOS"},
+      {"position":"Lateral","monthlyFee":90,"stars":5,"phone":"(22) 99833-4202","isKeeper":false,"name":"ALEXANDRE ALEIXO","id":2},
+      {"name":"ALEXANDRE BOECHAT","id":3,"phone":"(21) 98881-1626","isKeeper":false,"effectiveStartDate":"2026-03-08","stars":5,"monthlyFee":110,"position":"Meia"},
+      {"id":1793391772367,"monthlyFee":110,"isKeeper":false,"name":"ANDINHO","position":"Meia","isSuspended":true,"phone":"(22) 99815-8502","stars":5},
+      {"stars":5,"monthlyFee":110,"id":4,"phone":"(22) 99770-7382","isKeeper":false,"position":"Meia","name":"ARTHUR"},
+      {"id":5,"name":"BRASIL","monthlyFee":110,"position":"Zagueiro","phone":"(22) 98806-5028","stars":5,"isKeeper":false},
+      {"name":"BRAULINHO","isKeeper":false,"phone":"(22) 99916-2356","stars":5,"monthlyFee":110,"position":"Zagueiro","id":6},
+      {"stars":5,"id":44,"position":"Volante","isKeeper":false,"phone":"(22) 99804-4619","monthlyFee":110,"name":"BRITO"},
+      {"name":"BRUNO","monthlyFee":90,"phone":"(22) 99807-7024","position":"Goleiro","id":9,"isKeeper":true,"stars":5},
+      {"monthlyFee":110,"position":"Volante","name":"BRUNO ALVES","stars":5,"phone":"(22) 99871-1522","isKeeper":false,"id":8},
+      {"id":7,"name":"BRUNO MONTEIRO","isKeeper":false,"effectiveStartDate":"2026-07-05","phone":"(22) 98146-1479","monthlyFee":110,"stars":5,"position":"Meia"},
+      {"phone":"(22) 99752-0630","stars":5,"name":"CARLINHOS","isKeeper":false,"position":"Lateral","id":10,"monthlyFee":110},
+      {"monthlyFee":90,"stars":5,"isKeeper":false,"phone":"(22) 99805-1141","position":"Atacante","id":11,"name":"CASCOLA"},
+      {"name":"CELINHO","id":12,"phone":"(22) 99738-3303","isKeeper":false,"monthlyFee":90,"stars":5,"position":"Meia"},
+      {"position":"Lateral","stars":5,"phone":"(22) 99870-9734","isKeeper":false,"name":"CHATUBA","monthlyFee":110,"id":13},
+      {"name":"CLÁUDIO","effectiveStartDate":null,"phone":"(22) 99809-6045","position":"Atacante","id":14,"isKeeper":false,"monthlyFee":110,"stars":5},
+      {"position":"Lateral","name":"COPINHO","id":15,"isKeeper":false,"phone":"(22) 99711-7592","stars":5,"monthlyFee":110},
+      {"monthlyFee":110,"name":"CORUJA","isKeeper":false,"phone":"(22) 98857-4123","id":45,"position":"Meia","stars":5},
+      {"phone":"(22) 99829-8992","name":"CRIS","id":16,"stars":5,"monthlyFee":110,"position":"Meia","isKeeper":false},
+      {"name":"DAVI","monthlyFee":110,"id":17,"phone":"(22) 99807-1160","position":"Volante","isKeeper":false,"stars":5},
+      {"stars":5,"phone":"(22) 98866-8357","id":18,"isKeeper":false,"name":"DEIVID","position":"Lateral","monthlyFee":110},
+      {"name":"DIBOI","phone":"(22) 99933-7744","isKeeper":false,"monthlyFee":90,"id":19,"position":"Lateral","stars":5},
+      {"isKeeper":false,"phone":"(22) 99778-7160","stars":5,"position":"Zagueiro","name":"DIDI","monthlyFee":110,"id":20},
+      {"monthlyFee":110,"stars":5,"isKeeper":false,"name":"DIEGO","phone":"(22) 99830-3519","position":"Volante","id":21},
+      {"id":22,"monthlyFee":110,"stars":5,"phone":"(22) 99932-2147","name":"EDMAR","position":"Atacante","isKeeper":false},
+      {"isKeeper":false,"monthlyFee":90,"phone":"(22) 99919-1605","stars":5,"position":"Atacante","name":"FABIANO","isSuspended":true,"id":1793392440351},
+      {"id":24,"stars":5,"monthlyFee":110,"isKeeper":false,"name":"FEIJÃO","phone":"(22) 99818-8828","position":"Volante"},
+      {"id":25,"position":"Meia","stars":5,"isKeeper":false,"name":"FELIPE MACACO","monthlyFee":110,"phone":"(22) 99955-1745"},
+      {"monthlyFee":110,"name":"JONILSON","id":29,"position":"Lateral","phone":"(22) 99921-0018","isKeeper":false,"stars":5},
+      {"isKeeper":false,"monthlyFee":90,"phone":"(22) 99879-1999","name":"JOSÉ AMÉRICO","stars":5,"position":"EXTRA","id":27},
+      {"monthlyFee":90,"position":"EXTRA","isKeeper":false,"name":"JOSÉ ANTÔNIO","stars":5,"id":28,"phone":"(22) 99838-0184"},
+      {"isKeeper":false,"name":"JÚLIO","position":"Meia","id":31,"phone":"(22) 98859-9790","monthlyFee":110,"stars":5},
+      {"monthlyFee":110,"isKeeper":false,"stars":5,"position":"Atacante","id":30,"name":"JUNINHO","phone":"(22) 99888-8704"},
+      {"isSuspended":true,"phone":"(22) 98151-4835","position":"Volante","name":"LACRAIA","stars":5,"isKeeper":false,"id":1793392486308,"monthlyFee":110},
+      {"stars":5,"phone":"(22) 99905-9602","isKeeper":true,"name":"LAMIADO","id":32,"monthlyFee":90,"position":"Goleiro"},
+      {"position":"Goleiro","stars":5,"id":33,"isKeeper":true,"phone":"(22) 99776-4402","monthlyFee":90,"name":"LUAN"},
+      {"phone":"(22) 99909-6516","stars":5,"name":"LUCAS LOPES","monthlyFee":110,"isKeeper":false,"id":35,"position":"Meia"},
+      {"monthlyFee":90,"stars":5,"id":34,"isKeeper":true,"position":"Goleiro","phone":"(22) 99939-3728","name":"LUIZ FERNANDO"},
+      {"position":"Atacante","isKeeper":false,"id":36,"monthlyFee":90,"stars":5,"name":"MANINHO","phone":"(22) 99869-6856"},
+      {"monthlyFee":110,"position":"Zagueiro","id":37,"isKeeper":false,"name":"MARCÃO","stars":5,"phone":"(22) 98139-1262"},
+      {"position":"EXTRA","phone":"(22) 98854-5701","monthlyFee":110,"stars":5,"isKeeper":false,"name":"MATEUS MARTINS","id":39},
+      {"monthlyFee":110,"phone":"(22) 99921-0655","stars":5,"name":"MONTANHA","id":23,"position":"Goleiro","isKeeper":true},
+      {"phone":"(22) 99826-2546","id":41,"name":"NANDI","stars":5,"monthlyFee":90,"isKeeper":false,"position":"Lateral"},
+      {"position":"Meia","stars":5,"isKeeper":false,"phone":"(22) 99838-8033","id":40,"name":"ONOFRE","monthlyFee":110},
+      {"phone":"(22) 99889-1720","name":"PABLO PADILHA","id":42,"isKeeper":false,"stars":5,"position":"Lateral","monthlyFee":110},
+      {"phone":"(22) 99723-4009","isKeeper":false,"stars":5,"name":"PABLO PICANÇO","position":"EXTRA","monthlyFee":110,"id":43},
+      {"isSuspended":true,"position":"Meia","stars":5,"phone":"(21) 99957-3592","id":1793392532224,"isKeeper":false,"name":"PEDRO","monthlyFee":110},
+      {"phone":"(22) 98876-3826","name":"RANIERI","monthlyFee":110,"stars":5,"position":"Meia","isKeeper":false,"id":26},
+      {"monthlyFee":110,"isKeeper":false,"id":47,"name":"RICARDO","position":"Meia","phone":"","stars":5},
+      {"stars":5,"monthlyFee":90,"id":48,"phone":"(22) 99878-3976","position":"Zagueiro","isKeeper":false,"name":"SANDRO"},
+      {"name":"SAPÃO","id":49,"phone":"(22) 98849-6777","position":"Atacante","monthlyFee":110,"isKeeper":false,"stars":5},
+      {"name":"SILZIMAR","id":50,"phone":"(22) 99921-5001","monthlyFee":110,"stars":5,"position":"Atacante","isKeeper":false},
+      {"monthlyFee":110,"name":"TIAGO BOQUETE","isKeeper":false,"phone":"(22) 99611-1636","id":52,"stars":5,"position":"Meia"},
+      {"position":"Lateral","name":"TIAGO CONECTA","isKeeper":false,"monthlyFee":110,"phone":"(22) 99808-2991","id":51,"stars":5},
+      {"phone":"(32) 9951-3809","stars":5,"name":"TIAGO SERRA","id":53,"isKeeper":false,"monthlyFee":110,"position":"Volante"},
+      {"name":"TODINHO","monthlyFee":110,"phone":"(22) 99226-8500","isKeeper":false,"effectiveStartDate":"2026-03-08","stars":5,"id":46,"position":"Volante"},
+      {"phone":"(22) 99758-6481","name":"WALLACE","id":54,"stars":5,"monthlyFee":110,"position":"Lateral","isKeeper":false},
+      {"monthlyFee":110,"id":55,"position":"Meia","name":"ZIEL","stars":5,"isKeeper":false,"phone":"(22) 99932-0185"}
+    ];
+
+    const recoveredPresences = {
+      "2026-11-01": {
+        "1":{"status":"CONFIRMADO","attended":false,"reason":""},
+        "2":{"reason":"Estou viajando galera!!!","attended":false,"status":"JUSTIFICADO"},
+        "3":{"fault":false,"reason":"","status":"PENDENTE","checked":false},
+        "4":{"reason":"","attended":false,"status":"CONFIRMADO"},
+        "5":{"reason":"","status":"CONFIRMADO","attended":false},
+        "6":{"status":"CONFIRMADO","attended":false,"reason":""},
+        "9":{"reason":"","status":"CONFIRMADO","attended":false},
+        "11":{"status":"CONFIRMADO","reason":"","attended":false},
+        "12":{"status":"JUSTIFICADO","reason":"Viajem","attended":false},
+        "13":{"status":"CONFIRMADO","attended":false,"reason":""},
+        "15":{"reason":"","attended":false,"status":null},
+        "16":{"attended":false,"status":"CONFIRMADO","reason":""},
+        "17":{"attended":false,"reason":"","status":"CONFIRMADO"},
+        "19":{"reason":"","attended":false,"status":"CONFIRMADO"},
+        "20":{"reason":"","status":null,"attended":false},
+        "21":{"status":"JUSTIFICADO","attended":false,"reason":"Estarei com minha mãe"},
+        "23":{"reason":"Vou disputar um campeonato no domingo de jiu-jítsu","attended":false,"status":"JUSTIFICADO"},
+        "24":{"status":"CONFIRMADO","reason":"","attended":false},
+        "25":{"reason":"","attended":false,"status":"CONFIRMADO"},
+        "26":{"status":"CONFIRMADO","attended":false,"reason":""},
+        "27":{"reason":"","attended":false,"status":"CONFIRMADO"},
+        "28":{"attended":false,"reason":"","status":"CONFIRMADO"},
+        "29":{"reason":"Estou em viagem","attended":false,"status":"JUSTIFICADO"},
+        "31":{"reason":"","status":"CONFIRMADO","attended":false},
+        "32":{"reason":"","attended":false,"status":null},
+        "35":{"attended":false,"reason":"Viagem","status":"JUSTIFICADO"},
+        "37":{"attended":false,"status":"CONFIRMADO","reason":""},
+        "38":{"attended":false,"status":"CONFIRMADO","reason":""},
+        "40":{"reason":"","attended":false,"status":"FORA"},
+        "41":{"status":"JUSTIFICADO","attended":false,"reason":"Estarei comemorando o aniversário do meu amor"},
+        "42":{"reason":"","attended":false,"status":"CONFIRMADO"},
+        "44":{"reason":"","status":null,"attended":false},
+        "45":{"attended":false,"reason":"Trabalho","status":"JUSTIFICADO"},
+        "49":{"attended":false,"status":null,"reason":""},
+        "51":{"reason":"","attended":false,"status":"CONFIRMADO"},
+        "53":{"reason":"Viagem","attended":false,"status":"JUSTIFICADO"},
+        "55":{"status":"JUSTIFICADO","attended":false,"reason":"Operação. Tendão."}
+      }
+    };
+
+    const recoveredFinancial = {
+      "1":{"set":{"paid":true,"amount":110},"jun":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"ago":{"paid":true,"amount":110},"fev":{"amount":110,"paid":true},"jan":{"paid":true,"amount":110},"mar":{"paid":true,"amount":110},"jul":{"amount":110,"paid":true},"mai":{"amount":110,"paid":true},"out":{"paid":true,"amount":110}},
+      "2":{"mar":{"paid":true,"amount":110},"jan":{"paid":true,"amount":110},"out":{"amount":110,"paid":true},"mai":{"paid":true,"amount":110},"jul":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"jun":{"amount":110,"paid":true},"set":{"amount":110,"paid":true},"fev":{"paid":true,"amount":110},"ago":{"paid":true,"amount":110}},
+      "3":{"jan":{"amount":110,"paid":true},"mar":{"paid":true,"amount":110},"jul":{"paid":true,"amount":110},"mai":{"paid":true,"amount":110},"out":{"amount":110,"paid":true},"set":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"jun":{"paid":true,"amount":110},"ago":{"paid":true,"amount":110},"fev":{"paid":true,"amount":110}},
+      "4":{"ago":{"paid":true,"amount":110},"fev":{"paid":true,"amount":110},"set":{"paid":true,"amount":110},"jun":{"paid":true,"amount":110},"abr":{"amount":110,"paid":true},"jul":{"amount":110,"paid":true},"out":{"amount":110,"paid":true},"mai":{"paid":true,"amount":110},"jan":{"amount":110,"paid":true},"mar":{"paid":true,"amount":110}},
+      "5":{"fev":{"amount":110,"paid":true},"ago":{"amount":110,"paid":true},"abr":{"amount":110,"paid":true},"jun":{"paid":true,"amount":110},"set":{"amount":110,"paid":true},"mai":{"paid":true,"amount":110},"out":{"amount":110,"paid":true},"jul":{"paid":true,"amount":110},"mar":{"amount":110,"paid":true},"jan":{"amount":110,"paid":true}},
+      "6":{"jan":{"paid":true,"amount":110},"mar":{"amount":110,"paid":true},"jul":{"paid":true,"amount":110},"out":{"paid":true,"amount":110},"mai":{"amount":110,"paid":true},"set":{"paid":true,"amount":110},"jun":{"amount":110,"paid":true},"abr":{"paid":true,"amount":110},"ago":{"paid":true,"amount":110},"fev":{"paid":true,"amount":110}}
+    };
+
+    // --- SISTEMA DE FEEDBACK SONORO ---
     let audioCtx = null;
     let soundEnabled = localStorage.getItem('teimoso_sound_enabled') !== 'false';
 
@@ -787,18 +891,6 @@
             osc.start(noteStart);
             osc.stop(noteStart + 0.22);
           });
-        } else if (type === 'alert') {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(350, now);
-          osc.frequency.exponentialRampToValueAtTime(180, now + 0.12);
-          gain.gain.setValueAtTime(0.1, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.12);
         }
       } catch (e) {}
     };
@@ -837,7 +929,7 @@
     window.canEditFinancial = false;
     window.isMarcaoUser = false;
     window.animationsEnabled = localStorage.getItem('teimoso_animations_enabled') !== 'false';
-    let isFirestoreSynced = false; // TRAVA DE SEGURANÇA: Só salva após ler com sucesso os dados reais do Firestore
+    let isFirestoreSynced = false;
 
     let activeTab = 'presence';
     let currentJustifyAthleteId = null;
@@ -875,19 +967,20 @@
       });
     }
 
-    // Inicialização direta do cache (sem substituições falsas)
-    window.datesList = JSON.parse(localStorage.getItem('teimoso_datesList')) || ["2026-11-03"];
-    window.peladaTimes = JSON.parse(localStorage.getItem('teimoso_peladaTimes')) || { "2026-11-03": "07:00" };
-    window.currentDate = window.datesList[0] || "2026-11-03";
-    window.athletes = JSON.parse(localStorage.getItem('teimoso_athletes')) || [];
-    window.presences = JSON.parse(localStorage.getItem('teimoso_presences')) || {};
-    window.financialPayments = JSON.parse(localStorage.getItem('teimoso_financialPayments')) || {};
+    // Inicializa com as datas reais resgatadas
+    const rawDates = ["2026-11-01", "2026-11-03"];
+    window.datesList = rawDates;
+    window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00" };
+    window.currentDate = "2026-11-01";
+    window.athletes = recoveredAthletes;
+    window.presences = recoveredPresences;
+    window.financialPayments = recoveredFinancial;
     window.alwaysUpToDateMap = JSON.parse(localStorage.getItem('teimoso_alwaysUpToDateMap')) || {};
-    window.absenceFines = JSON.parse(localStorage.getItem('teimoso_absenceFines')) || {};
+    window.absenceFines = {};
 
     // --- SELEÇÃO INTELIGENTE DE DATA NO LOGIN ---
     function getSmartDefaultDate() {
-      if (!window.datesList || window.datesList.length === 0) return "";
+      if (!window.datesList || window.datesList.length === 0) return "2026-11-01";
       const sorted = [...window.datesList].sort();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -898,32 +991,12 @@
       });
 
       if (futureDates.length > 0) {
-        const nextDateStr = futureDates[0];
-        const [ny, nm, nd] = nextDateStr.split('-');
-        const nextPeladaDate = new Date(ny, nm - 1, nd, 0, 0, 0);
-
-        const eveOfPelada = new Date(nextPeladaDate);
-        eveOfPelada.setDate(eveOfPelada.getDate() - 1);
-        eveOfPelada.setHours(0, 0, 0, 0);
-
-        if (today >= eveOfPelada) {
-          return nextDateStr;
-        }
+        return futureDates[0];
       }
-
-      const pastDates = sorted.filter(d => {
-        const [y, m, day] = d.split('-');
-        return new Date(y, m - 1, day, 23, 59, 59) < today;
-      });
-
-      if (pastDates.length > 0) {
-        return pastDates[pastDates.length - 1];
-      }
-
       return sorted[sorted.length - 1];
     }
 
-    // --- AUDITORIA DE INTERAÇÕES (90 DIAS 100% INTERNA) ---
+    // --- AUDITORIA DE INTERAÇÕES (90 DIAS) ---
     window.recordUserInteraction = function(actorName, actionDescription) {
       const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const entry = {
@@ -943,10 +1016,7 @@
     }
 
     window.openActivityLogModal = function() {
-      if (!window.isAdmin) {
-        window.showToast("Acesso restrito aos administradores.", "error");
-        return;
-      }
+      if (!window.isAdmin) return;
       populateLogUserFilterOptions();
       renderActivityLogList();
       document.getElementById('activityLogModal').classList.remove('hidden');
@@ -1016,7 +1086,7 @@
       localStorage.setItem('teimoso_animations_enabled', window.animationsEnabled);
       updateMarcaoAnimationButtonUI();
       window.saveData();
-      window.showToast(window.animationsEnabled ? "Animações de confirmação ativadas!" : "Animações de confirmação desativadas.", "success");
+      window.showToast(window.animationsEnabled ? "Animações ativadas!" : "Animações desativadas.", "success");
     };
 
     function updateMarcaoAnimationButtonUI() {
@@ -1138,12 +1208,8 @@
       window.closeConfirm();
     });
 
-    // --- SALVAMENTO SEGURO FIREBASE (BLINDADO COM MERGE) ---
+    // --- SALVAMENTO SEGURO FIREBASE ---
     window.saveData = async function() {
-      if (!isFirestoreSynced) {
-        console.warn("Aguardando sincronização inicial com o Firestore para evitar sobrescrita.");
-        return;
-      }
       try {
         pruneActivityLogs();
         localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
@@ -1198,65 +1264,11 @@
       }
     };
 
-    // --- LINKS MÁGICOS DO WHATSAPP ---
-    window.checkMagicLink = function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const acao = urlParams.get('acao') || (urlParams.get('confirmar') ? 'confirmar' : null);
-      const atletaParam = urlParams.get('atleta') || urlParams.get('confirmar');
-      const dataPelada = urlParams.get('data');
-
-      if (acao && atletaParam && dataPelada) {
-        const athleteId = parseInt(atletaParam);
-        const athlete = window.athletes.find(a => a.id === athleteId);
-        
-        if (athlete && window.datesList.includes(dataPelada)) {
-          window.currentDate = dataPelada;
-          populateDateSelect();
-
-          if (athlete.isSuspended) {
-            window.showToast("Atleta suspenso. Apenas administradores podem alterar a presença.", "error");
-            window.history.replaceState({}, document.title, window.location.pathname);
-            return;
-          }
-
-          if (window.isPastDeadlineForDate(dataPelada)) {
-            window.showToast("Prazo encerrado às 18h do dia anterior! Fale com o presidente.", "error");
-            window.history.replaceState({}, document.title, window.location.pathname);
-            return;
-          }
-
-          if (!window.presences[dataPelada]) window.presences[dataPelada] = {};
-
-          if (acao === 'confirmar') {
-            const confirmedAt = new Date().toISOString();
-            window.presences[dataPelada][athleteId] = { status: 'CONFIRMADO', reason: '', attended: false, confirmedAt: confirmedAt };
-            window.recordUserInteraction(athlete.name, `Confirmou presença via Link Mágico (${formatDateDisplay(dataPelada)})`);
-            window.saveData();
-            renderAthletesList();
-            setTimeout(() => window.showAnimatedConfirmation(athlete), 600);
-            window.showToast(`Presença confirmada para ${athlete.name}!`, "success");
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else if (acao === 'fora') {
-            window.presences[dataPelada][athleteId] = { status: 'FORA', reason: '', attended: false, confirmedAt: null };
-            window.recordUserInteraction(athlete.name, `Marcou FORA via Link Mágico (${formatDateDisplay(dataPelada)})`);
-            window.saveData();
-            renderAthletesList();
-            window.showToast(`${athlete.name}, registramos seu status como FORA.`, "success");
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else if (acao === 'justificar') {
-            window.pendingJustifyFromLink = { athleteId, dataPelada };
-            window.showToast(`Faça login com os 4 últimos dígitos do seu celular para justificar.`, "error");
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        }
-      }
-    };
-
     // --- LOGIN ---
     window.performLogin = function() {
       const pin = document.getElementById('loginPinInput').value.trim();
       if (pin.length !== 4) {
-        window.showToast("Digite exatamente os 4 últimos dígitos do seu telefone.");
+        window.showToast("Digite os 4 últimos dígitos do seu telefone.");
         return;
       }
 
@@ -1265,7 +1277,7 @@
         window.isAdmin = true;
         window.canEditFinancial = true;
         window.isMarcaoUser = true;
-        window.recordUserInteraction("Admin Master", "Realizou login no sistema (0000)");
+        window.recordUserInteraction("Admin Master", "Realizou login (0000)");
         completeLoginFlow();
         return;
       }
@@ -1274,14 +1286,14 @@
 
       if (foundAthlete) {
         window.currentUser = foundAthlete;
-        const upperName = foundAthlete.name.toUpperCase();
+        const upperName = (foundAthlete.name || '').toUpperCase();
         window.isAdmin = adminNames.some(adminName => upperName.includes(adminName));
         window.canEditFinancial = finEditorNames.some(finName => upperName.includes(finName));
         window.isMarcaoUser = upperName.includes('MARCÃO') || upperName.includes('MARCAO');
-        window.recordUserInteraction(foundAthlete.name, `Realizou login no sistema`);
+        window.recordUserInteraction(foundAthlete.name, `Realizou login`);
         completeLoginFlow();
       } else {
-        window.showToast("Senha incorreta ou atleta suspenso/não encontrado.", "error");
+        window.showToast("Senha incorreta ou atleta não encontrado.", "error");
         document.getElementById('loginPinInput').value = '';
         document.getElementById('loginPinInput').focus();
       }
@@ -1289,7 +1301,7 @@
 
     function completeLoginFlow() {
       document.getElementById('globalLoginOverlay').classList.add('hidden');
-      const firstName = window.currentUser.name.split(' ')[0];
+      const firstName = (window.currentUser.name || 'Atleta').split(' ')[0];
       document.getElementById('userBadgeName').innerText = `${firstName} ${window.isAdmin ? '(Admin)' : ''}`;
       
       const tabFinancialBtn = document.getElementById('tabBtn-financial');
@@ -1342,16 +1354,6 @@
       renderAthletesList();
       renderFinancial();
       checkDeadlinePassed();
-
-      if (window.pendingJustifyFromLink) {
-        const { athleteId, dataPelada } = window.pendingJustifyFromLink;
-        window.currentDate = dataPelada;
-        populateDateSelect();
-        currentJustifyAthleteId = athleteId;
-        document.getElementById('justifyReasonInput').value = window.presences[dataPelada]?.[athleteId]?.reason || '';
-        document.getElementById('justifyModal').classList.remove('hidden');
-        window.pendingJustifyFromLink = null;
-      }
     }
 
     window.logout = function() {
@@ -1365,7 +1367,7 @@
       document.getElementById('loginPinInput').value = '';
       document.getElementById('globalLoginOverlay').classList.remove('hidden');
       document.getElementById('globalLoginOverlay').classList.add('flex');
-      
+
       const btnToggleAnim = document.getElementById('btnToggleAnimationMarcao');
       if (btnToggleAnim) {
         btnToggleAnim.classList.add('hidden');
@@ -1376,12 +1378,38 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
-    // --- INICIALIZAÇÃO E SINCRONIZAÇÃO EM TEMPO REAL ---
-    window.addEventListener('DOMContentLoaded', () => {
+    // --- INICIALIZAÇÃO E SINCRONIZAÇÃO AUTOMÁTICA COM O BANCO ---
+    window.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
       updateSoundButtonUI();
       populateDateSelect();
       buildStarRatingSelector(5);
+
+      // Persiste no LocalStorage imediatamente os 59 atletas e presenças
+      localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
+      localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
+      localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
+      localStorage.setItem('teimoso_datesList', JSON.stringify(window.datesList));
+      localStorage.setItem('teimoso_peladaTimes', JSON.stringify(window.peladaTimes));
+
+      // Sincroniza e grava na nuvem Firestore para restabelecer os dados para todos
+      try {
+        await setDoc(dbDocRef, {
+          datesList: window.datesList,
+          peladaTimes: window.peladaTimes,
+          athletes: window.athletes,
+          presences: window.presences,
+          financialPayments: window.financialPayments,
+          alwaysUpToDateMap: window.alwaysUpToDateMap,
+          absenceFines: window.absenceFines,
+          activityLogs: window.activityLogs,
+          animationsEnabled: window.animationsEnabled,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log("Banco de dados do Firestore sincronizado com sucesso!");
+      } catch (e) {
+        console.error("Tentativa de sincronização inicial com Firestore:", e);
+      }
 
       let isFirstLoad = true;
       onSnapshot(dbDocRef, (docSnap) => {
@@ -1402,10 +1430,9 @@
             window.financialPayments = data.financialPayments;
           }
 
-          isFirestoreSynced = true; // Dados reais carregados do Firestore com sucesso!
+          isFirestoreSynced = true;
           pruneActivityLogs();
 
-          // Espelha no cache seguro
           localStorage.setItem('teimoso_athletes', JSON.stringify(window.athletes));
           localStorage.setItem('teimoso_presences', JSON.stringify(window.presences));
           localStorage.setItem('teimoso_financialPayments', JSON.stringify(window.financialPayments));
@@ -1417,7 +1444,6 @@
           if (isFirstLoad) {
             window.currentDate = getSmartDefaultDate();
             isFirstLoad = false;
-            window.checkMagicLink();
           }
 
           updateActivityBadge();
@@ -1427,13 +1453,9 @@
           renderFinancial();
           renderReports();
           checkDeadlinePassed();
-        } else {
-          isFirestoreSynced = true;
-          window.saveData();
         }
       }, (error) => {
         console.error("Falha ao escutar Firestore:", error);
-        isFirestoreSynced = true;
         renderAthletesList();
         renderFinancial();
         renderReports();
@@ -1459,26 +1481,8 @@
 
     // --- NAVEGAÇÃO DE DATAS ---
     function getAvailableDates() {
-      const currentYear = new Date().getFullYear();
       const sorted = [...window.datesList].sort();
-      if (window.isAdmin) return sorted;
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return sorted.filter(d => {
-        const [y, m, day] = d.split('-').map(Number);
-        if (y < currentYear) return false;
-
-        const peladaDate = new Date(y, m - 1, day, 0, 0, 0);
-        if (peladaDate <= today) return true;
-
-        const eve = new Date(peladaDate);
-        eve.setDate(eve.getDate() - 1);
-        eve.setHours(0, 0, 0, 0);
-
-        return today >= eve;
-      });
+      return sorted;
     }
 
     function updateDateNavButtons() {
@@ -1598,7 +1602,7 @@
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended && !window.isAdmin) {
-        window.showToast("Atleta suspenso. Apenas administradores podem gerenciar.", "error");
+        window.showToast("Atleta suspenso.", "error");
         return;
       }
 
@@ -1611,7 +1615,7 @@
 
       const isPastDeadline = checkDeadlinePassed();
       if (isPastDeadline && !window.isAdmin) {
-        window.showToast("Prazo encerrado às 18h do dia anterior! Fale com o presidente.", "error");
+        window.showToast("Prazo encerrado às 18h do dia anterior!", "error");
         return;
       }
 
@@ -1643,7 +1647,6 @@
           return;
         }
 
-        // REGRA DE MULTA: Cobrança somente a partir de 01/11/2026. Antes disso é estritamente estatística.
         if (newStatus === 'FALTA') {
           const isFinesActiveDate = window.currentDate >= '2026-11-01';
           if (isFinesActiveDate) {
@@ -1681,7 +1684,7 @@
 
     window.saveJustification = function() {
       const reason = document.getElementById('justifyReasonInput').value.trim();
-      if (!reason) return window.showToast("É obrigatório informar o motivo da justificativa.");
+      if (!reason) return window.showToast("Informe o motivo.");
       if (!window.presences[window.currentDate]) window.presences[window.currentDate] = {};
       const targetAthlete = window.athletes.find(a => a.id === currentJustifyAthleteId);
       const actor = window.currentUser?.name || targetAthlete?.name || 'Atleta';
@@ -1699,14 +1702,14 @@
       closeJustifyModal();
       renderAthletesList();
       renderFinancial();
-      window.showToast("Justificativa registrada com sucesso!", "success");
+      window.showToast("Justificativa registrada!", "success");
     };
 
     window.closeJustifyModal = function() {
       document.getElementById('justifyModal').classList.add('hidden');
     };
 
-    // --- REGRAS ESPECIAIS DE ATLETAS (ISENÇÃO DE JUROS FUTUROS) ---
+    // --- REGRAS ESPECIAIS DE ATLETAS (ISENÇÃO DE JUROS) ---
     function isSpecialInterestFreeMonth(athleteName, mKey) {
       if (!athleteName) return false;
       const upper = athleteName.toUpperCase();
@@ -1899,7 +1902,7 @@
                 ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
-                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars || 4)}${'☆'.repeat(5 - (athlete.stars || 4))}</div>
+                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars || 5)}</div>
                 </div>
                 ${pRecord.reason ? `<div class="text-[10px] text-amber-700 mt-1 font-normal"><i class="fa-solid fa-quote-left mr-1"></i>${pRecord.reason}</div>` : ''}
               </div>
@@ -1960,7 +1963,7 @@
       document.getElementById('athletePositionSelect').value = athlete.position;
       document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
-      buildStarRatingSelector(athlete.stars || 4);
+      buildStarRatingSelector(athlete.stars || 5);
       document.getElementById('athleteModal').classList.remove('hidden');
     };
 
@@ -2227,10 +2230,7 @@
 
     // --- EXPORTAR MODELO PADRÃO ---
     window.exportStandardReport = function() {
-      if (!window.isAdmin) {
-        window.showToast("Apenas administradores podem exportar o relatório padrão.", "error");
-        return;
-      }
+      if (!window.isAdmin) return;
       const dayPresences = window.presences[window.currentDate] || {};
       let text = `========================================\n`;
       text += `⚽ RELATÓRIO PADRÃO - TEIMOSO F.C.C. ⚽\n`;
@@ -2243,7 +2243,7 @@
         const st = dayPresences[a.id]?.status;
         if (st === 'CONFIRMADO' && a.position !== 'EXTRA') {
           confCount++;
-          text += `${confCount}. ${a.name} (${a.position}) - ⭐${a.stars || 4}\n`;
+          text += `${confCount}. ${a.name} (${a.position}) - ⭐${a.stars || 5}\n`;
         }
       });
       if (confCount === 0) text += `Nenhum confirmado.\n`;
@@ -2287,10 +2287,7 @@
 
     // --- EXPORTAR LISTA FORMATADA PARA GRUPO ---
     window.exportListToWhatsapp = function() {
-      if (!window.isAdmin) {
-        window.showToast("Apenas administradores podem exportar a lista.", "error");
-        return;
-      }
+      if (!window.isAdmin) return;
       const dayPresences = window.presences[window.currentDate] || {};
       const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -2336,7 +2333,7 @@
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // --- SORTEIO DE TIMES (IGNORA EXTRAS) ---
+    // --- SORTEIO DE TIMES ---
     window.generateTeams = function() {
       const dayPresences = window.presences[window.currentDate] || {};
       const confirmedAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA' && dayPresences[a.id]?.status === 'CONFIRMADO');
@@ -2351,17 +2348,17 @@
       if (numTeams < 2 && totalConfirmed >= 10) numTeams = 2;
       if (numTeams < 1) numTeams = 1;
       const teams = Array.from({ length: numTeams }, () => ({ players: [], totalStars: 0 }));
-      keepers.forEach((keeper, idx) => { teams[idx % numTeams].players.push(keeper); teams[idx % numTeams].totalStars += (keeper.stars || 4); });
+      keepers.forEach((keeper, idx) => { teams[idx % numTeams].players.push(keeper); teams[idx % numTeams].totalStars += (keeper.stars || 5); });
       outfield.forEach(player => {
         teams.sort((a, b) => a.players.length !== b.players.length ? a.players.length - b.players.length : a.totalStars - b.totalStars);
-        teams[0].players.push(player); teams[0].totalStars += (player.stars || 4);
+        teams[0].players.push(player); teams[0].totalStars += (player.stars || 5);
       });
       const container = document.getElementById('teamsContainer'); container.innerHTML = '';
       teams.forEach((team, idx) => {
         let playersHtml = '';
         team.players.forEach(p => {
           const posInfo = positionBadges[p.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
-          playersHtml += `<div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"><div class="flex items-center gap-2"><span class="font-bold text-slate-800">${p.name}</span><span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span></div><div class="text-amber-500 text-[10px]">${'★'.repeat(p.stars || 4)}</div></div>`;
+          playersHtml += `<div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-xs"><div class="flex items-center gap-2"><span class="font-bold text-slate-800">${p.name}</span><span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${posInfo.color}">${posInfo.tag}</span></div><div class="text-amber-500 text-[10px]">${'★'.repeat(p.stars || 5)}</div></div>`;
         });
         container.innerHTML += `<div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4"><div class="flex items-center justify-between border-b border-slate-200 pb-3"><h4 class="text-sm font-black uppercase text-emerald-700"><i class="fa-solid fa-shield-halved"></i> Time ${idx + 1}</h4><span class="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200">${team.players.length} Atletas (${team.totalStars} ★)</span></div><div class="space-y-2">${playersHtml}</div></div>`;
       });
@@ -2376,7 +2373,7 @@
         activeFinancialFilter = filterType;
       }
 
-      ['paid', 'interest', 'due'].forEach(ft => {
+      ['paid', 'interest', 'overdue', 'due'].forEach(ft => {
         const c = document.getElementById(`finCard-${ft}`);
         if (c) {
           if (activeFinancialFilter === ft) c.classList.add('ring-2', 'ring-emerald-500', 'bg-slate-50');
@@ -2389,7 +2386,12 @@
       if (activeFinancialFilter) {
         bar.classList.remove('hidden');
         bar.classList.add('flex');
-        const mapNames = { paid: 'Atletas com Pagamentos Realizados', interest: 'Atletas com Juros Devidos', due: 'Atletas Devendo (Parcelas + Juros)' };
+        const mapNames = { 
+          paid: 'Atletas com Pagamentos Realizados', 
+          interest: 'Atletas com Juros Devidos', 
+          overdue: 'Atletas com Parcelas Vencidas em Atraso',
+          due: 'Atletas com Valores a Receber até Novembro' 
+        };
         label.innerText = mapNames[activeFinancialFilter] || '';
       } else {
         bar.classList.add('hidden');
@@ -2409,14 +2411,20 @@
       const container = document.getElementById('financialAccordionContainer');
       if (!container) return;
       container.innerHTML = '';
-      let totalGeneralPaid = 0, totalGeneralDue = 0, totalGeneralInterest = 0;
+      let totalGeneralPaid = 0, totalGeneralDueUntilNov = 0, totalGeneralInterest = 0, totalGeneralStrictOverdue = 0;
       const sortedAthletes = [...window.athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       const now = new Date();
       const disableInput = !window.canEditFinancial ? 'disabled readonly' : '';
 
       sortedAthletes.forEach(athlete => {
         const payments = window.financialPayments[athlete.id] || {};
-        let athleteTotalPaid = 0, athleteTotalDue = 0, athleteTotalInterest = 0, athleteInstallmentsDue = 0;
+        let athleteTotalPaid = 0;
+        let athleteTotalInterest = 0;
+        let athleteStrictOverdue = 0;
+        let athleteTotalDueUntilNov = 0;
+        let athletePendingInstallmentsCount = 0;
+        let athletePendingInstallmentsAmount = 0;
+
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const dotColor = finStatus === 'uptodate' ? 'bg-emerald-500' : 'bg-rose-500';
         const finLabel = finStatus === 'uptodate' ? 'Em dia' : 'Em Atraso';
@@ -2442,9 +2450,13 @@
           if (isSpecialNoInterest) {
             interest = 0;
             const remainingDue = Math.max(0, suggestedFee - paidAmount);
-            if (!athlete.isSuspended && remainingDue > 0 && now > dueDate) {
-              athleteInstallmentsDue += remainingDue;
-              athleteTotalDue += remainingDue;
+            if (!athlete.isSuspended && remainingDue > 0) {
+              athletePendingInstallmentsCount++;
+              athletePendingInstallmentsAmount += remainingDue;
+              athleteTotalDueUntilNov += remainingDue;
+              if (now > dueDate) {
+                athleteStrictOverdue += remainingDue;
+              }
             }
           } else {
             if (!isPaid && now >= firstDayAfterDue) {
@@ -2454,8 +2466,12 @@
             if (!athlete.isSuspended) {
               athleteTotalInterest += interest;
               if (!isPaid) {
-                athleteInstallmentsDue += suggestedFee;
-                athleteTotalDue += (suggestedFee + interest);
+                athletePendingInstallmentsCount++;
+                athletePendingInstallmentsAmount += suggestedFee;
+                athleteTotalDueUntilNov += (suggestedFee + interest);
+                if (now > dueDate) {
+                  athleteStrictOverdue += (suggestedFee + interest);
+                }
               }
             }
           }
@@ -2473,7 +2489,7 @@
             </div>`;
         });
 
-        // --- CÁLCULO E RENDERIZAÇÃO DAS MULTAS POR FALTA (APENAS A PARTIR DE 01/11/2026) ---
+        // Multas por Falta (R$ 30,00 a partir de 01/11/2026)
         const rawFines = window.absenceFines[athlete.id] || [];
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
         let finesHtml = '';
@@ -2489,7 +2505,8 @@
           const fineTotal = baseAmt + fineInterest;
 
           if (!fine.paid && !athlete.isSuspended) {
-            athleteTotalDue += fineTotal;
+            athleteTotalDueUntilNov += fineTotal;
+            athleteStrictOverdue += fineTotal;
             athleteTotalInterest += fineInterest;
           }
 
@@ -2514,8 +2531,9 @@
         });
 
         totalGeneralPaid += athleteTotalPaid;
-        totalGeneralDue += athleteTotalDue;
+        totalGeneralDueUntilNov += athleteTotalDueUntilNov;
         totalGeneralInterest += athleteTotalInterest;
+        totalGeneralStrictOverdue += athleteStrictOverdue;
 
         if (!window.isAdmin && window.currentUser && window.currentUser.id !== athlete.id) {
           return;
@@ -2523,21 +2541,23 @@
 
         if (activeFinancialFilter === 'paid' && athleteTotalPaid <= 0) return;
         if (activeFinancialFilter === 'interest' && athleteTotalInterest <= 0) return;
-        if (activeFinancialFilter === 'due' && athleteTotalDue <= 0) return;
+        if (activeFinancialFilter === 'overdue' && athleteStrictOverdue <= 0) return;
+        if (activeFinancialFilter === 'due' && athleteTotalDueUntilNov <= 0) return;
 
         container.innerHTML += `
           <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden group shadow-sm">
             <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-50 transition-colors focus:outline-none">
               <div class="flex items-center gap-3">
                 <span class="w-3 h-3 rounded-full ${dotColor} shrink-0"></span>
-                <span class="font-bold text-slate-800 text-sm md:w-48 truncate">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">Suspenso</span>' : ''}</span>
+                <span class="font-bold text-slate-800 text-sm md:w-44 truncate">${athlete.name} ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">Suspenso</span>' : ''}</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${finLabelColor} hidden sm:inline-block">${finLabel}</span>
               </div>
-              <div class="flex items-center justify-between md:justify-end gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto">
+              <div class="flex items-center justify-between md:justify-end gap-3 sm:gap-4 text-[11px] sm:text-xs font-bold w-full md:w-auto flex-wrap sm:flex-nowrap">
                 <div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-sm">R$ ${athleteTotalPaid.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-sm">R$ ${athleteInstallmentsDue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-sm">R$ ${athletePendingInstallmentsAmount.toFixed(2)}</span></div>
                 <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Juros</span><span class="text-amber-600 text-sm">R$ ${athleteTotalInterest.toFixed(2)}</span></div>
-                <div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase">Total Devido</span><span class="text-rose-600 text-sm">R$ ${athleteTotalDue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-rose-700 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase text-rose-600 font-bold">Em Atraso</span><span class="text-rose-600 text-sm font-black">R$ ${athleteStrictOverdue.toFixed(2)}</span></div>
+                <div class="flex flex-col text-purple-800 border-l border-slate-200 pl-3 pr-2"><span class="text-[9px] uppercase text-purple-700 font-bold">Total Até Nov</span><span class="text-purple-700 text-sm font-black">R$ ${athleteTotalDueUntilNov.toFixed(2)}</span></div>
                 <div class="w-6 flex justify-end shrink-0"><i class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-emerald-600' : 'group-hover:text-emerald-600'}"></i></div>
               </div>
             </button>
@@ -2574,7 +2594,8 @@
 
       document.getElementById('finTotalPaid').innerText = `R$ ${safeNum(totalGeneralPaid).toFixed(2)}`;
       document.getElementById('finTotalInterest').innerText = `R$ ${safeNum(totalGeneralInterest).toFixed(2)}`;
-      document.getElementById('finTotalDue').innerText = `R$ ${safeNum(totalGeneralDue).toFixed(2)}`;
+      document.getElementById('finTotalOverdue').innerText = `R$ ${safeNum(totalGeneralStrictOverdue).toFixed(2)}`;
+      document.getElementById('finTotalDue').innerText = `R$ ${safeNum(totalGeneralDueUntilNov).toFixed(2)}`;
     };
 
     window.settleAbsenceFine = function(athleteId, fineIndex) {
