@@ -600,9 +600,9 @@
     </div>
   </div>
 
-  <!-- NEW/EDIT ATHLETE MODAL -->
+  <!-- NEW/EDIT ATHLETE MODAL (COM CAMPOS DE ANIVERSÁRIO) -->
   <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h3 id="athleteModalTitle" class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-user-plus text-emerald-600"></i> Cadastrar Novo Atleta
@@ -622,6 +622,38 @@
           <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
           <p class="text-[9px] text-slate-500 mt-1">Cole o link da foto de perfil da web ou do WhatsApp.</p>
         </div>
+
+        <!-- CAMPOS DE DIA E MÊS DE ANIVERSÁRIO -->
+        <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-cake-candles text-amber-600"></i> Aniversário do Atleta (Dia e Mês):
+          </label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Dia (1 a 31):</label>
+              <input type="number" id="athleteBirthDayInput" min="1" max="31" placeholder="Ex: 15" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 shadow-sm text-center">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Mês:</label>
+              <select id="athleteBirthMonthSelect" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 shadow-sm">
+                <option value="">Não informado</option>
+                <option value="1">Janeiro (01)</option>
+                <option value="2">Fevereiro (02)</option>
+                <option value="3">Março (03)</option>
+                <option value="4">Abril (04)</option>
+                <option value="5">Maio (05)</option>
+                <option value="6">Junho (06)</option>
+                <option value="7">Julho (07)</option>
+                <option value="8">Agosto (08)</option>
+                <option value="9">Setembro (09)</option>
+                <option value="10">Outubro (10)</option>
+                <option value="11">Novembro (11)</option>
+                <option value="12">Dezembro (12)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Posição:</label>
@@ -2076,6 +2108,21 @@
           startDateBadge = `<span class="text-[9px] font-bold text-sky-700 bg-sky-50 border border-sky-300 px-1.5 py-0.2 rounded-md" title="Início da contagem de assiduidade">Início: ${sd}/${sm}/${sy}</span>`;
         }
 
+        // CRACHÁ / IDENTIFICAÇÃO DE ANIVERSÁRIO
+        let birthdayBadge = '';
+        if (athlete.birthDay && athlete.birthMonth) {
+          const bDay = String(athlete.birthDay).padStart(2, '0');
+          const bMonth = String(athlete.birthMonth).padStart(2, '0');
+          const now = new Date();
+          const isTodayBirthday = (now.getDate() === parseInt(athlete.birthDay) && (now.getMonth() + 1) === parseInt(athlete.birthMonth));
+
+          if (isTodayBirthday) {
+            birthdayBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 animate-pulse shadow-sm" title="Aniversariante do Dia!"><i class="fa-solid fa-cake-candles text-amber-600"></i> Níver Hoje! 🎉</span>`;
+          } else {
+            birthdayBadge = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200" title="Data de Aniversário"><i class="fa-solid fa-cake-candles text-slate-400"></i> ${bDay}/${bMonth}</span>`;
+          }
+        }
+
         const tr = document.createElement('tr');
         tr.className = athlete.isSuspended 
           ? "bg-rose-50/50 border-l-4 border-rose-400 opacity-80 transition-colors" 
@@ -2150,6 +2197,7 @@
                   ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
                   ${startDateBadge}
+                  ${birthdayBadge}
                 </div>
                 ${confirmBadgeHtml}
                 <div class="flex items-center gap-2 mt-0.5">
@@ -2196,13 +2244,15 @@
       }
     };
 
-    // --- CADASTRO E EDIÇÃO DE ATLETAS ---
+    // --- CADASTRO E EDIÇÃO DE ATLETAS COM ANIVERSÁRIO ---
     window.openNewAthleteModal = function() {
       document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-600"></i> Cadastrar Novo Atleta`;
       document.getElementById('editAthleteId').value = '';
       document.getElementById('athleteNameInput').value = '';
       document.getElementById('athletePhoneInput').value = '';
       document.getElementById('athletePhotoUrlInput').value = '';
+      document.getElementById('athleteBirthDayInput').value = '';
+      document.getElementById('athleteBirthMonthSelect').value = '';
       document.getElementById('athletePositionSelect').value = 'Meia';
       document.getElementById('athleteMonthlyFeeInput').value = '110';
       document.getElementById('athleteSuspendedCheckbox').checked = false;
@@ -2218,6 +2268,8 @@
       document.getElementById('athleteNameInput').value = athlete.name;
       document.getElementById('athletePhoneInput').value = athlete.phone || '';
       document.getElementById('athletePhotoUrlInput').value = athlete.photoUrl || '';
+      document.getElementById('athleteBirthDayInput').value = athlete.birthDay || '';
+      document.getElementById('athleteBirthMonthSelect').value = athlete.birthMonth || '';
       document.getElementById('athletePositionSelect').value = athlete.position;
       document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
@@ -2246,30 +2298,51 @@
       const name = document.getElementById('athleteNameInput').value.trim();
       const phone = document.getElementById('athletePhoneInput').value.trim();
       const photoUrl = document.getElementById('athletePhotoUrlInput').value.trim();
+      const birthDay = parseInt(document.getElementById('athleteBirthDayInput').value) || null;
+      const birthMonth = parseInt(document.getElementById('athleteBirthMonthSelect').value) || null;
       const position = document.getElementById('athletePositionSelect').value;
       const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput').value) || 110;
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
       if (!name) return window.showToast("Digite o nome.");
 
+      if (birthDay && (birthDay < 1 || birthDay > 31)) {
+        return window.showToast("O dia de aniversário deve estar entre 1 e 31.");
+      }
+
       if (id) {
         const athlete = window.athletes.find(a => a.id == id);
         if (athlete) {
-          athlete.name = name; athlete.phone = phone; athlete.photoUrl = photoUrl;
-          athlete.position = position; athlete.stars = selectedStarsForNewAthlete;
-          athlete.isSuspended = isSuspended; athlete.isKeeper = (position === 'Goleiro');
+          athlete.name = name; 
+          athlete.phone = phone; 
+          athlete.photoUrl = photoUrl;
+          athlete.birthDay = birthDay;
+          athlete.birthMonth = birthMonth;
+          athlete.position = position; 
+          athlete.stars = selectedStarsForNewAthlete;
+          athlete.isSuspended = isSuspended; 
+          athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
         }
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o cadastro do atleta: ${name}`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o cadastro do atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
         window.showToast("Atleta atualizado na nuvem!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
         window.athletes.push({
-          id: newId, name: name, position: position, stars: selectedStarsForNewAthlete,
-          phone: phone, photoUrl: photoUrl, isKeeper: (position === 'Goleiro'),
-          monthlyFee: monthlyFee, isSuspended: isSuspended, effectiveStartDate: null
+          id: newId, 
+          name: name, 
+          position: position, 
+          stars: selectedStarsForNewAthlete,
+          phone: phone, 
+          photoUrl: photoUrl, 
+          birthDay: birthDay,
+          birthMonth: birthMonth,
+          isKeeper: (position === 'Goleiro'),
+          monthlyFee: monthlyFee, 
+          isSuspended: isSuspended, 
+          effectiveStartDate: null
         });
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name}`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
         window.showToast("Atleta cadastrado na nuvem!", "success");
       }
 
