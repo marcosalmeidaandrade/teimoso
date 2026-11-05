@@ -879,65 +879,68 @@
     window.absenceFines = {};
 
     // --- TABELA COMPLETA DE PAGAMENTOS MENSAIS IMPORTADA (JAN A NOV) ---
+    // Valores > 0: Baixa efetuada com valor informado
+    // 0: Em aberto (sem baixa), assumindo a mensalidade cadastrada do atleta (monthlyFee)
+    // 'x': Inativo / Não elegível
     const importedFullPaymentsMap = {
-      "ADALBERTO": { jan: 111, fev: 122, mar: 110, abr: 111, mai: 111, jun: 131, jul: 133, ago: 130, set: 110, out: 125 },
+      "ADALBERTO": { jan: 111, fev: 122, mar: 110, abr: 111, mai: 111, jun: 131, jul: 133, ago: 130, set: 110, out: 125, nov: 0 },
       "ALEXANDRE ALEIXO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "ALEXANDRE BOECHAT": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110 },
-      "ANDINHO": { jan: 110, fev: 115, mar: 134, abr: 139, mai: 135, jun: 132, jul: 110, ago: 110, set: 111, out: 123 },
-      "ARTHUR": { jan: 112, fev: 110, mar: 124, abr: 121, mai: 125, jun: 121, jul: 138, ago: 125, set: 139, out: 110 },
-      "BRASIL": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "BRAULINHO": { jan: 131, fev: 89, mar: 145, abr: 133, mai: 110, jun: 110, jul: 110, ago: 80 },
-      "BRUNO MONTEIRO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110 },
-      "BRUNO ALVES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "BRUNO": { jan: 111, fev: 92, mar: 80, abr: 70, mai: 80, jun: 70, jul: 80, ago: 80, set: 80, out: 90 },
+      "ALEXANDRE BOECHAT": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110, nov: 0 },
+      "ANDINHO": { jan: 110, fev: 115, mar: 134, abr: 139, mai: 135, jun: 132, jul: 110, ago: 110, set: 111, out: 123, nov: 0 },
+      "ARTHUR": { jan: 112, fev: 110, mar: 124, abr: 121, mai: 125, jun: 121, jul: 138, ago: 125, set: 139, out: 110, nov: 0 },
+      "BRASIL": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "BRAULINHO": { jan: 131, fev: 89, mar: 145, abr: 133, mai: 110, jun: 110, jul: 110, ago: 80, set: 0, out: 0, nov: 0 },
+      "BRUNO MONTEIRO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 0, out: 0, nov: 0 },
+      "BRUNO ALVES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "BRUNO": { jan: 111, fev: 92, mar: 80, abr: 70, mai: 80, jun: 70, jul: 80, ago: 80, set: 80, out: 90, nov: 0 },
       "CARLINHOS": { jan: 90, fev: 119, mar: 110, abr: 110, mai: 130, jun: 130, jul: 133, ago: 110, set: 110, out: 110, nov: 110 },
       "CASCOLA": { jan: 95, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "CELINHO": { jan: 113, fev: 103, mar: 112, abr: 113, mai: 111, jun: 112, jul: 110, ago: 110, set: 110 },
-      "CHATUBA": { jan: 110, fev: 122, mar: 110, abr: 110, mai: 141, jun: 140, jul: 133, ago: 123 },
-      "CLÁUDIO": { jan: 110, fev: 110, mar: 110, abr: 120, mai: 123, jun: 110, jul: 142, ago: 110, set: 110, out: 110 },
-      "COPINHO": { jan: 112, fev: 130, mar: 110, abr: 150, mai: 150, jun: 150, jul: 140, ago: 130 },
-      "CRIS": { jan: 124, fev: 122, mar: 115, abr: 154, mai: 134, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "DAVI": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "DEIVID": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110 },
+      "CELINHO": { jan: 113, fev: 103, mar: 112, abr: 113, mai: 111, jun: 112, jul: 110, ago: 110, set: 110, out: 0, nov: 0 },
+      "CHATUBA": { jan: 110, fev: 122, mar: 110, abr: 110, mai: 141, jun: 140, jul: 133, ago: 123, set: 0, out: 0, nov: 0 },
+      "CLÁUDIO": { jan: 110, fev: 110, mar: 110, abr: 120, mai: 123, jun: 110, jul: 142, ago: 110, set: 110, out: 110, nov: 0 },
+      "COPINHO": { jan: 112, fev: 130, mar: 110, abr: 150, mai: 150, jun: 150, jul: 140, ago: 130, set: 0, out: 0, nov: 0 },
+      "CRIS": { jan: 124, fev: 122, mar: 115, abr: 154, mai: 134, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "DAVI": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "DEIVID": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110, nov: 0 },
       "DIBOI": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 100, ago: 100, set: 100, out: 90, nov: 90 },
-      "DIDI": { jan: 111, fev: 110, mar: 114, abr: 127, mai: 114, jun: 110, jul: 116, ago: 115, set: 119, out: 122 },
-      "DIEGO": { jan: 114, fev: 124, mar: 116, abr: 130, mai: 130, jun: 135, jul: 155, ago: 130, set: 110, out: 40 },
-      "EDMAR": { jan: 113, fev: 122, mar: 140, abr: 133, mai: 157, jun: 126, jul: 169, ago: 138, set: 110 },
-      "MONTANHA": { jan: 110, fev: 91, mar: 113, abr: 115, mai: 100, jun: 80, jul: 80, ago: 100, set: 100, out: 80 },
-      "FABIANO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90 },
-      "FEIJÃO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 123, set: 110, out: 110 },
-      "FELIPE MACACO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "RANIERI": { jan: 121, fev: 122, mar: 115, abr: 110, mai: 123, jun: 114, jul: 114, ago: 131, set: 110, out: 110 },
+      "DIDI": { jan: 111, fev: 110, mar: 114, abr: 127, mai: 114, jun: 110, jul: 116, ago: 115, set: 119, out: 122, nov: 0 },
+      "DIEGO": { jan: 114, fev: 124, mar: 116, abr: 130, mai: 130, jun: 135, jul: 155, ago: 130, set: 110, out: 40, nov: 0 },
+      "EDMAR": { jan: 113, fev: 122, mar: 140, abr: 133, mai: 157, jun: 126, jul: 169, ago: 138, set: 110, out: 0, nov: 0 },
+      "MONTANHA": { jan: 110, fev: 91, mar: 113, abr: 115, mai: 100, jun: 80, jul: 80, ago: 100, set: 100, out: 80, nov: 0 },
+      "FABIANO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 'x', nov: 'x' },
+      "FEIJÃO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 123, set: 110, out: 110, nov: 0 },
+      "FELIPE MACACO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "RANIERI": { jan: 121, fev: 122, mar: 115, abr: 110, mai: 123, jun: 114, jul: 114, ago: 131, set: 110, out: 110, nov: 0 },
       "JOSÉ AMÉRICO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "JOSÉ ANTÔNIO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90 },
-      "JONILSON": { jan: 110, fev: 110, mar: 128, abr: 130, mai: 110, jun: 114, jul: 110, ago: 124, set: 110, out: 110 },
-      "JUNINHO": { jan: 110, fev: 117, mar: 124, abr: 113, mai: 125, jun: 114, jul: 131, ago: 139, set: 110 },
-      "JÚLIO": { jan: 118, fev: 133, mar: 137, abr: 135, mai: 135, jun: 110, jul: 140, ago: 125, set: 110, out: 36 },
-      "LACRAIA": { jan: 100 },
-      "LAMIADO": { jan: 105, fev: 100, mar: 110, abr: 100, mai: 70, jun: 90, jul: 90, ago: 90 },
-      "LUAN": { jan: 122, fev: 122, mar: 112, abr: 110, mai: 111, jun: 111, jul: 110, ago: 116, set: 107, out: 125 },
-      "LUIZ FERNANDO": { jan: 111, fev: 90, mar: 93, abr: 82, mai: 100, jun: 100, jul: 79, ago: 100, set: 102, out: 105 },
-      "LUCAS LOPES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 114, set: 110, out: 110 },
+      "JOSÉ ANTÔNIO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 0, nov: 0 },
+      "JONILSON": { jan: 110, fev: 110, mar: 128, abr: 130, mai: 110, jun: 114, jul: 110, ago: 124, set: 110, out: 110, nov: 0 },
+      "JUNINHO": { jan: 110, fev: 117, mar: 124, abr: 113, mai: 125, jun: 114, jul: 131, ago: 139, set: 110, out: 0, nov: 0 },
+      "JÚLIO": { jan: 118, fev: 133, mar: 137, abr: 135, mai: 135, jun: 110, jul: 140, ago: 125, set: 110, out: 36, nov: 0 },
+      "LACRAIA": { jan: 100, fev: 'x', mar: 'x', abr: 'x', mai: 'x', jun: 'x', jul: 'x', ago: 'x', set: 'x', out: 'x', nov: 'x' },
+      "LAMIADO": { jan: 105, fev: 100, mar: 110, abr: 100, mai: 70, jun: 90, jul: 90, ago: 90, set: 0, out: 0, nov: 0 },
+      "LUAN": { jan: 122, fev: 122, mar: 112, abr: 110, mai: 111, jun: 111, jul: 110, ago: 116, set: 107, out: 125, nov: 0 },
+      "LUIZ FERNANDO": { jan: 111, fev: 90, mar: 93, abr: 82, mai: 100, jun: 100, jul: 79, ago: 100, set: 102, out: 105, nov: 0 },
+      "LUCAS LOPES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 114, set: 110, out: 110, nov: 0 },
       "MANINHO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "MARCÃO": { jan: 110, fev: 110, mar: 114, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110 },
-      "ALBINOS": { jan: 112, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 118, ago: 118, set: 116, out: 110 },
-      "MATEUS MARTINS": { jan: 111, fev: 105, mar: 133, abr: 140, mai: 110, jun: 110, jul: 110, ago: 110, set: 110 },
-      "ONOFRE": { jan: 126, fev: 121, mar: 117, abr: 120, mai: 125, jun: 122, jul: 110, ago: 110 },
-      "NANDI": { jan: 98, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 100 },
+      "MARCÃO": { jan: 110, fev: 110, mar: 114, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 0, out: 0, nov: 0 },
+      "ALBINOS": { jan: 112, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 118, ago: 118, set: 116, out: 110, nov: 0 },
+      "MATEUS MARTINS": { jan: 111, fev: 105, mar: 133, abr: 140, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 0, nov: 0 },
+      "ONOFRE": { jan: 126, fev: 121, mar: 117, abr: 120, mai: 125, jun: 122, jul: 110, ago: 110, set: 0, out: 0, nov: 0 },
+      "NANDI": { jan: 98, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 100, nov: 0 },
       "PABLO PADILHA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 110 },
-      "PABLO PICANÇO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "PEDRO": { jan: 113, fev: 125, mar: 120, abr: 138, mai: 124, jun: 134, jul: 127, ago: 124 },
-      "BRITO": { jan: 115, fev: 105, mar: 125, abr: 110, mai: 110, jun: 115, jul: 142, ago: 110, set: 110, out: 110 },
+      "PABLO PICANÇO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "PEDRO": { jan: 113, fev: 125, mar: 120, abr: 138, mai: 124, jun: 134, jul: 127, ago: 124, set: 'x', out: 'x', nov: 'x' },
+      "BRITO": { jan: 115, fev: 105, mar: 125, abr: 110, mai: 110, jun: 115, jul: 142, ago: 110, set: 110, out: 110, nov: 0 },
       "CORUJA": { jan: 110, fev: 114, mar: 120, abr: 110, mai: 110, jun: 134, jul: 110, ago: 110, set: 110, out: 125, nov: 110 },
-      "TODINHO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 125 },
-      "RICARDO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110 },
-      "SANDRO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90 },
-      "SAPÃO": { jan: 123, fev: 125, mar: 121, abr: 110, mai: 135, jun: 132, jul: 140, ago: 139, set: 130, out: 125 },
+      "TODINHO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 125, nov: 0 },
+      "RICARDO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 'x', out: 'x', nov: 'x' },
+      "SANDRO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 0 },
+      "SAPÃO": { jan: 123, fev: 125, mar: 121, abr: 110, mai: 135, jun: 132, jul: 140, ago: 139, set: 130, out: 125, nov: 0 },
       "SILZIMAR": { jan: 111, fev: 109, mar: 111, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 90 },
-      "TIAGO CONECTA": { jan: 112, fev: 110, mar: 115, abr: 127, mai: 123, jun: 110, jul: 133, ago: 138, set: 110 },
-      "TIAGO BOQUETE": { jan: 110, fev: 110, mar: 100, abr: 110, mai: 110, jun: 110, jul: 130, ago: 110, set: 110, out: 110 },
-      "TIAGO SERRA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
-      "WALLACE": { jan: 116, fev: 130, mar: 122, abr: 138, mai: 134, jun: 132, jul: 139, ago: 142, set: 126, out: 130 },
+      "TIAGO CONECTA": { jan: 112, fev: 110, mar: 115, abr: 127, mai: 123, jun: 110, jul: 133, ago: 138, set: 110, out: 0, nov: 0 },
+      "TIAGO BOQUETE": { jan: 110, fev: 110, mar: 100, abr: 110, mai: 110, jun: 110, jul: 130, ago: 110, set: 110, out: 110, nov: 0 },
+      "TIAGO SERRA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
+      "WALLACE": { jan: 116, fev: 130, mar: 122, abr: 138, mai: 134, jun: 132, jul: 139, ago: 142, set: 126, out: 130, nov: 0 },
       "ZIEL": { jan: 112, fev: 125, mar: 132, abr: 125, mai: 110, jun: 127, jul: 110, ago: 125, set: 110, out: 110, nov: 80 }
     };
 
@@ -951,7 +954,7 @@
 
     window.applyAllSpreadsheetPayments = function() {
       if (!window.athletes || window.athletes.length === 0) return 0;
-      let appliedCount = 0;
+      let appliedChanges = 0;
       if (!window.financialPayments || typeof window.financialPayments !== 'object') {
         window.financialPayments = {};
       }
@@ -970,23 +973,45 @@
           }
 
           Object.keys(athleteMonthsData).forEach(mKey => {
-            const val = parseFloat(athleteMonthsData[mKey]);
+            const rawVal = athleteMonthsData[mKey];
+            
+            // Se marcado com 'x', remove qualquer pagamento gravado para não gerar cobrança
+            if (rawVal === 'x') {
+              if (window.financialPayments[athlete.id][mKey]) {
+                delete window.financialPayments[athlete.id][mKey];
+                appliedChanges++;
+              }
+              return;
+            }
+
+            const val = parseFloat(rawVal);
+            const currentRecord = window.financialPayments[athlete.id][mKey];
+
             if (!isNaN(val) && val > 0) {
-              const currentPaid = window.financialPayments[athlete.id][mKey]?.paid;
-              const currentAmt = window.financialPayments[athlete.id][mKey]?.amount;
-              if (!currentPaid || currentAmt !== val) {
+              // Valor informado (> 0): efetua a baixa
+              if (!currentRecord || !currentRecord.paid || currentRecord.amount !== val) {
                 window.financialPayments[athlete.id][mKey] = {
                   paid: true,
                   amount: val
                 };
-                appliedCount++;
+                appliedChanges++;
+              }
+            } else if (val === 0) {
+              // Valor 0,00: mensalidade em aberto (sem baixa).
+              // Puxa o valor padrão de cadastro do atleta (monthlyFee)
+              if (currentRecord && (currentRecord.paid || currentRecord.amount > 0)) {
+                window.financialPayments[athlete.id][mKey] = {
+                  paid: false,
+                  amount: 0
+                };
+                appliedChanges++;
               }
             }
           });
         }
       });
 
-      return appliedCount;
+      return appliedChanges;
     };
 
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
@@ -2437,6 +2462,7 @@
           if (!isMonthInactive && !athlete.isSuspended) {
             if (isSpecialNoInterest) {
               interest = 0;
+              // Regra específica mantida por nome: cobrança residual do saldo restante
               const remainingDue = Math.max(0, suggestedFee - paidAmount);
               if (remainingDue > 0) {
                 athletePendingInstallmentsAmount += remainingDue;
@@ -2459,15 +2485,8 @@
                   // Em aberto (a vencer até o dia 15): conta como débito a receber SEM juros e NÃO conta em atraso
                   athleteTotalDueUntilNov += suggestedFee;
                 }
-              } else if (paidAmount < suggestedFee) {
-                // Pagamento parcial: diferença residual
-                const partialDiff = suggestedFee - paidAmount;
-                athletePendingInstallmentsAmount += partialDiff;
-                athleteTotalDueUntilNov += partialDiff;
-                if (now > dueDate) {
-                  athleteStrictOverdue += partialDiff;
-                }
               }
+              // Se isPaid for true com valor menor que a parcela, é considerado quitado (pago em mês posterior)
             }
           }
 
@@ -2482,8 +2501,25 @@
           let statusTagText = isMonthInactive
             ? "Inativo"
             : (isPaid
-                ? (paidAmount < suggestedFee ? `Parcial: R$ ${paidAmount.toFixed(0)}` : "Pago")
-                : (now > dueDate ? "Vencido" : "A Vencer (Dia 15)"));
+                ? (isSpecialNoInterest && paidAmount < suggestedFee ? `Parcial: R$ ${paidAmount.toFixed(0)}` : "Quitado")
+                : (now > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)"));
+
+          // Valor exibido sugerido no campo do mês:
+          // Se pago: exibe o valor efetivamente pago
+          // Se inativo: 0
+          // Se em aberto: sugere o valor base cadastrado + juros acumulados (base + juros)
+          let suggestedInputValue = 0;
+          if (isMonthInactive) {
+            suggestedInputValue = 0;
+          } else if (isPaid) {
+            suggestedInputValue = paidAmount;
+          } else {
+            if (isSpecialNoInterest) {
+              suggestedInputValue = Math.max(0, suggestedFee - paidAmount);
+            } else {
+              suggestedInputValue = suggestedFee + interest;
+            }
+          }
 
           monthsGridHtml += `
             <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative">
@@ -2493,7 +2529,7 @@
               </span>
               <div class="flex items-center gap-1.5 justify-center">
                 <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput || (isMonthInactive ? 'disabled' : '')} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial && !isMonthInactive ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${isPaid ? paidAmount : (isMonthInactive ? 0 : suggestedFee)}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !isMonthInactive ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (isMonthInactive ? 'disabled readonly' : '')} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="number" value="${suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !isMonthInactive ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (isMonthInactive ? 'disabled readonly' : '')} title="${!isPaid && !isMonthInactive ? `Base: R$ ${suggestedFee.toFixed(2)} + Juros: R$ ${interest.toFixed(2)} = R$ ${(suggestedFee + interest).toFixed(2)}` : ''}" class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
               <span class="text-[8px] font-bold ${isPaid ? 'text-sky-700' : (now > dueDate ? 'text-rose-600' : 'text-amber-700')}">${statusTagText}</span>
             </div>`;
@@ -2639,9 +2675,60 @@
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
       const athlete = window.athletes.find(a => a.id === athleteId);
       const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
-      window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: isChecked ? fee : 0 };
+
+      let amountToSet = 0;
+      if (isChecked) {
+        // Ao marcar, quita pelo valor com juros sugerido calculado para o mês
+        const mIndex = months.indexOf(mKey);
+        const firstDayAfterDue = new Date(2026, mIndex, 16);
+        const now = new Date();
+        let interest = 0;
+        if (!isSpecialInterestFreeMonth(athlete?.name, mKey) && now >= firstDayAfterDue) {
+          const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+          interest = Math.max(0, daysLate) * 1.00;
+        }
+        amountToSet = fee + interest;
+      }
+
+      window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: amountToSet };
       window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `${isChecked ? 'Baixou' : 'Desmarcou'} mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''}`);
-      window.saveData(); renderFinancial(); renderReports();
+      window.saveData(); 
+      renderFinancial(); 
+      renderReports();
+    };
+
+    window.doubleClickSettleMonth = function(athleteId, mKey) {
+      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
+
+      const mIndex = months.indexOf(mKey);
+      const firstDayAfterDue = new Date(2026, mIndex, 16);
+      const now = new Date();
+      let interest = 0;
+      if (!isSpecialInterestFreeMonth(athlete?.name, mKey) && now >= firstDayAfterDue) {
+        const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+        interest = Math.max(0, daysLate) * 1.00;
+      }
+      const totalAmount = fee + interest;
+
+      window.financialPayments[athleteId][mKey] = { paid: true, amount: totalAmount };
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''} no valor sugerido de R$ ${totalAmount.toFixed(2)}`);
+      window.saveData(); 
+      renderFinancial(); 
+      renderReports(); 
+      window.showToast(`Parcela baixada (R$ ${totalAmount.toFixed(2)}) na nuvem!`, "success");
+    };
+
+    window.updateFinancialValue = function(athleteId, mKey, val) {
+      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
+      const numVal = parseFloat(val) || 0;
+      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
+      window.financialPayments[athleteId][mKey] = { paid: numVal > 0, amount: numVal };
+      window.saveData(); 
+      renderFinancial(); 
+      renderReports();
     };
 
     window.doubleClickSettleMonth = function(athleteId, mKey) {
