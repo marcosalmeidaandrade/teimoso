@@ -1727,6 +1727,19 @@
       return false;
     }
 
+    // Regra de Acordo Especial: Bruno Monteiro (vencimento unificado em 15/11/2026 sem juros/atraso)
+    function isBrunoMonteiroAgreement(athleteName) {
+      if (!athleteName) return false;
+      return athleteName.toUpperCase().includes('BRUNO MONTEIRO');
+    }
+
+    // Regra de Diferença Parcial de Outubro (Diego e Júlio)
+    function isPartialOctoberAthlete(athleteName, mKey) {
+      if (!athleteName || mKey !== 'out') return false;
+      const upper = athleteName.toUpperCase();
+      return upper.includes('DIEGO') || upper.includes('JÚLIO') || upper.includes('JULIO');
+    }
+
     function safeNum(val, fallback = 0) {
       if (val === undefined || val === null || val === '') return fallback;
       if (typeof val === 'number') return isNaN(val) ? fallback : val;
@@ -1748,6 +1761,20 @@
         const paymentData = payments[mKey];
         const isPaid = paymentData && (paymentData.paid || safeNum(paymentData.amount) > 0);
         
+        // Se for o acordo de Bruno Monteiro até 15/11/2026, não considera em atraso antes desta data
+        if (isBrunoMonteiroAgreement(athleteName)) {
+          const agreementDueDate = new Date(2026, 10, 15, 23, 59, 59); // 15/11/2026
+          if (now <= agreementDueDate) continue;
+        }
+
+        // Atletas com diferença parcial em outubro (Diego e Júlio)
+        if (isPartialOctoberAthlete(athleteName, mKey)) {
+          const suggestedFee = athlete ? safeNum(athlete.monthlyFee, 110) : 110;
+          const paidAmt = paymentData ? safeNum(paymentData.amount, 0) : 0;
+          if (paidAmt < suggestedFee && now > dueDate) return 'overdue';
+          continue;
+        }
+
         if (isSpecialInterestFreeMonth(athleteName, mKey)) {
           const suggestedFee = athlete ? safeNum(athlete.monthlyFee, 110) : 110;
           const paidAmt = paymentData ? safeNum(paymentData.amount, 0) : 0;
@@ -2454,15 +2481,48 @@
           if (isPaid) athleteTotalPaid += paidAmount;
 
           const isSpecialNoInterest = isSpecialInterestFreeMonth(athleteName, mKey);
+          const isBrunoAgreed = isBrunoMonteiroAgreement(athleteName);
+          const isPartialOct = isPartialOctoberAthlete(athleteName, mKey);
 
           // Verifica se o mês foi expressamente inativado (marcado com 'x' na planilha)
           const isMonthInactive = importedFullPaymentsMap[normalizeName(athleteName)]?.[mKey] === 'x';
 
           let interest = 0;
           if (!isMonthInactive && !athlete.isSuspended) {
-            if (isSpecialNoInterest) {
+            // Caso 1: Bruno Monteiro - Acordo financeiro para pagamento até 15/11/2026
+            if (isBrunoAgreed) {
+              const agreementDueDate = new Date(2026, 10, 15, 23, 59, 59); // 15/11/2026
+              if (!isPaid) {
+                athletePendingInstallmentsAmount += suggestedFee;
+                athleteTotalDueUntilNov += suggestedFee;
+                if (now > agreementDueDate) {
+                  // Caso passe de 15/11/2026, entra em atraso
+                  const daysLate = Math.floor((now - agreementDueDate) / (1000 * 60 * 60 * 24)) + 1;
+                  interest = Math.max(0, daysLate) * 1.00;
+                  athleteTotalInterest += interest;
+                  athleteStrictOverdue += (suggestedFee + interest);
+                }
+              }
+            }
+            // Caso 2: Diego e Júlio - Cobrança da diferença de outubro + juros proporcionais
+            else if (isPartialOct) {
+              const differenceDue = Math.max(0, suggestedFee - paidAmount);
+              if (differenceDue > 0) {
+                athletePendingInstallmentsAmount += differenceDue;
+                if (now >= firstDayAfterDue) {
+                  const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+                  interest = Math.max(0, daysLate) * 1.00;
+                  athleteTotalInterest += interest;
+                  athleteStrictOverdue += (differenceDue + interest);
+                  athleteTotalDueUntilNov += (differenceDue + interest);
+                } else {
+                  athleteTotalDueUntilNov += differenceDue;
+                }
+              }
+            }
+            // Caso 3: Regras especiais de isenção de juros futuros
+            else if (isSpecialNoInterest) {
               interest = 0;
-              // Regra específica mantida por nome: cobrança residual do saldo restante
               const remainingDue = Math.max(0, suggestedFee - paidAmount);
               if (remainingDue > 0) {
                 athletePendingInstallmentsAmount += remainingDue;
@@ -2471,46 +2531,60 @@
                   athleteStrictOverdue += remainingDue;
                 }
               }
-            } else {
+            }
+            // Caso 4: Regra padrão
+            else {
               if (!isPaid) {
                 athletePendingInstallmentsAmount += suggestedFee;
                 if (now >= firstDayAfterDue) {
-                  // Vencido: aplica juros diários e soma no Total Em Atraso
                   const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
                   interest = Math.max(0, daysLate) * 1.00;
                   athleteTotalInterest += interest;
                   athleteStrictOverdue += (suggestedFee + interest);
                   athleteTotalDueUntilNov += (suggestedFee + interest);
                 } else {
-                  // Em aberto (a vencer até o dia 15): conta como débito a receber SEM juros e NÃO conta em atraso
                   athleteTotalDueUntilNov += suggestedFee;
                 }
               }
-              // Se isPaid for true com valor menor que a parcela, é considerado quitado (pago em mês posterior)
             }
+          }
+
+          let isCellOverdue = false;
+          if (isBrunoAgreed) {
+            isCellOverdue = !isPaid && (now > new Date(2026, 10, 15, 23, 59, 59));
+          } else if (isPartialOct) {
+            isCellOverdue = (paidAmount < suggestedFee) && (now > dueDate);
+          } else {
+            isCellOverdue = !isPaid && (now > dueDate);
           }
 
           let cellColorClass = isMonthInactive 
             ? "bg-slate-200 text-slate-400 border-slate-300"
-            : (isPaid 
+            : (isPaid && !isPartialOct
                 ? "bg-sky-50 text-sky-800 border-sky-300" 
-                : (now > dueDate 
+                : (isCellOverdue 
                     ? "bg-rose-50 text-rose-800 border-rose-300" 
-                    : "bg-amber-50/70 text-amber-800 border-amber-300")); // Em aberto até o vencimento
+                    : (isBrunoAgreed && !isPaid 
+                        ? "bg-emerald-50/70 text-emerald-800 border-emerald-300" 
+                        : "bg-amber-50/70 text-amber-800 border-amber-300")));
 
           let statusTagText = isMonthInactive
             ? "Inativo"
-            : (isPaid
-                ? (isSpecialNoInterest && paidAmount < suggestedFee ? `Parcial: R$ ${paidAmount.toFixed(0)}` : "Quitado")
-                : (now > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)"));
+            : (isBrunoAgreed && !isPaid
+                ? "Acordo 15/11"
+                : (isPartialOct
+                    ? `Falta R$ ${(suggestedFee - paidAmount).toFixed(0)} + juros`
+                    : (isPaid
+                        ? (isSpecialNoInterest && paidAmount < suggestedFee ? `Parcial: R$ ${paidAmount.toFixed(0)}` : "Quitado")
+                        : (now > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)"))));
 
-          // Valor exibido sugerido no campo do mês:
-          // Se pago: exibe o valor efetivamente pago
-          // Se inativo: 0
-          // Se em aberto: sugere o valor base cadastrado + juros acumulados (base + juros)
           let suggestedInputValue = 0;
           if (isMonthInactive) {
             suggestedInputValue = 0;
+          } else if (isBrunoAgreed) {
+            suggestedInputValue = isPaid ? paidAmount : suggestedFee;
+          } else if (isPartialOct) {
+            suggestedInputValue = Math.max(0, suggestedFee - paidAmount) + interest;
           } else if (isPaid) {
             suggestedInputValue = paidAmount;
           } else {
@@ -2525,13 +2599,15 @@
             <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative">
               <span class="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
                 ${mKey} 
+                ${isBrunoAgreed && !isPaid ? '<i class="fa-solid fa-handshake text-emerald-600 text-[9px]" title="Acordo financeiro até 15/11/2026"></i>' : ''}
+                ${isPartialOct ? '<i class="fa-solid fa-circle-exclamation text-amber-500 text-[9px]" title="Cobrança da diferença de outubro + juros"></i>' : ''}
                 ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-600 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}
               </span>
               <div class="flex items-center gap-1.5 justify-center">
-                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput || (isMonthInactive ? 'disabled' : '')} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial && !isMonthInactive ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !isMonthInactive ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (isMonthInactive ? 'disabled readonly' : '')} title="${!isPaid && !isMonthInactive ? `Base: R$ ${suggestedFee.toFixed(2)} + Juros: R$ ${interest.toFixed(2)} = R$ ${(suggestedFee + interest).toFixed(2)}` : ''}" class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="checkbox" ${isPaid && !isPartialOct ? 'checked' : ''} ${disableInput || (isMonthInactive ? 'disabled' : '')} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial && !isMonthInactive ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
+                <input type="number" value="${suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !isMonthInactive ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (isMonthInactive ? 'disabled readonly' : '')} title="${isBrunoAgreed && !isPaid ? 'Acordo com a Diretoria: R$ 110,00 até 15/11/2026' : (isPartialOct ? `Mensalidade: R$ ${suggestedFee.toFixed(2)} - Pago: R$ ${paidAmount.toFixed(2)} = Resta R$ ${(suggestedFee - paidAmount).toFixed(2)} + R$ ${interest.toFixed(2)} juros` : (!isPaid && !isMonthInactive ? `Base: R$ ${suggestedFee.toFixed(2)} + Juros: R$ ${interest.toFixed(2)} = R$ ${(suggestedFee + interest).toFixed(2)}` : ''))}" class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
-              <span class="text-[8px] font-bold ${isPaid ? 'text-sky-700' : (now > dueDate ? 'text-rose-600' : 'text-amber-700')}">${statusTagText}</span>
+              <span class="text-[8px] font-bold ${isBrunoAgreed && !isPaid ? 'text-emerald-700' : (isPaid && !isPartialOct ? 'text-sky-700' : (isCellOverdue ? 'text-rose-600' : 'text-amber-700'))}">${statusTagText}</span>
             </div>`;
         });
 
