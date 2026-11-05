@@ -878,6 +878,117 @@
     window.alwaysUpToDateMap = {};
     window.absenceFines = {};
 
+    // --- TABELA COMPLETA DE PAGAMENTOS MENSAIS IMPORTADA (JAN A NOV) ---
+    const importedFullPaymentsMap = {
+      "ADALBERTO": { jan: 111, fev: 122, mar: 110, abr: 111, mai: 111, jun: 131, jul: 133, ago: 130, set: 110, out: 125 },
+      "ALEXANDRE ALEIXO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
+      "ALEXANDRE BOECHAT": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110 },
+      "ANDINHO": { jan: 110, fev: 115, mar: 134, abr: 139, mai: 135, jun: 132, jul: 110, ago: 110, set: 111, out: 123 },
+      "ARTHUR": { jan: 112, fev: 110, mar: 124, abr: 121, mai: 125, jun: 121, jul: 138, ago: 125, set: 139, out: 110 },
+      "BRASIL": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "BRAULINHO": { jan: 131, fev: 89, mar: 145, abr: 133, mai: 110, jun: 110, jul: 110, ago: 80 },
+      "BRUNO MONTEIRO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110 },
+      "BRUNO ALVES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "BRUNO": { jan: 111, fev: 92, mar: 80, abr: 70, mai: 80, jun: 70, jul: 80, ago: 80, set: 80, out: 90 },
+      "CARLINHOS": { jan: 90, fev: 119, mar: 110, abr: 110, mai: 130, jun: 130, jul: 133, ago: 110, set: 110, out: 110, nov: 110 },
+      "CASCOLA": { jan: 95, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
+      "CELINHO": { jan: 113, fev: 103, mar: 112, abr: 113, mai: 111, jun: 112, jul: 110, ago: 110, set: 110 },
+      "CHATUBA": { jan: 110, fev: 122, mar: 110, abr: 110, mai: 141, jun: 140, jul: 133, ago: 123 },
+      "CLÁUDIO": { jan: 110, fev: 110, mar: 110, abr: 120, mai: 123, jun: 110, jul: 142, ago: 110, set: 110, out: 110 },
+      "COPINHO": { jan: 112, fev: 130, mar: 110, abr: 150, mai: 150, jun: 150, jul: 140, ago: 130 },
+      "CRIS": { jan: 124, fev: 122, mar: 115, abr: 154, mai: 134, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "DAVI": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "DEIVID": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110 },
+      "DIBOI": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 100, ago: 100, set: 100, out: 90, nov: 90 },
+      "DIDI": { jan: 111, fev: 110, mar: 114, abr: 127, mai: 114, jun: 110, jul: 116, ago: 115, set: 119, out: 122 },
+      "DIEGO": { jan: 114, fev: 124, mar: 116, abr: 130, mai: 130, jun: 135, jul: 155, ago: 130, set: 110, out: 40 },
+      "EDMAR": { jan: 113, fev: 122, mar: 140, abr: 133, mai: 157, jun: 126, jul: 169, ago: 138, set: 110 },
+      "MONTANHA": { jan: 110, fev: 91, mar: 113, abr: 115, mai: 100, jun: 80, jul: 80, ago: 100, set: 100, out: 80 },
+      "FABIANO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90 },
+      "FEIJÃO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 123, set: 110, out: 110 },
+      "FELIPE MACACO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "RANIERI": { jan: 121, fev: 122, mar: 115, abr: 110, mai: 123, jun: 114, jul: 114, ago: 131, set: 110, out: 110 },
+      "JOSÉ AMÉRICO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
+      "JOSÉ ANTÔNIO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90 },
+      "JONILSON": { jan: 110, fev: 110, mar: 128, abr: 130, mai: 110, jun: 114, jul: 110, ago: 124, set: 110, out: 110 },
+      "JUNINHO": { jan: 110, fev: 117, mar: 124, abr: 113, mai: 125, jun: 114, jul: 131, ago: 139, set: 110 },
+      "JÚLIO": { jan: 118, fev: 133, mar: 137, abr: 135, mai: 135, jun: 110, jul: 140, ago: 125, set: 110, out: 36 },
+      "LACRAIA": { jan: 100 },
+      "LAMIADO": { jan: 105, fev: 100, mar: 110, abr: 100, mai: 70, jun: 90, jul: 90, ago: 90 },
+      "LUAN": { jan: 122, fev: 122, mar: 112, abr: 110, mai: 111, jun: 111, jul: 110, ago: 116, set: 107, out: 125 },
+      "LUIZ FERNANDO": { jan: 111, fev: 90, mar: 93, abr: 82, mai: 100, jun: 100, jul: 79, ago: 100, set: 102, out: 105 },
+      "LUCAS LOPES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 114, set: 110, out: 110 },
+      "MANINHO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
+      "MARCÃO": { jan: 110, fev: 110, mar: 114, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110 },
+      "ALBINOS": { jan: 112, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 118, ago: 118, set: 116, out: 110 },
+      "MATEUS MARTINS": { jan: 111, fev: 105, mar: 133, abr: 140, mai: 110, jun: 110, jul: 110, ago: 110, set: 110 },
+      "ONOFRE": { jan: 126, fev: 121, mar: 117, abr: 120, mai: 125, jun: 122, jul: 110, ago: 110 },
+      "NANDI": { jan: 98, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 100 },
+      "PABLO PADILHA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 110 },
+      "PABLO PICANÇO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "PEDRO": { jan: 113, fev: 125, mar: 120, abr: 138, mai: 124, jun: 134, jul: 127, ago: 124 },
+      "BRITO": { jan: 115, fev: 105, mar: 125, abr: 110, mai: 110, jun: 115, jul: 142, ago: 110, set: 110, out: 110 },
+      "CORUJA": { jan: 110, fev: 114, mar: 120, abr: 110, mai: 110, jun: 134, jul: 110, ago: 110, set: 110, out: 125, nov: 110 },
+      "TODINHO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 125 },
+      "RICARDO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110 },
+      "SANDRO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90 },
+      "SAPÃO": { jan: 123, fev: 125, mar: 121, abr: 110, mai: 135, jun: 132, jul: 140, ago: 139, set: 130, out: 125 },
+      "SILZIMAR": { jan: 111, fev: 109, mar: 111, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 90 },
+      "TIAGO CONECTA": { jan: 112, fev: 110, mar: 115, abr: 127, mai: 123, jun: 110, jul: 133, ago: 138, set: 110 },
+      "TIAGO BOQUETE": { jan: 110, fev: 110, mar: 100, abr: 110, mai: 110, jun: 110, jul: 130, ago: 110, set: 110, out: 110 },
+      "TIAGO SERRA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110 },
+      "WALLACE": { jan: 116, fev: 130, mar: 122, abr: 138, mai: 134, jun: 132, jul: 139, ago: 142, set: 126, out: 130 },
+      "ZIEL": { jan: 112, fev: 125, mar: 132, abr: 125, mai: 110, jun: 127, jul: 110, ago: 125, set: 110, out: 110, nov: 80 }
+    };
+
+    function normalizeName(str) {
+      return (str || '')
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    window.applyAllSpreadsheetPayments = function() {
+      if (!window.athletes || window.athletes.length === 0) return 0;
+      let appliedCount = 0;
+      if (!window.financialPayments || typeof window.financialPayments !== 'object') {
+        window.financialPayments = {};
+      }
+
+      const normalizedMap = {};
+      Object.keys(importedFullPaymentsMap).forEach(k => {
+        normalizedMap[normalizeName(k)] = importedFullPaymentsMap[k];
+      });
+
+      window.athletes.forEach(athlete => {
+        const normAthlete = normalizeName(athlete.name);
+        if (normalizedMap[normAthlete]) {
+          const athleteMonthsData = normalizedMap[normAthlete];
+          if (!window.financialPayments[athlete.id]) {
+            window.financialPayments[athlete.id] = {};
+          }
+
+          Object.keys(athleteMonthsData).forEach(mKey => {
+            const val = parseFloat(athleteMonthsData[mKey]);
+            if (!isNaN(val) && val > 0) {
+              const currentPaid = window.financialPayments[athlete.id][mKey]?.paid;
+              const currentAmt = window.financialPayments[athlete.id][mKey]?.amount;
+              if (!currentPaid || currentAmt !== val) {
+                window.financialPayments[athlete.id][mKey] = {
+                  paid: true,
+                  amount: val
+                };
+                appliedCount++;
+              }
+            }
+          });
+        }
+      });
+
+      return appliedCount;
+    };
+
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
     const finEditorNames = ['PABLO PADILHA', 'MARCÃO', 'MARCAO'];
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
@@ -1322,6 +1433,11 @@
         if (isFirstSync) {
           window.currentDate = getSmartDefaultDate();
           isFirstSync = false;
+          // Aplicação automática de todos os pagamentos da planilha (jan a nov)
+          const updated = window.applyAllSpreadsheetPayments();
+          if (updated > 0) {
+            window.saveData();
+          }
           setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
         }
 
@@ -2314,44 +2430,72 @@
 
           const isSpecialNoInterest = isSpecialInterestFreeMonth(athleteName, mKey);
 
+          // Verifica se o mês foi expressamente inativado (marcado com 'x' na planilha)
+          const isMonthInactive = importedFullPaymentsMap[normalizeName(athleteName)]?.[mKey] === 'x';
+
           let interest = 0;
-          if (isSpecialNoInterest) {
-            interest = 0;
-            const remainingDue = Math.max(0, suggestedFee - paidAmount);
-            if (!athlete.isSuspended && remainingDue > 0) {
-              athletePendingInstallmentsAmount += remainingDue;
-              athleteTotalDueUntilNov += remainingDue;
-              if (now > dueDate) {
-                athleteStrictOverdue += remainingDue;
+          if (!isMonthInactive && !athlete.isSuspended) {
+            if (isSpecialNoInterest) {
+              interest = 0;
+              const remainingDue = Math.max(0, suggestedFee - paidAmount);
+              if (remainingDue > 0) {
+                athletePendingInstallmentsAmount += remainingDue;
+                athleteTotalDueUntilNov += remainingDue;
+                if (now > dueDate) {
+                  athleteStrictOverdue += remainingDue;
+                }
               }
-            }
-          } else {
-            if (!isPaid && now >= firstDayAfterDue) {
-              const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
-              interest = Math.max(0, daysLate) * 1.00;
-            }
-            if (!athlete.isSuspended) {
-              athleteTotalInterest += interest;
+            } else {
               if (!isPaid) {
                 athletePendingInstallmentsAmount += suggestedFee;
-                athleteTotalDueUntilNov += (suggestedFee + interest);
-                if (now > dueDate) {
+                if (now >= firstDayAfterDue) {
+                  // Vencido: aplica juros diários e soma no Total Em Atraso
+                  const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+                  interest = Math.max(0, daysLate) * 1.00;
+                  athleteTotalInterest += interest;
                   athleteStrictOverdue += (suggestedFee + interest);
+                  athleteTotalDueUntilNov += (suggestedFee + interest);
+                } else {
+                  // Em aberto (a vencer até o dia 15): conta como débito a receber SEM juros e NÃO conta em atraso
+                  athleteTotalDueUntilNov += suggestedFee;
+                }
+              } else if (paidAmount < suggestedFee) {
+                // Pagamento parcial: diferença residual
+                const partialDiff = suggestedFee - paidAmount;
+                athletePendingInstallmentsAmount += partialDiff;
+                athleteTotalDueUntilNov += partialDiff;
+                if (now > dueDate) {
+                  athleteStrictOverdue += partialDiff;
                 }
               }
             }
           }
 
-          let cellColorClass = isPaid ? "bg-sky-50 text-sky-800 border-sky-300" : (now > dueDate ? "bg-rose-50 text-rose-800 border-rose-300" : "bg-slate-50 text-slate-500 border-slate-200");
+          let cellColorClass = isMonthInactive 
+            ? "bg-slate-200 text-slate-400 border-slate-300"
+            : (isPaid 
+                ? "bg-sky-50 text-sky-800 border-sky-300" 
+                : (now > dueDate 
+                    ? "bg-rose-50 text-rose-800 border-rose-300" 
+                    : "bg-amber-50/70 text-amber-800 border-amber-300")); // Em aberto até o vencimento
+
+          let statusTagText = isMonthInactive
+            ? "Inativo"
+            : (isPaid
+                ? (paidAmount < suggestedFee ? `Parcial: R$ ${paidAmount.toFixed(0)}` : "Pago")
+                : (now > dueDate ? "Vencido" : "A Vencer (Dia 15)"));
 
           monthsGridHtml += `
             <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative">
-              <span class="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">${mKey} ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-600 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}</span>
+              <span class="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                ${mKey} 
+                ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-600 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}
+              </span>
               <div class="flex items-center gap-1.5 justify-center">
-                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${isPaid ? paidAmount : suggestedFee}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput || (isMonthInactive ? 'disabled' : '')} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial && !isMonthInactive ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
+                <input type="number" value="${isPaid ? paidAmount : (isMonthInactive ? 0 : suggestedFee)}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !isMonthInactive ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (isMonthInactive ? 'disabled readonly' : '')} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
-              ${isSpecialNoInterest && paidAmount < suggestedFee ? `<span class="text-[8px] text-amber-600 font-bold">Resta: R$ ${(suggestedFee - paidAmount).toFixed(2)}</span>` : ''}
+              <span class="text-[8px] font-bold ${isPaid ? 'text-sky-700' : (now > dueDate ? 'text-rose-600' : 'text-amber-700')}">${statusTagText}</span>
             </div>`;
         });
 
