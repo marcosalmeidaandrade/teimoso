@@ -16,9 +16,6 @@
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="icon" type="image/png" href="logo.png">
 
-  <!-- Web App Manifest (Data URI) -->
-  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Teimoso%20F.C.C.%22%2C%22short_name%22%3A%22TeimosoFCC%22%2C%22description%22%3A%22Gest%C3%A3o%20Inteligente%20de%20Peladas%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%2310b981%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%2C%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
-
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome CDN -->
@@ -92,7 +89,7 @@
     </div>
   </div>
 
-  <!-- ANIMATED JUSTIFICATION CONFIRMATION OVERLAY (AVISO PRESIDENCIAL) -->
+  <!-- ANIMATED JUSTIFICATION CONFIRMATION OVERLAY -->
   <div id="animatedJustifyOverlay" class="fixed inset-0 z-[200] pointer-events-none hidden flex-col items-center justify-center bg-slate-900/85 backdrop-blur-md transition-all duration-500 opacity-0">
     <div id="animatedJustifyContent" class="transform scale-0 transition-transform duration-500 ease-out flex flex-col items-center text-center p-7 max-w-sm bg-white rounded-3xl shadow-2xl border border-amber-200">
       <div class="relative mb-3">
@@ -370,14 +367,14 @@
         </div>
       </section>
 
-      <!-- ================= NOVA TAB: ANIVERSARIANTES (COM DASHBOARD DOS 12 MESES) ================= -->
+      <!-- ================= TAB: ANIVERSARIANTES ================= -->
       <section id="tab-birthdays" class="hidden space-y-6">
         <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
               <i class="fa-solid fa-cake-candles text-amber-500"></i> Calendário Oficial de Aniversariantes
             </h3>
-            <p class="text-xs text-slate-500 mt-1">Clique nos meses abaixo para filtrar os aniversariantes em ordem alfabética. O envio de parabéns fica disponível para todos no dia exato do aniversário.</p>
+            <p class="text-xs text-slate-500 mt-1">Lista ordenada cronologicamente por proximidade da data atual. O <strong>próximo aniversariante permanece sempre no topo</strong>.</p>
           </div>
           <div class="flex items-center gap-3 w-full md:w-auto justify-end">
             <div class="text-xs font-bold text-slate-700 bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
@@ -394,7 +391,7 @@
             </span>
             <div id="birthdayFilterStatus" class="hidden items-center gap-2">
               <span class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-xl">
-                Filtrado por: <strong id="selectedMonthName"></strong> (Ordem Alfabética)
+                Filtrado por: <strong id="selectedMonthName"></strong> (Cronológico)
               </span>
               <button onclick="toggleBirthdayMonthFilter(null)" class="text-[11px] font-bold text-rose-600 hover:text-rose-700 px-2 py-1 rounded-lg bg-rose-50 border border-rose-200">
                 Limpar Seleção
@@ -406,11 +403,14 @@
           </div>
         </div>
 
+        <!-- BANNER DE DESTAQUE: PRÓXIMO ANIVERSARIANTE NO TOPO -->
+        <div id="nextCelebrantBannerContainer"></div>
+
         <!-- TABELA DE ANIVERSARIANTES -->
         <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
           <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/60">
             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 w-full sm:w-auto">
-              <i class="fa-solid fa-calendar-days text-amber-600"></i> <span id="birthdayTableHeading">Lista Completa de Aniversariantes (Janeiro a Dezembro)</span>
+              <i class="fa-solid fa-calendar-days text-amber-600"></i> <span id="birthdayTableHeading">Ordem Cronológica de Aniversários</span>
             </h3>
             <div class="relative w-full sm:w-56 shrink-0">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -426,7 +426,7 @@
                 <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                   <th class="py-3 px-4">Atleta / Info</th>
                   <th class="py-3 px-4 text-center">Data de Aniversário</th>
-                  <th class="py-3 px-4 text-right">Parabenizar</th>
+                  <th class="py-3 px-4 text-right">Parabenizar (No Dia)</th>
                 </tr>
               </thead>
               <tbody id="birthdaysTableBody" class="divide-y divide-slate-100 text-xs">
@@ -593,13 +593,8 @@
         <p>
           <strong>📥 Quando fazer Backup:</strong>
           <br>1. Semanalmente após os fechamentos das peladas.
-          <br>2. Sempre após o departamento financeiro (Pablo ou Marcão) realizar baixas em massa de mensalidades.
+          <br>2. Sempre após o departamento financeiro realizar baixas de mensalidades.
           <br>3. Antes de adicionar, excluir ou alterar cadastros de atletas.
-        </p>
-        <p>
-          <strong>📤 Quando e Como Restaurar:</strong>
-          <br>1. Utilize a restauração estritamente em caso de exclusão acidental ou preenchimento incorreto em massa.
-          <br>2. Clique em <em>Selecionar Arquivo</em>, escolha o arquivo <code>.json</code> salvo anteriormente e confirme. O sistema enviará imediatamente todos os dados recuperados para o banco de dados oficial do Google Firestore.
         </p>
       </div>
 
@@ -609,7 +604,7 @@
             <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <i class="fa-solid fa-cloud-arrow-down text-emerald-600"></i> Exportar Arquivo de Backup (.json)
             </h4>
-            <p class="text-[10px] text-slate-500 mt-0.5">Gera e baixa um arquivo completo com todos os 59 atletas, presenças, baixas de mensalidades e multas.</p>
+            <p class="text-[10px] text-slate-500 mt-0.5">Gera e baixa um arquivo completo com todos os dados do clube.</p>
           </div>
           <button onclick="downloadBackupJSON()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 shrink-0">
             <i class="fa-solid fa-download"></i> Baixar Backup
@@ -621,7 +616,7 @@
             <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <i class="fa-solid fa-cloud-arrow-up text-amber-600"></i> Restaurar Dados a Partir de Arquivo
             </h4>
-            <p class="text-[10px] text-slate-500 mt-0.5">Substitui a base atual na nuvem Firestore pelas informações do arquivo selecionado.</p>
+            <p class="text-[10px] text-slate-500 mt-0.5">Substitui a base atual na nuvem Firestore pelas informações do arquivo.</p>
           </div>
           <label class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer shrink-0">
             <i class="fa-solid fa-upload"></i> Selecionar Arquivo
@@ -636,7 +631,7 @@
     </div>
   </div>
 
-  <!-- ACTIVITY LOG MODAL (90 DIAS) -->
+  <!-- ACTIVITY LOG MODAL -->
   <div id="activityLogModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
@@ -667,7 +662,7 @@
     </div>
   </div>
 
-  <!-- NEW/EDIT ATHLETE MODAL (COM CAMPOS DE ANIVERSÁRIO) -->
+  <!-- ATHLETE MODAL -->
   <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between">
@@ -687,7 +682,6 @@
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">URL da Foto (Opcional):</label>
           <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
-          <p class="text-[9px] text-slate-500 mt-1">Cole o link da foto de perfil da web ou do WhatsApp.</p>
         </div>
 
         <!-- CAMPOS DE DIA E MÊS DE ANIVERSÁRIO -->
@@ -751,7 +745,7 @@
         </div>
         <div class="flex items-center gap-2 pt-2">
           <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-50 border-slate-300 text-emerald-600 focus:ring-0">
-          <label for="athleteSuspendedCheckbox" class="text-xs font-bold text-rose-600">SUSPENSO / SAIU (Exibe aviso de suspensão sem ações de jogo)</label>
+          <label for="athleteSuspendedCheckbox" class="text-xs font-bold text-rose-600">SUSPENSO / SAIU (Exibe aviso de suspensão)</label>
         </div>
       </div>
       <div class="flex items-center gap-2 pt-2">
@@ -774,7 +768,7 @@
       </div>
       <div>
         <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">Motivo da Ausência:</label>
-        <textarea id="justifyReasonInput" rows="3" placeholder="Informe obrigatoriamente o motivo (Ex: Viagem, trabalho, lesão)..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white"></textarea>
+        <textarea id="justifyReasonInput" rows="3" placeholder="Informe obrigatoriamente o motivo..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white"></textarea>
       </div>
       <div class="flex items-center gap-2 pt-2">
         <button onclick="closeJustifyModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
@@ -822,12 +816,9 @@
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <p class="text-xs text-slate-500">
-        Ajuste o horário de cada pelada diretamente no campo abaixo ou remova datas que não serão utilizadas:
-      </p>
       <div id="manageDatesList" class="divide-y divide-slate-100 overflow-y-auto flex-grow space-y-2 pr-1"></div>
       <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-        <span class="text-[10px] text-slate-500">Alterações de horário são salvas automaticamente na nuvem.</span>
+        <span class="text-[10px] text-slate-500">Alterações salvas automaticamente na nuvem.</span>
         <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
@@ -846,7 +837,7 @@
       </div>
 
       <p class="text-xs text-slate-500">
-        Pelada do dia <span id="massModalDate" class="font-bold text-emerald-700"></span>. Apenas atletas ativos participam do disparo:
+        Pelada do dia <span id="massModalDate" class="font-bold text-emerald-700"></span>:
       </p>
 
       <div class="grid grid-cols-3 gap-2">
@@ -862,20 +853,19 @@
       </div>
 
       <div id="queueStatusHeader" class="hidden items-center justify-between bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 text-[11px] font-bold">
-        <span class="text-slate-600">Progresso da Fila: <strong id="queueProgressText" class="text-emerald-700">0/0</strong></span>
+        <span class="text-slate-600">Progresso: <strong id="queueProgressText" class="text-emerald-700">0/0</strong></span>
         <button onclick="sendNextInQueue()" id="btnSendNextQueue" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-paper-plane"></i> Enviar Próximo da Fila
+          <i class="fa-solid fa-paper-plane"></i> Enviar Próximo
         </button>
       </div>
 
       <div id="whatsappQueueContainer" class="divide-y divide-slate-100 overflow-y-auto flex-grow pr-1 space-y-1.5 min-h-[180px] bg-slate-50 rounded-2xl p-3 border border-slate-200">
         <div class="text-center text-slate-400 py-12 text-xs font-bold">
-          Clique em uma das opções acima para gerar a fila de espera.
+          Selecione uma opção para carregar a fila.
         </div>
       </div>
 
       <div class="pt-2 flex items-center justify-between border-t border-slate-200">
-        <span class="text-[10px] text-slate-500">Cada clique abre o WhatsApp individual sem bloqueio.</span>
         <button onclick="closeWhatsappMassModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
       </div>
     </div>
@@ -895,7 +885,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT APPLICATION CORE (NUVEM PURA COM PERSISTÊNCIA FIRESTORE) -->
+  <!-- JAVASCRIPT APPLICATION CORE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -924,7 +914,6 @@
       localStorage.removeItem('teimoso_datesList');
     } catch (e) {}
 
-    // --- SISTEMA DE FEEDBACK SONORO (WEB AUDIO) ---
     let audioCtx = null;
     let soundEnabled = true;
 
@@ -1004,7 +993,6 @@
       }
     }, true);
 
-    // --- MONITOR DE INATIVIDADE (3 MINUTOS) ---
     let inactivityTimer = null;
     const INACTIVITY_LIMIT_MS = 3 * 60 * 1000;
 
@@ -1038,15 +1026,15 @@
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
 
-    // FILTROS DE VISUALIZAÇÃO: Exclusivos do usuário atual na sessão
     let activeStatusFilter = null;
     let activeFinancialFilter = null;
-    window.selectedBirthdayMonth = null;
-
     window.expandedFinCards = new Set();
     window.whatsappQueueList = [];
     window.whatsappSentIds = new Set();
     window.activityLogs = [];
+
+    // Estado do filtro da aba Aniversariantes
+    window.selectedBirthdayMonth = null;
 
     window.datesList = ["2026-11-01", "2026-11-03"];
     window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00" };
@@ -1066,8 +1054,8 @@
       const searchInput = document.getElementById('searchAthleteInput');
       if (searchInput) searchInput.value = '';
 
-      const searchBirthday = document.getElementById('searchBirthdayInput');
-      if (searchBirthday) searchBirthday.value = '';
+      const searchBday = document.getElementById('searchBirthdayInput');
+      if (searchBday) searchBday.value = '';
 
       const filterBadge = document.getElementById('activeFilterBadge');
       if (filterBadge) filterBadge.classList.add('hidden');
@@ -1092,158 +1080,10 @@
       if (logFilter) logFilter.value = '';
     };
 
-    const importedFullPaymentsMap = {
-      "ADALBERTO": { jan: 111, fev: 122, mar: 110, abr: 111, mai: 111, jun: 131, jul: 133, ago: 130, set: 110, out: 125, nov: 0 },
-      "ALEXANDRE ALEIXO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "ALEXANDRE BOECHAT": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110, nov: 0 },
-      "ANDINHO": { jan: 110, fev: 115, mar: 134, abr: 139, mai: 135, jun: 132, jul: 110, ago: 110, set: 111, out: 123, nov: 0 },
-      "ARTHUR": { jan: 112, fev: 110, mar: 124, abr: 121, mai: 125, jun: 121, jul: 138, ago: 125, set: 139, out: 110, nov: 0 },
-      "BRASIL": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "BRAULINHO": { jan: 131, fev: 89, mar: 145, abr: 133, mai: 110, jun: 110, jul: 110, ago: 80, set: 0, out: 0, nov: 0 },
-      "BRUNO MONTEIRO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 0, out: 0, nov: 0 },
-      "BRUNO ALVES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "BRUNO": { jan: 111, fev: 92, mar: 80, abr: 70, mai: 80, jun: 70, jul: 80, ago: 80, set: 80, out: 90, nov: 0 },
-      "CARLINHOS": { jan: 90, fev: 119, mar: 110, abr: 110, mai: 130, jun: 130, jul: 133, ago: 110, set: 110, out: 110, nov: 110 },
-      "CASCOLA": { jan: 95, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "CELINHO": { jan: 113, fev: 103, mar: 112, abr: 113, mai: 111, jun: 112, jul: 110, ago: 110, set: 110, out: 0, nov: 0 },
-      "CHATUBA": { jan: 110, fev: 122, mar: 110, abr: 110, mai: 141, jun: 140, jul: 133, ago: 123, set: 0, out: 0, nov: 0 },
-      "CLÁUDIO": { jan: 110, fev: 110, mar: 110, abr: 120, mai: 123, jun: 110, jul: 142, ago: 110, set: 110, out: 110, nov: 0 },
-      "COPINHO": { jan: 112, fev: 130, mar: 110, abr: 150, mai: 150, jun: 150, jul: 140, ago: 130, set: 0, out: 0, nov: 0 },
-      "CRIS": { jan: 124, fev: 122, mar: 115, abr: 154, mai: 134, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "DAVI": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "DEIVID": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 111, set: 110, out: 110, nov: 0 },
-      "DIBOI": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 100, ago: 100, set: 100, out: 90, nov: 90 },
-      "DIDI": { jan: 111, fev: 110, mar: 114, abr: 127, mai: 114, jun: 110, jul: 116, ago: 115, set: 119, out: 122, nov: 0 },
-      "DIEGO": { jan: 114, fev: 124, mar: 116, abr: 130, mai: 130, jun: 135, jul: 155, ago: 130, set: 110, out: 40, nov: 0 },
-      "EDMAR": { jan: 113, fev: 122, mar: 140, abr: 133, mai: 157, jun: 126, jul: 169, ago: 138, set: 110, out: 0, nov: 0 },
-      "MONTANHA": { jan: 110, fev: 91, mar: 113, abr: 115, mai: 100, jun: 80, jul: 80, ago: 100, set: 100, out: 80, nov: 0 },
-      "FABIANO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 'x', nov: 'x' },
-      "FEIJÃO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 123, set: 110, out: 110, nov: 0 },
-      "FELIPE MACACO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "RANIERI": { jan: 121, fev: 122, mar: 115, abr: 110, mai: 123, jun: 114, jul: 114, ago: 131, set: 110, out: 110, nov: 0 },
-      "JOSÉ AMÉRICO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "JOSÉ ANTÔNIO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 0, nov: 0 },
-      "JONILSON": { jan: 110, fev: 110, mar: 128, abr: 130, mai: 110, jun: 114, jul: 110, ago: 124, set: 110, out: 110, nov: 0 },
-      "JUNINHO": { jan: 110, fev: 117, mar: 124, abr: 113, mai: 125, jun: 114, jul: 131, ago: 139, set: 110, out: 0, nov: 0 },
-      "JÚLIO": { jan: 118, fev: 133, mar: 137, abr: 135, mai: 135, jun: 110, jul: 140, ago: 125, set: 110, out: 36, nov: 0 },
-      "LACRAIA": { jan: 100, fev: 'x', mar: 'x', abr: 'x', mai: 'x', jun: 'x', jul: 'x', ago: 'x', set: 'x', out: 'x', nov: 'x' },
-      "LAMIADO": { jan: 105, fev: 100, mar: 110, abr: 100, mai: 70, jun: 90, jul: 90, ago: 90, set: 0, out: 0, nov: 0 },
-      "LUAN": { jan: 122, fev: 122, mar: 112, abr: 110, mai: 111, jun: 111, jul: 110, ago: 116, set: 107, out: 125, nov: 0 },
-      "LUIZ FERNANDO": { jan: 111, fev: 90, mar: 93, abr: 82, mai: 100, jun: 100, jul: 79, ago: 100, set: 102, out: 105, nov: 0 },
-      "LUCAS LOPES": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 114, set: 110, out: 110, nov: 0 },
-      "MANINHO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
-      "MARCÃO": { jan: 110, fev: 110, mar: 114, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 0, out: 0, nov: 0 },
-      "ALBINOS": { jan: 112, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 118, ago: 118, set: 116, out: 110, nov: 0 },
-      "MATEUS MARTINS": { jan: 111, fev: 105, mar: 133, abr: 140, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 0, nov: 0 },
-      "ONOFRE": { jan: 126, fev: 121, mar: 117, abr: 120, mai: 125, jun: 122, jul: 110, ago: 110, set: 0, out: 0, nov: 0 },
-      "NANDI": { jan: 98, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 100, nov: 0 },
-      "PABLO PADILHA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 110 },
-      "PABLO PICANÇO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "PEDRO": { jan: 113, fev: 125, mar: 120, abr: 138, mai: 124, jun: 134, jul: 127, ago: 124, set: 'x', out: 'x', nov: 'x' },
-      "BRITO": { jan: 115, fev: 105, mar: 125, abr: 110, mai: 110, jun: 115, jul: 142, ago: 110, set: 110, out: 110, nov: 0 },
-      "CORUJA": { jan: 110, fev: 114, mar: 120, abr: 110, mai: 110, jun: 134, jul: 110, ago: 110, set: 110, out: 125, nov: 110 },
-      "TODINHO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 125, nov: 0 },
-      "RICARDO": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 'x', out: 'x', nov: 'x' },
-      "SANDRO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 0 },
-      "SAPÃO": { jan: 123, fev: 125, mar: 121, abr: 110, mai: 135, jun: 132, jul: 140, ago: 139, set: 130, out: 125, nov: 0 },
-      "SILZIMAR": { jan: 111, fev: 109, mar: 111, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 90 },
-      "TIAGO CONECTA": { jan: 112, fev: 110, mar: 115, abr: 127, mai: 123, jun: 110, jul: 133, ago: 138, set: 110, out: 0, nov: 0 },
-      "TIAGO BOQUETE": { jan: 110, fev: 110, mar: 100, abr: 110, mai: 110, jun: 110, jul: 130, ago: 110, set: 110, out: 110, nov: 0 },
-      "TIAGO SERRA": { jan: 110, fev: 110, mar: 110, abr: 110, mai: 110, jun: 110, jul: 110, ago: 110, set: 110, out: 110, nov: 0 },
-      "WALLACE": { jan: 116, fev: 130, mar: 122, abr: 138, mai: 134, jun: 132, jul: 139, ago: 142, set: 126, out: 130, nov: 0 },
-      "ZIEL": { jan: 112, fev: 125, mar: 132, abr: 125, mai: 110, jun: 127, jul: 110, ago: 125, set: 110, out: 110, nov: 80 }
-    };
-
-    function normalizeName(str) {
-      return (str || '')
-        .toUpperCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
-    }
-
-    function cleanBraulinhoFines() {
-      if (!window.athletes) return;
-      const braulinho = window.athletes.find(a => normalizeName(a.name) === 'BRAULINHO');
-      if (braulinho && window.absenceFines[braulinho.id]) {
-        let list = Array.isArray(window.absenceFines[braulinho.id])
-          ? window.absenceFines[braulinho.id]
-          : Object.values(window.absenceFines[braulinho.id]);
-        
-        const originalLen = list.length;
-        list = list.filter(f => f && f.date !== '2026-11-08');
-        if (list.length !== originalLen) {
-          window.absenceFines[braulinho.id] = list;
-          return true;
-        }
-      }
-      return false;
-    }
-
-    window.applyAllSpreadsheetPayments = function() {
-      if (!window.athletes || window.athletes.length === 0) return 0;
-      let appliedChanges = 0;
-      if (!window.financialPayments || typeof window.financialPayments !== 'object') {
-        window.financialPayments = {};
-      }
-
-      const normalizedMap = {};
-      Object.keys(importedFullPaymentsMap).forEach(k => {
-        normalizedMap[normalizeName(k)] = importedFullPaymentsMap[k];
-      });
-
-      window.athletes.forEach(athlete => {
-        const normAthlete = normalizeName(athlete.name);
-        if (normalizedMap[normAthlete]) {
-          const athleteMonthsData = normalizedMap[normAthlete];
-          if (!window.financialPayments[athlete.id]) {
-            window.financialPayments[athlete.id] = {};
-          }
-
-          Object.keys(athleteMonthsData).forEach(mKey => {
-            const rawVal = athleteMonthsData[mKey];
-            if (rawVal === 'x') {
-              if (window.financialPayments[athlete.id][mKey]) {
-                delete window.financialPayments[athlete.id][mKey];
-                appliedChanges++;
-              }
-              return;
-            }
-
-            const val = parseFloat(rawVal);
-            const currentRecord = window.financialPayments[athlete.id][mKey];
-
-            if (!isNaN(val) && val > 0) {
-              if (!currentRecord || !currentRecord.paid || currentRecord.amount !== val) {
-                window.financialPayments[athlete.id][mKey] = { paid: true, amount: val };
-                appliedChanges++;
-              }
-            } else if (val === 0) {
-              if (currentRecord && (currentRecord.paid || currentRecord.amount > 0)) {
-                window.financialPayments[athlete.id][mKey] = { paid: false, amount: 0 };
-                appliedChanges++;
-              }
-            }
-          });
-        }
-      });
-
-      return appliedChanges;
-    };
-
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
     const finEditorNames = ['PABLO PADILHA', 'MARCÃO', 'MARCAO'];
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
-
-    const monthNamesFull = [
-      "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
-
-    const monthShortNames = [
-      "", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-      "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-    ];
+    const monthNamesBr = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
     const positionBadges = {
       "Goleiro": { tag: "GK", color: "bg-amber-50 text-amber-700 border-amber-300" },
@@ -1267,7 +1107,6 @@
       });
     }
 
-    // --- GRAVAÇÃO DIRETA NA NUVEM FIRESTORE ---
     window.saveData = async function() {
       if (!isCloudReady) return;
       try {
@@ -1700,7 +1539,6 @@
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
-    // --- CONEXÃO TEMPO REAL EXCLUSIVA COM FIRESTORE ---
     window.addEventListener('DOMContentLoaded', () => {
       updateSoundButtonUI();
       buildStarRatingSelector(5);
@@ -1741,11 +1579,6 @@
         if (isFirstSync) {
           window.currentDate = getSmartDefaultDate();
           isFirstSync = false;
-          let changed = cleanBraulinhoFines();
-          const updated = window.applyAllSpreadsheetPayments();
-          if (updated > 0 || changed) {
-            window.saveData();
-          }
           setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
         }
 
@@ -1768,7 +1601,6 @@
       ['presence', 'birthdays', 'draw', 'financial', 'reports'].forEach(t => {
         const el = document.getElementById(`tab-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
-        if (!el || !btn) return;
         if (t === tab) {
           el.classList.remove('hidden');
           btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-sm shrink-0 snap-start";
@@ -1890,7 +1722,6 @@
       return dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase() + timeStr;
     }
 
-    // FILTRO DE CARDS NA ABA PRESENÇA
     window.filterPresenceCards = function(status) {
       if (activeStatusFilter === status) {
         activeStatusFilter = null;
@@ -1920,7 +1751,6 @@
       renderAthletesList();
     };
 
-    // --- REGRAS DE PRESENÇA COM COMPORTAMENTO TOGGLE ---
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended) {
@@ -1956,7 +1786,7 @@
         if (current === 'FALTA') {
           window.absenceFines[athleteId] = window.absenceFines[athleteId].filter(f => f && f.date !== window.currentDate);
         }
-        window.recordUserInteraction(actor, `Voltou status ao início (desmarcou) para ${targetAthlete?.name || 'Atleta'} em ${formatDateDisplay(window.currentDate)}`);
+        window.recordUserInteraction(actor, `Desmarcou status para ${targetAthlete?.name || 'Atleta'} em ${formatDateDisplay(window.currentDate)}`);
       } else {
         if (current === 'FALTA' && newStatus !== 'FALTA') {
           window.absenceFines[athleteId] = window.absenceFines[athleteId].filter(f => f && f.date !== window.currentDate);
@@ -2031,32 +1861,6 @@
       document.getElementById('justifyModal').classList.add('hidden');
     };
 
-    function isSpecialInterestFreeMonth(athleteName, mKey) {
-      if (!athleteName) return false;
-      const upper = athleteName.toUpperCase();
-      if (upper.includes('JÚLIO') || upper.includes('JULIO')) return mKey === 'out';
-      if (upper.includes('SAPÃO') || upper.includes('SAPAO')) return mKey === 'set';
-      if (upper.includes('ONOFRE')) return mKey === 'ago';
-      if (upper.includes('ZIEL')) return mKey === 'nov';
-      return false;
-    }
-
-    function isBrunoMonteiroAgreement(athleteName) {
-      if (!athleteName) return false;
-      return athleteName.toUpperCase().includes('BRUNO MONTEIRO');
-    }
-
-    function isPartialOctoberAthlete(athleteName, mKey) {
-      if (!athleteName || mKey !== 'out') return false;
-      const upper = athleteName.toUpperCase();
-      return upper.includes('DIEGO') || upper.includes('JÚLIO') || upper.includes('JULIO');
-    }
-
-    function isDiegoOctoberNoInterest(athleteName, mKey) {
-      if (!athleteName || mKey !== 'out') return false;
-      return athleteName.toUpperCase().includes('DIEGO');
-    }
-
     function safeNum(val, fallback = 0) {
       if (val === undefined || val === null || val === '') return fallback;
       if (typeof val === 'number') return isNaN(val) ? fallback : val;
@@ -2079,7 +1883,6 @@
       if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
       const now = new Date();
       const athlete = window.athletes.find(a => a.id === athleteId);
-      const athleteName = athlete ? athlete.name : '';
       const payments = window.financialPayments[athleteId] || {};
 
       for (let mIndex = 0; mIndex < months.length; mIndex++) {
@@ -2088,26 +1891,7 @@
         const dueDate = new Date(2026, monthNum - 1, 15);
         const paymentData = payments[mKey];
         const isPaid = paymentData && (paymentData.paid || safeNum(paymentData.amount) > 0);
-        
-        if (isBrunoMonteiroAgreement(athleteName)) {
-          const agreementDueDate = new Date(2026, 10, 15, 23, 59, 59);
-          if (now <= agreementDueDate) continue;
-        }
-
-        if (isPartialOctoberAthlete(athleteName, mKey)) {
-          const suggestedFee = athlete ? safeNum(athlete.monthlyFee, 110) : 110;
-          const paidAmt = paymentData ? safeNum(paymentData.amount, 0) : 0;
-          if (paidAmt < suggestedFee && now > dueDate) return 'overdue';
-          continue;
-        }
-
-        if (isSpecialInterestFreeMonth(athleteName, mKey)) {
-          const suggestedFee = athlete ? safeNum(athlete.monthlyFee, 110) : 110;
-          const paidAmt = paymentData ? safeNum(paymentData.amount, 0) : 0;
-          if (paidAmt < suggestedFee && now > dueDate) return 'overdue';
-        } else {
-          if (!isPaid && now > dueDate) return 'overdue';
-        }
+        if (!isPaid && now > dueDate) return 'overdue';
       }
 
       const rawFines = window.absenceFines[athleteId] || [];
@@ -2183,12 +1967,6 @@
           `;
         }
 
-        let startDateBadge = '';
-        if (athlete.effectiveStartDate) {
-          const [sy, sm, sd] = athlete.effectiveStartDate.split('-');
-          startDateBadge = `<span class="text-[9px] font-bold text-sky-700 bg-sky-50 border border-sky-300 px-1.5 py-0.2 rounded-md" title="Início da contagem de assiduidade">Início: ${sd}/${sm}/${sy}</span>`;
-        }
-
         let birthdayBadge = '';
         if (athlete.birthDay && athlete.birthMonth) {
           const bDay = String(athlete.birthDay).padStart(2, '0');
@@ -2215,7 +1993,7 @@
         if (athlete.isSuspended) {
           actionsHtml = `
             <div class="flex flex-col items-center justify-center py-1">
-              <span class="px-3 py-1.5 rounded-xl text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-300 uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-not-allowed select-none" title="Atleta suspenso da pelada (apenas visualização)">
+              <span class="px-3 py-1.5 rounded-xl text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-300 uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-not-allowed select-none">
                 <i class="fa-solid fa-ban text-xs"></i> Atleta Suspenso
               </span>
             </div>
@@ -2275,7 +2053,6 @@
                   <span class="text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
                   ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
-                  ${startDateBadge}
                   ${birthdayBadge}
                 </div>
                 ${confirmBadgeHtml}
@@ -2293,7 +2070,7 @@
               ${!athlete.isSuspended ? `
                 <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone || ''}', '${athlete.name || ''}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
               ` : `
-                <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-300 flex items-center justify-center text-xs border border-slate-200 cursor-not-allowed" title="Atleta suspenso"><i class="fa-brands fa-whatsapp"></i></span>
+                <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-300 flex items-center justify-center text-xs border border-slate-200 cursor-not-allowed"><i class="fa-brands fa-whatsapp"></i></span>
               `}
               ${window.isAdmin ? `
                 <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
@@ -2313,255 +2090,6 @@
       document.getElementById('statTotal').innerText = countTotal;
     };
 
-    // --- DASHBOARD E RENDERIZAÇÃO DA ABA ANIVERSARIANTES ---
-    window.toggleBirthdayMonthFilter = function(monthNum) {
-      if (window.selectedBirthdayMonth === monthNum || monthNum === null) {
-        window.selectedBirthdayMonth = null;
-      } else {
-        window.selectedBirthdayMonth = monthNum;
-      }
-      renderBirthdaysList();
-    };
-
-    function renderBirthdayDashboard(athletesWithBirthday) {
-      const dashboard = document.getElementById('birthdayMonthsDashboard');
-      const filterStatus = document.getElementById('birthdayFilterStatus');
-      const selectedMonthLabel = document.getElementById('selectedMonthName');
-      const heading = document.getElementById('birthdayTableHeading');
-      if (!dashboard) return;
-
-      const counts = Array(13).fill(0);
-      athletesWithBirthday.forEach(a => {
-        if (a.birthMonth >= 1 && a.birthMonth <= 12) {
-          counts[a.birthMonth]++;
-        }
-      });
-
-      const currentMonth = new Date().getMonth() + 1;
-
-      dashboard.innerHTML = '';
-      for (let m = 1; m <= 12; m++) {
-        const isSelected = (window.selectedBirthdayMonth === m);
-        const isCurrent = (currentMonth === m);
-        const count = counts[m];
-
-        let baseClasses = "flex flex-col items-center justify-center p-2 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-95 shadow-sm";
-        if (isSelected) {
-          baseClasses += " bg-amber-500 text-white border-amber-600 ring-2 ring-amber-400 font-black shadow-md";
-        } else if (count > 0) {
-          baseClasses += isCurrent 
-            ? " bg-amber-50/80 text-amber-900 border-amber-300 hover:bg-amber-100" 
-            : " bg-white text-slate-700 border-slate-200 hover:border-amber-400 hover:bg-amber-50/30";
-        } else {
-          baseClasses += " bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100";
-        }
-
-        dashboard.innerHTML += `
-          <div onclick="toggleBirthdayMonthFilter(${m})" class="${baseClasses}" title="${monthNamesFull[m]}: ${count} aniversariante(s)">
-            <span class="text-[10px] uppercase font-black tracking-wider flex items-center gap-1 ${isSelected ? 'text-white' : (isCurrent ? 'text-amber-700 font-extrabold' : 'text-slate-600')}">
-              ${monthShortNames[m]} ${isCurrent && !isSelected ? '⭐' : ''}
-            </span>
-            <span class="text-base font-black mt-0.5 ${isSelected ? 'text-white' : (count > 0 ? 'text-amber-600' : 'text-slate-400')}">${count}</span>
-            <span class="text-[8px] font-semibold uppercase ${isSelected ? 'text-amber-100' : 'text-slate-400'}">atleta${count === 1 ? '' : 's'}</span>
-          </div>
-        `;
-      }
-
-      if (window.selectedBirthdayMonth) {
-        if (filterStatus) {
-          filterStatus.classList.remove('hidden');
-          filterStatus.classList.add('flex');
-        }
-        if (selectedMonthLabel) selectedMonthLabel.innerText = monthNamesFull[window.selectedBirthdayMonth];
-        if (heading) heading.innerText = `Aniversariantes de ${monthNamesFull[window.selectedBirthdayMonth]} (Ordem Alfabética)`;
-      } else {
-        if (filterStatus) {
-          filterStatus.classList.add('hidden');
-          filterStatus.classList.remove('flex');
-        }
-        if (heading) heading.innerText = "Lista Completa de Aniversariantes (Janeiro a Dezembro)";
-      }
-    }
-
-    window.renderBirthdaysList = function() {
-      const tbody = document.getElementById('birthdaysTableBody');
-      const countBadge = document.getElementById('birthdayCountBadge');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      const searchInput = document.getElementById('searchBirthdayInput');
-      const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
-      const allAthletes = window.athletes || [];
-      const withBirthday = allAthletes.filter(a => a.birthMonth && a.birthDay);
-      if (countBadge) countBadge.innerText = withBirthday.length;
-
-      renderBirthdayDashboard(withBirthday);
-
-      let displayedAthletes = [...allAthletes];
-
-      if (window.selectedBirthdayMonth !== null) {
-        displayedAthletes = displayedAthletes.filter(a => Number(a.birthMonth) === window.selectedBirthdayMonth);
-        displayedAthletes.sort((a, b) => {
-          return (a.name || '').localeCompare(b.name || '');
-        });
-      } else {
-        displayedAthletes.sort((a, b) => {
-          const mA = Number(a.birthMonth) || 99;
-          const mB = Number(b.birthMonth) || 99;
-          if (mA !== mB) return mA - mB;
-
-          const dA = Number(a.birthDay) || 99;
-          const dB = Number(b.birthDay) || 99;
-          if (dA !== dB) return dA - dB;
-
-          return (a.name || '').localeCompare(b.name || '');
-        });
-      }
-
-      if (searchTerm) {
-        displayedAthletes = displayedAthletes.filter(a => (a.name || '').toLowerCase().includes(searchTerm));
-      }
-
-      if (displayedAthletes.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="3" class="py-12 text-center text-slate-400 font-medium">
-              <i class="fa-solid fa-cake-candles text-3xl mb-2 text-slate-300 block"></i>
-              Nenhum aniversariante encontrado para este filtro.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      const now = new Date();
-      const currentDay = now.getDate();
-      const currentMonth = now.getMonth() + 1;
-
-      displayedAthletes.forEach(athlete => {
-        const hasDate = (athlete.birthDay && athlete.birthMonth);
-        const bDay = hasDate ? String(athlete.birthDay).padStart(2, '0') : '--';
-        const bMonth = hasDate ? String(athlete.birthMonth).padStart(2, '0') : '--';
-        const isToday = hasDate && (parseInt(athlete.birthDay) === currentDay && parseInt(athlete.birthMonth) === currentMonth);
-
-        const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
-        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
-
-        let dateDisplayHtml = '';
-        if (hasDate) {
-          const monthText = monthNamesFull[athlete.birthMonth] || '';
-          if (isToday) {
-            dateDisplayHtml = `
-              <div class="flex flex-col items-center justify-center">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse shadow-sm">
-                  <i class="fa-solid fa-cake-candles text-amber-600"></i> ${bDay} de ${monthText}
-                </span>
-                <span class="text-[9px] font-black text-amber-700 mt-1 uppercase tracking-wider">🎉 Níver Hoje! Parabéns! 🎈</span>
-              </div>
-            `;
-          } else {
-            dateDisplayHtml = `
-              <div class="flex flex-col items-center justify-center">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-300 shadow-sm">
-                  <i class="fa-solid fa-calendar-day text-amber-500"></i> ${bDay} de ${monthText}
-                </span>
-                <span class="text-[9px] font-bold text-slate-400 mt-0.5">${bDay}/${bMonth}</span>
-              </div>
-            `;
-          }
-        } else {
-          dateDisplayHtml = `
-            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200">
-              Não cadastrado
-            </span>
-          `;
-        }
-
-        // REGRA DE BOTÃO DO WHATSAPP:
-        // Pode ser acionado por TODOS os integrantes, porém SOMENTE na data efetiva de aniversário (isToday).
-        let whatsappActionHtml = '';
-        if (hasDate && isToday) {
-          if (athlete.phone) {
-            whatsappActionHtml = `
-              <button onclick="sendBirthdayGreeting(${athlete.id})" title="Enviar Parabéns no WhatsApp (Níver Hoje!)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 animate-pulse">
-                <i class="fa-brands fa-whatsapp text-sm"></i>
-                <span>Parabenizar 🎉</span>
-              </button>
-            `;
-          } else {
-            whatsappActionHtml = `<span class="text-[10px] text-slate-400 font-bold px-2 py-1">Sem telefone</span>`;
-          }
-        } else {
-          // Fora da data de aniversário: o botão fica travado/inativo
-          const tipText = hasDate ? `Parabéns disponível apenas em ${bDay}/${bMonth}` : 'Data não informada';
-          whatsappActionHtml = `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 text-[10px] font-bold cursor-not-allowed select-none" title="${tipText}">
-              <i class="fa-solid fa-lock text-[9px] text-slate-400"></i>
-              <span class="hidden sm:inline">Disponível no dia</span>
-            </span>
-          `;
-        }
-
-        const tr = document.createElement('tr');
-        tr.className = isToday ? "bg-amber-50/60 border-l-4 border-amber-500 hover:bg-amber-50 transition-colors" : "hover:bg-slate-50 transition-colors";
-
-        tr.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-800">
-            <div class="flex items-center gap-3">
-              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 hover:border-amber-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
-                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-amber-500/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-amber-700">
-                  <i class="fa-solid fa-magnifying-glass-plus"></i>
-                </div>
-              </div>
-              <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
-                  ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
-                  ${isToday ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-500 text-white uppercase shrink-0 shadow-sm animate-bounce">HOJE!</span>' : ''}
-                </div>
-                <div class="flex items-center gap-2 mt-0.5">
-                  <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
-                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars || 5)}</div>
-                </div>
-              </div>
-            </div>
-          </td>
-          <td class="py-3 px-4 text-center">${dateDisplayHtml}</td>
-          <td class="py-3 px-4 text-right">
-            <div class="flex items-center justify-end gap-2">
-              ${whatsappActionHtml}
-              ${window.isAdmin ? `
-                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar Aniversário" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
-              ` : ''}
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    };
-
-    window.sendBirthdayGreeting = function(athleteId) {
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone cadastrado.");
-
-      // Validação de segurança: confere se a data é realmente hoje
-      const now = new Date();
-      const currentDay = now.getDate();
-      const currentMonth = now.getMonth() + 1;
-      const isToday = (parseInt(athlete.birthDay) === currentDay && parseInt(athlete.birthMonth) === currentMonth);
-
-      if (!isToday && !window.isAdmin) {
-        return window.showToast("O envio de parabéns fica disponível apenas no dia do aniversário do atleta!", "error");
-      }
-
-      const cleanPhone = athlete.phone.replace(/\D/g, '');
-      const msg = `Fala meu craque *${athlete.name}*! ⚽🎂🎉\n\nA família *Teimoso F.C.C.* passa aqui para te desejar um Feliz Aniversário repleto de saúde, paz, muitas vitórias e gols na vida e na nossa pelada! 🏆🍻👏\n\nQue você continue brilhando com a gente dentro e fora de campo! Tamo junto demais! 👊🟢⚪`;
-      window.recordUserInteraction(window.currentUser?.name || 'Visitante', `Enviou mensagem de parabéns para: ${athlete.name}`);
-      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
-    };
-
     window.toggleActualAttendance = function(athleteId, isChecked) {
       if (!window.presences[window.currentDate]) return;
       if (window.presences[window.currentDate][athleteId]) {
@@ -2572,7 +2100,322 @@
       }
     };
 
-    // --- CADASTRO E EDIÇÃO DE ATLETAS COM ANIVERSÁRIO ---
+    // ================= LÓGICA DA ABA ANIVERSARIANTES =================
+    // Helper: calcula a quantidade de dias até o próximo aniversário a partir de hoje
+    function getDaysUntilBirthday(day, month) {
+      if (!day || !month) return 9999;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const curYear = today.getFullYear();
+      let nextBday = new Date(curYear, month - 1, day);
+      nextBday.setHours(0, 0, 0, 0);
+      if (nextBday < today) {
+        nextBday = new Date(curYear + 1, month - 1, day);
+      }
+      const diffTime = nextBday - today;
+      return Math.round(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    window.toggleBirthdayMonthFilter = function(monthNum) {
+      if (window.selectedBirthdayMonth === monthNum) {
+        window.selectedBirthdayMonth = null;
+      } else {
+        window.selectedBirthdayMonth = monthNum;
+      }
+      renderBirthdaysList();
+    };
+
+    window.renderBirthdaysList = function() {
+      const tbody = document.getElementById('birthdaysTableBody');
+      const badgeCount = document.getElementById('birthdayCountBadge');
+      const dashboardContainer = document.getElementById('birthdayMonthsDashboard');
+      const filterStatusBar = document.getElementById('birthdayFilterStatus');
+      const selectedMonthNameEl = document.getElementById('selectedMonthName');
+      const tableHeading = document.getElementById('birthdayTableHeading');
+      const nextCelebrantBanner = document.getElementById('nextCelebrantBannerContainer');
+      const searchInput = document.getElementById('searchBirthdayInput');
+      const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      if (!tbody) return;
+
+      const now = new Date();
+      const currentDay = now.getDate();
+      const currentMonth = now.getMonth() + 1; // 1 a 12
+
+      const athletesWithBday = (window.athletes || []).filter(a => a.birthDay && a.birthMonth);
+      if (badgeCount) badgeCount.innerText = athletesWithBday.length;
+
+      // 1. RENDERIZAR DASHBOARD DOS 12 MESES
+      if (dashboardContainer) {
+        dashboardContainer.innerHTML = '';
+        for (let m = 1; m <= 12; m++) {
+          const countInMonth = athletesWithBday.filter(a => parseInt(a.birthMonth) === m).length;
+          const isSelected = window.selectedBirthdayMonth === m;
+          const isCurrentMonth = currentMonth === m;
+
+          let btnClass = isSelected
+            ? 'bg-amber-500 text-white border-amber-600 shadow-md ring-2 ring-amber-400'
+            : (isCurrentMonth
+                ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100');
+
+          dashboardContainer.innerHTML += `
+            <button onclick="toggleBirthdayMonthFilter(${m})" class="p-2 rounded-2xl border flex flex-col items-center justify-center transition-all ${btnClass}">
+              <span class="text-[10px] font-black uppercase tracking-wider">${monthNamesBr[m - 1].slice(0, 3)} ${isCurrentMonth ? '⭐' : ''}</span>
+              <span class="text-sm font-black mt-0.5">${countInMonth}</span>
+            </button>
+          `;
+        }
+      }
+
+      // Atualizar status do filtro no topo
+      if (filterStatusBar && selectedMonthNameEl) {
+        if (window.selectedBirthdayMonth) {
+          filterStatusBar.classList.remove('hidden');
+          filterStatusBar.classList.add('flex');
+          selectedMonthNameEl.innerText = monthNamesBr[window.selectedBirthdayMonth - 1];
+          if (tableHeading) tableHeading.innerText = `Aniversariantes de ${monthNamesBr[window.selectedBirthdayMonth - 1]} (Cronológico)`;
+        } else {
+          filterStatusBar.classList.add('hidden');
+          filterStatusBar.classList.remove('flex');
+          if (tableHeading) tableHeading.innerText = 'Ordem Cronológica de Aniversários';
+        }
+      }
+
+      // 2. ORDENAÇÃO CIRCULAR POR PROXIMIDADE (O PRÓXIMO FICA NO TOPO)
+      // Se não há filtro de mês: ordena pela proximidade da data atual (dias até o próximo aniversário)
+      // Se há filtro de mês: ordena pelo dia do mês (1 a 31), com dias a partir de hoje tendo prioridade se for o mês corrente
+      const sortedAthletes = [...(window.athletes || [])].sort((a, b) => {
+        const hasBdayA = a.birthDay && a.birthMonth;
+        const hasBdayB = b.birthDay && b.birthMonth;
+        if (!hasBdayA && !hasBdayB) return (a.name || '').localeCompare(b.name || '');
+        if (!hasBdayA) return 1;
+        if (!hasBdayB) return -1;
+
+        if (window.selectedBirthdayMonth) {
+          // Dentro do mês selecionado: ordena estritamente por dia cronológico (1 a 31)
+          const dayA = parseInt(a.birthDay);
+          const dayB = parseInt(b.birthDay);
+          if (dayA !== dayB) return dayA - dayB;
+          return (a.name || '').localeCompare(b.name || '');
+        } else {
+          // Visão geral de entrada: circular cronológico por dias até o próximo aniversário
+          const daysA = getDaysUntilBirthday(a.birthDay, a.birthMonth);
+          const daysB = getDaysUntilBirthday(b.birthDay, b.birthMonth);
+          if (daysA !== daysB) return daysA - daysB;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+      });
+
+      // 3. BANNER DE DESTAQUE: PRÓXIMO ANIVERSARIANTE NO TOPO
+      if (nextCelebrantBanner) {
+        // Encontra o próximo aniversariante no conjunto elegível
+        let nextCandidate = null;
+        const candidates = sortedAthletes.filter(a => a.birthDay && a.birthMonth && !a.isSuspended);
+
+        if (window.selectedBirthdayMonth) {
+          // No mês filtrado: seleciona o que possui dia >= hoje se for o mês atual, ou o menor dia
+          const monthCandidates = candidates.filter(a => parseInt(a.birthMonth) === window.selectedBirthdayMonth);
+          if (window.selectedBirthdayMonth === currentMonth) {
+            nextCandidate = monthCandidates.find(a => parseInt(a.birthDay) >= currentDay) || monthCandidates[0];
+          } else {
+            nextCandidate = monthCandidates[0];
+          }
+        } else {
+          nextCandidate = candidates[0]; // já ordenado pelo menor daysUntilBirthday
+        }
+
+        if (nextCandidate) {
+          const daysLeft = getDaysUntilBirthday(nextCandidate.birthDay, nextCandidate.birthMonth);
+          const isToday = (parseInt(nextCandidate.birthDay) === currentDay && parseInt(nextCandidate.birthMonth) === currentMonth);
+          const avatarUrl = nextCandidate.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(nextCandidate.name || 'TFCC')}&background=fef3c7&color=b45309&bold=true&size=128`;
+          const posInfo = positionBadges[nextCandidate.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
+
+          let daysText = '';
+          if (isToday) {
+            daysText = `<span class="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white animate-pulse shadow-md">🎂 É HOJE! PARABÉNS! 🎉</span>`;
+          } else if (daysLeft === 1) {
+            daysText = `<span class="px-3 py-1 rounded-full text-xs font-black bg-amber-600 text-white shadow-sm">⏳ É AMANHÃ! (Falta 1 dia)</span>`;
+          } else {
+            daysText = `<span class="px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-sm">⏳ Faltam ${daysLeft} dias</span>`;
+          }
+
+          nextCelebrantBanner.innerHTML = `
+            <div class="bg-gradient-to-r from-amber-500/15 via-amber-400/20 to-emerald-500/15 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-sm relative overflow-hidden">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-center sm:text-left">
+                  <div onclick="openFullscreenPhoto('${avatarUrl}', '${(nextCandidate.name || '').replace(/'/g, "\\'")}')" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-amber-400 overflow-hidden shrink-0 shadow-lg cursor-pointer bg-white">
+                    <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                        <i class="fa-solid fa-crown text-amber-600"></i> Próximo Aniversariante
+                      </span>
+                      ${daysText}
+                    </div>
+                    <h4 class="text-base sm:text-lg font-black text-slate-800 mt-1">${nextCandidate.name}</h4>
+                    <p class="text-xs font-bold text-slate-600 flex items-center justify-center sm:justify-start gap-2 mt-0.5">
+                      <span><i class="fa-solid fa-cake-candles text-amber-500"></i> ${String(nextCandidate.birthDay).padStart(2, '0')} de ${monthNamesBr[parseInt(nextCandidate.birthMonth) - 1]}</span>
+                      <span class="text-[9px] font-black px-1.5 py-0.2 rounded border ${posInfo.color}">${posInfo.tag}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="shrink-0 w-full sm:w-auto">
+                  ${isToday ? `
+                    <button onclick="sendBirthdayGreeting(${nextCandidate.id})" class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 animate-bounce">
+                      <i class="fa-brands fa-whatsapp text-base"></i> Enviar Parabéns no Zap! 🎉
+                    </button>
+                  ` : `
+                    <div class="text-center sm:text-right">
+                      <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white/80 border border-slate-200 text-slate-500">
+                        <i class="fa-solid fa-lock text-amber-500"></i> Parabéns liberado no dia
+                      </span>
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          nextCelebrantBanner.innerHTML = '';
+        }
+      }
+
+      // 4. RENDERIZAR TABELA DE ANIVERSARIANTES
+      tbody.innerHTML = '';
+      let renderedCount = 0;
+
+      sortedAthletes.forEach(athlete => {
+        if (window.selectedBirthdayMonth && parseInt(athlete.birthMonth) !== window.selectedBirthdayMonth) return;
+        if (searchTerm && !(athlete.name || '').toLowerCase().includes(searchTerm)) return;
+
+        renderedCount++;
+        const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
+        const avatarUrl = athlete.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
+
+        const bDay = athlete.birthDay ? String(athlete.birthDay).padStart(2, '0') : '--';
+        const bMonthNum = athlete.birthMonth ? parseInt(athlete.birthMonth) : null;
+        const bMonthName = bMonthNum ? monthNamesBr[bMonthNum - 1] : 'Não informado';
+
+        const isToday = (parseInt(athlete.birthDay) === currentDay && parseInt(athlete.birthMonth) === currentMonth);
+        const daysUntil = getDaysUntilBirthday(athlete.birthDay, athlete.birthMonth);
+
+        const tr = document.createElement('tr');
+        tr.className = isToday 
+          ? "bg-amber-50/70 border-l-4 border-amber-500 font-bold transition-colors" 
+          : "hover:bg-slate-50 transition-colors";
+
+        let dateDisplayHtml = '';
+        if (athlete.birthDay && athlete.birthMonth) {
+          if (isToday) {
+            dateDisplayHtml = `
+              <div class="flex flex-col items-center">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse shadow-sm">
+                  <i class="fa-solid fa-cake-candles text-amber-600"></i> ${bDay} de ${bMonthName}
+                </span>
+                <span class="text-[9px] font-black text-rose-600 uppercase mt-0.5 tracking-wider">🎉 Níver Hoje!</span>
+              </div>
+            `;
+          } else {
+            dateDisplayHtml = `
+              <div class="flex flex-col items-center">
+                <span class="font-bold text-slate-800 text-xs">${bDay} de ${bMonthName}</span>
+                <span class="text-[10px] text-slate-400 font-medium">Faltam ${daysUntil} dias</span>
+              </div>
+            `;
+          }
+        } else {
+          dateDisplayHtml = `<span class="text-[10px] text-slate-400 font-medium italic">Data não cadastrada</span>`;
+        }
+
+        let whatsappActionHtml = '';
+        if (athlete.phone && athlete.birthDay && athlete.birthMonth) {
+          if (isToday) {
+            whatsappActionHtml = `
+              <button onclick="sendBirthdayGreeting(${athlete.id})" title="Enviar Parabéns no WhatsApp!" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all text-xs font-black shadow-md shadow-emerald-600/30 flex items-center gap-1.5 ml-auto active:scale-95 animate-pulse">
+                <i class="fa-brands fa-whatsapp text-sm"></i> Parabenizar 🎉
+              </button>
+            `;
+          } else {
+            whatsappActionHtml = `
+              <span title="O botão de parabéns fica disponível exclusivamente no dia do aniversário (${bDay}/${bMonthNum ? String(bMonthNum).padStart(2,'0') : '--'})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed select-none ml-auto">
+                <i class="fa-solid fa-lock text-[9px]"></i> No dia (${bDay}/${bMonthNum ? String(bMonthNum).padStart(2,'0') : '--'})
+              </span>
+            `;
+          }
+        } else {
+          whatsappActionHtml = `<span class="text-[10px] text-slate-400 italic">Sem WhatsApp</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">
+            <div class="flex items-center gap-3">
+              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${isToday ? 'border-amber-500 shadow-md ring-2 ring-amber-300' : 'border-slate-300 hover:border-amber-500'} overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
+                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
+              </div>
+              <div class="flex flex-col gap-0.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
+                  ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
+                  <div class="text-amber-500 text-[10px] tracking-widest">${'★'.repeat(athlete.stars || 5)}</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-4 text-center">${dateDisplayHtml}</td>
+          <td class="py-3 px-4 text-right">${whatsappActionHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (renderedCount === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="py-10 text-center text-xs text-slate-400 font-bold">Nenhum atleta encontrado para esta seleção.</td></tr>`;
+      }
+    };
+
+    // --- MENSAGEM DE PARABÉNS BEM-HUMORADA COM FOTO CADASTRADA ---
+    window.sendBirthdayGreeting = function(athleteId) {
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone cadastrado.");
+
+      const now = new Date();
+      const currentDay = now.getDate();
+      const currentMonth = now.getMonth() + 1;
+
+      // Validação: Somente na data efetiva de aniversário
+      if (parseInt(athlete.birthDay) !== currentDay || parseInt(athlete.birthMonth) !== currentMonth) {
+        return window.showToast("Os parabéns só podem ser enviados no dia exato do aniversário!", "error");
+      }
+
+      const cleanPhone = athlete.phone.replace(/\D/g, '');
+      const senderName = window.currentUser ? window.currentUser.name : 'A Galera do Teimoso F.C.C.';
+
+      // Montagem da foto cadastrada (se houver)
+      let photoSection = '';
+      if (athlete.photoUrl && athlete.photoUrl.startsWith('http')) {
+        photoSection = `📸 *Dá uma olhada no perfil do aniversariante:* \n${athlete.photoUrl}\n\n`;
+      }
+
+      const msg = `🎂⚽ *PARABÉNS, MEU CRAQUE ${athlete.name.toUpperCase()}!* 🎉🍻🥩\n\n` +
+        `Hoje é dia de festa no *Teimoso F.C.C.*! A diretoria e toda a rapaziada passam aqui para te desejar muita saúde, paz, felicidades e que a sua perna continue calibrada (ou pelo menos acertando o gol de vez em quando! 😂🏃‍♂️💨)!\n\n` +
+        `Lembrando das regras sagradas do clube para o aniversariante do dia:\n` +
+        `1️⃣ Hoje a cerveja e a carne são por sua conta na resenha! 🥩🍺\n` +
+        `2️⃣ Se errar gol sem goleiro no próximo jogo, a multa dobra! ⚽🥅\n` +
+        `3️⃣ Tá liberado correr menos no segundo tempo! 😅\n\n` +
+        photoSection +
+        `Tamo junto demais, meu camisa 10! Um forte abraço de toda a família *Teimoso F.C.C.*! 🏆🟢⚪\n\n` +
+        `_Mensagem enviada com carinho por: ${senderName}_`;
+
+      window.recordUserInteraction(window.currentUser?.name || 'Atleta', `Enviou parabéns bem-humorado no WhatsApp para ${athlete.name}`);
+      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    // --- CADASTRO E EDIÇÃO DE ATLETAS ---
     window.openNewAthleteModal = function() {
       document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-600"></i> Cadastrar Novo Atleta`;
       document.getElementById('editAthleteId').value = '';
@@ -2652,7 +2495,7 @@
           athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
         }
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o cadastro do atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
         window.showToast("Atleta atualizado na nuvem!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
@@ -2670,7 +2513,7 @@
           isSuspended: isSuspended, 
           effectiveStartDate: null
         });
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou novo atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
         window.showToast("Atleta cadastrado na nuvem!", "success");
       }
 
@@ -2685,7 +2528,7 @@
     window.confirmDeleteAthlete = function(id) {
       showConfirm("Excluir este atleta definitivamente da nuvem?", () => {
         const a = window.athletes.find(x => x.id === id);
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu definitivamente o atleta: ${a?.name || id}`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu atleta: ${a?.name || id}`);
         window.athletes = window.athletes.filter(x => x.id !== id);
         window.saveData();
         renderAthletesList();
@@ -2765,7 +2608,7 @@
       }
       if (!window.peladaTimes) window.peladaTimes = {};
       window.peladaTimes[dateStr] = newTime || '07:00';
-      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Alterou o horário da pelada de ${dateStr} para ${newTime}`);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Alterou horário da pelada de ${dateStr} para ${newTime}`);
       window.saveData();
       populateDateSelect();
       renderAthletesList();
@@ -2781,7 +2624,7 @@
           delete window.peladaTimes[d];
         }
         if (window.currentDate === d) window.currentDate = getSmartDefaultDate();
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu a data: ${d}`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu data: ${d}`);
         window.saveData(); 
         populateDateSelect(); 
         renderAthletesList(); 
@@ -3018,7 +2861,7 @@
       text += `\n⏰ _Lembrando: Confirmações encerram às 18h do dia anterior. Após esse horário, falar com a direção!_`;
 
       window.recordUserInteraction(window.currentUser?.name || 'Admin', "Gerou lista formatada para grupo do WhatsApp");
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     };
 
     // --- SORTEIO DE TIMES ---
@@ -3128,7 +2971,6 @@
         const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-700 bg-emerald-50 border border-emerald-300' : 'text-rose-700 bg-rose-50 border border-rose-300';
         const isExpanded = window.expandedFinCards.has(athlete.id);
         const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
-        const athleteName = athlete.name || '';
         const suggestedFee = safeNum(athlete.monthlyFee, 110);
 
         let monthsGridHtml = '';
@@ -3141,135 +2983,43 @@
           
           if (isPaid) athleteTotalPaid += paidAmount;
 
-          const isSpecialNoInterest = isSpecialInterestFreeMonth(athleteName, mKey);
-          const isBrunoAgreed = isBrunoMonteiroAgreement(athleteName);
-          const isPartialOct = isPartialOctoberAthlete(athleteName, mKey);
-          const isDiegoOct = isDiegoOctoberNoInterest(athleteName, mKey);
-          const isMonthInactive = importedFullPaymentsMap[normalizeName(athleteName)]?.[mKey] === 'x';
-
           let interest = 0;
-          if (!isMonthInactive && !athlete.isSuspended) {
-            if (isBrunoAgreed) {
-              const agreementDueDate = new Date(2026, 10, 15, 23, 59, 59);
-              if (!isPaid) {
-                athletePendingInstallmentsAmount += suggestedFee;
+          if (!athlete.isSuspended) {
+            if (!isPaid) {
+              athletePendingInstallmentsAmount += suggestedFee;
+              if (now >= firstDayAfterDue) {
+                const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+                interest = Math.max(0, daysLate) * 1.00;
+                athleteTotalInterest += interest;
+                athleteStrictOverdue += (suggestedFee + interest);
+                athleteTotalDueUntilNov += (suggestedFee + interest);
+              } else {
                 athleteTotalDueUntilNov += suggestedFee;
-                if (now > agreementDueDate) {
-                  const daysLate = Math.floor((now - agreementDueDate) / (1000 * 60 * 60 * 24)) + 1;
-                  interest = Math.max(0, daysLate) * 1.00;
-                  athleteTotalInterest += interest;
-                  athleteStrictOverdue += (suggestedFee + interest);
-                }
-              }
-            } else if (isPartialOct) {
-              const differenceDue = Math.max(0, suggestedFee - paidAmount);
-              if (differenceDue > 0) {
-                athletePendingInstallmentsAmount += differenceDue;
-                if (isDiegoOct) {
-                  interest = 0;
-                  athleteTotalDueUntilNov += differenceDue;
-                  if (now > dueDate) {
-                    athleteStrictOverdue += differenceDue;
-                  }
-                } else {
-                  if (now >= firstDayAfterDue) {
-                    const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
-                    interest = Math.max(0, daysLate) * 1.00;
-                    athleteTotalInterest += interest;
-                    athleteStrictOverdue += (differenceDue + interest);
-                    athleteTotalDueUntilNov += (differenceDue + interest);
-                  } else {
-                    athleteTotalDueUntilNov += differenceDue;
-                  }
-                }
-              }
-            } else if (isSpecialNoInterest) {
-              interest = 0;
-              const remainingDue = Math.max(0, suggestedFee - paidAmount);
-              if (remainingDue > 0) {
-                athletePendingInstallmentsAmount += remainingDue;
-                athleteTotalDueUntilNov += remainingDue;
-                if (now > dueDate) {
-                  athleteStrictOverdue += remainingDue;
-                }
-              }
-            } else {
-              if (!isPaid) {
-                athletePendingInstallmentsAmount += suggestedFee;
-                if (now >= firstDayAfterDue) {
-                  const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
-                  interest = Math.max(0, daysLate) * 1.00;
-                  athleteTotalInterest += interest;
-                  athleteStrictOverdue += (suggestedFee + interest);
-                  athleteTotalDueUntilNov += (suggestedFee + interest);
-                } else {
-                  athleteTotalDueUntilNov += suggestedFee;
-                }
               }
             }
           }
 
-          let isCellOverdue = false;
-          if (isBrunoAgreed) {
-            isCellOverdue = !isPaid && (now > new Date(2026, 10, 15, 23, 59, 59));
-          } else if (isPartialOct) {
-            isCellOverdue = (paidAmount < suggestedFee) && (now > dueDate);
-          } else {
-            isCellOverdue = !isPaid && (now > dueDate);
-          }
+          let isCellOverdue = !isPaid && (now > dueDate);
+          let cellColorClass = isPaid
+            ? "bg-sky-50 text-sky-800 border-sky-300" 
+            : (isCellOverdue 
+                ? "bg-rose-50 text-rose-800 border-rose-300" 
+                : "bg-amber-50/70 text-amber-800 border-amber-300");
 
-          let cellColorClass = isMonthInactive 
-            ? "bg-slate-200 text-slate-400 border-slate-300"
-            : (isPaid && !isPartialOct
-                ? "bg-sky-50 text-sky-800 border-sky-300" 
-                : (isCellOverdue 
-                    ? "bg-rose-50 text-rose-800 border-rose-300" 
-                    : (isBrunoAgreed && !isPaid 
-                        ? "bg-emerald-50/70 text-emerald-800 border-emerald-300" 
-                        : "bg-amber-50/70 text-amber-800 border-amber-300")));
+          let statusTagText = isPaid
+            ? "Quitado"
+            : (now > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)");
 
-          let statusTagText = isMonthInactive
-            ? "Inativo"
-            : (isBrunoAgreed && !isPaid
-                ? "Acordo 15/11"
-                : (isPartialOct
-                    ? (isDiegoOct 
-                        ? `Diferença R$ ${(suggestedFee - paidAmount).toFixed(0)} (Sem Juros)`
-                        : `Falta R$ ${(suggestedFee - paidAmount).toFixed(0)} + juros`)
-                    : (isPaid
-                        ? (isSpecialNoInterest && paidAmount < suggestedFee ? `Parcial: R$ ${paidAmount.toFixed(0)}` : "Quitado")
-                        : (now > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)"))));
-
-          let suggestedInputValue = 0;
-          if (isMonthInactive) {
-            suggestedInputValue = 0;
-          } else if (isBrunoAgreed) {
-            suggestedInputValue = isPaid ? paidAmount : suggestedFee;
-          } else if (isPartialOct) {
-            suggestedInputValue = Math.max(0, suggestedFee - paidAmount) + interest;
-          } else if (isPaid) {
-            suggestedInputValue = paidAmount;
-          } else {
-            if (isSpecialNoInterest) {
-              suggestedInputValue = Math.max(0, suggestedFee - paidAmount);
-            } else {
-              suggestedInputValue = suggestedFee + interest;
-            }
-          }
+          let suggestedInputValue = isPaid ? paidAmount : (suggestedFee + interest);
 
           monthsGridHtml += `
             <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative">
-              <span class="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                ${mKey} 
-                ${isBrunoAgreed && !isPaid ? '<i class="fa-solid fa-handshake text-emerald-600 text-[9px]" title="Acordo financeiro até 15/11/2026"></i>' : ''}
-                ${isPartialOct ? `<i class="fa-solid ${isDiegoOct ? 'fa-handshake text-emerald-600' : 'fa-circle-exclamation text-amber-500'} text-[9px]" title="${isDiegoOct ? 'Cobrança apenas da diferença (sem juros)' : 'Cobrança da diferença de outubro + juros'}"></i>` : ''}
-                ${isSpecialNoInterest ? '<i class="fa-solid fa-gift text-emerald-600 text-[9px]" title="Regra Especial: Isenção de Juros Futuros"></i>' : ''}
-              </span>
+              <span class="text-[10px] uppercase font-bold text-slate-500">${mKey}</span>
               <div class="flex items-center gap-1.5 justify-center">
-                <input type="checkbox" ${isPaid && !isPartialOct ? 'checked' : ''} ${disableInput || (isMonthInactive ? 'disabled' : '')} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial && !isMonthInactive ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="number" value="${suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !isMonthInactive ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (isMonthInactive ? 'disabled readonly' : '')} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${window.canEditFinancial ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
+                <input type="number" value="${suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${disableInput} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
-              <span class="text-[8px] font-bold ${isBrunoAgreed && !isPaid ? 'text-emerald-700' : (isPaid && !isPartialOct ? 'text-sky-700' : (isCellOverdue ? 'text-rose-600' : 'text-amber-700'))}">${statusTagText}</span>
+              <span class="text-[8px] font-bold ${isPaid ? 'text-sky-700' : (isCellOverdue ? 'text-rose-600' : 'text-amber-700')}">${statusTagText}</span>
             </div>`;
         });
 
@@ -3279,7 +3029,6 @@
 
         athleteFines.forEach((fine, fineIdx) => {
           if (!fine || fine.date < '2026-11-01') return;
-          
           const fineDate = new Date(fine.date + 'T00:00:00');
           let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
           if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -3299,16 +3048,16 @@
                 <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
                 <span class="font-bold text-slate-800">Falta em ${formatDateDisplay(fine.date)}</span>
                 <span class="text-[10px] text-slate-500">Base: R$ ${baseAmt.toFixed(2)}</span>
-                <span class="text-[10px] text-amber-600 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>
+                <span class="text-[10px] text-amber-600 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)}</span>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs font-black ${fine.paid ? 'text-emerald-600' : 'text-rose-600'}">Total: R$ ${fineTotal.toFixed(2)}</span>
                 ${window.canEditFinancial ? `
                   <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 font-bold text-[10px] transition-all">
-                    ${fine.paid ? 'Quitada' : 'Baixar Débito'}
+                    ${fine.paid ? 'Quitada' : 'Baixar'}
                   </button>
-                  <button onclick="deleteAbsenceFine(${athlete.id}, ${fineIdx})" title="Excluir multa permanentemente (Pablo Padilha e Marcão)" class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-300 font-bold text-[10px] transition-all flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can"></i> Excluir Multa
+                  <button onclick="deleteAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-300 font-bold text-[10px] transition-all flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Excluir
                   </button>
                 ` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${fine.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${fine.paid ? 'Paga' : 'Pendente'}</span>`}
               </div>
@@ -3360,23 +3109,18 @@
                       <input type="checkbox" id="always_up_${athlete.id}" ${isAlwaysUpToDate ? 'checked' : ''} onchange="toggleAlwaysUpToDate(${athlete.id}, this.checked)" class="w-4 h-4 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 cursor-pointer">
                       <label for="always_up_${athlete.id}" class="text-xs font-bold text-slate-800 cursor-pointer">Forçar Status: Considerar Sempre em Dia</label>
                     </div>
-                    <span class="text-[10px] text-slate-500">Exclusivo Marcão / Pablo Padilha</span>
                   </div>
                 ` : ''}
                 
                 ${finesHtml ? `
                   <div class="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 space-y-2">
                     <h5 class="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-2">
-                      <i class="fa-solid fa-gavel"></i> Multas por Falta (R$ 30,00 + R$ 1,00/dia)
+                      <i class="fa-solid fa-gavel"></i> Multas por Falta
                     </h5>
                     <div class="space-y-1.5">${finesHtml}</div>
                   </div>
                 ` : ''}
 
-                <div class="flex justify-between items-center">
-                  <h4 class="text-xs font-bold text-slate-700 uppercase flex items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-600"></i> Mensalidades (${formatCurrencyBR(suggestedFee)}/mês)</h4>
-                  ${window.canEditFinancial ? `<button onclick="openWhatsappFinancialIndividual(${athlete.id})" class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold border border-emerald-300"><i class="fa-brands fa-whatsapp text-sm"></i> Cobrar via WhatsApp</button>` : ''}
-                </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">${monthsGridHtml}</div>
               </div>
             </div>
@@ -3404,7 +3148,7 @@
       if (window.absenceFines[athleteId] && window.absenceFines[athleteId][fineIndex]) {
         window.absenceFines[athleteId][fineIndex].paid = true;
         const target = window.athletes.find(a => a.id === athleteId);
-        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de falta de ${target?.name || ''}`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de ${target?.name || ''}`);
         window.saveData();
         renderFinancial();
         renderAthletesList();
@@ -3416,7 +3160,7 @@
     window.deleteAbsenceFine = function(athleteId, fineIndex) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem excluir multas.");
       const target = window.athletes.find(a => a.id === athleteId);
-      window.showConfirm(`Excluir permanentemente a multa de R$ 30,00 de ${target?.name || 'Atleta'}?`, () => {
+      window.showConfirm(`Excluir permanentemente a multa de ${target?.name || 'Atleta'}?`, () => {
         if (window.absenceFines[athleteId]) {
           let list = Array.isArray(window.absenceFines[athleteId])
             ? window.absenceFines[athleteId]
@@ -3424,12 +3168,12 @@
           
           list.splice(fineIndex, 1);
           window.absenceFines[athleteId] = list;
-          window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Excluiu e zerou a multa de falta de ${target?.name || ''}`);
+          window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Excluiu multa de ${target?.name || ''}`);
           window.saveData();
           renderFinancial();
           renderAthletesList();
           renderReports();
-          window.showToast("Multa excluída e zerada com sucesso!", "success");
+          window.showToast("Multa excluída com sucesso!", "success");
         }
       });
     };
@@ -3454,15 +3198,7 @@
 
       let amountToSet = 0;
       if (isChecked) {
-        const mIndex = months.indexOf(mKey);
-        const firstDayAfterDue = new Date(2026, mIndex, 16);
-        const now = new Date();
-        let interest = 0;
-        if (!isSpecialInterestFreeMonth(athlete?.name, mKey) && now >= firstDayAfterDue) {
-          const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
-          interest = Math.max(0, daysLate) * 1.00;
-        }
-        amountToSet = fee + interest;
+        amountToSet = fee;
       }
 
       window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: amountToSet };
@@ -3472,116 +3208,16 @@
       renderReports();
     };
 
-    window.doubleClickSettleMonth = function(athleteId, mKey) {
-      if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
-      if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
-
-      const mIndex = months.indexOf(mKey);
-      const firstDayAfterDue = new Date(2026, mIndex, 16);
-      const now = new Date();
-      let interest = 0;
-      if (!isSpecialInterestFreeMonth(athlete?.name, mKey) && now >= firstDayAfterDue) {
-        const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
-        interest = Math.max(0, daysLate) * 1.00;
-      }
-      const totalAmount = fee + interest;
-
-      window.financialPayments[athleteId][mKey] = { paid: true, amount: totalAmount };
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou mensalidade (${mKey.toUpperCase()}) de ${athlete?.name || ''} no valor sugerido de R$ ${totalAmount.toFixed(2)}`);
-      window.saveData(); 
-      renderFinancial(); 
-      renderReports(); 
-      window.showToast(`Parcela baixada (R$ ${totalAmount.toFixed(2)}) na nuvem!`, "success");
-    };
-
     window.updateFinancialValue = function(athleteId, mKey, val) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem editar o financeiro.");
       const numVal = parseFloat(val) || 0;
       if (!window.financialPayments[athleteId]) window.financialPayments[athleteId] = {};
       window.financialPayments[athleteId][mKey] = { paid: numVal > 0, amount: numVal };
       const a = window.athletes.find(x => x.id === athleteId);
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Alterou valor manual da mensalidade (${mKey.toUpperCase()}) de ${a?.name || ''} para R$ ${numVal}`);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Alterou valor manual (${mKey.toUpperCase()}) de ${a?.name || ''} para R$ ${numVal}`);
       window.saveData(); 
       renderFinancial(); 
       renderReports();
-    };
-
-    window.openWhatsappFinancialIndividual = function(athleteId) {
-      const athlete = window.athletes.find(a => a.id === athleteId);
-      if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone.");
-      const status = getAthleteFinancialStatus(athleteId);
-      const cleanPhone = athlete.phone.replace(/\D/g, '');
-      const payments = window.financialPayments[athleteId] || {};
-      const now = new Date();
-      const athleteName = athlete.name || '';
-      const suggestedFee = athlete.monthlyFee || 110;
-
-      let msg = '';
-      if (status === 'uptodate') {
-        msg = `Fala meu camisa 10 *${athlete.name}*! ⚽🎩🏆\n\nPassando aqui para parabenizar pela pontualidade de craque exemplar! 🟢⚪✨ Suas mensalidades estão 100% em dia e o nosso caixa agradece demais! 🍻🥩\n\nDesejamos uma excelente resenha e boa festa a todos nós! Tamo junto! 🚀🥳\n\n_Mensagem automática do sistema de gestão do Teimoso F.C.C._`;
-      } else {
-        let totalMonthlyDue = 0;
-        let totalFinesDue = 0;
-        let pendingMonthsText = '';
-
-        months.forEach((mKey, mIndex) => {
-          const dueDate = new Date(2026, mIndex, 15);
-          const firstDayAfterDue = new Date(2026, mIndex, 16);
-          let monthData = payments[mKey] || { paid: false, amount: 0 };
-          let isPaid = monthData.paid === true || Number(monthData.amount) > 0;
-          let paidAmount = Number(monthData.amount) || 0;
-
-          if (now > dueDate) {
-            if (isSpecialInterestFreeMonth(athleteName, mKey)) {
-              const diff = Math.max(0, suggestedFee - paidAmount);
-              if (diff > 0) {
-                totalMonthlyDue += diff;
-                pendingMonthsText += `• *${mKey.toUpperCase()}*: R$ ${diff.toFixed(2)} (Parcela sem juros futuros)\n`;
-              }
-            } else if (!isPaid) {
-              let interest = now >= firstDayAfterDue ? (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
-              let monthTotal = suggestedFee + interest;
-              totalMonthlyDue += monthTotal;
-              pendingMonthsText += `• *${mKey.toUpperCase()}*: R$ ${suggestedFee.toFixed(2)} + R$ ${interest.toFixed(2)} (Juros) = *R$ ${monthTotal.toFixed(2)}*\n`;
-            }
-          }
-        });
-
-        const athleteFines = Array.isArray(window.absenceFines[athleteId])
-          ? window.absenceFines[athleteId]
-          : Object.values(window.absenceFines[athleteId] || {});
-        let finesText = '';
-        athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= '2026-11-01') {
-            const fineDate = new Date(fine.date + 'T00:00:00');
-            let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
-            if (daysPassed < 0) daysPassed = 0;
-            const fineInterest = daysPassed * 1.00;
-            const fineTotal = fine.baseAmount + fineInterest;
-            totalFinesDue += fineTotal;
-            finesText += `• *Falta em ${formatDateDisplay(fine.date)}*: R$ ${fine.baseAmount.toFixed(2)} + R$ ${fineInterest.toFixed(2)} (${daysPassed} dias juros) = *R$ ${fineTotal.toFixed(2)}*\n`;
-          }
-        });
-
-        const grandTotal = totalMonthlyDue + totalFinesDue;
-
-        msg = `Fala meu craque *${athlete.name}*! ⚽🏃‍♂️💨\n\nPassando aqui com todo o carinho e aquele toque de bola refinado para te atualizar sobre os débitos pendentes no *Teimoso F.C.C.*! 📋😅\n\n`;
-
-        if (pendingMonthsText) {
-          msg += `🗓️ *MENSALIDADES VENCIDAS:*\n${pendingMonthsText}\n`;
-        }
-        if (finesText) {
-          msg += `⚠️ *MULTAS POR FALTA:*\n${finesText}\n`;
-        }
-
-        msg += `💰 *TOTAL GERAL CONSOLIDADO: R$ ${grandTotal.toFixed(2)}*\n\n`;
-        msg += `Para regularizar e manter o churrasco e as chuteiras nos trinques, faça seu PIX para a chave oficial:\n🔑 *teimosofcc@gmail.com*\n\nAssim que fizer, envia o comprovante para a diretoria dar baixa! Tamo junto demais na próxima pelada! 🍻👊🟢⚪\n\n_Mensagem automática do sistema de gestão do Teimoso F.C.C._`;
-      }
-
-      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Disparou cobrança financeira via WhatsApp para: ${athlete.name}`);
-      window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     window.openWhatsappFinancialMassModal = function() {
@@ -3589,8 +3225,7 @@
       let overdueList = window.athletes.filter(a => !a.isSuspended && getAthleteFinancialStatus(a.id) === 'overdue' && a.phone);
       if (overdueList.length === 0) return window.showToast("Nenhum atleta inadimplente.");
       showConfirm(`Abrir fila para cobrar ${overdueList.length} atletas inadimplentes?`, () => {
-        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Iniciou disparo de cobrança em massa para ${overdueList.length} inadimplentes`);
-        overdueList.forEach((a, idx) => { setTimeout(() => openWhatsappFinancialIndividual(a.id), idx * 1200); });
+        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Iniciou disparo de cobrança para ${overdueList.length} inadimplentes`);
       });
     };
 
@@ -3623,13 +3258,13 @@
       };
 
       const now = new Date();
-      const filename = `backup_teimoso_fcc_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}h${String(now.getMinutes()).padStart(2,'0')}.json`;
+      const filename = `backup_teimoso_fcc_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}.json`;
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
       a.click();
-      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Gerou e baixou arquivo de Backup (.json)`);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Baixou arquivo de Backup`);
       window.showToast("Arquivo de backup baixado com sucesso!", "success");
     };
 
@@ -3643,10 +3278,10 @@
         try {
           const parsed = JSON.parse(e.target.result);
           if (!parsed.athletes || !Array.isArray(parsed.athletes)) {
-            throw new Error("Arquivo de backup inválido: lista de atletas não encontrada.");
+            throw new Error("Arquivo de backup inválido.");
           }
 
-          window.showConfirm(`Restaurar a base de dados do arquivo? Isso substituirá as informações atuais na nuvem pelos dados de ${parsed.exportedAt || 'data anterior'}.`, async () => {
+          window.showConfirm(`Restaurar a base de dados do arquivo? Isso substituirá as informações na nuvem.`, async () => {
             if (parsed.datesList) window.datesList = parsed.datesList;
             if (parsed.peladaTimes) window.peladaTimes = parsed.peladaTimes;
             if (parsed.athletes) window.athletes = parsed.athletes;
@@ -3656,7 +3291,7 @@
             if (parsed.absenceFines) window.absenceFines = parsed.absenceFines;
             if (parsed.activityLogs) window.activityLogs = parsed.activityLogs;
 
-            window.recordUserInteraction(window.currentUser?.name || 'Admin', `Restaurou a base completa a partir de arquivo de backup`);
+            window.recordUserInteraction(window.currentUser?.name || 'Admin', `Restaurou a base completa a partir de arquivo`);
             await window.saveData();
 
             populateDateSelect();
@@ -3665,7 +3300,7 @@
             renderFinancial();
             renderReports();
             window.closeBackupModal();
-            window.showToast("Dados restaurados com sucesso na nuvem Firestore!", "success");
+            window.showToast("Dados restaurados com sucesso!", "success");
           });
         } catch (err) {
           window.showToast("Erro ao processar arquivo: " + err.message, "error");
@@ -3695,18 +3330,11 @@
         const finStatus = getAthleteFinancialStatus(athlete.id);
         const tr = document.createElement('tr'); 
         tr.className = "hover:bg-slate-50 transition-colors";
-        
-        let startInfo = '';
-        if (athlete.effectiveStartDate) {
-          const [ey, em, ed] = athlete.effectiveStartDate.split('-');
-          startInfo = `<div class="text-[9px] text-sky-700 font-semibold">Conta a partir de ${ed}/${em}/${ey}</div>`;
-        }
 
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-800">
             ${athlete.name} 
             ${athlete.isSuspended ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300 uppercase">Suspenso</span>' : ''}
-            ${startInfo}
           </td>
           <td class="py-3 px-4 text-slate-600">${athlete.position}</td>
           <td class="py-3 px-4 text-center font-bold text-slate-800">${confCount} / ${totalEligible}</td>
@@ -3718,7 +3346,7 @@
     };
 
     window.exportReportsCSV = function() {
-      let csv = "Atleta,Posicao,Presencas,PeladasElegiveis,TaxaAssiduidade,DataInicio\n";
+      let csv = "Atleta,Posicao,Presencas,PeladasElegiveis,TaxaAssiduidade\n";
       window.athletes.forEach(athlete => {
         const eligibleDates = window.datesList.filter(d => {
           if (!athlete.effectiveStartDate) return true;
@@ -3727,7 +3355,7 @@
         const totalEligible = eligibleDates.length;
         let confCount = eligibleDates.reduce((acc, d) => acc + (window.presences[d]?.[athlete.id]?.status === 'CONFIRMADO' ? 1 : 0), 0);
         const rate = totalEligible > 0 ? Math.round((confCount / totalEligible) * 100) : 0;
-        csv += `"${athlete.name}","${athlete.position}",${confCount},${totalEligible},"${rate}%","${athlete.effectiveStartDate || 'Início do Ano'}"\n`;
+        csv += `"${athlete.name}","${athlete.position}",${confCount},${totalEligible},"${rate}%"\n`;
       });
       const a = document.createElement('a'); 
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
