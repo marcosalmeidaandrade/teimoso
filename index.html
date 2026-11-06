@@ -183,7 +183,7 @@
           </div>
         </div>
 
-        <!-- NAVIGATION TABS (COM A NOVA ABA ANIVERSARIANTES) -->
+        <!-- NAVIGATION TABS -->
         <nav class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto overflow-x-auto hide-scrollbar snap-x">
           <button onclick="switchTab('presence')" id="tabBtn-presence" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-sm shrink-0 snap-start">
             <i class="fa-solid fa-users"></i> Presença
@@ -370,14 +370,14 @@
         </div>
       </section>
 
-      <!-- ================= NOVA TAB: ANIVERSARIANTES (ORDENADA POR DATA A PARTIR DE JANEIRO + ALFABÉTICA) ================= -->
+      <!-- ================= NOVA TAB: ANIVERSARIANTES (COM DASHBOARD DOS 12 MESES) ================= -->
       <section id="tab-birthdays" class="hidden space-y-6">
         <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
               <i class="fa-solid fa-cake-candles text-amber-500"></i> Calendário Oficial de Aniversariantes
             </h3>
-            <p class="text-xs text-slate-500 mt-1">Ordenados cronologicamente a partir de janeiro do ano corrente e em ordem alfabética para a mesma data.</p>
+            <p class="text-xs text-slate-500 mt-1">Clique nos meses abaixo para filtrar os aniversariantes em ordem alfabética. O envio de parabéns fica disponível para todos no dia exato do aniversário.</p>
           </div>
           <div class="flex items-center gap-3 w-full md:w-auto justify-end">
             <div class="text-xs font-bold text-slate-700 bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
@@ -386,10 +386,31 @@
           </div>
         </div>
 
+        <!-- DASHBOARD DOS 12 MESES DO ANO -->
+        <div class="bg-white border border-slate-200 p-4 sm:p-5 rounded-3xl shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-simple text-amber-500"></i> Dashboard Mensal de Aniversariantes
+            </span>
+            <div id="birthdayFilterStatus" class="hidden items-center gap-2">
+              <span class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-xl">
+                Filtrado por: <strong id="selectedMonthName"></strong> (Ordem Alfabética)
+              </span>
+              <button onclick="toggleBirthdayMonthFilter(null)" class="text-[11px] font-bold text-rose-600 hover:text-rose-700 px-2 py-1 rounded-lg bg-rose-50 border border-rose-200">
+                Limpar Seleção
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2" id="birthdayMonthsDashboard">
+          </div>
+        </div>
+
+        <!-- TABELA DE ANIVERSARIANTES -->
         <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
           <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/60">
             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 w-full sm:w-auto">
-              <i class="fa-solid fa-calendar-days text-amber-600"></i> Lista Anual de Craques
+              <i class="fa-solid fa-calendar-days text-amber-600"></i> <span id="birthdayTableHeading">Lista Completa de Aniversariantes (Janeiro a Dezembro)</span>
             </h3>
             <div class="relative w-full sm:w-56 shrink-0">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -565,7 +586,6 @@
         </button>
       </div>
 
-      <!-- INSTRUÇÕES RÁPIDAS DE USO -->
       <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-600 space-y-2 overflow-y-auto max-h-48">
         <div class="flex items-center gap-2 font-black text-slate-800 uppercase tracking-wide text-[11px]">
           <i class="fa-solid fa-circle-info text-emerald-600"></i> Instruções: Como e Quando Utilizar
@@ -583,7 +603,6 @@
         </p>
       </div>
 
-      <!-- AÇÕES DE BACKUP -->
       <div class="space-y-3 pt-1">
         <div class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:border-emerald-300 transition-all">
           <div>
@@ -895,7 +914,6 @@
     const db = getFirestore(app);
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
-    // Limpeza mandatória de caches legados
     try {
       localStorage.removeItem('teimoso_athletes');
       localStorage.removeItem('teimoso_presences');
@@ -1020,9 +1038,11 @@
     let currentJustifyAthleteId = null;
     let selectedStarsForNewAthlete = 5;
 
-    // FILTROS DE VISUALIZAÇÃO
+    // FILTROS DE VISUALIZAÇÃO: Exclusivos do usuário atual na sessão
     let activeStatusFilter = null;
     let activeFinancialFilter = null;
+    window.selectedBirthdayMonth = null;
+
     window.expandedFinCards = new Set();
     window.whatsappQueueList = [];
     window.whatsappSentIds = new Set();
@@ -1040,6 +1060,7 @@
     window.resetAllSessionFilters = function() {
       activeStatusFilter = null;
       activeFinancialFilter = null;
+      window.selectedBirthdayMonth = null;
       window.expandedFinCards.clear();
       
       const searchInput = document.getElementById('searchAthleteInput');
@@ -1071,7 +1092,6 @@
       if (logFilter) logFilter.value = '';
     };
 
-    // TABELA OFICIAL DE PAGAMENTOS MENSAIS
     const importedFullPaymentsMap = {
       "ADALBERTO": { jan: 111, fev: 122, mar: 110, abr: 111, mai: 111, jun: 131, jul: 133, ago: 130, set: 110, out: 125, nov: 0 },
       "ALEXANDRE ALEIXO": { jan: 90, fev: 90, mar: 90, abr: 90, mai: 90, jun: 90, jul: 90, ago: 90, set: 90, out: 90, nov: 90 },
@@ -1214,6 +1234,16 @@
     const adminNames = ['FELIPE MACACO', 'CLÁUDIO', 'CLAUDIO', 'PABLO PADILHA', 'DAVI', 'TIAGO BOQUETE', 'MARCÃO', 'MARCAO'];
     const finEditorNames = ['PABLO PADILHA', 'MARCÃO', 'MARCAO'];
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
+
+    const monthNamesFull = [
+      "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
+    const monthShortNames = [
+      "", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+      "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+    ];
 
     const positionBadges = {
       "Goleiro": { tag: "GK", color: "bg-amber-50 text-amber-700 border-amber-300" },
@@ -1666,7 +1696,7 @@
       const btnBackup = document.getElementById('btnBackupAdmin');
       if (btnBackup) { btnBackup.classList.add('hidden'); btnBackup.classList.remove('flex'); }
 
-      if (activeTab === 'financial') switchTab('presence');
+      if (activeTab === 'financial' || activeTab === 'birthdays') switchTab('presence');
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
     };
 
@@ -1732,7 +1762,6 @@
       });
     });
 
-    // CONTROLE DE NAVEGAÇÃO DE ABAS
     window.switchTab = function(tab) {
       activeTab = tab;
       window.recordUserInteraction(window.currentUser?.name || 'Visitante', `Navegou para a aba: ${tab.toUpperCase()}`);
@@ -1891,7 +1920,7 @@
       renderAthletesList();
     };
 
-    // --- REGRAS DE PRESENÇA ---
+    // --- REGRAS DE PRESENÇA COM COMPORTAMENTO TOGGLE ---
     window.setPresenceStatus = function(athleteId, newStatus) {
       const targetAthlete = window.athletes.find(a => a.id === athleteId);
       if (targetAthlete && targetAthlete.isSuspended) {
@@ -2284,11 +2313,75 @@
       document.getElementById('statTotal').innerText = countTotal;
     };
 
-    // --- NOVA RENDERIZAÇÃO: ABA ANIVERSARIANTES ---
-    const monthNamesList = [
-      "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
+    // --- DASHBOARD E RENDERIZAÇÃO DA ABA ANIVERSARIANTES ---
+    window.toggleBirthdayMonthFilter = function(monthNum) {
+      if (window.selectedBirthdayMonth === monthNum || monthNum === null) {
+        window.selectedBirthdayMonth = null;
+      } else {
+        window.selectedBirthdayMonth = monthNum;
+      }
+      renderBirthdaysList();
+    };
+
+    function renderBirthdayDashboard(athletesWithBirthday) {
+      const dashboard = document.getElementById('birthdayMonthsDashboard');
+      const filterStatus = document.getElementById('birthdayFilterStatus');
+      const selectedMonthLabel = document.getElementById('selectedMonthName');
+      const heading = document.getElementById('birthdayTableHeading');
+      if (!dashboard) return;
+
+      const counts = Array(13).fill(0);
+      athletesWithBirthday.forEach(a => {
+        if (a.birthMonth >= 1 && a.birthMonth <= 12) {
+          counts[a.birthMonth]++;
+        }
+      });
+
+      const currentMonth = new Date().getMonth() + 1;
+
+      dashboard.innerHTML = '';
+      for (let m = 1; m <= 12; m++) {
+        const isSelected = (window.selectedBirthdayMonth === m);
+        const isCurrent = (currentMonth === m);
+        const count = counts[m];
+
+        let baseClasses = "flex flex-col items-center justify-center p-2 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-95 shadow-sm";
+        if (isSelected) {
+          baseClasses += " bg-amber-500 text-white border-amber-600 ring-2 ring-amber-400 font-black shadow-md";
+        } else if (count > 0) {
+          baseClasses += isCurrent 
+            ? " bg-amber-50/80 text-amber-900 border-amber-300 hover:bg-amber-100" 
+            : " bg-white text-slate-700 border-slate-200 hover:border-amber-400 hover:bg-amber-50/30";
+        } else {
+          baseClasses += " bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100";
+        }
+
+        dashboard.innerHTML += `
+          <div onclick="toggleBirthdayMonthFilter(${m})" class="${baseClasses}" title="${monthNamesFull[m]}: ${count} aniversariante(s)">
+            <span class="text-[10px] uppercase font-black tracking-wider flex items-center gap-1 ${isSelected ? 'text-white' : (isCurrent ? 'text-amber-700 font-extrabold' : 'text-slate-600')}">
+              ${monthShortNames[m]} ${isCurrent && !isSelected ? '⭐' : ''}
+            </span>
+            <span class="text-base font-black mt-0.5 ${isSelected ? 'text-white' : (count > 0 ? 'text-amber-600' : 'text-slate-400')}">${count}</span>
+            <span class="text-[8px] font-semibold uppercase ${isSelected ? 'text-amber-100' : 'text-slate-400'}">atleta${count === 1 ? '' : 's'}</span>
+          </div>
+        `;
+      }
+
+      if (window.selectedBirthdayMonth) {
+        if (filterStatus) {
+          filterStatus.classList.remove('hidden');
+          filterStatus.classList.add('flex');
+        }
+        if (selectedMonthLabel) selectedMonthLabel.innerText = monthNamesFull[window.selectedBirthdayMonth];
+        if (heading) heading.innerText = `Aniversariantes de ${monthNamesFull[window.selectedBirthdayMonth]} (Ordem Alfabética)`;
+      } else {
+        if (filterStatus) {
+          filterStatus.classList.add('hidden');
+          filterStatus.classList.remove('flex');
+        }
+        if (heading) heading.innerText = "Lista Completa de Aniversariantes (Janeiro a Dezembro)";
+      }
+    }
 
     window.renderBirthdaysList = function() {
       const tbody = document.getElementById('birthdaysTableBody');
@@ -2300,76 +2393,133 @@
       const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
       const allAthletes = window.athletes || [];
+      const withBirthday = allAthletes.filter(a => a.birthMonth && a.birthDay);
+      if (countBadge) countBadge.innerText = withBirthday.length;
+
+      renderBirthdayDashboard(withBirthday);
+
+      let displayedAthletes = [...allAthletes];
+
+      if (window.selectedBirthdayMonth !== null) {
+        displayedAthletes = displayedAthletes.filter(a => Number(a.birthMonth) === window.selectedBirthdayMonth);
+        displayedAthletes.sort((a, b) => {
+          return (a.name || '').localeCompare(b.name || '');
+        });
+      } else {
+        displayedAthletes.sort((a, b) => {
+          const mA = Number(a.birthMonth) || 99;
+          const mB = Number(b.birthMonth) || 99;
+          if (mA !== mB) return mA - mB;
+
+          const dA = Number(a.birthDay) || 99;
+          const dB = Number(b.birthDay) || 99;
+          if (dA !== dB) return dA - dB;
+
+          return (a.name || '').localeCompare(b.name || '');
+        });
+      }
+
+      if (searchTerm) {
+        displayedAthletes = displayedAthletes.filter(a => (a.name || '').toLowerCase().includes(searchTerm));
+      }
+
+      if (displayedAthletes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="py-12 text-center text-slate-400 font-medium">
+              <i class="fa-solid fa-cake-candles text-3xl mb-2 text-slate-300 block"></i>
+              Nenhum aniversariante encontrado para este filtro.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
       const now = new Date();
       const currentDay = now.getDate();
       const currentMonth = now.getMonth() + 1;
 
-      // ORDENAÇÃO: Cronológica a partir de janeiro (Mês 1 -> 12, Dia 1 -> 31) e alfabética para mesma data
-      const sortedAthletes = [...allAthletes].sort((a, b) => {
-        const monthA = Number(a.birthMonth) || 999;
-        const monthB = Number(b.birthMonth) || 999;
-        if (monthA !== monthB) return monthA - monthB;
-
-        const dayA = Number(a.birthDay) || 999;
-        const dayB = Number(b.birthDay) || 999;
-        if (dayA !== dayB) return dayA - dayB;
-
-        return (a.name || '').localeCompare(b.name || '');
-      });
-
-      let totalWithBirthday = 0;
-
-      sortedAthletes.forEach(athlete => {
-        const hasBirthday = (athlete.birthDay && athlete.birthMonth);
-        if (hasBirthday) totalWithBirthday++;
-
-        if (searchTerm && !(athlete.name || '').toLowerCase().includes(searchTerm)) return;
+      displayedAthletes.forEach(athlete => {
+        const hasDate = (athlete.birthDay && athlete.birthMonth);
+        const bDay = hasDate ? String(athlete.birthDay).padStart(2, '0') : '--';
+        const bMonth = hasDate ? String(athlete.birthMonth).padStart(2, '0') : '--';
+        const isToday = hasDate && (parseInt(athlete.birthDay) === currentDay && parseInt(athlete.birthMonth) === currentMonth);
 
         const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
         const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
 
-        const isToday = (Number(athlete.birthDay) === currentDay && Number(athlete.birthMonth) === currentMonth);
-
         let dateDisplayHtml = '';
-        if (hasBirthday) {
-          const formattedDay = String(athlete.birthDay).padStart(2, '0');
-          const monthText = monthNamesList[Number(athlete.birthMonth)] || '';
-          dateDisplayHtml = `
-            <div class="flex flex-col items-center justify-center">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black ${isToday ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-sm animate-pulse' : 'bg-slate-100 text-slate-800 border border-slate-200'}">
-                <i class="fa-solid fa-cake-candles ${isToday ? 'text-amber-600' : 'text-slate-400'}"></i>
-                ${formattedDay} de ${monthText}
-              </span>
-              ${isToday ? '<span class="text-[10px] font-black text-amber-700 mt-1 uppercase tracking-wider">🎉 Parabéns! É Hoje! 🎂</span>' : ''}
-            </div>
-          `;
+        if (hasDate) {
+          const monthText = monthNamesFull[athlete.birthMonth] || '';
+          if (isToday) {
+            dateDisplayHtml = `
+              <div class="flex flex-col items-center justify-center">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse shadow-sm">
+                  <i class="fa-solid fa-cake-candles text-amber-600"></i> ${bDay} de ${monthText}
+                </span>
+                <span class="text-[9px] font-black text-amber-700 mt-1 uppercase tracking-wider">🎉 Níver Hoje! Parabéns! 🎈</span>
+              </div>
+            `;
+          } else {
+            dateDisplayHtml = `
+              <div class="flex flex-col items-center justify-center">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-300 shadow-sm">
+                  <i class="fa-solid fa-calendar-day text-amber-500"></i> ${bDay} de ${monthText}
+                </span>
+                <span class="text-[9px] font-bold text-slate-400 mt-0.5">${bDay}/${bMonth}</span>
+              </div>
+            `;
+          }
         } else {
           dateDisplayHtml = `
-            <div class="flex items-center justify-center">
-              <span class="text-[10px] font-bold text-slate-400 italic bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">Data não informada</span>
-            </div>
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200">
+              Não cadastrado
+            </span>
+          `;
+        }
+
+        // REGRA DE BOTÃO DO WHATSAPP:
+        // Pode ser acionado por TODOS os integrantes, porém SOMENTE na data efetiva de aniversário (isToday).
+        let whatsappActionHtml = '';
+        if (hasDate && isToday) {
+          if (athlete.phone) {
+            whatsappActionHtml = `
+              <button onclick="sendBirthdayGreeting(${athlete.id})" title="Enviar Parabéns no WhatsApp (Níver Hoje!)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 animate-pulse">
+                <i class="fa-brands fa-whatsapp text-sm"></i>
+                <span>Parabenizar 🎉</span>
+              </button>
+            `;
+          } else {
+            whatsappActionHtml = `<span class="text-[10px] text-slate-400 font-bold px-2 py-1">Sem telefone</span>`;
+          }
+        } else {
+          // Fora da data de aniversário: o botão fica travado/inativo
+          const tipText = hasDate ? `Parabéns disponível apenas em ${bDay}/${bMonth}` : 'Data não informada';
+          whatsappActionHtml = `
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 text-[10px] font-bold cursor-not-allowed select-none" title="${tipText}">
+              <i class="fa-solid fa-lock text-[9px] text-slate-400"></i>
+              <span class="hidden sm:inline">Disponível no dia</span>
+            </span>
           `;
         }
 
         const tr = document.createElement('tr');
-        tr.className = isToday 
-          ? "bg-amber-50/60 border-l-4 border-amber-500 hover:bg-amber-50 transition-colors" 
-          : "hover:bg-slate-50 transition-colors";
+        tr.className = isToday ? "bg-amber-50/60 border-l-4 border-amber-500 hover:bg-amber-50 transition-colors" : "hover:bg-slate-50 transition-colors";
 
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-3">
-              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar foto" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 ${isToday ? 'border-amber-500 shadow-md' : 'border-slate-300 hover:border-emerald-500'} overflow-hidden shrink-0 bg-slate-100 cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
+              <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 hover:border-amber-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
                 <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-amber-500/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-amber-800">
+                <div class="absolute inset-0 bg-amber-500/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-amber-700">
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </div>
               </div>
               <div class="flex flex-col gap-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm text-slate-800">${athlete.name}</span>
+                  <span class="text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
                   ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
-                  ${isToday ? '<span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-white uppercase shadow-sm">HOJE</span>' : ''}
+                  ${isToday ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-500 text-white uppercase shrink-0 shadow-sm animate-bounce">HOJE!</span>' : ''}
                 </div>
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="text-[9px] font-black px-1.5 py-0.5 rounded-md border ${posInfo.color}">${posInfo.tag}</span>
@@ -2381,34 +2531,34 @@
           <td class="py-3 px-4 text-center">${dateDisplayHtml}</td>
           <td class="py-3 px-4 text-right">
             <div class="flex items-center justify-end gap-2">
-              ${athlete.phone ? `
-                <button onclick="sendBirthdayGreeting(${athlete.id})" title="Enviar Parabéns no WhatsApp" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
-                  <i class="fa-brands fa-whatsapp text-sm"></i>
-                  <span class="hidden sm:inline">Parabéns</span>
-                </button>
-              ` : `
-                <span class="text-[10px] text-slate-400 font-medium">Sem fone</span>
-              `}
+              ${whatsappActionHtml}
               ${window.isAdmin ? `
-                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar data de aniversário" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300">
-                  <i class="fa-solid fa-cake-candles text-amber-600"></i>
-                </button>
+                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar Aniversário" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
               ` : ''}
             </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
-
-      if (countBadge) countBadge.innerText = `${totalWithBirthday} de ${allAthletes.length}`;
     };
 
     window.sendBirthdayGreeting = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone cadastrado.");
+
+      // Validação de segurança: confere se a data é realmente hoje
+      const now = new Date();
+      const currentDay = now.getDate();
+      const currentMonth = now.getMonth() + 1;
+      const isToday = (parseInt(athlete.birthDay) === currentDay && parseInt(athlete.birthMonth) === currentMonth);
+
+      if (!isToday && !window.isAdmin) {
+        return window.showToast("O envio de parabéns fica disponível apenas no dia do aniversário do atleta!", "error");
+      }
+
       const cleanPhone = athlete.phone.replace(/\D/g, '');
-      const msg = `Fala meu craque camisa 10 *${athlete.name}*! ⚽🎂🎉\n\nA diretoria e todos os atletas do *Teimoso F.C.C.* passam aqui para te desejar um *Feliz Aniversário*! Muita saúde, paz, felicidades e que a sua chuteira continue calibrada para marcar muitos gols nas nossas peladas! 🏆🚀🥩🍻\n\nTamo junto sempre! Parabéns pelo seu dia! 👊🟢⚪`;
-      window.recordUserInteraction(window.currentUser?.name || 'Atleta', `Enviou mensagem de parabéns para: ${athlete.name}`);
+      const msg = `Fala meu craque *${athlete.name}*! ⚽🎂🎉\n\nA família *Teimoso F.C.C.* passa aqui para te desejar um Feliz Aniversário repleto de saúde, paz, muitas vitórias e gols na vida e na nossa pelada! 🏆🍻👏\n\nQue você continue brilhando com a gente dentro e fora de campo! Tamo junto demais! 👊🟢⚪`;
+      window.recordUserInteraction(window.currentUser?.name || 'Visitante', `Enviou mensagem de parabéns para: ${athlete.name}`);
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
 
@@ -2868,7 +3018,7 @@
       text += `\n⏰ _Lembrando: Confirmações encerram às 18h do dia anterior. Após esse horário, falar com a direção!_`;
 
       window.recordUserInteraction(window.currentUser?.name || 'Admin', "Gerou lista formatada para grupo do WhatsApp");
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     // --- SORTEIO DE TIMES ---
