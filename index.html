@@ -1001,6 +1001,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ",
@@ -1014,6 +1015,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const messaging = getMessaging(app);
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
     try {
@@ -1755,6 +1757,10 @@
       populateDateSelect();
 
       window.showToast(`Bem-vindo, ${firstName}!`, "success");
+      
+      // INICIA O PEDIDO DE NOTIFICAÇÃO PUSH APÓS O LOGIN
+      initPushNotifications();
+      
       renderAthletesList();
       renderBirthdaysList();
       renderFinancial();
@@ -1831,6 +1837,32 @@
       closeChangePasswordModal();
       window.showToast("Senha alterada com sucesso na nuvem!", "success");
     };
+
+    // --- NOTIFICAÇÕES PUSH (FIREBASE MESSAGING) ---
+    window.initPushNotifications = async function() {
+      if (!('serviceWorker' in navigator)) return;
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // ATENÇÃO: Você precisa substituir a chave abaixo pela sua chave VAPID gerada no Firebase
+          const token = await getToken(messaging, { vapidKey: 'BHDFelx9rgOMADX7L7xLLsmqUMf4a2lsBROo5-V7qLgsHU1p0dc_18LjMpUM3h_yBb9b9zMHpWFvKQrKa-vYqSY' });
+          if (token && window.currentUser) {
+            const athlete = window.athletes.find(a => a.id === window.currentUser.id);
+            if (athlete && athlete.fcmToken !== token) {
+              athlete.fcmToken = token;
+              window.saveData(); // Grava o token do celular do cara no banco de dados
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Push Notifications bloqueadas ou com erro:', error);
+      }
+    };
+
+    // Recebe a notificação se o app estiver ABERTO na tela
+    onMessage(messaging, (payload) => {
+      window.showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "success");
+    });
 
     window.resetAthletePinToPhoneDefault = function() {
       const phone = document.getElementById('athletePhoneInput').value.trim();
