@@ -149,7 +149,7 @@
       </div>
       <div class="text-center space-y-1">
         <h2 class="text-xl font-black text-slate-800 uppercase tracking-wider">Acesso ao Sistema</h2>
-        <p class="text-xs text-slate-500 font-medium">Sua senha são os <strong class="text-slate-800">4 últimos dígitos</strong> do seu telefone.</p>
+        <p id="loginInstructionsText" class="text-xs text-slate-500 font-medium">Sua senha são os <strong class="text-slate-800">4 últimos dígitos</strong> do seu telefone (ou sua senha personalizada de 4 dígitos).</p>
       </div>
       <div class="w-full mt-2">
         <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-4 text-3xl font-black text-emerald-600 focus:outline-none focus:border-emerald-500 focus:bg-white text-center tracking-[0.5em] placeholder-slate-300 shadow-inner">
@@ -160,6 +160,46 @@
     </div>
     <div class="mt-8 text-slate-500 text-[10px] font-bold">
       DEVELOPER BY MARCOS ALMEIDA®
+    </div>
+  </div>
+
+  <!-- MODAL: ALTERAR SENHA DO USUÁRIO LOGADO -->
+  <div id="changePasswordModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-key text-emerald-600"></i> Alterar Minha Senha
+        </h3>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Informe a sua nova senha de <strong>4 dígitos numéricos</strong>:
+        </p>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Nova Senha (4 dígitos):</label>
+          <input type="tel" id="newPasswordInput" maxlength="4" placeholder="Ex: 1234" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-2xl font-black text-emerald-600 focus:outline-none focus:border-emerald-500 text-center tracking-[0.4em] shadow-inner">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Confirmar Nova Senha:</label>
+          <input type="tel" id="confirmPasswordInput" maxlength="4" placeholder="Ex: 1234" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-2xl font-black text-emerald-600 focus:outline-none focus:border-emerald-500 text-center tracking-[0.4em] shadow-inner">
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 font-medium">
+          <i class="fa-solid fa-circle-info text-amber-600 mr-1"></i>
+          Ao alterar para um número diferente do seu telefone, os 4 dígitos do seu número não terão mais acesso.
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
+        <button onclick="closeChangePasswordModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="saveNewPassword()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Salvar Nova Senha</button>
+      </div>
     </div>
   </div>
 
@@ -218,6 +258,12 @@
           <button onclick="openActivityLogModal()" id="btnActivityLog" title="Histórico de Auditoria (90 Dias)" class="hidden relative px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-amber-600 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm">
             <i class="fa-solid fa-bell"></i>
             <span id="activityBadgeCount" class="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">0</span>
+          </button>
+
+          <!-- BOTÃO ALTERAR SENHA -->
+          <button onclick="openChangePasswordModal()" id="btnChangePassword" title="Alterar minha senha (4 dígitos)" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-sm">
+            <i class="fa-solid fa-key text-emerald-600 text-xs"></i>
+            <span class="text-[11px] hidden sm:inline">Alterar Senha</span>
           </button>
 
           <div id="userBadge" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shrink-0 shadow-sm">
@@ -662,7 +708,7 @@
     </div>
   </div>
 
-  <!-- ATHLETE MODAL -->
+  <!-- ATHLETE MODAL (COM CAMPO DE SENHA VISÍVEL PARA ADMIN) -->
   <div id="athleteModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between">
@@ -682,6 +728,25 @@
         <div>
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">URL da Foto (Opcional):</label>
           <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+        </div>
+
+        <!-- SENHA DO ATLETA (VISÍVEL E EDITÁVEL POR ADMINS) -->
+        <div id="adminPinFieldContainer" class="bg-emerald-50/70 border border-emerald-300 rounded-2xl p-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-key text-emerald-600"></i> Senha de Acesso (4 dígitos numéricos):
+            </label>
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-900 uppercase">Visível p/ Admin</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="athletePinInput" maxlength="4" placeholder="••••" class="w-full bg-white border border-emerald-300 rounded-xl px-3 py-2 text-sm font-black text-emerald-700 focus:outline-none focus:border-emerald-500 tracking-[0.3em] text-center shadow-sm">
+            <button type="button" onclick="resetAthletePinToPhoneDefault()" title="Redefinir para os 4 últimos dígitos do telefone" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-bold transition-all shrink-0">
+              Padrão Telefone
+            </button>
+          </div>
+          <p class="text-[9px] text-emerald-700 mt-1 font-medium">
+            Se deixado vazio, a senha padrão são os 4 últimos dígitos do telefone do atleta.
+          </p>
         </div>
 
         <!-- CAMPOS DE DIA E MÊS DE ANIVERSÁRIO -->
@@ -1033,7 +1098,6 @@
     window.whatsappSentIds = new Set();
     window.activityLogs = [];
 
-    // Estado do filtro da aba Aniversariantes
     window.selectedBirthdayMonth = null;
 
     window.datesList = ["2026-11-01", "2026-11-03"];
@@ -1094,6 +1158,26 @@
       "Atacante": { tag: "ATA", color: "bg-rose-50 text-rose-700 border-rose-300" },
       "EXTRA": { tag: "EXTRA", color: "bg-purple-50 text-purple-700 border-purple-300" }
     };
+
+    // FUNÇÕES AUXILIARES DE SENHA (PIN)
+    function getAthletePhoneLast4(phone) {
+      if (!phone) return '';
+      return phone.replace(/\D/g, '').slice(-4);
+    }
+
+    function getAthleteEffectivePin(athlete) {
+      if (!athlete) return '';
+      if (athlete.customPin && String(athlete.customPin).trim().length === 4) {
+        return String(athlete.customPin).trim();
+      }
+      return getAthletePhoneLast4(athlete.phone);
+    }
+
+    function isAthletePinCustomized(athlete) {
+      if (!athlete || !athlete.customPin) return false;
+      const phoneDefault = getAthletePhoneLast4(athlete.phone);
+      return String(athlete.customPin).trim() !== phoneDefault;
+    }
 
     function pruneActivityLogs() {
       if (!Array.isArray(window.activityLogs)) {
@@ -1371,8 +1455,8 @@
       requestAnimationFrame(() => toast.classList.remove('translate-x-10', 'opacity-0'));
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-x-10');
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
+        setTimeout(() => toast.remove(), 350);
+      }, 5000);
     };
 
     let confirmCallback = null;
@@ -1416,10 +1500,11 @@
       }
     };
 
+    // --- SISTEMA DE LOGIN COM VERIFICAÇÃO DE SENHA ALTERADA ---
     window.performLogin = function() {
       const pin = document.getElementById('loginPinInput').value.trim();
       if (pin.length !== 4) {
-        window.showToast("Digite os 4 últimos dígitos do seu telefone.");
+        window.showToast("Digite os 4 dígitos da sua senha.");
         return;
       }
 
@@ -1433,7 +1518,8 @@
         return;
       }
 
-      const foundAthlete = window.athletes.find(a => !a.isSuspended && a.phone && a.phone.replace(/\D/g, '').slice(-4) === pin);
+      // 1. Procurar atleta cuja senha efetiva (customPin ou 4 dígitos do telefone) seja exatamente o PIN digitado
+      const foundAthlete = window.athletes.find(a => !a.isSuspended && getAthleteEffectivePin(a) === pin);
 
       if (foundAthlete) {
         window.currentUser = foundAthlete;
@@ -1443,11 +1529,31 @@
         window.isMarcaoUser = upperName.includes('MARCÃO') || upperName.includes('MARCAO');
         window.recordUserInteraction(foundAthlete.name, `Realizou login com sucesso`);
         completeLoginFlow();
-      } else {
-        window.showToast("Senha incorreta ou atleta não encontrado.", "error");
+        return;
+      }
+
+      // 2. REGRA SOLICITADA: Se digitou os 4 últimos dígitos do telefone, mas o atleta alterou sua senha para outro valor:
+      const athleteWhoChangedPin = window.athletes.find(a => {
+        if (a.isSuspended) return false;
+        const phoneLast4 = getAthletePhoneLast4(a.phone);
+        const effectivePin = getAthleteEffectivePin(a);
+        return phoneLast4 === pin && effectivePin !== pin;
+      });
+
+      if (athleteWhoChangedPin) {
+        window.showToast(
+          "Você alterou sua senha e não são mais os 4 últimos dígitos do telefone. Caso queira criar uma nova senha, entre em contato com o administrador (Marcão).",
+          "error"
+        );
         document.getElementById('loginPinInput').value = '';
         document.getElementById('loginPinInput').focus();
+        return;
       }
+
+      // 3. Caso não coincida com nenhum usuário
+      window.showToast("Senha incorreta ou atleta não encontrado.", "error");
+      document.getElementById('loginPinInput').value = '';
+      document.getElementById('loginPinInput').focus();
     };
 
     function completeLoginFlow() {
@@ -1537,6 +1643,57 @@
 
       if (activeTab === 'financial' || activeTab === 'birthdays') switchTab('presence');
       setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
+    };
+
+    // --- MODAL DE ALTERAR SENHA DO USUÁRIO ---
+    window.openChangePasswordModal = function() {
+      if (!window.currentUser || window.currentUser.id === 0) {
+        return window.showToast("Admin Master não altera senha por este menu.");
+      }
+      document.getElementById('newPasswordInput').value = '';
+      document.getElementById('confirmPasswordInput').value = '';
+      document.getElementById('changePasswordModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('newPasswordInput').focus(), 200);
+    };
+
+    window.closeChangePasswordModal = function() {
+      document.getElementById('changePasswordModal').classList.add('hidden');
+    };
+
+    window.saveNewPassword = function() {
+      if (!window.currentUser) return;
+      const newPin = document.getElementById('newPasswordInput').value.trim();
+      const confirmPin = document.getElementById('confirmPasswordInput').value.trim();
+
+      if (!/^\d{4}$/.test(newPin)) {
+        return window.showToast("A senha deve conter exatamente 4 dígitos numéricos.");
+      }
+
+      if (newPin !== confirmPin) {
+        return window.showToast("A confirmação da nova senha não confere.");
+      }
+
+      const athlete = window.athletes.find(a => a.id === window.currentUser.id);
+      if (!athlete) return window.showToast("Atleta não localizado na base.");
+
+      athlete.customPin = newPin;
+      window.currentUser.customPin = newPin;
+
+      window.recordUserInteraction(athlete.name, "Alterou a própria senha de acesso (4 dígitos)");
+      window.saveData();
+      closeChangePasswordModal();
+      window.showToast("Sua senha foi alterada com sucesso na nuvem!", "success");
+    };
+
+    window.resetAthletePinToPhoneDefault = function() {
+      const phoneVal = document.getElementById('athletePhoneInput').value.trim();
+      const last4 = phoneVal.replace(/\D/g, '').slice(-4);
+      if (last4.length === 4) {
+        document.getElementById('athletePinInput').value = last4;
+        window.showToast(`Senha preenchida com o padrão do telefone (${last4})`, "success");
+      } else {
+        window.showToast("Informe primeiro um telefone válido com pelo menos 4 dígitos.");
+      }
     };
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -2073,7 +2230,7 @@
                 <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-300 flex items-center justify-center text-xs border border-slate-200 cursor-not-allowed"><i class="fa-brands fa-whatsapp"></i></span>
               `}
               ${window.isAdmin ? `
-                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="openEditAthleteModal(${athlete.id})" title="Editar Atleta e Senha" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center text-xs border border-slate-300"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="confirmDeleteAthlete(${athlete.id})" title="Excluir" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center text-xs border border-rose-300"><i class="fa-solid fa-trash"></i></button>
               ` : ''}
             </div>
@@ -2144,7 +2301,7 @@
       const athletesWithBday = (window.athletes || []).filter(a => a.birthDay && a.birthMonth);
       if (badgeCount) badgeCount.innerText = athletesWithBday.length;
 
-      // 1. RENDERIZAR DASHBOARD DOS 12 MESES
+      // 1. DASHBOARD DOS 12 MESES
       if (dashboardContainer) {
         dashboardContainer.innerHTML = '';
         for (let m = 1; m <= 12; m++) {
@@ -2167,7 +2324,6 @@
         }
       }
 
-      // Atualizar status do filtro no topo
       if (filterStatusBar && selectedMonthNameEl) {
         if (window.selectedBirthdayMonth) {
           filterStatusBar.classList.remove('hidden');
@@ -2181,7 +2337,7 @@
         }
       }
 
-      // 2. ORDENAÇÃO CIRCULAR POR PROXIMIDADE (O PRÓXIMO FICA NO TOPO)
+      // 2. ORDENAÇÃO CIRCULAR POR PROXIMIDADE
       const sortedAthletes = [...(window.athletes || [])].sort((a, b) => {
         const hasBdayA = a.birthDay && a.birthMonth;
         const hasBdayB = b.birthDay && b.birthMonth;
@@ -2202,7 +2358,7 @@
         }
       });
 
-      // 3. BANNER DE DESTAQUE: PRÓXIMO ANIVERSARIANTE NO TOPO
+      // 3. BANNER DO PRÓXIMO ANIVERSARIANTE NO TOPO
       if (nextCelebrantBanner) {
         let nextCandidate = null;
         const candidates = sortedAthletes.filter(a => a.birthDay && a.birthMonth && !a.isSuspended);
@@ -2371,7 +2527,7 @@
       }
     };
 
-    // --- MENSAGEM DE PARABÉNS BEM-HUMORADA (SEM FOTO / COM REGRA PARA EXTRAS) ---
+    // --- MENSAGEM DE PARABÉNS BEM-HUMORADA ---
     window.sendBirthdayGreeting = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone cadastrado.");
@@ -2380,7 +2536,6 @@
       const currentDay = now.getDate();
       const currentMonth = now.getMonth() + 1;
 
-      // Validação: Somente na data efetiva de aniversário
       if (parseInt(athlete.birthDay) !== currentDay || parseInt(athlete.birthMonth) !== currentMonth) {
         return window.showToast("Os parabéns só podem ser enviados no dia exato do aniversário!", "error");
       }
@@ -2392,7 +2547,6 @@
       let msg = '';
 
       if (isExtra) {
-        // Mensagem exclusiva bem-humorada para atletas EXTRA (só resenha)
         msg = `🎂🍻 *PARABÉNS, MEU CRAQUE DA RESENHA ${athlete.name.toUpperCase()}!* 🎉🥩🥳\n\n` +
           `Hoje o dia é todo seu! A diretoria e toda a família do *Teimoso F.C.C.* passam para te desejar muita saúde, paz, alegria e sucesso dentro e fora das quatro linhas!\n\n` +
           `📢 *REGULAMENTO OFICIAL DO CLUBE PARA SEU NÍVER:*\n` +
@@ -2401,7 +2555,6 @@
           `Comemore muito, meu amigo! Um forte abraço de todos nós do *Teimoso F.C.C.*! 🏆🟢⚪\n\n` +
           `_Mensagem enviada com carinho por: ${senderName}_`;
       } else {
-        // Mensagem bem-humorada para atletas regulares
         msg = `🎂⚽ *PARABÉNS, MEU CRAQUE ${athlete.name.toUpperCase()}!* 🎉🍻🥩\n\n` +
           `Hoje é dia de festa no *Teimoso F.C.C.*! A diretoria e toda a rapaziada passam aqui para te desejar muita saúde, paz, felicidades e que a sua perna continue calibrada (ou pelo menos acertando o gol de vez em quando! 😂🏃‍♂️💨)!\n\n` +
           `Lembrando das regras sagradas do clube para o aniversariante do dia:\n` +
@@ -2423,6 +2576,7 @@
       document.getElementById('athleteNameInput').value = '';
       document.getElementById('athletePhoneInput').value = '';
       document.getElementById('athletePhotoUrlInput').value = '';
+      document.getElementById('athletePinInput').value = '';
       document.getElementById('athleteBirthDayInput').value = '';
       document.getElementById('athleteBirthMonthSelect').value = '';
       document.getElementById('athletePositionSelect').value = 'Meia';
@@ -2440,6 +2594,11 @@
       document.getElementById('athleteNameInput').value = athlete.name;
       document.getElementById('athletePhoneInput').value = athlete.phone || '';
       document.getElementById('athletePhotoUrlInput').value = athlete.photoUrl || '';
+      
+      // Senha sempre visível para os administradores
+      const effectivePin = getAthleteEffectivePin(athlete);
+      document.getElementById('athletePinInput').value = effectivePin || '';
+
       document.getElementById('athleteBirthDayInput').value = athlete.birthDay || '';
       document.getElementById('athleteBirthMonthSelect').value = athlete.birthMonth || '';
       document.getElementById('athletePositionSelect').value = athlete.position;
@@ -2470,6 +2629,7 @@
       const name = document.getElementById('athleteNameInput').value.trim();
       const phone = document.getElementById('athletePhoneInput').value.trim();
       const photoUrl = document.getElementById('athletePhotoUrlInput').value.trim();
+      const pinVal = document.getElementById('athletePinInput').value.trim();
       const birthDay = parseInt(document.getElementById('athleteBirthDayInput').value) || null;
       const birthMonth = parseInt(document.getElementById('athleteBirthMonthSelect').value) || null;
       const position = document.getElementById('athletePositionSelect').value;
@@ -2477,6 +2637,10 @@
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
       if (!name) return window.showToast("Digite o nome.");
+
+      if (pinVal && !/^\d{4}$/.test(pinVal)) {
+        return window.showToast("A senha do atleta deve conter exatamente 4 dígitos numéricos.");
+      }
 
       if (birthDay && (birthDay < 1 || birthDay > 31)) {
         return window.showToast("O dia de aniversário deve estar entre 1 e 31.");
@@ -2488,6 +2652,7 @@
           athlete.name = name; 
           athlete.phone = phone; 
           athlete.photoUrl = photoUrl;
+          athlete.customPin = pinVal || (athlete.customPin || getAthletePhoneLast4(phone));
           athlete.birthDay = birthDay;
           athlete.birthMonth = birthMonth;
           athlete.position = position; 
@@ -2496,10 +2661,11 @@
           athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
         }
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou atleta: ${name} (Senha: ${athlete.customPin})`);
         window.showToast("Atleta atualizado na nuvem!", "success");
       } else {
         const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
+        const initialPin = pinVal || getAthletePhoneLast4(phone);
         window.athletes.push({
           id: newId, 
           name: name, 
@@ -2507,6 +2673,7 @@
           stars: selectedStarsForNewAthlete,
           phone: phone, 
           photoUrl: photoUrl, 
+          customPin: initialPin,
           birthDay: birthDay,
           birthMonth: birthMonth,
           isKeeper: (position === 'Goleiro'),
@@ -2514,7 +2681,7 @@
           isSuspended: isSuspended, 
           effectiveStartDate: null
         });
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou novo atleta: ${name} (Aniv: ${birthDay || '--'}/${birthMonth || '--'})`);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou novo atleta: ${name} (Senha: ${initialPin})`);
         window.showToast("Atleta cadastrado na nuvem!", "success");
       }
 
