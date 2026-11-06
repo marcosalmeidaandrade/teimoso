@@ -65,6 +65,24 @@
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed top-5 right-5 z-[250] flex flex-col gap-2 pointer-events-none"></div>
 
+  <!-- MODAL DE ALERTA NO MEIO DA TELA (AVISO CENTRALIZADO PARA SMARTPHONES) -->
+  <div id="centerAlertModal" class="hidden fixed inset-0 z-[350] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-amber-400 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl flex flex-col items-center text-center space-y-4 animate-in fade-in zoom-in duration-200">
+      <div class="w-14 h-14 rounded-2xl bg-amber-100 border border-amber-300 text-amber-600 flex items-center justify-center text-2xl shadow-inner shrink-0">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 id="centerAlertTitle" class="text-base font-black text-slate-800 uppercase tracking-wide">Aviso Importante</h3>
+        <p id="centerAlertMessage" class="text-xs sm:text-sm font-semibold text-slate-600 mt-2 leading-relaxed">
+          Mensagem de aviso aqui.
+        </p>
+      </div>
+      <button onclick="closeCenterAlert()" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/30 transition-all">
+        Entendido
+      </button>
+    </div>
+  </div>
+
   <!-- ANIMATED CONFIRMATION OVERLAY -->
   <div id="animatedConfirmOverlay" class="fixed inset-0 z-[200] pointer-events-none hidden flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md transition-all duration-500 opacity-0">
     <div id="animatedConfirmContent" class="transform scale-0 transition-transform duration-500 ease-out flex flex-col items-center text-center p-8 max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-200">
@@ -143,8 +161,8 @@
 
   <!-- GLOBAL LOGIN OVERLAY -->
   <div id="globalLoginOverlay" class="fixed inset-0 z-[100] bg-slate-900/60 flex flex-col items-center justify-center p-4 backdrop-blur-md">
-    <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-6">
-      <div class="w-24 h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shadow-md shrink-0">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center space-y-4 sm:space-y-5">
+      <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shadow-md shrink-0">
         <img src="logo.png" alt="Teimoso F.C.C. Logo" class="w-full h-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=TFCC&background=10b981&color=fff&bold=true'">
       </div>
       <div class="text-center space-y-1">
@@ -152,14 +170,25 @@
         <p class="text-xs text-slate-500 font-medium">Informe sua senha numérica de <strong class="text-slate-800">4 dígitos</strong>.</p>
         <p class="text-[10px] text-slate-400">Padrão inicial: 4 últimos dígitos do seu telefone cadastrado.</p>
       </div>
-      <div class="w-full mt-2">
-        <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-4 text-3xl font-black text-emerald-600 focus:outline-none focus:border-emerald-500 focus:bg-white text-center tracking-[0.5em] placeholder-slate-300 shadow-inner">
+
+      <!-- ALERTA INLINE DENTRO DO CARD DE LOGIN (VISÍVEL NO MEIO DA TELA) -->
+      <div id="loginInlineWarning" class="hidden w-full bg-amber-50 border border-amber-300 rounded-2xl p-3 text-left space-y-1 shadow-sm">
+        <div class="flex items-center gap-1.5 text-amber-800 font-black text-[11px] uppercase tracking-wider">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Senha Alterada
+        </div>
+        <p id="loginInlineWarningText" class="text-[11px] text-amber-900 font-medium leading-relaxed">
+          Você alterou sua senha e não são mais os 4 últimos dígitos do telefone. Caso queira criar uma nova senha, entre em contato com o administrador (Marcão).
+        </p>
       </div>
-      <button onclick="performLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-black transition-all shadow-lg shadow-emerald-600/30 uppercase tracking-wider active:scale-95">
+
+      <div class="w-full">
+        <input type="tel" id="loginPinInput" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter') performLogin()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 sm:py-4 text-3xl font-black text-emerald-600 focus:outline-none focus:border-emerald-500 focus:bg-white text-center tracking-[0.5em] placeholder-slate-300 shadow-inner">
+      </div>
+      <button onclick="performLogin()" class="w-full py-3.5 sm:py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-black transition-all shadow-lg shadow-emerald-600/30 uppercase tracking-wider active:scale-95">
         Entrar na Pelada
       </button>
     </div>
-    <div class="mt-8 text-slate-500 text-[10px] font-bold">
+    <div class="mt-6 sm:mt-8 text-slate-500 text-[10px] font-bold">
       DEVELOPER BY MARCOS ALMEIDA®
     </div>
   </div>
@@ -1103,7 +1132,7 @@
     // Filtros de visualização locais
     let activeStatusFilter = null;
     let activeFinancialFilter = null;
-    let selectedBirthMonthFilter = null; // null = Todos (ordem cronológica pelo dia de hoje)
+    let selectedBirthMonthFilter = null;
     window.expandedFinCards = new Set();
     window.whatsappQueueList = [];
     window.whatsappSentIds = new Set();
@@ -1132,6 +1161,9 @@
 
       const filterBadge = document.getElementById('activeFilterBadge');
       if (filterBadge) filterBadge.classList.add('hidden');
+
+      const loginInline = document.getElementById('loginInlineWarning');
+      if (loginInline) loginInline.classList.add('hidden');
 
       ['CONFIRMADO', 'JUSTIFICADO', 'FORA', 'FALTA'].forEach(st => {
         const card = document.getElementById(`cardStat-${st}`);
@@ -1208,6 +1240,33 @@
         return entryTime >= cutoffTime;
       });
     }
+
+    // --- MODAL DE ALERTA CENTRALIZADO NO MEIO DA TELA ---
+    window.showCenterAlert = function(title, message) {
+      const modal = document.getElementById('centerAlertModal');
+      const titleEl = document.getElementById('centerAlertTitle');
+      const msgEl = document.getElementById('centerAlertMessage');
+      if (titleEl) titleEl.innerText = title || "Aviso Importante";
+      if (msgEl) msgEl.innerText = message || "";
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      window.playAppSound('click');
+    };
+
+    window.closeCenterAlert = function() {
+      const modal = document.getElementById('centerAlertModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      const input = document.getElementById('loginPinInput');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    };
 
     // --- GRAVAÇÃO NA NUVEM FIRESTORE ---
     window.saveData = async function() {
@@ -1519,9 +1578,12 @@
       }
     };
 
-    // --- LOGIN INTELIGENTE COM AVISO DE SENHA ALTERADA ---
+    // --- LOGIN INTELIGENTE COM AVISO CENTRALIZADO NO MEIO DA TELA ---
     window.performLogin = function() {
       const pin = document.getElementById('loginPinInput').value.trim();
+      const loginInline = document.getElementById('loginInlineWarning');
+      if (loginInline) loginInline.classList.add('hidden');
+
       if (pin.length !== 4) {
         window.showToast("Digite os 4 números da sua senha.");
         return;
@@ -1560,12 +1622,17 @@
       });
 
       if (athleteWithOldPhonePin) {
-        window.showToast(
-          "Você alterou sua senha e não são mais os 4 últimos dígitos do telefone. Caso queira criar uma nova senha, entre em contato com o administrador (Marcão).",
-          "error"
-        );
-        document.getElementById('loginPinInput').value = '';
-        document.getElementById('loginPinInput').focus();
+        const warningMsg = "Você alterou sua senha e não são mais os 4 últimos dígitos do telefone. Caso queira criar uma nova senha, entre em contato com o administrador (Marcão).";
+        
+        // 1) Abre o alerta modal centralizado NO MEIO DA TELA
+        window.showCenterAlert("Senha Alterada", warningMsg);
+        
+        // 2) Exibe também de forma persistente dentro do card de login
+        if (loginInline) {
+          const textEl = document.getElementById('loginInlineWarningText');
+          if (textEl) textEl.innerText = warningMsg;
+          loginInline.classList.remove('hidden');
+        }
         return;
       }
 
@@ -2450,7 +2517,6 @@
       }
 
       if (selectedBirthMonthFilter !== null) {
-        // Quando o mês está selecionado: filtrar apenas o mês e ordenar rigorosamente por ordem cronológica (1 a 31) e alfabética
         displayedAthletes = displayedAthletes.filter(a => parseInt(a.birthMonth) === selectedBirthMonthFilter);
         displayedAthletes.sort((a, b) => {
           const dayA = parseInt(a.birthDay) || 99;
@@ -2459,9 +2525,6 @@
           return (a.name || '').localeCompare(b.name || '');
         });
       } else {
-        // Visão geral sem seleção de mês:
-        // Ordenar cronologicamente a partir do dia de hoje (quem faz hoje ou nos próximos dias aparece no topo),
-        // e atletas sem data cadastrada vão para o fim da lista.
         displayedAthletes.sort((a, b) => {
           const daysA = getDaysUntilNextBirthday(a.birthDay, a.birthMonth);
           const daysB = getDaysUntilNextBirthday(b.birthDay, b.birthMonth);
@@ -2507,7 +2570,6 @@
           dateDisplayHtml = `<span class="text-[10px] text-slate-400 font-medium">Não informado</span>`;
         }
 
-        // REGRA WHATSAPP: Aberto a todos os integrantes, porém liberado APENAS no dia efetivo do aniversário
         let whatsappButtonHtml = '';
         if (isTodayBirthday) {
           whatsappButtonHtml = `
@@ -2554,7 +2616,6 @@
       });
     };
 
-    // MENSAGEM BEM-HUMORADA DE ANIVERSÁRIO (SEM FOTO)
     window.sendBirthdayWhatsApp = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete) return;
