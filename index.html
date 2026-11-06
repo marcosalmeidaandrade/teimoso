@@ -2101,7 +2101,6 @@
     };
 
     // ================= LÓGICA DA ABA ANIVERSARIANTES =================
-    // Helper: calcula a quantidade de dias até o próximo aniversário a partir de hoje
     function getDaysUntilBirthday(day, month) {
       if (!day || !month) return 9999;
       const today = new Date();
@@ -2140,7 +2139,7 @@
 
       const now = new Date();
       const currentDay = now.getDate();
-      const currentMonth = now.getMonth() + 1; // 1 a 12
+      const currentMonth = now.getMonth() + 1;
 
       const athletesWithBday = (window.athletes || []).filter(a => a.birthDay && a.birthMonth);
       if (badgeCount) badgeCount.innerText = athletesWithBday.length;
@@ -2183,8 +2182,6 @@
       }
 
       // 2. ORDENAÇÃO CIRCULAR POR PROXIMIDADE (O PRÓXIMO FICA NO TOPO)
-      // Se não há filtro de mês: ordena pela proximidade da data atual (dias até o próximo aniversário)
-      // Se há filtro de mês: ordena pelo dia do mês (1 a 31), com dias a partir de hoje tendo prioridade se for o mês corrente
       const sortedAthletes = [...(window.athletes || [])].sort((a, b) => {
         const hasBdayA = a.birthDay && a.birthMonth;
         const hasBdayB = b.birthDay && b.birthMonth;
@@ -2193,13 +2190,11 @@
         if (!hasBdayB) return -1;
 
         if (window.selectedBirthdayMonth) {
-          // Dentro do mês selecionado: ordena estritamente por dia cronológico (1 a 31)
           const dayA = parseInt(a.birthDay);
           const dayB = parseInt(b.birthDay);
           if (dayA !== dayB) return dayA - dayB;
           return (a.name || '').localeCompare(b.name || '');
         } else {
-          // Visão geral de entrada: circular cronológico por dias até o próximo aniversário
           const daysA = getDaysUntilBirthday(a.birthDay, a.birthMonth);
           const daysB = getDaysUntilBirthday(b.birthDay, b.birthMonth);
           if (daysA !== daysB) return daysA - daysB;
@@ -2209,12 +2204,10 @@
 
       // 3. BANNER DE DESTAQUE: PRÓXIMO ANIVERSARIANTE NO TOPO
       if (nextCelebrantBanner) {
-        // Encontra o próximo aniversariante no conjunto elegível
         let nextCandidate = null;
         const candidates = sortedAthletes.filter(a => a.birthDay && a.birthMonth && !a.isSuspended);
 
         if (window.selectedBirthdayMonth) {
-          // No mês filtrado: seleciona o que possui dia >= hoje se for o mês atual, ou o menor dia
           const monthCandidates = candidates.filter(a => parseInt(a.birthMonth) === window.selectedBirthdayMonth);
           if (window.selectedBirthdayMonth === currentMonth) {
             nextCandidate = monthCandidates.find(a => parseInt(a.birthDay) >= currentDay) || monthCandidates[0];
@@ -2222,7 +2215,7 @@
             nextCandidate = monthCandidates[0];
           }
         } else {
-          nextCandidate = candidates[0]; // já ordenado pelo menor daysUntilBirthday
+          nextCandidate = candidates[0];
         }
 
         if (nextCandidate) {
@@ -2378,7 +2371,7 @@
       }
     };
 
-    // --- MENSAGEM DE PARABÉNS BEM-HUMORADA COM FOTO CADASTRADA ---
+    // --- MENSAGEM DE PARABÉNS BEM-HUMORADA (SEM FOTO / COM REGRA PARA EXTRAS) ---
     window.sendBirthdayGreeting = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone cadastrado.");
@@ -2394,22 +2387,30 @@
 
       const cleanPhone = athlete.phone.replace(/\D/g, '');
       const senderName = window.currentUser ? window.currentUser.name : 'A Galera do Teimoso F.C.C.';
+      const isExtra = (athlete.position === 'EXTRA');
 
-      // Montagem da foto cadastrada (se houver)
-      let photoSection = '';
-      if (athlete.photoUrl && athlete.photoUrl.startsWith('http')) {
-        photoSection = `📸 *Dá uma olhada no perfil do aniversariante:* \n${athlete.photoUrl}\n\n`;
+      let msg = '';
+
+      if (isExtra) {
+        // Mensagem exclusiva bem-humorada para atletas EXTRA (só resenha)
+        msg = `🎂🍻 *PARABÉNS, MEU CRAQUE DA RESENHA ${athlete.name.toUpperCase()}!* 🎉🥩🥳\n\n` +
+          `Hoje o dia é todo seu! A diretoria e toda a família do *Teimoso F.C.C.* passam para te desejar muita saúde, paz, alegria e sucesso dentro e fora das quatro linhas!\n\n` +
+          `📢 *REGULAMENTO OFICIAL DO CLUBE PARA SEU NÍVER:*\n` +
+          `⚠️ *Aviso aos navegantes:* Como você é categoria *EXTRA*, a diretoria informa formalmente que você *NÃO PODE ENTRAR EM CAMPO PRA JOGAR*... 😂⚽🚫\n` +
+          `✅ *MAS ESTÁ 100% LIBERADO (E CONVOCADO) PRA FESTEJAR, COMANDAR O CHURRASCO E A CERVEJA NA RESENHA!* 🍻🍖🍾\n\n` +
+          `Comemore muito, meu amigo! Um forte abraço de todos nós do *Teimoso F.C.C.*! 🏆🟢⚪\n\n` +
+          `_Mensagem enviada com carinho por: ${senderName}_`;
+      } else {
+        // Mensagem bem-humorada para atletas regulares
+        msg = `🎂⚽ *PARABÉNS, MEU CRAQUE ${athlete.name.toUpperCase()}!* 🎉🍻🥩\n\n` +
+          `Hoje é dia de festa no *Teimoso F.C.C.*! A diretoria e toda a rapaziada passam aqui para te desejar muita saúde, paz, felicidades e que a sua perna continue calibrada (ou pelo menos acertando o gol de vez em quando! 😂🏃‍♂️💨)!\n\n` +
+          `Lembrando das regras sagradas do clube para o aniversariante do dia:\n` +
+          `1️⃣ Hoje a cerveja e a carne são por sua conta na resenha! 🥩🍺\n` +
+          `2️⃣ Se errar gol sem goleiro no próximo jogo, a multa dobra! ⚽🥅\n` +
+          `3️⃣ Tá liberado correr menos no segundo tempo! 😅\n\n` +
+          `Tamo junto demais, meu camisa 10! Um forte abraço de toda a família *Teimoso F.C.C.*! 🏆🟢⚪\n\n` +
+          `_Mensagem enviada com carinho por: ${senderName}_`;
       }
-
-      const msg = `🎂⚽ *PARABÉNS, MEU CRAQUE ${athlete.name.toUpperCase()}!* 🎉🍻🥩\n\n` +
-        `Hoje é dia de festa no *Teimoso F.C.C.*! A diretoria e toda a rapaziada passam aqui para te desejar muita saúde, paz, felicidades e que a sua perna continue calibrada (ou pelo menos acertando o gol de vez em quando! 😂🏃‍♂️💨)!\n\n` +
-        `Lembrando das regras sagradas do clube para o aniversariante do dia:\n` +
-        `1️⃣ Hoje a cerveja e a carne são por sua conta na resenha! 🥩🍺\n` +
-        `2️⃣ Se errar gol sem goleiro no próximo jogo, a multa dobra! ⚽🥅\n` +
-        `3️⃣ Tá liberado correr menos no segundo tempo! 😅\n\n` +
-        photoSection +
-        `Tamo junto demais, meu camisa 10! Um forte abraço de toda a família *Teimoso F.C.C.*! 🏆🟢⚪\n\n` +
-        `_Mensagem enviada com carinho por: ${senderName}_`;
 
       window.recordUserInteraction(window.currentUser?.name || 'Atleta', `Enviou parabéns bem-humorado no WhatsApp para ${athlete.name}`);
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
