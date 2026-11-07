@@ -1151,9 +1151,9 @@
     window.whatsappSentIds = new Set();
     window.activityLogs = [];
 
-    window.datesList = ["2026-11-01", "2026-11-03"];
-    window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00" };
-    window.currentDate = "2026-11-01";
+    window.datesList = ["2026-11-01", "2026-11-03", "2026-11-08"];
+    window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00", "2026-11-08": "07:00" };
+    window.currentDate = "2026-11-08";
     window.athletes = [];
     window.presences = {};
     window.financialPayments = {};
@@ -1845,7 +1845,7 @@
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           // ATENÇÃO: Você precisa substituir a chave abaixo pela sua chave VAPID gerada no Firebase
-          const token = await getToken(messaging, { vapidKey: 'BHDFelx9rgOMADX7L7xLLsmqUMf4a2lsBROo5-V7qLgsHU1p0dc_18LjMpUM3h_yBb9b9zMHpWFvKQrKa-vYqSY' });
+          const token = await getToken(messaging, { vapidKey: 'COLE_SUA_CHAVE_VAPID_AQUI' });
           if (token && window.currentUser) {
             const athlete = window.athletes.find(a => a.id === window.currentUser.id);
             if (athlete && athlete.fcmToken !== token) {
@@ -1963,12 +1963,6 @@
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const nextSaturday = new Date(today);
-      const dayOfWeek = today.getDay();
-      const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
-      nextSaturday.setDate(today.getDate() + daysUntilSaturday);
-      nextSaturday.setHours(23, 59, 59, 999);
-
       const pastDates = allDates.filter(d => {
         const [y, m, day] = d.split('-');
         return new Date(y, m - 1, day, 23, 59, 59) < today;
@@ -1979,7 +1973,7 @@
         const [y, m, day] = d.split('-');
         const dateObj = new Date(y, m - 1, day, 0, 0, 0);
         if (d === lastPastDate) return true;
-        if (dateObj >= today && dateObj <= nextSaturday) return true;
+        if (dateObj >= today) return true;
         return false;
       });
 
