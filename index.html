@@ -2257,6 +2257,12 @@
       const allAthletesList = window.athletes || [];
 
       const sortedAthletes = [...allAthletesList].sort((a, b) => {
+        // REGRA DE OURO: O usuário logado SEMPRE aparece no topo da lista
+        if (window.currentUser && window.currentUser.id !== 0) {
+          if (a.id === window.currentUser.id) return -1;
+          if (b.id === window.currentUser.id) return 1;
+        }
+
         if (a.isSuspended && !b.isSuspended) return 1;
         if (!a.isSuspended && b.isSuspended) return -1;
 
@@ -2389,6 +2395,7 @@
               <div class="flex flex-col gap-0.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
+                  ${isSelf ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-emerald-600 text-white uppercase shrink-0 shadow-sm shadow-emerald-500/30 animate-pulse">VOCÊ</span>' : ''}
                   ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
                   ${birthdayBadge}
