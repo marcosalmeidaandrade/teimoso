@@ -2037,10 +2037,16 @@
     window.initPushNotifications = async function() {
       if (!('serviceWorker' in navigator)) return;
       try {
+        // FORÇA O REGISTRO DO ARQUIVO DE SEGUNDO PLANO (SERVICE WORKER)
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           // Chave VAPID configurada com sucesso para o Teimoso F.C.C.
-          const token = await getToken(messaging, { vapidKey: 'BHDFelx9rgOMADX7L7xLLsmqUMf4a2lsBROo5-V7qLgsHU1p0dc_18LjMpUM3h_yBb9b9zMHpWFvKQrKa-vYqSY' });
+          const token = await getToken(messaging, { 
+            vapidKey: 'BHDFelx9rgOMADX7L7xLLsmqUMf4a2lsBROo5-V7qLgsHU1p0dc_18LjMpUM3h_yBb9b9zMHpWFvKQrKa-vYqSY',
+            serviceWorkerRegistration: registration 
+          });
           if (token && window.currentUser) {
             const athlete = window.athletes.find(a => a.id === window.currentUser.id);
             if (athlete && athlete.fcmToken !== token) {
@@ -3516,12 +3522,36 @@
     window.exportListToWhatsapp = function() {
       if (!window.isAdmin) return;
       const dayPresences = window.presences[window.currentDate] || {};
+      
+      const getConfirmTime = (id) => {
+        const p = dayPresences[id];
+        return p && p.status === 'CONFIRMADO' && p.confirmedAt ? new Date(p.confirmedAt).getTime() : 0;
+      };
+
+      const formatTimeForMsg = (id) => {
+        const p = dayPresences[id];
+        if (p && p.status === 'CONFIRMADO' && p.confirmedAt) {
+          const d = new Date(p.confirmedAt);
+          const hs = String(d.getHours()).padStart(2, '0');
+          const ms = String(d.getMinutes()).padStart(2, '0');
+          return hs + ':' + ms;
+        }
+        return '--:--';
+      };
+
+      const sortByConfirmTime = (a, b) => {
+        const timeA = getConfirmTime(a.id);
+        const timeB = getConfirmTime(b.id);
+        if (timeA > 0 && timeB > 0) return timeA - timeB; // Crescente (Quem confirmou primeiro sobe)
+        return (a.name || '').localeCompare(b.name || '');
+      };
+
       const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-      const confirmedKeepers = activeAthletes.filter(a => (a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO');
-      const confirmedOutfield = activeAthletes.filter(a => !(a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO');
-      const confirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status === 'CONFIRMADO');
+      const confirmedKeepers = activeAthletes.filter(a => (a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
+      const confirmedOutfield = activeAthletes.filter(a => !(a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
+      const confirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
       
       const unconfirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status !== 'CONFIRMADO');
       const extraKeepers = confirmedKeepers.slice(2);
@@ -3538,19 +3568,19 @@
       text += `🧤 *GOLEIROS CONFIRMADOS:*\n`;
       if (mainKeepers.length === 0) text += `1. _Vaga aberta_\n2. _Vaga aberta_\n`;
       else {
-        mainKeepers.forEach((k, i) => { text += `${i + 1}. ${k.name} ✅\n`; });
+        mainKeepers.forEach((k, i) => { text += `${i + 1}. ${k.name} ✅ _(${formatTimeForMsg(k.id)})_\n`; });
         if (mainKeepers.length === 1) text += `2. _Vaga aberta_\n`;
       }
 
       text += `\n🏃 *JOGADORES DE LINHA (${confirmedOutfield.length}):*\n`;
       if (confirmedOutfield.length === 0) text += `_Nenhum confirmado ainda_\n`;
       else {
-        confirmedOutfield.forEach((p, i) => { text += `${i + 1}. ${p.name} ✅\n`; });
+        confirmedOutfield.forEach((p, i) => { text += `${i + 1}. ${p.name} ✅ _(${formatTimeForMsg(p.id)})_\n`; });
       }
 
       if (confirmedExtras.length > 0) {
         text += `\n🍺 *EXTRAS (SOMENTE RESENHA - CONFIRMADOS):*\n`;
-        confirmedExtras.forEach((ex, i) => { text += `${i + 1}. ${ex.name} ✅ (Resenha)\n`; });
+        confirmedExtras.forEach((ex, i) => { text += `${i + 1}. ${ex.name} ✅ (Resenha) _(${formatTimeForMsg(ex.id)})_\n`; });
       }
 
       text += `\n❌ *OUTROS / FORA DA PELADA (${absentAthletes.length}):*\n`;
