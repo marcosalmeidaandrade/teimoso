@@ -1767,23 +1767,7 @@
       checkDeadlinePassed();
       resetInactivityTimer();
 
-      // --- NOVA REGRA: AVISO DE ANIVERSARIANTE (SEM TIRAR DA TELA DE PRESENÇA) ---
-      const now = new Date();
-      const todayDay = now.getDate();
-      const todayMonth = now.getMonth() + 1;
-      const aniversariantesHoje = window.athletes.filter(a => !a.isSuspended && a.birthDay == todayDay && a.birthMonth == todayMonth);
-
-      if (aniversariantesHoje.length > 0) {
-        const nomes = aniversariantesHoje.map(a => a.name.split(' ')[0]).join(' e ');
-        
-        // Dá um pequeno atraso para a interface carregar e exibe o modal no meio da tela
-        setTimeout(() => {
-          window.showCenterAlert(
-            "🎉 TEM ANIVERSARIANTE HOJE!", 
-            `Opa! Hoje é o aniversário de ${nomes}!\n\nPrimeiro, garanta sua vaga confirmando presença no racha. Depois, dê um pulo na aba de "Aniversariantes" para mandar os parabéns e cobrar o churrasco! 🎂🍻`
-          );
-        }, 600);
-      }
+      window.hasPromptedBirthdayThisSession = false;
     }
 
     window.logout = function() {
@@ -2186,6 +2170,10 @@
       window.saveData();
       renderAthletesList();
       renderFinancial();
+
+      let delay = 500;
+      if (newStatus === 'CONFIRMADO' && current !== 'CONFIRMADO') delay = 3200;
+      window.checkAndPromptBirthdayAfterAction(delay);
     };
 
     window.saveJustification = function() {
@@ -2209,10 +2197,34 @@
       renderAthletesList();
       renderFinancial();
       window.showAnimatedJustification(targetAthlete);
+      window.checkAndPromptBirthdayAfterAction(4700);
     };
 
     window.closeJustifyModal = function() {
       document.getElementById('justifyModal').classList.add('hidden');
+    };
+
+    window.checkAndPromptBirthdayAfterAction = function(delayMs = 500) {
+      if (window.hasPromptedBirthdayThisSession) return;
+
+      const now = new Date();
+      const todayDay = now.getDate();
+      const todayMonth = now.getMonth() + 1;
+      const aniversariantesHoje = window.athletes.filter(a => !a.isSuspended && a.birthDay == todayDay && a.birthMonth == todayMonth);
+
+      if (aniversariantesHoje.length > 0) {
+        window.hasPromptedBirthdayThisSession = true;
+        const nomes = aniversariantesHoje.map(a => a.name.split(' ')[0]).join(' e ');
+
+        setTimeout(() => {
+          window.showConfirm(
+            `Ação salva com sucesso! ✅\n\n🎉 Aproveitando: Hoje é aniversário de ${nomes}!\n\nDeseja ir para a aba de Aniversariantes agora para mandar os parabéns?`,
+            () => {
+              window.switchTab('birthdays');
+            }
+          );
+        }, delayMs);
+      }
     };
 
     function safeNum(val, fallback = 0) {
