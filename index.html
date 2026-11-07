@@ -97,7 +97,7 @@
   <!-- QUICK PRESENCE MODAL (TELA RÁPIDA DE AÇÃO NO LOGIN) -->
   <div id="quickPresenceModal" class="hidden fixed inset-0 z-[320] bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-4 transition-opacity opacity-0 duration-300">
     <div class="bg-white border-2 border-emerald-500 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform scale-95 transition-transform duration-300" id="quickPresenceContent">
-      <button onclick="closeQuickPresenceModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+      <button onclick="skipQuickPresence()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
       
@@ -126,7 +126,7 @@
         </div>
       </div>
       
-      <button onclick="closeQuickPresenceModal()" class="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-wider mt-4 underline decoration-slate-300 underline-offset-4">
+      <button onclick="skipQuickPresence()" class="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-wider mt-4 underline decoration-slate-300 underline-offset-4">
         Responder depois
       </button>
     </div>
@@ -1894,7 +1894,11 @@
 
       // EXIBE TELA RÁPIDA DE PRESENÇA SE ESTIVER PENDENTE
       setTimeout(() => {
-         window.showQuickPresenceModal();
+         const showedPresence = window.showQuickPresenceModal();
+         if (!showedPresence) {
+             // Se não exibiu a tela de presença, checa logo o cadastro familiar
+             window.checkAndPromptFamilyData(500);
+         }
       }, 700);
     }
 
@@ -1970,14 +1974,14 @@
 
     // --- QUICK PRESENCE (TELA RÁPIDA DE AÇÃO) ---
     window.showQuickPresenceModal = function() {
-      if (!window.currentUser || window.currentUser.id === 0 || window.currentUser.isSuspended) return;
+      if (!window.currentUser || window.currentUser.id === 0 || window.currentUser.isSuspended) return false;
 
       // Se passou do prazo e não for admin, não exibe
-      if (window.isPastDeadlineForDate(window.currentDate) && !window.isAdmin) return;
+      if (window.isPastDeadlineForDate(window.currentDate) && !window.isAdmin) return false;
 
       // Se já tiver respondido algo no dia, não incomoda
       const pRecord = window.presences[window.currentDate]?.[window.currentUser.id];
-      if (pRecord && pRecord.status) return;
+      if (pRecord && pRecord.status) return false;
 
       const modal = document.getElementById('quickPresenceModal');
       const content = document.getElementById('quickPresenceContent');
@@ -1999,6 +2003,7 @@
       content.classList.add('scale-100');
       
       window.playAppSound('confirm');
+      return true;
     };
 
     window.closeQuickPresenceModal = function() {
@@ -2016,6 +2021,11 @@
       }, 300);
     };
 
+    window.skipQuickPresence = function() {
+       window.closeQuickPresenceModal();
+       window.checkAndPromptFamilyData(500);
+    };
+
     window.handleQuickPresence = function(status) {
        window.closeQuickPresenceModal();
        setTimeout(() => {
@@ -2029,8 +2039,8 @@
       try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          // ATENÇÃO: Você precisa substituir a chave abaixo pela sua chave VAPID gerada no Firebase
-          const token = await getToken(messaging, { vapidKey: 'COLE_SUA_CHAVE_VAPID_AQUI' });
+          // Chave VAPID configurada com sucesso para o Teimoso F.C.C.
+          const token = await getToken(messaging, { vapidKey: 'BHDFelx9rgOMADX7L7xLLsmqUMf4a2lsBROo5-V7qLgsHU1p0dc_18LjMpUM3h_yBb9b9zMHpWFvKQrKa-vYqSY' });
           if (token && window.currentUser) {
             const athlete = window.athletes.find(a => a.id === window.currentUser.id);
             if (athlete && athlete.fcmToken !== token) {
