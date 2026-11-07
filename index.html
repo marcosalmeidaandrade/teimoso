@@ -889,6 +889,40 @@
             <input type="number" id="athleteMonthlyFeeInput" value="110" step="1" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
           </div>
         </div>
+
+        <!-- DADOS FAMILIARES (FESTA DE FINAL DE ANO) -->
+        <div class="bg-sky-50/60 border border-sky-200/80 rounded-2xl p-3 mt-2">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-sky-800 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-people-roof text-sky-600"></i> Família (Sorteios Fim de Ano)
+          </label>
+          <div class="space-y-2.5">
+             <div>
+               <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Esposa (Nome):</label>
+               <input type="text" id="adminWifeName" placeholder="Nome completo ou apelido" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-[11px] font-bold focus:border-sky-500 outline-none shadow-sm">
+             </div>
+             <div class="grid grid-cols-2 gap-2">
+               <div>
+                 <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Dia Nasc.:</label>
+                 <input type="number" id="adminWifeDay" min="1" max="31" placeholder="Dia" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-[11px] font-bold focus:border-sky-500 outline-none shadow-sm text-center">
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Mês Nasc.:</label>
+                 <select id="adminWifeMonth" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-[11px] font-bold focus:border-sky-500 outline-none shadow-sm">
+                    <option value="">Mês</option>
+                    <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option><option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option><option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+                 </select>
+               </div>
+             </div>
+             <div class="pt-1 border-t border-sky-200/60 mt-1">
+                <div class="flex items-center justify-between mb-2 mt-1">
+                  <label class="block text-[10px] font-bold uppercase text-slate-600 flex items-center gap-1"><i class="fa-solid fa-children text-sky-500"></i> Filhos:</label>
+                  <button type="button" onclick="adminAddChildRow()" class="text-[9px] bg-sky-200 hover:bg-sky-300 text-sky-800 px-2 py-1 rounded-md font-black uppercase tracking-wider transition-colors">+ Adicionar</button>
+                </div>
+                <div id="adminChildrenContainer" class="space-y-2"></div>
+             </div>
+          </div>
+        </div>
+
         <div class="flex items-center gap-2 pt-2">
           <input type="checkbox" id="athleteSuspendedCheckbox" class="w-4 h-4 rounded bg-slate-50 border-slate-300 text-emerald-600 focus:ring-0">
           <label for="athleteSuspendedCheckbox" class="text-xs font-bold text-rose-600">SUSPENSO / SAIU (Exibe aviso de suspensão sem ações de jogo)</label>
@@ -1031,6 +1065,47 @@
       <div class="flex items-center gap-2 pt-2">
         <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
         <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAMILY DATA PROMPT MODAL -->
+  <div id="familyDataModal" class="hidden fixed inset-0 z-[340] bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-4 transition-opacity opacity-0 duration-300">
+    <div class="bg-white border-2 border-sky-400 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col space-y-4 max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300" id="familyDataContent">
+      <div class="text-center">
+        <h2 class="text-lg font-black text-sky-700 uppercase tracking-wider flex items-center justify-center gap-2"><i class="fa-solid fa-gift text-amber-500"></i> Festa Fim de Ano</h2>
+        <p class="text-[11px] text-slate-500 mt-1.5 font-bold leading-relaxed">
+          Atualize os dados da sua família para garantirem participação nos <strong>sorteios e brindes exclusivos da nossa festa!</strong> 🎁🍻
+        </p>
+      </div>
+
+      <!-- ESPOSA -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+        <h3 class="text-[11px] font-black text-slate-700 uppercase flex items-center gap-1.5"><i class="fa-solid fa-ring text-amber-500"></i> Dados da Esposa</h3>
+        <div>
+          <input type="text" id="promptWifeName" placeholder="Nome completo ou apelido" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:border-sky-500 outline-none shadow-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <input type="number" id="promptWifeDay" min="1" max="31" placeholder="Dia Nasc." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:border-sky-500 outline-none shadow-sm text-center">
+          <select id="promptWifeMonth" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2.5 text-xs font-bold text-slate-800 focus:border-sky-500 outline-none shadow-sm">
+              <option value="">Mês Nasc.</option>
+              <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option><option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option><option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FILHOS -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+            <h3 class="text-[11px] font-black text-slate-700 uppercase flex items-center gap-1.5"><i class="fa-solid fa-children text-sky-500"></i> Filhos</h3>
+            <button onclick="addPromptChildRow()" class="px-2.5 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm transition-all">+ Adicionar</button>
+        </div>
+        <div id="promptChildrenContainer" class="space-y-2"></div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="skipFamilyData()" class="w-1/3 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase transition-all">Agora Não</button>
+        <button onclick="saveFamilyDataPrompt()" class="w-2/3 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-sky-600/30 uppercase tracking-wider active:scale-95">Salvar Família</button>
       </div>
     </div>
   </div>
@@ -1618,18 +1693,27 @@
     };
 
     let confirmCallback = null;
-    window.showConfirm = function(message, callback) {
+    let cancelCallback = null;
+    window.showConfirm = function(message, callback, onCancel) {
       document.getElementById('confirmMessage').innerText = message;
       confirmCallback = callback;
+      cancelCallback = onCancel;
       document.getElementById('customConfirmModal').classList.remove('hidden');
     };
+    
     window.closeConfirm = function() {
       document.getElementById('customConfirmModal').classList.add('hidden');
+      if (cancelCallback) cancelCallback();
       confirmCallback = null;
+      cancelCallback = null;
     };
+    
     document.getElementById('btnConfirmAction').addEventListener('click', () => {
-      if (confirmCallback) confirmCallback();
-      window.closeConfirm();
+      const cb = confirmCallback;
+      confirmCallback = null;
+      cancelCallback = null;
+      if (cb) cb();
+      document.getElementById('customConfirmModal').classList.add('hidden');
     });
 
     window.isPastDeadlineForDate = function(dateStr) {
@@ -1806,6 +1890,7 @@
       resetInactivityTimer();
 
       window.hasPromptedBirthdayThisSession = false;
+      window.hasPromptedFamilyThisSession = false;
 
       // EXIBE TELA RÁPIDA DE PRESENÇA SE ESTIVER PENDENTE
       setTimeout(() => {
@@ -2303,7 +2388,10 @@
     };
 
     window.checkAndPromptBirthdayAfterAction = function(delayMs = 500) {
-      if (window.hasPromptedBirthdayThisSession) return;
+      if (window.hasPromptedBirthdayThisSession) {
+         window.checkAndPromptFamilyData(delayMs);
+         return;
+      }
 
       const now = new Date();
       const todayDay = now.getDate();
@@ -2319,13 +2407,131 @@
           window.showConfirm(
             `Ação salva com sucesso! ✅\n\n🎉 Aproveitando: Hoje é aniversário de ${nomes}!\n\nDeseja enviar os parabéns pelo WhatsApp agora mesmo?`,
             () => {
-              // Dispara o WhatsApp direto e mantém o atleta na lista de presença
+              // Confirmou os parabéns
               window.sendBirthdayWhatsApp(aniversariante.id);
               window.switchTab('presence'); 
+              setTimeout(() => window.checkAndPromptFamilyData(500), 1000);
+            },
+            () => {
+              // Negou os parabéns
+              window.checkAndPromptFamilyData(500);
             }
           );
         }, delayMs);
+      } else {
+        // Não há aniversariantes hoje
+        window.checkAndPromptFamilyData(delayMs);
       }
+    };
+
+    // --- FUNÇÕES DE CADASTRO FAMILIAR (FESTA DE FINAL DE ANO) ---
+    window.getChildRowHTML = function(name = '', day = '', month = '') {
+      return `
+        <div class="flex items-center gap-1 child-row bg-white p-2 rounded-xl border border-slate-200 shadow-sm relative group">
+           <input type="text" placeholder="Nome do filho(a)" value="${name}" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold outline-none focus:border-sky-500 child-name">
+           <input type="number" min="1" max="31" placeholder="Dia" value="${day}" class="w-[50px] bg-slate-50 border border-slate-200 rounded-lg px-1 py-1.5 text-[11px] font-bold outline-none focus:border-sky-500 text-center child-day">
+           <select class="w-[65px] bg-slate-50 border border-slate-200 rounded-lg px-0.5 py-1.5 text-[11px] font-bold outline-none focus:border-sky-500 child-month">
+              <option value="">Mês</option>
+              <option value="1" ${month==1?'selected':''}>Jan</option><option value="2" ${month==2?'selected':''}>Fev</option><option value="3" ${month==3?'selected':''}>Mar</option><option value="4" ${month==4?'selected':''}>Abr</option><option value="5" ${month==5?'selected':''}>Mai</option><option value="6" ${month==6?'selected':''}>Jun</option><option value="7" ${month==7?'selected':''}>Jul</option><option value="8" ${month==8?'selected':''}>Ago</option><option value="9" ${month==9?'selected':''}>Set</option><option value="10" ${month==10?'selected':''}>Out</option><option value="11" ${month==11?'selected':''}>Nov</option><option value="12" ${month==12?'selected':''}>Dez</option>
+           </select>
+           <button type="button" onclick="this.parentElement.remove()" class="text-rose-400 hover:text-rose-600 px-1.5 transition-colors"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+    };
+
+    window.adminAddChildRow = function() {
+      document.getElementById('adminChildrenContainer').insertAdjacentHTML('beforeend', window.getChildRowHTML());
+    };
+
+    window.addPromptChildRow = function() {
+      document.getElementById('promptChildrenContainer').insertAdjacentHTML('beforeend', window.getChildRowHTML());
+    };
+
+    window.checkAndPromptFamilyData = function(delayMs = 500) {
+      if (!window.currentUser || window.currentUser.id === 0) return;
+      if (window.hasPromptedFamilyThisSession) return;
+
+      const athlete = window.athletes.find(a => a.id === window.currentUser.id);
+      if (!athlete) return;
+      if (athlete.familyDataFilled) return; 
+
+      setTimeout(() => {
+         window.openFamilyDataPromptModal(athlete);
+      }, delayMs);
+    };
+
+    window.openFamilyDataPromptModal = function(athlete) {
+      window.hasPromptedFamilyThisSession = true;
+      const modal = document.getElementById('familyDataModal');
+      const content = document.getElementById('familyDataContent');
+
+      document.getElementById('promptWifeName').value = athlete?.family?.wife?.name || '';
+      document.getElementById('promptWifeDay').value = athlete?.family?.wife?.day || '';
+      document.getElementById('promptWifeMonth').value = athlete?.family?.wife?.month || '';
+      
+      const childrenContainer = document.getElementById('promptChildrenContainer');
+      childrenContainer.innerHTML = '';
+      if (athlete?.family?.children && athlete.family.children.length > 0) {
+        athlete.family.children.forEach(c => {
+           childrenContainer.insertAdjacentHTML('beforeend', window.getChildRowHTML(c.name, c.day, c.month));
+        });
+      } else {
+        childrenContainer.insertAdjacentHTML('beforeend', window.getChildRowHTML());
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      void modal.offsetWidth; 
+      modal.classList.remove('opacity-0');
+      modal.classList.add('opacity-100');
+      content.classList.remove('scale-95');
+      content.classList.add('scale-100');
+      window.playAppSound('click');
+    };
+
+    window.closeFamilyDataPromptModal = function() {
+      const modal = document.getElementById('familyDataModal');
+      const content = document.getElementById('familyDataContent');
+      modal.classList.remove('opacity-100');
+      modal.classList.add('opacity-0');
+      content.classList.remove('scale-100');
+      content.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 300);
+    };
+
+    window.skipFamilyData = function() {
+      window.closeFamilyDataPromptModal();
+    };
+
+    window.saveFamilyDataPrompt = function() {
+      const athlete = window.athletes.find(a => a.id === window.currentUser.id);
+      if (!athlete) return;
+
+      const wifeName = document.getElementById('promptWifeName').value.trim();
+      const wifeDay = parseInt(document.getElementById('promptWifeDay').value) || null;
+      const wifeMonth = parseInt(document.getElementById('promptWifeMonth').value) || null;
+
+      const children = [];
+      document.querySelectorAll('#promptChildrenContainer .child-row').forEach(row => {
+         const cName = row.querySelector('.child-name').value.trim();
+         const cDay = parseInt(row.querySelector('.child-day').value) || null;
+         const cMonth = parseInt(row.querySelector('.child-month').value) || null;
+         if(cName) children.push({ name: cName, day: cDay, month: cMonth });
+      });
+
+      athlete.family = {
+         wife: { name: wifeName, day: wifeDay, month: wifeMonth },
+         children: children
+      };
+      athlete.familyDataFilled = true;
+
+      window.recordUserInteraction(athlete.name, "Atualizou o cadastro familiar para a Festa de Fim de Ano");
+      window.saveData();
+      window.closeFamilyDataPromptModal();
+      window.showToast("Dados familiares salvos com sucesso! 🎁", "success");
     };
 
     function safeNum(val, fallback = 0) {
@@ -2873,6 +3079,12 @@
       document.getElementById('athletePositionSelect').value = 'Meia';
       document.getElementById('athleteMonthlyFeeInput').value = '110';
       document.getElementById('athleteSuspendedCheckbox').checked = false;
+      
+      document.getElementById('adminWifeName').value = '';
+      document.getElementById('adminWifeDay').value = '';
+      document.getElementById('adminWifeMonth').value = '';
+      document.getElementById('adminChildrenContainer').innerHTML = '';
+
       buildStarRatingSelector(5);
       document.getElementById('athleteModal').classList.remove('hidden');
     };
@@ -2891,6 +3103,19 @@
       document.getElementById('athletePositionSelect').value = athlete.position;
       document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
+      
+      document.getElementById('adminWifeName').value = athlete?.family?.wife?.name || '';
+      document.getElementById('adminWifeDay').value = athlete?.family?.wife?.day || '';
+      document.getElementById('adminWifeMonth').value = athlete?.family?.wife?.month || '';
+      
+      const childrenContainer = document.getElementById('adminChildrenContainer');
+      childrenContainer.innerHTML = '';
+      if (athlete?.family?.children && athlete.family.children.length > 0) {
+        athlete.family.children.forEach(c => {
+           childrenContainer.insertAdjacentHTML('beforeend', window.getChildRowHTML(c.name, c.day, c.month));
+        });
+      }
+
       buildStarRatingSelector(athlete.stars || 5);
       document.getElementById('athleteModal').classList.remove('hidden');
     };
@@ -2923,6 +3148,24 @@
       const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput').value) || 110;
       const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
 
+      const adminWifeName = document.getElementById('adminWifeName').value.trim();
+      const adminWifeDay = parseInt(document.getElementById('adminWifeDay').value) || null;
+      const adminWifeMonth = parseInt(document.getElementById('adminWifeMonth').value) || null;
+
+      const children = [];
+      document.querySelectorAll('#adminChildrenContainer .child-row').forEach(row => {
+         const cName = row.querySelector('.child-name').value.trim();
+         const cDay = parseInt(row.querySelector('.child-day').value) || null;
+         const cMonth = parseInt(row.querySelector('.child-month').value) || null;
+         if (cName) children.push({ name: cName, day: cDay, month: cMonth });
+      });
+
+      const familyObj = {
+         wife: { name: adminWifeName, day: adminWifeDay, month: adminWifeMonth },
+         children: children
+      };
+      const familyDataFilled = adminWifeName !== '' || children.length > 0;
+
       if (!name) return window.showToast("Digite o nome.");
 
       if (birthDay && (birthDay < 1 || birthDay > 31)) {
@@ -2947,6 +3190,8 @@
           athlete.isSuspended = isSuspended; 
           athlete.isKeeper = (position === 'Goleiro');
           athlete.monthlyFee = monthlyFee;
+          athlete.family = familyObj;
+          athlete.familyDataFilled = athlete.familyDataFilled || familyDataFilled;
         }
         window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o cadastro do atleta: ${name}`);
         window.showToast("Atleta atualizado na nuvem!", "success");
@@ -2965,7 +3210,9 @@
           isKeeper: (position === 'Goleiro'),
           monthlyFee: monthlyFee, 
           isSuspended: isSuspended, 
-          effectiveStartDate: null
+          effectiveStartDate: null,
+          family: familyObj,
+          familyDataFilled: familyDataFilled
         });
         window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name}`);
         window.showToast("Atleta cadastrado na nuvem!", "success");
