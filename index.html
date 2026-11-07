@@ -2312,13 +2312,16 @@
 
       if (aniversariantesHoje.length > 0) {
         window.hasPromptedBirthdayThisSession = true;
+        const aniversariante = aniversariantesHoje[0];
         const nomes = aniversariantesHoje.map(a => a.name.split(' ')[0]).join(' e ');
 
         setTimeout(() => {
           window.showConfirm(
-            `Ação salva com sucesso! ✅\n\n🎉 Aproveitando: Hoje é aniversário de ${nomes}!\n\nDeseja ir para a aba de Aniversariantes agora para mandar os parabéns?`,
+            `Ação salva com sucesso! ✅\n\n🎉 Aproveitando: Hoje é aniversário de ${nomes}!\n\nDeseja enviar os parabéns pelo WhatsApp agora mesmo?`,
             () => {
-              window.switchTab('birthdays');
+              // Dispara o WhatsApp direto e mantém o atleta na lista de presença
+              window.sendBirthdayWhatsApp(aniversariante.id);
+              window.switchTab('presence'); 
             }
           );
         }, delayMs);
