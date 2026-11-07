@@ -1766,6 +1766,22 @@
       renderFinancial();
       checkDeadlinePassed();
       resetInactivityTimer();
+
+      // --- NOVA REGRA: REDIRECIONAMENTO DE ANIVERSARIANTE NO LOGIN ---
+      const now = new Date();
+      const todayDay = now.getDate();
+      const todayMonth = now.getMonth() + 1;
+      const aniversariantesHoje = window.athletes.filter(a => !a.isSuspended && a.birthDay == todayDay && a.birthMonth == todayMonth);
+
+      if (aniversariantesHoje.length > 0) {
+        switchTab('birthdays'); // Muda automaticamente para a aba de aniversariantes
+        const nomes = aniversariantesHoje.map(a => a.name.split(' ')[0]).join(' e ');
+        
+        // Dá um pequeno atraso para a animação da aba e exibe o modal no meio da tela
+        setTimeout(() => {
+          window.showCenterAlert("🎉 TEM ANIVERSARIANTE HOJE!", `Opa! Hoje é o aniversário de ${nomes}! O sistema já te trouxe direto para a aba de Aniversariantes para você mandar os parabéns e cobrar o churrasco! 🎂🍻`);
+        }, 500);
+      }
     }
 
     window.logout = function() {
