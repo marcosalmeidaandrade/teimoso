@@ -1110,6 +1110,31 @@
     </div>
   </div>
 
+  <!-- SETTLE FINE MODAL (BAIXA DE MULTA NEGOCIÁVEL) -->
+  <div id="settleFineModal" class="hidden fixed inset-0 z-[360] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i> Baixar Débito de Multa
+        </h3>
+        <button onclick="closeSettleFineModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div>
+        <p class="text-xs text-slate-600 mb-2">Informe o valor que foi pago por <strong id="settleFineAthleteName" class="text-slate-800"></strong>:</p>
+        <input type="number" id="settleFineAmountInput" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-lg font-black text-center text-emerald-600 focus:outline-none focus:border-emerald-500">
+        <p class="text-[10px] text-amber-600 mt-1.5"><i class="fa-solid fa-circle-info"></i> O débito será liquidado independentemente do valor informado.</p>
+      </div>
+      <div class="flex items-center gap-2 pt-2">
+        <input type="hidden" id="settleFineAthleteId">
+        <input type="hidden" id="settleFineIndex">
+        <button onclick="closeSettleFineModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="confirmSettleFine()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Confirmar Baixa</button>
+      </div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT APPLICATION CORE (NUVEM COM PERSISTÊNCIA FIRESTORE) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -3781,6 +3806,10 @@
         athleteFines.forEach((fine, fineIdx) => {
           if (!fine || fine.date < '2026-11-01') return;
           
+          if (fine.paid && fine.amountPaid !== undefined) {
+             athleteTotalPaid += safeNum(fine.amountPaid, 0);
+          }
+          
           const fineDate = new Date(fine.date + 'T00:00:00');
           let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
           if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -3793,20 +3822,22 @@
             athleteStrictOverdue += fineTotal;
             athleteTotalInterest += fineInterest;
           }
+          
+          const amountPaidLabel = fine.paid && fine.amountPaid !== undefined ? ` (Pago: R$ ${fine.amountPaid.toFixed(2)})` : '';
 
           finesHtml += `
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-rose-300 text-xs shadow-sm">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white p-2.5 rounded-xl border ${fine.paid ? 'border-emerald-300' : 'border-rose-300'} text-xs shadow-sm">
               <div class="flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                <i class="fa-solid fa-triangle-exclamation ${fine.paid ? 'text-emerald-500' : 'text-rose-500'}"></i>
                 <span class="font-bold text-slate-800">Falta em ${formatDateDisplay(fine.date)}</span>
                 <span class="text-[10px] text-slate-500">Base: R$ ${baseAmt.toFixed(2)}</span>
-                <span class="text-[10px] text-amber-600 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>
+                ${!fine.paid ? `<span class="text-[10px] text-amber-600 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>` : ''}
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-black ${fine.paid ? 'text-emerald-600' : 'text-rose-600'}">Total: R$ ${fineTotal.toFixed(2)}</span>
+                <span class="text-xs font-black ${fine.paid ? 'text-emerald-600' : 'text-rose-600'}">Total: R$ ${fineTotal.toFixed(2)}${amountPaidLabel}</span>
                 ${window.canEditFinancial ? `
-                  <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 font-bold text-[10px] transition-all">
-                    ${fine.paid ? 'Quitada' : 'Baixar Débito'}
+                  <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded ${fine.paid ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300' : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300'} font-bold text-[10px] transition-all">
+                    ${fine.paid ? 'Desfazer Baixa' : 'Baixar Débito'}
                   </button>
                   <button onclick="deleteAbsenceFine(${athlete.id}, ${fineIdx})" title="Excluir multa permanentemente" class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-300 font-bold text-[10px] transition-all flex items-center gap-1">
                     <i class="fa-solid fa-trash-can"></i> Excluir Multa
@@ -3903,14 +3934,62 @@
     window.settleAbsenceFine = function(athleteId, fineIndex) {
       if (!window.canEditFinancial) return window.showToast("Apenas Pablo Padilha e Marcão podem quitar multas.");
       if (window.absenceFines[athleteId] && window.absenceFines[athleteId][fineIndex]) {
-        window.absenceFines[athleteId][fineIndex].paid = true;
+        const fine = window.absenceFines[athleteId][fineIndex];
         const target = window.athletes.find(a => a.id === athleteId);
-        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de falta de ${target?.name || ''}`);
+        
+        if (fine.paid) {
+           window.showConfirm(`Desfazer a baixa da multa de ${target?.name}?`, () => {
+             fine.paid = false;
+             delete fine.amountPaid;
+             window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Desfez a baixa de multa de falta de ${target?.name || ''}`);
+             window.saveData();
+             renderFinancial();
+             renderAthletesList();
+             renderReports();
+             window.showToast("Baixa desfeita!", "success");
+           });
+        } else {
+            const now = new Date();
+            const fineDate = new Date(fine.date + 'T00:00:00');
+            let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
+            if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
+            const baseAmt = safeNum(fine.baseAmount, 30.00);
+            const fineInterest = daysPassed * 1.00;
+            const fineTotal = baseAmt + fineInterest;
+
+            document.getElementById('settleFineAthleteId').value = athleteId;
+            document.getElementById('settleFineIndex').value = fineIndex;
+            document.getElementById('settleFineAthleteName').innerText = target?.name || 'Atleta';
+            document.getElementById('settleFineAmountInput').value = fineTotal.toFixed(2);
+            document.getElementById('settleFineModal').classList.remove('hidden');
+        }
+      }
+    };
+
+    window.closeSettleFineModal = function() {
+      document.getElementById('settleFineModal').classList.add('hidden');
+    };
+
+    window.confirmSettleFine = function() {
+      const athleteId = parseInt(document.getElementById('settleFineAthleteId').value);
+      const fineIndex = parseInt(document.getElementById('settleFineIndex').value);
+      const amountPaid = parseFloat(document.getElementById('settleFineAmountInput').value);
+
+      if (isNaN(amountPaid) || amountPaid < 0) {
+         return window.showToast("Informe um valor válido.", "error");
+      }
+
+      if (window.absenceFines[athleteId] && window.absenceFines[athleteId][fineIndex]) {
+        window.absenceFines[athleteId][fineIndex].paid = true;
+        window.absenceFines[athleteId][fineIndex].amountPaid = amountPaid;
+        const target = window.athletes.find(a => a.id === athleteId);
+        window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de falta de ${target?.name || ''} no valor de R$ ${amountPaid.toFixed(2)}`);
         window.saveData();
         renderFinancial();
         renderAthletesList();
         renderReports();
         window.showToast("Multa liquidada na nuvem!", "success");
+        closeSettleFineModal();
       }
     };
 
