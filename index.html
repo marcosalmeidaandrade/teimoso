@@ -259,22 +259,28 @@
           </div>
         </div>
 
-        <!-- NAVIGATION TABS -->
-        <nav class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto overflow-x-auto hide-scrollbar snap-x">
-          <button onclick="switchTab('presence')" id="tabBtn-presence" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-sm shrink-0 snap-start">
-            <i class="fa-solid fa-users"></i> Presença
+        <!-- NAVIGATION TABS (DISTRIBUIÇÃO AUTOMÁTICA SEM ROLAGEM LATERAL) -->
+        <nav class="flex items-stretch justify-between gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 w-full sm:w-auto">
+          <button onclick="switchTab('presence')" id="tabBtn-presence" class="flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-emerald-600 text-white shadow-sm">
+            <i class="fa-solid fa-users text-xs sm:text-sm"></i>
+            <span class="leading-none">Presença</span>
           </button>
-          <button onclick="switchTab('birthdays')" id="tabBtn-birthdays" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
-            <i class="fa-solid fa-cake-candles text-amber-500"></i> Aniversariantes
+          <button onclick="switchTab('birthdays')" id="tabBtn-birthdays" class="flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-900 hover:bg-white">
+            <i class="fa-solid fa-cake-candles text-amber-500 text-xs sm:text-sm"></i>
+            <span class="leading-none sm:hidden">Níver</span>
+            <span class="leading-none hidden sm:inline">Aniversariantes</span>
           </button>
-          <button onclick="switchTab('draw')" id="tabBtn-draw" class="hidden px-4 py-2 rounded-xl text-xs font-bold transition-all items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
-            <i class="fa-solid fa-shuffle"></i> Sorteio
+          <button onclick="switchTab('draw')" id="tabBtn-draw" class="hidden flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-900 hover:bg-white">
+            <i class="fa-solid fa-shuffle text-xs sm:text-sm"></i>
+            <span class="leading-none">Sorteio</span>
           </button>
-          <button onclick="switchTab('financial')" id="tabBtn-financial" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
-            <i class="fa-solid fa-wallet"></i> Financeiro
+          <button onclick="switchTab('financial')" id="tabBtn-financial" class="flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-900 hover:bg-white">
+            <i class="fa-solid fa-wallet text-xs sm:text-sm"></i>
+            <span class="leading-none">Financeiro</span>
           </button>
-          <button onclick="switchTab('reports')" id="tabBtn-reports" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start">
-            <i class="fa-solid fa-chart-pie"></i> Relatórios
+          <button onclick="switchTab('reports')" id="tabBtn-reports" class="flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-900 hover:bg-white">
+            <i class="fa-solid fa-chart-pie text-xs sm:text-sm"></i>
+            <span class="leading-none">Relatórios</span>
           </button>
         </nav>
 
@@ -2169,12 +2175,13 @@
       ['presence', 'birthdays', 'draw', 'financial', 'reports'].forEach(t => {
         const el = document.getElementById(`tab-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
+        const isHidden = btn.classList.contains('hidden');
         if (t === tab) {
           el.classList.remove('hidden');
-          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-emerald-600 text-white shadow-sm shrink-0 snap-start";
+          btn.className = `${isHidden ? 'hidden ' : 'flex '}flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-emerald-600 text-white shadow-sm`;
         } else {
           el.classList.add('hidden');
-          btn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white shrink-0 snap-start";
+          btn.className = `${isHidden ? 'hidden ' : 'flex '}flex-1 sm:flex-initial px-1.5 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-slate-600 hover:text-slate-900 hover:bg-white`;
         }
       });
       if (tab === 'birthdays') renderBirthdaysList();
@@ -3833,16 +3840,19 @@
                 <span class="text-[10px] text-slate-500">Base: R$ ${baseAmt.toFixed(2)}</span>
                 ${!fine.paid ? `<span class="text-[10px] text-amber-600 font-bold">+ Juros: R$ ${fineInterest.toFixed(2)} (${daysPassed} dias)</span>` : ''}
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-black ${fine.paid ? 'text-emerald-600' : 'text-rose-600'}">Total: R$ ${fineTotal.toFixed(2)}${amountPaidLabel}</span>
-                ${window.canEditFinancial ? `
-                  <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded ${fine.paid ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300' : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300'} font-bold text-[10px] transition-all">
-                    ${fine.paid ? 'Desfazer Baixa' : 'Baixar Débito'}
-                  </button>
-                  <button onclick="deleteAbsenceFine(${athlete.id}, ${fineIdx})" title="Excluir multa permanentemente" class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-300 font-bold text-[10px] transition-all flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can"></i> Excluir Multa
-                  </button>
-                ` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${fine.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${fine.paid ? 'Paga' : 'Pendente'}</span>`}
+              <div class="flex flex-col sm:items-end gap-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-black ${fine.paid ? 'text-emerald-600' : 'text-rose-600'}">Total: R$ ${fineTotal.toFixed(2)}${amountPaidLabel}</span>
+                  ${window.canEditFinancial ? `
+                    <button onclick="settleAbsenceFine(${athlete.id}, ${fineIdx})" class="px-2 py-1 rounded ${fine.paid ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300' : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300'} font-bold text-[10px] transition-all">
+                      ${fine.paid ? 'Desfazer Baixa' : 'Baixar Débito'}
+                    </button>
+                    <button onclick="deleteAbsenceFine(${athlete.id}, ${fineIdx})" title="Excluir multa permanentemente" class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-300 font-bold text-[10px] transition-all flex items-center gap-1">
+                      <i class="fa-solid fa-trash-can"></i> Excluir Multa
+                    </button>
+                  ` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${fine.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${fine.paid ? 'Paga' : 'Pendente'}</span>`}
+                </div>
+                ${fine.paid && window.canEditFinancial && fine.settledAt ? `<span class="text-[9px] text-slate-400 font-bold tracking-wide mt-0.5">Data da baixa: ${new Date(fine.settledAt).toLocaleDateString('pt-BR')}</span>` : ''}
               </div>
             </div>
           `;
@@ -3941,6 +3951,7 @@
            window.showConfirm(`Desfazer a baixa da multa de ${target?.name}?`, () => {
              fine.paid = false;
              delete fine.amountPaid;
+             delete fine.settledAt;
              window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Desfez a baixa de multa de falta de ${target?.name || ''}`);
              window.saveData();
              renderFinancial();
@@ -3982,6 +3993,7 @@
       if (window.absenceFines[athleteId] && window.absenceFines[athleteId][fineIndex]) {
         window.absenceFines[athleteId][fineIndex].paid = true;
         window.absenceFines[athleteId][fineIndex].amountPaid = amountPaid;
+        window.absenceFines[athleteId][fineIndex].settledAt = new Date().toISOString();
         const target = window.athletes.find(a => a.id === athleteId);
         window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de falta de ${target?.name || ''} no valor de R$ ${amountPaid.toFixed(2)}`);
         window.saveData();
