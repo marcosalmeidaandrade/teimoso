@@ -358,6 +358,16 @@
             </div>
           </button>
 
+          <button onclick="switchTab('stats')" id="tabBtn-stats" class="nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5 bg-white text-slate-700 hover:bg-amber-50 hover:border-amber-300 border border-slate-200 shadow-sm">
+            <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xs sm:text-sm shrink-0">
+              <i class="fa-solid fa-futbol"></i>
+            </span>
+            <div class="flex flex-col items-center sm:items-start leading-tight">
+              <span class="text-[10px] sm:text-xs font-black tracking-wide">Artilharia</span>
+              <span class="hidden md:inline text-[9px] text-slate-400 font-medium">Craque & Bagre</span>
+            </div>
+          </button>
+
           <button onclick="switchTab('roulette')" id="tabBtn-roulette" class="hidden nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5 bg-white text-slate-700 hover:bg-sky-50 hover:border-sky-300 border border-slate-200 shadow-sm">
             <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-xs sm:text-sm shrink-0">
               <i class="fa-solid fa-gift"></i>
@@ -711,6 +721,107 @@
               <tbody id="reportsTableBody" class="divide-y divide-slate-100 text-xs">
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5.1: ARTILHARIA & ENQUETE CRAQUE/BAGRE ================= -->
+      <section id="tab-stats" class="hidden space-y-6">
+        <!-- CABEÇALHO E SELETOR DE DATA DA PELADA -->
+        <div class="bg-white border border-slate-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-amber-500 text-lg"></i> Artilharia & Urna Craque / Bagre
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+              Acompanhe os artilheiros e vote no <strong>Craque</strong> e no <strong>Bagre da Pelada</strong> (votação aberta no dia do jogo das <strong>08:00 às 10:00</strong>).
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5">
+              <span class="text-[10px] font-black uppercase text-slate-500">Pelada:</span>
+              <span id="statsCurrentDateLabel" class="text-xs font-black text-emerald-700"></span>
+            </div>
+            <button onclick="openPollVotingModal(true)" id="btnOpenPollManual" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-2 active:scale-95">
+              <i class="fa-solid fa-check-to-slot"></i> Votar Agora
+            </button>
+            <button onclick="toggleAdminForcePoll()" id="btnAdminForcePoll" class="hidden px-3 py-2.5 bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 rounded-xl text-[11px] font-bold transition-all items-center gap-1.5">
+              <i class="fa-solid fa-bolt"></i> <span id="labelAdminForcePoll">Liberar Enquete (Teste)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- BANNER DE STATUS DA ENQUETE (08:00 ÀS 10:00) -->
+        <div id="pollStatusBanner" class="rounded-2xl p-4 border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+        </div>
+
+        <!-- RESULTADOS PARCIAIS / FINAIS EM TEMPO REAL: CRAQUE vs BAGRE -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- CARD CRAQUE DA PELADA -->
+          <div class="bg-white border-2 border-amber-300 rounded-3xl p-5 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black shadow-inner">
+                  👑
+                </div>
+                <div>
+                  <h4 class="text-sm font-black uppercase tracking-wider text-slate-800">Craque da Pelada</h4>
+                  <p class="text-[10px] text-slate-500 font-semibold">Resultado parcial em tempo real</p>
+                </div>
+              </div>
+              <span id="totalVotesCraqueBadge" class="text-[11px] font-black px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">0 votos</span>
+            </div>
+            <div id="craqueResultsList" class="space-y-2.5 max-h-64 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- CARD BAGRE DA PELADA -->
+          <div class="bg-white border-2 border-sky-300 rounded-3xl p-5 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-lg font-black shadow-inner">
+                  🐟
+                </div>
+                <div>
+                  <h4 class="text-sm font-black uppercase tracking-wider text-slate-800">Bagre da Pelada</h4>
+                  <p class="text-[10px] text-slate-500 font-semibold">Quem entregou a paçoca hoje?</p>
+                </div>
+              </div>
+              <span id="totalVotesBagreBadge" class="text-[11px] font-black px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200">0 votos</span>
+            </div>
+            <div id="bagreResultsList" class="space-y-2.5 max-h-64 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- PAINEL DUPLO: RANKING GERAL DE ARTILHARIA + LANÇAMENTO DE GOLS DA PELADA -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- RANKING GERAL DA TEMPORADA (TOP ARTILHEIROS) -->
+          <div class="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                <h4 class="text-xs font-black uppercase tracking-wider text-emerald-700 flex items-center gap-2">
+                  <i class="fa-solid fa-medal text-amber-500 text-sm"></i> Ranking Geral de Artilheiros (Ano)
+                </h4>
+                <span id="seasonTotalGoalsBadge" class="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200">0 gols no ano</span>
+              </div>
+              <div id="seasonTopScorersList" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+            </div>
+          </div>
+
+          <!-- ARTILHARIA DA PELADA ATUAL (LANÇAMENTO ADMIN) -->
+          <div class="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-futbol text-emerald-600"></i> Gols da Pelada Selecionada
+                </h4>
+                <p class="text-[10px] text-slate-500 mt-0.5">
+                  Apenas administradores podem lançar ou ajustar os gols da partida.
+                </p>
+              </div>
+              <input type="text" id="searchScorerInput" oninput="renderStatsAndPollTab()" placeholder="Buscar jogador..." class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500">
+            </div>
+            <div id="matchGoalsAdminList" class="divide-y divide-slate-100 max-h-96 overflow-y-auto pr-1"></div>
           </div>
         </div>
       </section>
@@ -1259,6 +1370,60 @@
     </div>
   </div>
 
+  <!-- MODAL AUTOMÁTICO DE VOTAÇÃO (CRAQUE & BAGRE DA PELADA) -->
+  <div id="pollVotingModal" class="hidden fixed inset-0 z-[345] bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-amber-400 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg shadow-inner">🗳️</span>
+          <div>
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-800">Urna Oficial da Pelada</h3>
+            <p class="text-[10px] font-bold text-emerald-600" id="pollModalDateSubtitle">Votação aberta das 08:00 às 10:00</p>
+          </div>
+        </div>
+        <button onclick="closePollVotingModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[11px] text-amber-900 font-medium leading-snug">
+        <i class="fa-solid fa-clock text-amber-600 mr-1"></i>
+        Escolha o <strong>Craque</strong> e o <strong>Bagre</strong> de hoje! Seu voto é único nesta pelada e os resultados parciais aparecem na hora.
+      </div>
+
+      <div class="space-y-4">
+        <!-- SELEÇÃO DO CRAQUE -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
+          <label class="block text-xs font-black uppercase tracking-wider text-amber-700 flex items-center gap-1.5">
+            👑 Quem foi o CRAQUE da Pelada?
+          </label>
+          <select id="selectVoteCraque" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 shadow-sm">
+            <option value="">-- Selecione o Craque --</option>
+          </select>
+        </div>
+
+        <!-- SELEÇÃO DO BAGRE -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
+          <label class="block text-xs font-black uppercase tracking-wider text-sky-700 flex items-center gap-1.5">
+            🐟 Quem foi o BAGRE da Pelada?
+          </label>
+          <select id="selectVoteBagre" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 shadow-sm">
+            <option value="">-- Selecione o Bagre --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closePollVotingModal()" class="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all">
+          Ver Parciais
+        </button>
+        <button onclick="submitCraqueBagreVote()" class="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/30 active:scale-95">
+          Confirmar Voto ⚽
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT APPLICATION CORE (NUVEM COM PERSISTÊNCIA FIRESTORE) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1429,6 +1594,8 @@
     window.financialPayments = {};
     window.alwaysUpToDateMap = {};
     window.absenceFines = {};
+    window.peladaGoals = {};
+    window.peladaPolls = {};
 
     window.resetAllSessionFilters = function() {
       activeStatusFilter = null;
@@ -1811,6 +1978,8 @@
           financialPayments: window.financialPayments,
           alwaysUpToDateMap: window.alwaysUpToDateMap,
           absenceFines: window.absenceFines,
+          peladaGoals: window.peladaGoals,
+          peladaPolls: window.peladaPolls,
           activityLogs: window.activityLogs,
           animationsEnabled: window.animationsEnabled,
           updatedAt: new Date().toISOString()
@@ -2331,6 +2500,8 @@
           if (data.financialPayments && typeof data.financialPayments === 'object') window.financialPayments = data.financialPayments;
           if (data.alwaysUpToDateMap && typeof data.alwaysUpToDateMap === 'object') window.alwaysUpToDateMap = data.alwaysUpToDateMap;
           if (data.absenceFines && typeof data.absenceFines === 'object') window.absenceFines = data.absenceFines;
+          if (data.peladaGoals && typeof data.peladaGoals === 'object') window.peladaGoals = data.peladaGoals;
+          if (data.peladaPolls && typeof data.peladaPolls === 'object') window.peladaPolls = data.peladaPolls;
           if (data.activityLogs && Array.isArray(data.activityLogs)) window.activityLogs = data.activityLogs;
           if (typeof data.animationsEnabled === 'boolean') window.animationsEnabled = data.animationsEnabled;
         }
@@ -2355,20 +2526,26 @@
         renderBirthdaysList();
         renderFinancial();
         renderReports();
+        if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
         checkDeadlinePassed();
       }, (error) => {
         console.error("Falha ao sincronizar com Firestore:", error);
       });
     });
 
-    // --- ATUALIZAÇÃO DO FLUXO DE LOGIN PARA NOVA PELADA ---
+    // --- ATUALIZAÇÃO DO FLUXO DE LOGIN PARA NOVA PELADA E ENQUETE 08H ÀS 10H ---
     const originalCompleteLoginFlow = completeLoginFlow;
     completeLoginFlow = function() {
       originalCompleteLoginFlow();
       applyMenuLayoutMode();
       hasPromptedNewPeladaThisSession = false;
 
+      // PRIORIDADE MÁXIMA (08:00 às 10:00 do dia da pelada): Se a enquete estiver aberta e o atleta não votou, direciona automaticamente para votar!
       setTimeout(() => {
+        if (typeof window.checkAndAutoRedirectToPoll === 'function' && window.checkAndAutoRedirectToPoll()) {
+          return;
+        }
+
         const { nextFutureDate } = getPeladaTimelineInfo();
         if (!window.isAdmin && nextFutureDate && !hasPromptedNewPeladaThisSession) {
           hasPromptedNewPeladaThisSession = true;
@@ -2416,7 +2593,7 @@
       const mainEl = document.querySelector('main');
       if (!navWrapper || !navContainer) return;
 
-      const visibleCols = window.isAdmin ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-4';
+      const visibleCols = window.isAdmin ? 'grid-cols-4 md:grid-cols-7' : 'grid-cols-5';
 
       if (menuLayoutMode === 'cards') {
         navWrapper.className = "bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all";
@@ -2441,7 +2618,7 @@
     }
 
     function updateActiveTabButtonsUI() {
-      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'roulette'].forEach(t => {
+      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'roulette'].forEach(t => {
         const btn = document.getElementById(`tabBtn-${t}`);
         if (!btn) return;
         const isHidden = ((t === 'draw' || t === 'roulette') && !window.isAdmin);
@@ -2465,18 +2642,21 @@
       }
       activeTab = tab;
       window.recordUserInteraction(window.currentUser?.name || 'Visitante', `Navegou para a aba: ${tab.toUpperCase()}`);
-      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'roulette'].forEach(t => {
+      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'roulette'].forEach(t => {
         const el = document.getElementById(`tab-${t}`);
-        if (t === tab) {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
+        if (el) {
+          if (t === tab) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
         }
       });
       updateActiveTabButtonsUI();
       if (tab === 'birthdays') renderBirthdaysList();
       if (tab === 'financial') renderFinancial();
       if (tab === 'reports') renderReports();
+      if (tab === 'stats' && typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
       if (tab === 'roulette') buildRouletteParticipants();
     };
 
@@ -2551,6 +2731,7 @@
       updateDateNavButtons();
       checkDeadlinePassed();
       renderAthletesList();
+      if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
     };
 
     function formatDateDisplay(dateStr) {
@@ -4495,6 +4676,8 @@
         financialPayments: window.financialPayments,
         alwaysUpToDateMap: window.alwaysUpToDateMap,
         absenceFines: window.absenceFines,
+        peladaGoals: window.peladaGoals,
+        peladaPolls: window.peladaPolls,
         activityLogs: window.activityLogs,
         animationsEnabled: window.animationsEnabled
       };
@@ -4531,6 +4714,8 @@
             if (parsed.financialPayments) window.financialPayments = parsed.financialPayments;
             if (parsed.alwaysUpToDateMap) window.alwaysUpToDateMap = parsed.alwaysUpToDateMap;
             if (parsed.absenceFines) window.absenceFines = parsed.absenceFines;
+            if (parsed.peladaGoals) window.peladaGoals = parsed.peladaGoals;
+            if (parsed.peladaPolls) window.peladaPolls = parsed.peladaPolls;
             if (parsed.activityLogs) window.activityLogs = parsed.activityLogs;
 
             window.recordUserInteraction(window.currentUser?.name || 'Admin', `Restaurou a base completa a partir de arquivo de backup`);
@@ -4738,6 +4923,369 @@
         container.appendChild(conf);
       }
     }
+
+    // --- MÓDULO OFICIAL: ARTILHARIA E ENQUETE AUTOMÁTICA CRAQUE & BAGRE (08:00 ÀS 10:00) ---
+    window.isPollWindowOpen = function(dateStr) {
+      if (!dateStr) return false;
+      const pollData = window.peladaPolls?.[dateStr];
+      if (pollData && pollData.forceOpen) return true;
+
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      if (dateStr !== todayStr) return false;
+
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const startMinutes = 8 * 60;  // 08:00
+      const endMinutes = 10 * 60;   // 10:00
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    };
+
+    window.hasUserVotedInPoll = function(dateStr, userId) {
+      if (!dateStr || !userId) return false;
+      return Boolean(window.peladaPolls?.[dateStr]?.votes?.[userId]);
+    };
+
+    window.checkAndAutoRedirectToPoll = function() {
+      if (!window.currentUser || window.currentUser.id === 0 || window.currentUser.isSuspended) return false;
+
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      let targetPollDate = null;
+      if (window.datesList.includes(todayStr) && window.isPollWindowOpen(todayStr)) {
+        targetPollDate = todayStr;
+      } else if (window.isPollWindowOpen(window.currentDate)) {
+        targetPollDate = window.currentDate;
+      }
+
+      if (targetPollDate && !window.hasUserVotedInPoll(targetPollDate, window.currentUser.id)) {
+        window.currentDate = targetPollDate;
+        window.populateDateSelect();
+        window. closeQuickPresenceModal();
+        window.switchTab('stats');
+        window.openPollVotingModal(false);
+        return true;
+      }
+      return false;
+    };
+
+    window.toggleAdminForcePoll = function() {
+      if (!window.isAdmin) return;
+      if (!window.peladaPolls[window.currentDate]) {
+        window.peladaPolls[window.currentDate] = { forceOpen: false, votes: {} };
+      }
+      window.peladaPolls[window.currentDate].forceOpen = !window.peladaPolls[window.currentDate].forceOpen;
+      const isForced = window.peladaPolls[window.currentDate].forceOpen;
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `${isForced ? 'Abriu' : 'Fechou'} manualmente a enquete Craque/Bagre de ${window.currentDate}`);
+      window.saveData();
+      window.renderStatsAndPollTab();
+      window.showToast(isForced ? "Enquete liberada manualmente para votação!" : "Enquete voltou ao horário automático (08h às 10h).", "success");
+    };
+
+    window.adjustAthleteGoal = function(athleteId, delta) {
+      if (!window.isAdmin) {
+        return window.showToast("Apenas administradores podem lançar a artilharia.", "error");
+      }
+      if (!window.peladaGoals[window.currentDate]) {
+        window.peladaGoals[window.currentDate] = {};
+      }
+      const currentGoals = parseInt(window.peladaGoals[window.currentDate][athleteId]) || 0;
+      const newGoals = Math.max(0, currentGoals + delta);
+      if (newGoals === 0) {
+        delete window.peladaGoals[window.currentDate][athleteId];
+      } else {
+        window.peladaGoals[window.currentDate][athleteId] = newGoals;
+      }
+
+      const athlete = window.athletes.find(a => a.id === athleteId);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Ajustou gols de ${athlete?.name || 'Atleta'} para ${newGoals} em ${window.currentDate}`);
+      window.saveData();
+      window.renderStatsAndPollTab();
+    };
+
+    window.openPollVotingModal = function(isManualClick = true) {
+      if (!window.currentUser || window.currentUser.id === 0) {
+        return window.showToast("Faça login com seu perfil de atleta para votar.", "error");
+      }
+      if (!window.isPollWindowOpen(window.currentDate)) {
+        if (isManualClick) {
+          window.showToast("A votação abre apenas no dia da pelada, das 08:00 às 10:00!", "error");
+        }
+        return;
+      }
+      if (window.hasUserVotedInPoll(window.currentDate, window.currentUser.id)) {
+        if (isManualClick) {
+          window.showToast("Você já registrou seu voto nesta pelada! Confira as parciais.", "success");
+        }
+        return;
+      }
+
+      const dayPresences = window.presences[window.currentDate] || {};
+      let eligibleCandidates = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA' && dayPresences[a.id]?.status === 'CONFIRMADO');
+      if (eligibleCandidates.length < 2) {
+        eligibleCandidates = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA');
+      }
+      eligibleCandidates.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      const selCraque = document.getElementById('selectVoteCraque');
+      const selBagre = document.getElementById('selectVoteBagre');
+      if (!selCraque || !selBagre) return;
+
+      selCraque.innerHTML = '<option value="">-- Selecione o Craque 👑 --</option>';
+      selBagre.innerHTML = '<option value="">-- Selecione o Bagre 🐟 --</option>';
+
+      eligibleCandidates.forEach(a => {
+        selCraque.innerHTML += `<option value="${a.id}">${a.name} (${a.position})</option>`;
+        selBagre.innerHTML += `<option value="${a.id}">${a.name} (${a.position})</option>`;
+      });
+
+      const subtitle = document.getElementById('pollModalDateSubtitle');
+      if (subtitle) subtitle.innerText = `Pelada: ${formatDateDisplay(window.currentDate)} (08:00 às 10:00)`;
+
+      const modal = document.getElementById('pollVotingModal');
+      if (modal) modal.classList.remove('hidden');
+    };
+
+    window.closePollVotingModal = function() {
+      const modal = document.getElementById('pollVotingModal');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.submitCraqueBagreVote = function() {
+      if (!window.currentUser || window.currentUser.id === 0) return;
+      if (!window.isPollWindowOpen(window.currentDate)) {
+        window.closePollVotingModal();
+        return window.showToast("O horário de votação (08:00 às 10:00) já encerrou!", "error");
+      }
+
+      const craqueId = parseInt(document.getElementById('selectVoteCraque')?.value);
+      const bagreId = parseInt(document.getElementById('selectVoteBagre')?.value);
+
+      if (!craqueId || !bagreId) {
+        return window.showToast("Selecione tanto o Craque quanto o Bagre para votar!", "error");
+      }
+      if (craqueId === bagreId) {
+        return window.showToast("O Craque e o Bagre não podem ser o mesmo jogador!", "error");
+      }
+
+      if (!window.peladaPolls[window.currentDate]) {
+        window.peladaPolls[window.currentDate] = { forceOpen: false, votes: {} };
+      }
+      if (!window.peladaPolls[window.currentDate].votes) {
+        window.peladaPolls[window.currentDate].votes = {};
+      }
+
+      window.peladaPolls[window.currentDate].votes[window.currentUser.id] = {
+        craqueId: craqueId,
+        bagreId: bagreId,
+        voterName: window.currentUser.name,
+        timestamp: new Date().toISOString()
+      };
+
+      window.recordUserInteraction(window.currentUser.name, `Votou na enquete Craque & Bagre da pelada (${window.currentDate})`);
+      window.saveData();
+      window.closePollVotingModal();
+      window.renderStatsAndPollTab();
+      window.playAppSound('confirm');
+      window.showToast("Voto registrado com sucesso! Veja o resultado parcial.", "success");
+    };
+
+    window.renderStatsAndPollTab = function() {
+      const dateLabel = document.getElementById('statsCurrentDateLabel');
+      if (dateLabel) dateLabel.innerText = formatDateDisplay(window.currentDate);
+
+      const btnForce = document.getElementById('btnAdminForcePoll');
+      const lblForce = document.getElementById('labelAdminForcePoll');
+      const isForced = Boolean(window.peladaPolls?.[window.currentDate]?.forceOpen);
+      if (btnForce) {
+        if (window.isAdmin) {
+          btnForce.classList.remove('hidden');
+          btnForce.classList.add('flex');
+          if (lblForce) lblForce.innerText = isForced ? "Fechar Enquete (Teste)" : "Liberar Enquete (Teste)";
+        } else {
+          btnForce.classList.add('hidden');
+          btnForce.classList.remove('flex');
+        }
+      }
+
+      const banner = document.getElementById('pollStatusBanner');
+      const btnVoteNow = document.getElementById('btnOpenPollManual');
+      const isOpen = window.isPollWindowOpen(window.currentDate);
+      const alreadyVoted = window.currentUser && window.hasUserVotedInPoll(window.currentDate, window.currentUser.id);
+
+      if (banner) {
+        if (isOpen) {
+          banner.className = "rounded-2xl p-4 border bg-emerald-50 border-emerald-300 text-emerald-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm";
+          banner.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
+              <div class="text-xs">
+                <span class="font-black uppercase tracking-wider">Enquete Aberta Agora!</span>
+                <span class="block sm:inline sm:ml-1 font-medium">Votação ativa das 08:00 às 10:00 para eleger o Craque e o Bagre da pelada.</span>
+              </div>
+            </div>
+            <span class="text-[11px] font-black px-3 py-1 rounded-xl ${alreadyVoted ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'} shrink-0">
+              ${alreadyVoted ? '✅ Você já votou!' : '⏳ Seu voto está pendente'}
+            </span>
+          `;
+        } else {
+          banner.className = "rounded-2xl p-4 border bg-slate-100 border-slate-300 text-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm";
+          banner.innerHTML = `
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-lock text-slate-500 text-base"></i>
+              <div class="text-xs">
+                <span class="font-black uppercase tracking-wider">Urna Fechada:</span>
+                <span class="ml-1 font-medium">A enquete abre automaticamente no dia da pelada das <strong>08:00 às 10:00</strong>. Abaixo estão os resultados registrados.</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      if (btnVoteNow) {
+        if (isOpen && !alreadyVoted) {
+          btnVoteNow.innerHTML = `<i class="fa-solid fa-check-to-slot"></i> Votar Agora`;
+        } else if (alreadyVoted) {
+          btnVoteNow.innerHTML = `<i class="fa-solid fa-circle-check"></i> Voto Registrado`;
+        } else {
+          btnVoteNow.innerHTML = `<i class="fa-solid fa-clock"></i> Abre 08h às 10h`;
+        }
+      }
+
+      const votesObj = window.peladaPolls?.[window.currentDate]?.votes || {};
+      const votesList = Object.values(votesObj);
+      const totalVotes = votesList.length;
+
+      const craqueCounts = {};
+      const bagreCounts = {};
+      votesList.forEach(v => {
+        if (v.craqueId) craqueCounts[v.craqueId] = (craqueCounts[v.craqueId] || 0) + 1;
+        if (v.bagreId) bagreCounts[v.bagreId] = (bagreCounts[v.bagreId] || 0) + 1;
+      });
+
+      const renderPollCategoryList = (countsMap, containerId, badgeId, barColorClass) => {
+        const container = document.getElementById(containerId);
+        const badge = document.getElementById(badgeId);
+        if (badge) badge.innerText = `${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'}`;
+        if (!container) return;
+
+        const entries = Object.entries(countsMap)
+          .map(([id, count]) => ({
+            athlete: window.athletes.find(a => a.id == id),
+            count: count,
+            pct: totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
+          }))
+          .filter(item => item.athlete)
+          .sort((a, b) => b.count - a.count);
+
+        if (entries.length === 0) {
+          container.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs font-bold">Nenhum voto registrado ainda nesta pelada.</div>`;
+          return;
+        }
+
+        container.innerHTML = entries.map((item, idx) => `
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 space-y-1.5">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="text-slate-800">${idx === 0 ? '🏆 ' : `${idx + 1}º `}${item.athlete.name}</span>
+              <span class="text-slate-600">${item.count} v (${item.pct}%)</span>
+            </div>
+            <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full ${barColorClass} rounded-full transition-all duration-500" style="width: ${item.pct}%"></div>
+            </div>
+          </div>
+        `).join('');
+      };
+
+      renderPollCategoryList(craqueCounts, 'craqueResultsList', 'totalVotesCraqueBadge', 'bg-amber-500');
+      renderPollCategoryList(bagreCounts, 'bagreResultsList', 'totalVotesBagreBadge', 'bg-sky-500');
+
+      const seasonTotals = {};
+      let totalSeasonGoals = 0;
+      Object.values(window.peladaGoals || {}).forEach(dayMap => {
+        Object.entries(dayMap || {}).forEach(([athId, g]) => {
+          const numG = parseInt(g) || 0;
+          if (numG > 0) {
+            seasonTotals[athId] = (seasonTotals[athId] || 0) + numG;
+            totalSeasonGoals += numG;
+          }
+        });
+      });
+
+      const seasonBadge = document.getElementById('seasonTotalGoalsBadge');
+      if (seasonBadge) seasonBadge.innerText = `${totalSeasonGoals} gols no ano`;
+
+      const seasonListEl = document.getElementById('seasonTopScorersList');
+      if (seasonListEl) {
+        const rankedScorers = Object.entries(seasonTotals)
+          .map(([id, goals]) => ({ athlete: window.athletes.find(a => a.id == id), goals }))
+          .filter(x => x.athlete && x.goals > 0)
+          .sort((a, b) => b.goals - a.goals || (a.athlete.name || '').localeCompare(b.athlete.name || ''));
+
+        if (rankedScorers.length === 0) {
+          seasonListEl.innerHTML = `<div class="text-center text-slate-400 py-10 text-xs font-bold">Nenhum gol lançado na temporada ainda.</div>`;
+        } else {
+          seasonListEl.innerHTML = rankedScorers.map((item, idx) => `
+            <div class="flex items-center justify-between py-2 px-3 rounded-2xl border ${idx === 0 ? 'bg-amber-50/80 border-amber-300' : 'bg-slate-50 border-slate-200'}">
+              <div class="flex items-center gap-2.5">
+                <span class="w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center ${idx === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-700'}">${idx + 1}º</span>
+                <div>
+                  <div class="text-xs font-black text-slate-800">${item.athlete.name}</div>
+                  <div class="text-[10px] text-slate-500 font-semibold">${item.athlete.position}</div>
+                </div>
+              </div>
+              <span class="px-3 py-1 rounded-xl bg-emerald-600 text-white font-black text-xs shadow-sm">
+                ⚽ ${item.goals} ${item.goals === 1 ? 'gol' : 'gols'}
+              </span>
+            </div>
+          `).join('');
+        }
+      }
+
+      const matchListEl = document.getElementById('matchGoalsAdminList');
+      if (matchListEl) {
+        const searchVal = (document.getElementById('searchScorerInput')?.value || '').toLowerCase().trim();
+        const dayGoals = window.peladaGoals?.[window.currentDate] || {};
+        const dayPresences = window.presences?.[window.currentDate] || {};
+
+        const activePlayers = window.athletes
+          .filter(a => !a.isSuspended && a.position !== 'EXTRA')
+          .filter(a => !searchVal || (a.name || '').toLowerCase().includes(searchVal))
+          .sort((a, b) => {
+            const gA = parseInt(dayGoals[a.id]) || 0;
+            const gB = parseInt(dayGoals[b.id]) || 0;
+            if (gA !== gB) return gB - gA;
+            const cA = dayPresences[a.id]?.status === 'CONFIRMADO' ? 1 : 0;
+            const cB = dayPresences[b.id]?.status === 'CONFIRMADO' ? 1 : 0;
+            if (cA !== cB) return cB - cA;
+            return (a.name || '').localeCompare(b.name || '');
+          });
+
+        matchListEl.innerHTML = activePlayers.map(athlete => {
+          const gCount = parseInt(dayGoals[athlete.id]) || 0;
+          const isConf = dayPresences[athlete.id]?.status === 'CONFIRMADO';
+          return `
+            <div class="py-2.5 px-2 flex items-center justify-between gap-2 hover:bg-slate-50 rounded-xl transition-colors">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full ${isConf ? 'bg-emerald-500' : 'bg-slate-300'}" title="${isConf ? 'Confirmado na pelada' : 'Não confirmado'}"></span>
+                <span class="text-xs font-bold text-slate-800">${athlete.name}</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">${athlete.position}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                ${window.isAdmin ? `
+                  <button onclick="adjustAthleteGoal(${athlete.id}, -1)" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 font-black text-xs flex items-center justify-center border border-slate-300 active:scale-95">-</button>
+                  <span class="w-8 text-center font-black text-sm ${gCount > 0 ? 'text-emerald-600' : 'text-slate-400'}">${gCount}</span>
+                  <button onclick="adjustAthleteGoal(${athlete.id}, 1)" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center shadow-sm active:scale-95">+</button>
+                ` : `
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-black ${gCount > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-400'}">
+                    ${gCount > 0 ? `⚽ ${gCount}` : '0'}
+                  </span>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    };
   </script>
 </body>
 </html>
