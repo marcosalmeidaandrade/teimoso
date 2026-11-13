@@ -887,8 +887,11 @@
               Consulte todas as regras de confirmação de presença, horários limites, critérios de multas, enquetes pós-jogo e recursos disponíveis no aplicativo.
             </p>
           </div>
-          <div class="w-full md:w-64 shrink-0">
-            <div class="relative">
+          <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+            <button onclick="exportRulesToWhatsapp()" class="px-4 py-2.5 bg-white hover:bg-emerald-50 text-emerald-800 rounded-2xl text-xs font-black transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 shrink-0">
+              <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> Exportar p/ WhatsApp
+            </button>
+            <div class="relative w-full sm:w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
               <input type="text" id="searchRulesInput" oninput="filterRulesCards(this.value)" placeholder="Buscar regra (ex: multa, pix, 18h)..." class="w-full bg-white text-slate-800 rounded-2xl pl-9 pr-3 py-2.5 text-xs font-bold placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-md">
             </div>
@@ -2879,6 +2882,45 @@
       });
     };
 
+    window.exportRulesToWhatsapp = function() {
+      let text = `📋 *REGULAMENTO OFICIAL & GUIA DO APP - TEIMOSO F.C.C. (2026)* ⚽🟢⚪\n\n`;
+      text += `🔐 *1. ACESSO AO SISTEMA E SENHA*\n`;
+      text += `• *Senha Inicial (4 dígitos):* Padrão são os 4 últimos números do seu telefone cadastrado.\n`;
+      text += `• *Alterar Senha:* Você pode criar sua senha própria no botão *"Alterar Senha"* no topo do app.\n`;
+      text += `• *Segurança:* Sessão encerra automaticamente após 3 minutos de inatividade.\n\n`;
+
+      text += `⚽ *2. PRESENÇA E PRAZO LIMITE (18:00h)*\n`;
+      text += `• *CONFIRMADO:* Garante presença no jogo (ou na resenha para atletas EXTRA), registrando data e hora exatas.\n`;
+      text += `• *JUSTIFICAR:* Exige informar o motivo da ausência. Passa pela análise da *Presidência*; se não for aprovada, converte-se em *FALTA*.\n`;
+      text += `• *FORA:* Informa antecipadamente que não irá comparecer.\n`;
+      text += `• *Horário Limite:* O sistema bloqueia alterações online às *18:00h do dia anterior*. Após esse horário, falar diretamente com a presidência.\n\n`;
+
+      text += `🚨 *3. MULTAS E PENALIDADE POR 3 AUSÊNCIAS CONSECUTIVAS*\n`;
+      text += `• *Falta Não Justificada (FALTA):* Multa de *R$ 30,00 + R$ 1,00 de juros ao dia* até a quitação.\n`;
+      text += `• *3 Ausências Seguidas (FALTA e/ou FORA):* Atletas de linha que acumularem 3 peladas consecutivas com FALTA e/ou FORA sofrem multa automática no valor de *1 mensalidade cadastrada + R$ 1,00 de juros ao dia*.\n`;
+      text += `⚠️ *Importante:* Marcar *"JUSTIFICADO"* NÃO zera nem suspende a contagem! Apenas presença *"CONFIRMADO"* zera o contador (0/3).\n`;
+      text += `• *Radar de Pendurados (2/3):* Disponível na aba *Pendurados* para todos acompanharem.\n\n`;
+
+      text += `💰 *4. MENSALIDADES E FINANCEIRO*\n`;
+      text += `• *Vencimento:* Todo *dia 15* de cada mês (Janeiro a Novembro).\n`;
+      text += `• *Juros:* A partir do dia 16, acréscimo automático de *+ R$ 1,00 por dia de atraso*.\n`;
+      text += `• *Chave PIX Oficial:* teimosofcc@gmail.com\n`;
+      text += `• *Baixas:* Realizadas pela tesouraria (*Pablo Padilha e Marcão*) com registro da Data da Baixa.\n\n`;
+
+      text += `🏆 *5. ARTILHARIA E URNA "CRAQUE & BAGRE"*\n`;
+      text += `• *Artilharia:* Gols lançados por pelada somam no Ranking Geral do Ano.\n`;
+      text += `• *Urna Craque 👑 & Bagre 🐟:* Abre automaticamente no dia da pelada das *08:00h às 10:00h* (2h de duração), com direcionamento automático ao abrir o app e parciais em tempo real.\n\n`;
+
+      text += `🎂 *6. ANIVERSARIANTES E FESTA DE FIM DE ANO*\n`;
+      text += `• *Aba Níver:* Destaca o próximo aniversariante e libera os parabéns no WhatsApp no dia do aniversário.\n`;
+      text += `• *Família & Sorteios:* Cadastre esposa e filhos(as) para participarem da Roleta de Brindes da Festa de Fim de Ano!\n\n`;
+
+      text += `_Gerado pelo App Oficial Teimoso F.C.C._`;
+
+      window.recordUserInteraction(window.currentUser?.name || 'Atleta', "Exportou as Regras Oficiais para o WhatsApp");
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    };
+
     function getAvailableDates() {
       return [...window.datesList].sort();
     }
@@ -4254,7 +4296,20 @@
       const linkFora = `${currentUrl}?acao=fora&atleta=${athlete.id}&data=${window.currentDate}`;
       const linkJustificar = `${currentUrl}?acao=justificar&atleta=${athlete.id}&data=${window.currentDate}`;
 
-      return `Fala meu craque *${athlete.name}*! ⚽🔥🚀\n\nConvocação oficial para a pelada do *Teimoso F.C.C.* no dia *${formatDateDisplay(window.currentDate)}*! 🏆👟\n\nEscolha uma das opções abaixo clicando no link:\n\n🟢 *CONFIRMADO (Estou dentro!):*\n${linkConfirmar}\n\n⚠️ *JUSTIFICAR (Justificar ausência no App):*\n${linkJustificar}\n\n❌ *FORA (Não vou participar):*\n${linkFora}\n\n⏰ *Atenção:* O prazo para confirmar pelo link vai até as *18:00h do dia anterior*. Após esse horário, só será possível confirmar presença diretamente com a direção! 👊🟢⚪`;
+      let penduradoWarningText = '';
+      if (athlete && !athlete.isSuspended && athlete.position !== 'EXTRA' && typeof window.getAthleteConsecutiveStreakInfo === 'function') {
+        const streakInfo = window.getAthleteConsecutiveStreakInfo(athlete);
+        if (streakInfo && streakInfo.currentStreak === 2) {
+          const feeVal = formatCurrencyBR(safeNum(athlete.monthlyFee, 110));
+          const dLabels = streakInfo.streakDates.map(d => {
+            const [y, m, day] = d.split('-');
+            return `${day}/${m}`;
+          }).join(' e ');
+          penduradoWarningText = `\n⚠️ *ALERTA IMPORTANTE - VOCÊ ESTÁ PENDURADO (2 AUSÊNCIAS):*\nConstatamos *2 ausências consecutivas* (FALTA/FORA nas peladas de ${dLabels}). Caso não compareça nesta próxima pelada, você completará *3 ausências consecutivas* e sofrerá multa automática no valor da sua mensalidade (*${feeVal}*) com aplicação de *R$ 1,00 de juros diários* (lembrando que justificativa não interrompe a contagem)!\n`;
+        }
+      }
+
+      return `Fala meu craque *${athlete.name}*! ⚽🔥🚀\n\nConvocação oficial para a pelada do *Teimoso F.C.C.* no dia *${formatDateDisplay(window.currentDate)}*! 🏆👟\n${penduradoWarningText}\nEscolha uma das opções abaixo clicando no link:\n\n🟢 *CONFIRMADO (Estou dentro!):*\n${linkConfirmar}\n\n⚠️ *JUSTIFICAR (Justificar ausência no App):*\n${linkJustificar}\n\n❌ *FORA (Não vou participar):*\n${linkFora}\n\n⏰ *Atenção:* O prazo para confirmar pelo link vai até as *18:00h do dia anterior*. Após esse horário, só será possível confirmar presença diretamente com a direção! 👊🟢⚪`;
     };
 
     window.openWhatsappIndividual = function(athleteId, phone, name) {
