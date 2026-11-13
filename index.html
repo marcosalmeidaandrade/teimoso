@@ -445,9 +445,9 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
-                  <th class="py-3 px-4">Atleta / Info</th>
-                  <th class="py-3 px-4 text-center">Ações de Presença</th>
-                  <th id="thPresenceOptions" class="py-3 px-4 text-right">Opções</th>
+                  <th class="py-3 px-3 sm:px-4">Atleta / Info</th>
+                  <th class="py-3 px-2 sm:px-4 text-center">Ações de Presença</th>
+                  <th id="thPresenceOptions" class="py-3 px-3 sm:px-4 text-right">Opções</th>
                 </tr>
               </thead>
               <tbody id="athletesTableBody" class="divide-y divide-slate-100 text-xs">
@@ -1159,7 +1159,12 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const messaging = getMessaging(app);
+    let messaging = null;
+    try {
+      messaging = getMessaging(app);
+    } catch (e) {
+      console.warn("Firebase Messaging indisponível neste ambiente:", e);
+    }
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
 
     try {
@@ -2066,14 +2071,12 @@
 
     // --- NOTIFICAÇÕES PUSH (FIREBASE MESSAGING) ---
     window.initPushNotifications = async function() {
-      if (!('serviceWorker' in navigator)) return;
+      if (!messaging || !('serviceWorker' in navigator)) return;
       try {
-        // FORÇA O REGISTRO DO ARQUIVO DE SEGUNDO PLANO (SERVICE WORKER)
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          // Chave VAPID configurada com sucesso para o Teimoso F.C.C.
           const token = await getToken(messaging, { 
             vapidKey: 'BHDFelx9rgOMADX7L7xLLsmqUMf4a2lsBROo5-V7qLgsHU1p0dc_18LjMpUM3h_yBb9b9zMHpWFvKQrKa-vYqSY',
             serviceWorkerRegistration: registration 
@@ -2082,7 +2085,7 @@
             const athlete = window.athletes.find(a => a.id === window.currentUser.id);
             if (athlete && athlete.fcmToken !== token) {
               athlete.fcmToken = token;
-              window.saveData(); // Grava o token do celular do cara no banco de dados
+              window.saveData();
             }
           }
         }
@@ -2091,10 +2094,13 @@
       }
     };
 
-    // Recebe a notificação se o app estiver ABERTO na tela
-    onMessage(messaging, (payload) => {
-      window.showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "success");
-    });
+    if (messaging) {
+      try {
+        onMessage(messaging, (payload) => {
+          window.showToast(`🔔 ${payload.notification.title}: ${payload.notification.body}`, "success");
+        });
+      } catch (e) {}
+    }
 
     window.resetAthletePinToPhoneDefault = function() {
       const phone = document.getElementById('athletePhoneInput').value.trim();
@@ -2629,7 +2635,7 @@
       return 'uptodate';
     }
 
-    // --- RENDERIZAÇÃO DA TABELA DE PRESENÇA ---
+    // --- RENDERIZAÇÃO DA TABELA DE PRESENÇA (BOTÕES UNIFORMES NO CELULAR) ---
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
       if (!tbody) return;
@@ -2744,21 +2750,21 @@
           }
           actionsHtml = `<div class="flex flex-col items-center justify-center py-1">${currentStatusBadge}</div>`;
         } else {
+          // GRADE UNIFORME PARA CELULAR: Todos os botões com altura mínima igual, largura 100% e texto perfeitamente centralizado
+          const uniformBtnBase = "w-full min-h-[36px] px-2 py-1.5 rounded-xl text-[9px] sm:text-[10px] font-extrabold uppercase tracking-tight leading-tight flex items-center justify-center text-center transition-all select-none active:scale-95";
+          const confirmBtnText = athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO';
+
           actionsHtml = `
-            <div class="flex flex-col items-center justify-center gap-1.5 w-full">
-              <div class="grid grid-cols-2 gap-1 sm:gap-1.5 w-full max-w-[155px] mx-auto">
-                <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">${athlete.position === 'EXTRA' ? 'CONF. RESENHA' : 'CONFIRMADO'}</button>
-                  <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'JUSTIFICADO' ? 'bg-amber-500 text-white ring-2 ring-amber-400 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">JUSTIFICAR</button>
-                </div>
-                <div class="flex flex-col gap-1 sm:gap-1.5">
-                  <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FORA' ? 'bg-rose-600 text-white ring-2 ring-rose-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">FORA</button>
-                  ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" class="w-full px-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${status === 'FALTA' ? 'bg-purple-600 text-white ring-2 ring-purple-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">FALTA</button>` : ''}
-                </div>
+            <div class="flex flex-col items-center justify-center gap-1.5 w-full min-w-[180px] max-w-[230px] sm:max-w-[250px] mx-auto">
+              <div class="grid grid-cols-2 gap-1.5 w-full">
+                <button onclick="setPresenceStatus(${athlete.id}, 'CONFIRMADO')" class="${uniformBtnBase} ${status === 'CONFIRMADO' ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">${confirmBtnText}</button>
+                <button onclick="setPresenceStatus(${athlete.id}, 'FORA')" class="${uniformBtnBase} ${status === 'FORA' ? 'bg-rose-600 text-white ring-2 ring-rose-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">FORA</button>
+                <button onclick="setPresenceStatus(${athlete.id}, 'JUSTIFICADO')" class="${uniformBtnBase} ${!window.isAdmin ? 'col-span-2' : ''} ${status === 'JUSTIFICADO' ? 'bg-amber-500 text-white ring-2 ring-amber-400 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">JUSTIFICAR</button>
+                ${window.isAdmin ? `<button onclick="setPresenceStatus(${athlete.id}, 'FALTA')" class="${uniformBtnBase} ${status === 'FALTA' ? 'bg-purple-600 text-white ring-2 ring-purple-500 shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}">FALTA</button>` : ''}
               </div>
               ${(window.isAdmin && status === 'CONFIRMADO') ? `
-                <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg w-full max-w-[155px] justify-center mt-1 shadow-sm">
-                  <input type="checkbox" id="chk_att_${athlete.id}" ${pRecord.attended ? 'checked' : ''} onchange="toggleActualAttendance(${athlete.id}, this.checked)" class="w-3 h-3 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 cursor-pointer">
+                <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-300 px-2.5 py-1.5 rounded-xl w-full justify-center shadow-sm">
+                  <input type="checkbox" id="chk_att_${athlete.id}" ${pRecord.attended ? 'checked' : ''} onchange="toggleActualAttendance(${athlete.id}, this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 cursor-pointer">
                   <label for="chk_att_${athlete.id}" class="text-[9px] font-bold uppercase tracking-wider text-emerald-800 cursor-pointer text-center leading-tight">Validou?</label>
                 </div>
               ` : ''}
@@ -2769,8 +2775,8 @@
         const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
 
         tr.innerHTML = `
-          <td class="py-3 px-4 font-bold text-slate-800">
-            <div class="flex items-center gap-3">
+          <td class="py-3 px-3 sm:px-4 font-bold text-slate-800">
+            <div class="flex items-center gap-2.5 sm:gap-3">
               <div onclick="openFullscreenPhoto('${avatarUrl}', '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 hover:border-emerald-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
                 <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-emerald-600/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-emerald-800">
@@ -2778,8 +2784,8 @@
                 </div>
               </div>
               <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <span class="text-xs sm:text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
                   ${isSelf ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-emerald-600 text-white uppercase shrink-0 shadow-sm shadow-emerald-500/30 animate-pulse">VOCÊ</span>' : ''}
                   ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
@@ -2794,9 +2800,9 @@
               </div>
             </div>
           </td>
-          <td class="py-3 px-4 text-center">${actionsHtml}</td>
-          <td class="py-3 px-4 text-right">
-            <div class="flex items-center justify-end gap-2">
+          <td class="py-3 px-2 sm:px-4 text-center">${actionsHtml}</td>
+          <td class="py-3 px-3 sm:px-4 text-right">
+            <div class="flex items-center justify-end gap-1.5 sm:gap-2">
               ${!athlete.isSuspended ? `
                 <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone || ''}', '${athlete.name || ''}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
               ` : `
@@ -2877,7 +2883,6 @@
       const todayDay = now.getDate();
       const todayMonth = now.getMonth() + 1;
 
-      // 1. Contabilizar aniversariantes por mês (1 a 12)
       const monthCounts = Array(13).fill(0);
       let totalWithBirthday = 0;
 
@@ -2890,7 +2895,6 @@
 
       if (badgeTotal) badgeTotal.innerText = `${totalWithBirthday} Aniversariantes Cadastrados`;
 
-      // 2. Renderizar Dashboard Interativo dos 12 Meses
       for (let m = 1; m <= 12; m++) {
         const isCurrentMonth = (m === todayMonth);
         const isSelected = (selectedBirthMonthFilter === m);
@@ -2923,7 +2927,6 @@
         }
       }
 
-      // 3. Localizar o PRÓXIMO ANIVERSARIANTE para o card de destaque no topo
       const athletesWithBday = athletesList.filter(a => a.birthDay && a.birthMonth);
       if (athletesWithBday.length > 0) {
         const sortedByNext = [...athletesWithBday].sort((a, b) => {
@@ -2973,7 +2976,6 @@
         `;
       }
 
-      // 4. Filtrar atletas a serem exibidos na tabela
       let displayedAthletes = [...athletesList];
 
       if (searchTerm) {
@@ -3574,7 +3576,7 @@
       const sortByConfirmTime = (a, b) => {
         const timeA = getConfirmTime(a.id);
         const timeB = getConfirmTime(b.id);
-        if (timeA > 0 && timeB > 0) return timeA - timeB; // Crescente (Quem confirmou primeiro sobe)
+        if (timeA > 0 && timeB > 0) return timeA - timeB;
         return (a.name || '').localeCompare(b.name || '');
       };
 
