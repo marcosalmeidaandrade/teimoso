@@ -387,6 +387,16 @@
             </div>
           </button>
 
+          <button onclick="switchTab('photos')" id="tabBtn-photos" class="nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-white text-slate-700 hover:bg-pink-50 hover:border-pink-300 border border-slate-200 shadow-sm">
+            <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center text-xs sm:text-sm shrink-0">
+              <i class="fa-solid fa-camera-retro"></i>
+            </span>
+            <div class="flex flex-col items-center sm:items-start leading-tight">
+              <span class="text-[10px] sm:text-xs font-black tracking-wide">Fotos</span>
+              <span class="hidden xl:inline text-[9px] text-slate-400 font-medium">Galeria</span>
+            </div>
+          </button>
+
           <button onclick="switchTab('roulette')" id="tabBtn-roulette" class="hidden nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-white text-slate-700 hover:bg-sky-50 hover:border-sky-300 border border-slate-200 shadow-sm">
             <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-xs sm:text-sm shrink-0">
               <i class="fa-solid fa-gift"></i>
@@ -1072,6 +1082,31 @@
         </div>
       </section>
 
+      <!-- ================= TAB 5.4: GALERIA DE FOTOS DAS PELADAS ================= -->
+      <section id="tab-photos" class="hidden space-y-6">
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+              <i class="fa-solid fa-camera-retro text-pink-600 text-lg"></i> Galeria Oficial de Fotos — Teimoso F.C.C.
+            </h3>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+              Confira os registros das nossas peladas em <strong>ordem cronológica</strong> diretamente do Instagram do Teimoso. Toque em qualquer miniatura para abrir em tela inteira!
+            </p>
+          </div>
+          <div class="flex items-center gap-2 self-end md:self-auto">
+            <span id="badgeTotalPhotos" class="px-3.5 py-2 rounded-xl bg-pink-50 border border-pink-200 text-pink-700 text-xs font-black flex items-center gap-1.5 shadow-sm">
+              <i class="fa-brands fa-instagram text-sm"></i> 0 Fotos Publicadas
+            </span>
+            <button onclick="openManageDatesModal()" id="btnAdminManagePhotosShortcut" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm items-center gap-1.5">
+              <i class="fa-solid fa-link"></i> Gerenciar Links das Fotos
+            </button>
+          </div>
+        </div>
+
+        <div id="photosGalleryContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        </div>
+      </section>
+
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
       <section id="tab-roulette" class="hidden space-y-6">
         <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1449,6 +1484,13 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">Horário da Pelada:</label>
           <input type="time" id="newTimeInput" value="07:00" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+            <i class="fa-brands fa-instagram text-pink-600"></i> Link da Foto / Instagram (Opcional):
+          </label>
+          <input type="url" id="newPhotoUrlInput" placeholder="Cole o link da foto do Instagram..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-pink-500 focus:bg-white">
+          <p class="text-[9px] text-slate-400 mt-1">Você pode colar o link de mais de uma foto separando por vírgula.</p>
+        </div>
       </div>
       <div class="flex items-center gap-2 pt-2">
         <button onclick="closeNewDateModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
@@ -1459,22 +1501,44 @@
 
   <!-- MANAGE DATES MODAL -->
   <div id="manageDatesModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-days text-emerald-600"></i> Gerenciar Datas e Horários
+          <i class="fa-solid fa-calendar-days text-emerald-600"></i> Gerenciar Datas, Horários e Fotos das Peladas
         </h3>
         <button onclick="closeManageDatesModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
       <p class="text-xs text-slate-500">
-        Ajuste o horário de cada pelada diretamente no campo abaixo ou remova datas que não serão utilizadas:
+        Ajuste o horário de cada pelada, cole o <strong>link da foto do Instagram do Teimoso</strong> (ou múltiplos links separados por vírgula) ou remova datas não utilizadas:
       </p>
-      <div id="manageDatesList" class="divide-y divide-slate-100 overflow-y-auto flex-grow space-y-2 pr-1"></div>
+      <div id="manageDatesList" class="divide-y divide-slate-100 overflow-y-auto flex-grow space-y-2.5 pr-1"></div>
       <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-        <span class="text-[10px] text-slate-500">Alterações de horário são salvas automaticamente na nuvem.</span>
+        <span class="text-[10px] text-slate-500">Alterações de horário e links de fotos são salvas automaticamente na nuvem.</span>
         <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN PELADA PHOTO MODAL (GALERIA DE FOTOS) -->
+  <div id="fullscreenPeladaPhotoModal" onclick="closeFullscreenPeladaPhoto()" class="fixed inset-0 z-[380] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
+    <div class="w-full flex items-center justify-between max-w-3xl pt-2 text-slate-200">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-camera-retro text-pink-400"></i>
+        <span id="fullscreenPeladaPhotoTitle" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">Pelada Teimoso F.C.C.</span>
+      </div>
+      <button onclick="closeFullscreenPeladaPhoto()" class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+    </div>
+    <div class="relative flex items-center justify-center my-auto p-2 max-w-full">
+      <img id="fullscreenPeladaPhotoImg" src="" alt="Foto da Pelada" class="max-h-[75vh] max-w-[94vw] md:max-w-3xl object-contain rounded-2xl shadow-2xl border-2 border-white/20 transition-transform duration-300 transform scale-95">
+    </div>
+    <div class="pb-4 text-center">
+      <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-600/90 border border-pink-400 text-xs font-black text-white shadow-xl animate-pulse">
+        <i class="fa-solid fa-hand-pointer"></i>
+        <span>Clique novamente na tela para retornar às miniaturas</span>
       </div>
     </div>
   </div>
@@ -1915,6 +1979,7 @@
 
     window.datesList = ["2026-11-01", "2026-11-03", "2026-11-08"];
     window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00", "2026-11-08": "07:00" };
+    window.peladaPhotos = {};
     window.currentDate = "2026-11-08";
     window.athletes = [];
     window.presences = {};
@@ -2194,6 +2259,7 @@
         await setDoc(dbDocRef, {
           datesList: window.datesList,
           peladaTimes: window.peladaTimes,
+          peladaPhotos: window.peladaPhotos,
           athletes: window.athletes,
           presences: window.presences,
           financialPayments: window.financialPayments,
@@ -2352,6 +2418,7 @@
       }
 
       const btnBackup = document.getElementById('btnBackupAdmin');
+      const btnManagePhotosShortcut = document.getElementById('btnAdminManagePhotosShortcut');
       if (window.isAdmin) {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold shrink-0 shadow-sm";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-shield-halved text-emerald-600";
@@ -2364,6 +2431,7 @@
         document.getElementById('btnActivityLog').classList.remove('hidden');
         document.getElementById('btnBackupAdmin').classList.remove('hidden');
         document.getElementById('btnBackupAdmin').classList.add('flex');
+        if (btnManagePhotosShortcut) { btnManagePhotosShortcut.classList.remove('hidden'); btnManagePhotosShortcut.classList.add('flex'); }
       } else {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shrink-0 shadow-sm";
         document.getElementById('userBadgeIcon').className = "fa-solid fa-user text-emerald-600";
@@ -2376,6 +2444,7 @@
         document.getElementById('btnActivityLog').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.remove('flex');
         if (btnBackup) { btnBackup.classList.add('hidden'); btnBackup.classList.remove('flex'); }
+        if (btnManagePhotosShortcut) { btnManagePhotosShortcut.classList.add('hidden'); btnManagePhotosShortcut.classList.remove('flex'); }
       }
 
       if (window.canEditFinancial) {
@@ -2397,6 +2466,7 @@
       window.renderFinancial();
       if (typeof window.renderConsecutiveAbsencesTab === 'function') window.renderConsecutiveAbsencesTab();
       if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
+      if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
       window.checkDeadlinePassed();
       resetInactivityTimer();
 
@@ -2739,6 +2809,7 @@
           const data = docSnap.data();
           if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
+          if (data.peladaPhotos && typeof data.peladaPhotos === 'object') window.peladaPhotos = data.peladaPhotos;
           if (data.athletes && Array.isArray(data.athletes)) window.athletes = data.athletes;
           if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
           if (data.financialPayments && typeof data.financialPayments === 'object') window.financialPayments = data.financialPayments;
@@ -2773,6 +2844,7 @@
         window.renderReports();
         if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
         if (typeof window.renderConsecutiveAbsencesTab === 'function') window.renderConsecutiveAbsencesTab();
+        if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
         window.checkDeadlinePassed();
       }, (error) => {
         console.error("Falha ao sincronizar com Firestore:", error);
@@ -2801,7 +2873,7 @@
       const mainEl = document.querySelector('main');
       if (!navWrapper || !navContainer) return;
 
-      const visibleCols = window.isAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-9' : 'grid-cols-4 sm:grid-cols-7';
+      const visibleCols = window.isAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-10' : 'grid-cols-4 sm:grid-cols-8';
 
       if (menuLayoutMode === 'cards') {
         navWrapper.className = "bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all";
@@ -2826,7 +2898,7 @@
     }
 
     function updateActiveTabButtonsUI() {
-      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'consecutive', 'rules', 'roulette'].forEach(t => {
+      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'consecutive', 'rules', 'photos', 'roulette'].forEach(t => {
         const btn = document.getElementById(`tabBtn-${t}`);
         if (!btn) return;
         const isHidden = ((t === 'draw' || t === 'roulette') && !window.isAdmin);
@@ -2850,7 +2922,7 @@
       }
       activeTab = tab;
       window.recordUserInteraction(window.currentUser?.name || 'Visitante', `Navegou para a aba: ${tab.toUpperCase()}`);
-      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'consecutive', 'rules', 'roulette'].forEach(t => {
+      ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'consecutive', 'rules', 'photos', 'roulette'].forEach(t => {
         const el = document.getElementById(`tab-${t}`);
         if (el) {
           if (t === tab) {
@@ -2866,6 +2938,7 @@
       if (tab === 'reports') renderReports();
       if (tab === 'stats') renderStatsAndPollTab();
       if (tab === 'consecutive') renderConsecutiveAbsencesTab();
+      if (tab === 'photos') renderPhotosTab();
       if (tab === 'roulette') buildRouletteParticipants();
     };
 
@@ -4160,11 +4233,21 @@
         } else {
           const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
           window.athletes.push({
-            id: newId, name: name, position: position, stars: selectedStarsForNewAthlete,
-            phone: phone, photoUrl: photoUrl, birthDay: birthDay, birthMonth: birthMonth,
+            id: newId, 
+            name: name, 
+            position: position, 
+            stars: selectedStarsForNewAthlete,
+            phone: phone, 
+            photoUrl: photoUrl, 
+            birthDay: birthDay,
+            birthMonth: birthMonth,
             customPin: pinInput || (phone.replace(/\D/g, '').slice(-4) || '1234'),
-            isKeeper: (position === 'Goleiro'), monthlyFee: monthlyFee, isSuspended: isSuspended,
-            effectiveStartDate: null, family: familyObj, familyDataFilled: familyDataFilled
+            isKeeper: (position === 'Goleiro'),
+            monthlyFee: monthlyFee, 
+            isSuspended: isSuspended, 
+            effectiveStartDate: null,
+            family: familyObj,
+            familyDataFilled: familyDataFilled
           });
           window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name}`);
           window.showToast("Atleta cadastrado na nuvem!", "success");
@@ -4175,6 +4258,8 @@
         window.renderAthletesList();
         window.renderBirthdaysList();
         window.renderFinancial();
+        window.renderReports();
+        window.renderConsecutiveAbsencesTab();
       } catch (err) {
         console.error(err);
         window.showToast("Erro ao salvar atleta.", "error");
@@ -4190,33 +4275,52 @@
         window.renderAthletesList();
         window.renderBirthdaysList();
         window.renderFinancial();
+        window.renderReports();
+        window.renderConsecutiveAbsencesTab();
         window.showToast("Excluído com sucesso.", "success");
       });
     };
 
-    // --- GERENCIAR DATAS ---
+    // --- GERENCIAR DATAS E LINKS DE FOTOS DAS PELADAS ---
+    window.resolveInstagramOrImageUrl = function(rawUrl) {
+      const trimmed = (rawUrl || '').trim();
+      if (!trimmed) return '';
+      // Se for um link de post/reel do Instagram (ex: https://www.instagram.com/p/CODIGO/), converte para endpoint de mídia direta quando possível
+      const igMatch = trimmed.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/i);
+      if (igMatch && igMatch[1] && !trimmed.includes('/media')) {
+        return `https://www.instagram.com/p/${igMatch[1]}/media/?size=l`;
+      }
+      return trimmed;
+    };
+
     window.openNewDateModal = function() { 
       document.getElementById('newDateInput').value = ''; 
       document.getElementById('newTimeInput').value = '07:00'; 
+      const photoInput = document.getElementById('newPhotoUrlInput');
+      if (photoInput) photoInput.value = '';
       document.getElementById('newDateModal').classList.remove('hidden'); 
     };
     window.closeNewDateModal = function() { document.getElementById('newDateModal').classList.add('hidden'); };
     window.addNewDate = function() {
       const val = document.getElementById('newDateInput').value;
       const timeVal = document.getElementById('newTimeInput').value || '07:00';
+      const photoUrlVal = (document.getElementById('newPhotoUrlInput')?.value || '').trim();
       if (!val || window.datesList.includes(val)) return window.showToast("Data inválida ou já cadastrada.");
       
       if (!window.peladaTimes) window.peladaTimes = {};
+      if (!window.peladaPhotos) window.peladaPhotos = {};
       window.peladaTimes[val] = timeVal;
+      if (photoUrlVal) window.peladaPhotos[val] = photoUrlVal;
       window.datesList.push(val); 
       window.datesList.sort(); 
       window.currentDate = val;
-      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Criou pelada para ${window.formatDateDisplay(val)}`);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Criou pelada para ${formatDateDisplay(val)}`);
       
       window.saveData(); 
       window.closeNewDateModal(); 
       window.populateDateSelect(); 
       window.renderAthletesList();
+      window.renderPhotosTab();
       window.showToast("Data adicionada com sucesso na nuvem!", "success");
     };
 
@@ -4224,36 +4328,63 @@
       const list = document.getElementById('manageDatesList'); 
       list.innerHTML = '';
       if (!window.peladaTimes) window.peladaTimes = {};
+      if (!window.peladaPhotos) window.peladaPhotos = {};
 
-      window.datesList.forEach(d => {
+      const sortedDates = [...window.datesList].sort();
+      sortedDates.forEach(d => {
         const currentTime = window.peladaTimes[d] || '07:00';
+        const currentPhotoUrl = (window.peladaPhotos[d] || '').replace(/"/g, '&quot;');
         const [y, m, day] = d.split('-');
         const dateObj = new Date(y, m - 1, day);
         const dayLabel = dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase();
 
         list.innerHTML += `
-          <div class="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-            <div class="flex items-center gap-2.5">
-              <i class="fa-solid fa-calendar-check text-emerald-600 text-sm shrink-0"></i>
-              <div>
-                <div class="font-bold text-slate-800 text-xs">${dayLabel}</div>
-                <div class="text-[10px] text-slate-500 font-mono">${d}</div>
+          <div class="py-3 flex flex-col gap-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-calendar-check text-emerald-600 text-sm shrink-0"></i>
+                <div>
+                  <div class="font-bold text-slate-800 text-xs">${dayLabel}</div>
+                  <div class="text-[10px] text-slate-500 font-mono">${d}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-auto">
+                <div class="flex items-center gap-1.5 bg-white border border-slate-300 px-2.5 py-1 rounded-xl shadow-sm">
+                  <i class="fa-solid fa-clock text-emerald-600 text-xs"></i>
+                  <label class="text-[10px] uppercase font-bold text-slate-500">Horário:</label>
+                  <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+                </div>
+                <button onclick="deleteDate('${d}')" title="Excluir data" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0 border border-rose-200">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
               </div>
             </div>
-            <div class="flex items-center gap-2 self-end sm:self-auto">
-              <div class="flex items-center gap-1.5 bg-white border border-slate-300 px-2.5 py-1 rounded-xl shadow-sm">
-                <i class="fa-solid fa-clock text-emerald-600 text-xs"></i>
-                <label class="text-[10px] uppercase font-bold text-slate-500">Horário:</label>
-                <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
-              </div>
-              <button onclick="deleteDate('${d}')" title="Excluir data" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0 border border-rose-200">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-              </button>
+            <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-sm">
+              <i class="fa-brands fa-instagram text-pink-600 text-sm shrink-0"></i>
+              <input type="url" value="${currentPhotoUrl}" onchange="updatePeladaPhotoUrl('${d}', this.value)" placeholder="Cole aqui o link da foto do Instagram da pelada (ou vários separados por vírgula)..." class="w-full bg-transparent border-0 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none">
             </div>
           </div>
         `;
       });
       document.getElementById('manageDatesModal').classList.remove('hidden');
+    };
+
+    window.updatePeladaPhotoUrl = function(dateStr, newPhotoUrl) {
+      if (!window.isAdmin) {
+        window.showToast("Apenas administradores podem gerenciar fotos das peladas.", "error");
+        return;
+      }
+      if (!window.peladaPhotos) window.peladaPhotos = {};
+      const cleaned = (newPhotoUrl || '').trim();
+      if (cleaned) {
+        window.peladaPhotos[dateStr] = cleaned;
+      } else {
+        delete window.peladaPhotos[dateStr];
+      }
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o link de foto da pelada de ${dateStr}`);
+      window.saveData();
+      window.renderPhotosTab();
+      window.showToast("Link da foto da pelada salvo na nuvem!", "success");
     };
 
     window.updatePeladaTime = function(dateStr, newTime) {
@@ -4279,14 +4410,140 @@
         if (window.peladaTimes && window.peladaTimes[d]) {
           delete window.peladaTimes[d];
         }
+        if (window.peladaPhotos && window.peladaPhotos[d]) {
+          delete window.peladaPhotos[d];
+        }
         if (window.currentDate === d) window.currentDate = getSmartDefaultDate();
         window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu a data: ${d}`);
         window.saveData(); 
         window.populateDateSelect(); 
         window.renderAthletesList(); 
+        window.renderPhotosTab();
         window.openManageDatesModal(); 
         window.showToast("Excluída.", "success");
       });
+    };
+
+    // --- GALERIA DE FOTOS DAS PELADAS (ORDEM CRONOLÓGICA + TELA CHEIA) ---
+    window.renderPhotosTab = function() {
+      const container = document.getElementById('photosGalleryContainer');
+      const badgeEl = document.getElementById('badgeTotalPhotos');
+      if (!container) return;
+
+      const sortedDates = [...(window.datesList || [])].sort(); // Ordem cronológica (mais antiga -> mais recente)
+      const photoItems = [];
+
+      sortedDates.forEach(dateStr => {
+        const rawLinks = window.peladaPhotos?.[dateStr];
+        if (!rawLinks) return;
+        const urls = String(rawLinks)
+          .split(',')
+          .map(u => u.trim())
+          .filter(Boolean);
+
+        urls.forEach((rawUrl, idx) => {
+          photoItems.push({
+            date: dateStr,
+            dateFormatted: formatDateDisplay(dateStr),
+            rawUrl: rawUrl,
+            imageUrl: window.resolveInstagramOrImageUrl(rawUrl),
+            indexInDate: idx + 1,
+            totalInDate: urls.length
+          });
+        });
+      });
+
+      if (badgeEl) {
+        badgeEl.innerHTML = `<i class="fa-brands fa-instagram text-sm"></i> ${photoItems.length} ${photoItems.length === 1 ? 'Foto Publicada' : 'Fotos Publicadas'}`;
+      }
+
+      if (photoItems.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3 shadow-sm">
+            <div class="w-16 h-16 rounded-2xl bg-pink-50 border border-pink-200 text-pink-500 flex items-center justify-center text-2xl mx-auto">
+              <i class="fa-solid fa-camera-retro"></i>
+            </div>
+            <h4 class="text-sm font-black uppercase tracking-wider text-slate-700">Nenhuma Foto Cadastrada Ainda</h4>
+            <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+              Os administradores podem inserir o link das fotos do Instagram do Teimoso ao cadastrar uma <strong>Nova Data</strong> ou clicando em <strong>Gerenciar Datas</strong>.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = photoItems.map((item, i) => {
+        const safeImgUrl = item.imageUrl.replace(/'/g, "\\'");
+        const safeRawUrl = item.rawUrl.replace(/'/g, "\\'");
+        const titleLabel = item.totalInDate > 1
+          ? `Pelada ${item.dateFormatted} (Foto ${item.indexInDate}/${item.totalInDate})`
+          : `Pelada ${item.dateFormatted}`;
+        const safeTitle = titleLabel.replace(/'/g, "\\'");
+
+        return `
+          <div onclick="openFullscreenPeladaPhoto('${safeImgUrl}', '${safeTitle}', '${safeRawUrl}')" class="group bg-white border border-slate-200 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col">
+            <div class="relative aspect-square w-full bg-slate-100 overflow-hidden flex items-center justify-center">
+              <img src="${item.imageUrl}" alt="${titleLabel}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='https://placehold.co/600x600/fdf2f8/db2777?text=Foto+Instagram+Teimoso'">
+              <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/35 transition-all flex items-center justify-center">
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5">
+                  <i class="fa-solid fa-expand text-pink-600"></i> Ampliar Tela Cheia
+                </span>
+              </div>
+              <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-slate-900/75 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider">
+                #${i + 1}
+              </span>
+            </div>
+            <div class="p-3.5 flex items-center justify-between gap-2 bg-white">
+              <div class="truncate">
+                <div class="text-[10px] font-black uppercase tracking-wider text-pink-600 flex items-center gap-1">
+                  <i class="fa-solid fa-calendar-day"></i> Pelada Oficial
+                </div>
+                <div class="text-xs font-black text-slate-800 truncate mt-0.5">${item.dateFormatted}</div>
+              </div>
+              <a href="${item.rawUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Abrir post original no Instagram" class="w-8 h-8 rounded-xl bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 flex items-center justify-center transition-colors shrink-0">
+                <i class="fa-brands fa-instagram text-sm"></i>
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    window.openFullscreenPeladaPhoto = function(imageUrl, titleText, rawUrl) {
+      window.playAppSound('click');
+      const modal = document.getElementById('fullscreenPeladaPhotoModal');
+      const img = document.getElementById('fullscreenPeladaPhotoImg');
+      const titleEl = document.getElementById('fullscreenPeladaPhotoTitle');
+      if (!modal || !img) return;
+
+      img.onerror = function() {
+        this.onerror = null;
+        this.src = 'https://placehold.co/800x800/fdf2f8/db2777?text=Foto+da+Pelada+Teimoso+FCC';
+      };
+      img.src = imageUrl;
+      if (titleEl) titleEl.innerText = titleText || 'Pelada Teimoso F.C.C.';
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      modal.classList.add('opacity-100');
+      img.classList.remove('scale-95');
+      img.classList.add('scale-100');
+    };
+
+    window.closeFullscreenPeladaPhoto = function() {
+      const modal = document.getElementById('fullscreenPeladaPhotoModal');
+      const img = document.getElementById('fullscreenPeladaPhotoImg');
+      if (!modal || !img) return;
+      modal.classList.remove('opacity-100');
+      modal.classList.add('opacity-0');
+      img.classList.remove('scale-100');
+      img.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }, 300);
     };
 
     // --- WHATSAPP E EXPORTAÇÕES ---
@@ -5246,7 +5503,7 @@
       if (!window.isAdmin) return;
       const dataToExport = {
         app: "Teimoso F.C.C.", version: "2026.2", exportedAt: new Date().toISOString(),
-        datesList: window.datesList, peladaTimes: window.peladaTimes, athletes: window.athletes,
+        datesList: window.datesList, peladaTimes: window.peladaTimes, peladaPhotos: window.peladaPhotos, athletes: window.athletes,
         presences: window.presences, financialPayments: window.financialPayments,
         alwaysUpToDateMap: window.alwaysUpToDateMap, absenceFines: window.absenceFines,
         peladaGoals: window.peladaGoals, peladaPolls: window.peladaPolls, activityLogs: window.activityLogs
@@ -5269,6 +5526,7 @@
           window.showConfirm("Restaurar backup na nuvem?", async () => {
             if (parsed.datesList) window.datesList = parsed.datesList;
             if (parsed.peladaTimes) window.peladaTimes = parsed.peladaTimes;
+            if (parsed.peladaPhotos) window.peladaPhotos = parsed.peladaPhotos;
             if (parsed.athletes) window.athletes = parsed.athletes;
             if (parsed.presences) window.presences = parsed.presences;
             if (parsed.financialPayments) window.financialPayments = parsed.financialPayments;
