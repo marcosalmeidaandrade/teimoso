@@ -2052,6 +2052,7 @@
       const img = document.getElementById('fullscreenPhotoImage');
       const nameEl = document.getElementById('fullscreenPhotoAthleteName');
 
+      // Proteção contra quebra de imagem
       img.onerror = function() {
         this.onerror = null;
         this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(athleteName || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=512`;
@@ -2067,6 +2068,19 @@
       modal.classList.add('opacity-100');
       img.classList.remove('scale-95');
       img.classList.add('scale-100');
+    };
+
+    window.closeFullscreenPhoto = function() {
+      const modal = document.getElementById('fullscreenPhotoModal');
+      const img = document.getElementById('fullscreenPhotoImage');
+      modal.classList.remove('opacity-100');
+      modal.classList.add('opacity-0');
+      img.classList.remove('scale-100');
+      img.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }, 300);
     };
 
     window.closeFullscreenPhoto = function() {
