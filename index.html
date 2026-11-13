@@ -1638,6 +1638,110 @@
       }
     }
 
+    // --- TOAST, CONFIRMAÇÃO E ANIMAÇÕES GLOBAIS ---
+    window.showToast = function(message, type = 'error') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const bgColor = type === 'error' ? 'bg-rose-600' : 'bg-emerald-600';
+      toast.className = `${bgColor} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-x-10 opacity-0 pointer-events-auto border border-white/20`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-x-10', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-10');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    };
+
+    let confirmCallback = null;
+    let cancelCallback = null;
+    window.showConfirm = function(message, callback, onCancel) {
+      document.getElementById('confirmMessage').innerText = message;
+      confirmCallback = callback;
+      cancelCallback = onCancel;
+      document.getElementById('customConfirmModal').classList.remove('hidden');
+    };
+
+    window.closeConfirm = function() {
+      document.getElementById('customConfirmModal').classList.add('hidden');
+      if (cancelCallback) cancelCallback();
+      confirmCallback = null;
+      cancelCallback = null;
+    };
+
+    document.getElementById('btnConfirmAction').addEventListener('click', () => {
+      const cb = confirmCallback;
+      confirmCallback = null;
+      cancelCallback = null;
+      if (cb) cb();
+      document.getElementById('customConfirmModal').classList.add('hidden');
+    });
+
+    window.showAnimatedConfirmation = function(athleteObj) {
+      window.playAppSound('confirm');
+      if (!window.animationsEnabled) return;
+      const overlay = document.getElementById('animatedConfirmOverlay');
+      const content = document.getElementById('animatedConfirmContent');
+      const avatarEl = document.getElementById('confirmAthleteAvatar');
+      const nameEl = document.getElementById('confirmAthleteName');
+      const target = athleteObj || window.currentUser;
+      if (target) {
+        nameEl.innerText = target.name;
+        const fallbackName = encodeURIComponent(target.name || 'TFCC');
+        avatarEl.src = target.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=256`;
+      }
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      void overlay.offsetWidth;
+      overlay.classList.remove('opacity-0');
+      overlay.classList.add('opacity-100');
+      content.classList.remove('scale-0');
+      content.classList.add('scale-100');
+      setTimeout(() => {
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-0');
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+        }, 500);
+      }, 3000);
+    };
+
+    window.showAnimatedJustification = function(athleteObj) {
+      window.playAppSound('click');
+      if (!window.animationsEnabled) return;
+      const overlay = document.getElementById('animatedJustifyOverlay');
+      const content = document.getElementById('animatedJustifyContent');
+      const avatarEl = document.getElementById('justifyAthleteAvatar');
+      const nameEl = document.getElementById('justifyAthleteName');
+      const target = athleteObj || window.currentUser;
+      if (target) {
+        nameEl.innerText = target.name;
+        const fallbackName = encodeURIComponent(target.name || 'TFCC');
+        avatarEl.src = target.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=256`;
+      }
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      void overlay.offsetWidth;
+      overlay.classList.remove('opacity-0');
+      overlay.classList.add('opacity-100');
+      content.classList.remove('scale-0');
+      content.classList.add('scale-100');
+      setTimeout(() => {
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-0');
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+        }, 500);
+      }, 4500);
+    };
+
     // --- MODAL DE ALERTA CENTRALIZADO NO MEIO DA TELA ---
     window.showCenterAlert = function(title, message) {
       const modal = document.getElementById('centerAlertModal');
@@ -2052,10 +2156,10 @@
       const img = document.getElementById('fullscreenPhotoImage');
       const nameEl = document.getElementById('fullscreenPhotoAthleteName');
 
-      // Proteção contra quebra de imagem
+      const fallbackName = encodeURIComponent(athleteName || "TFCC");
       img.onerror = function() {
         this.onerror = null;
-        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(athleteName || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=512`;
+        this.src = `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=512`;
       };
 
       img.src = imageUrl;
@@ -2068,19 +2172,6 @@
       modal.classList.add('opacity-100');
       img.classList.remove('scale-95');
       img.classList.add('scale-100');
-    };
-
-    window.closeFullscreenPhoto = function() {
-      const modal = document.getElementById('fullscreenPhotoModal');
-      const img = document.getElementById('fullscreenPhotoImage');
-      modal.classList.remove('opacity-100');
-      modal.classList.add('opacity-0');
-      img.classList.remove('scale-100');
-      img.classList.add('scale-95');
-      setTimeout(() => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-      }, 300);
     };
 
     window.closeFullscreenPhoto = function() {
@@ -2812,7 +2903,7 @@
       return 'uptodate';
     }
 
-    // --- RENDERIZAÇÃO DA TABELA DE PRESENÇA (BOTÕES UNIFORMES NO CELULAR) ---
+    // --- RENDERIZAÇÃO DA TABELA DE PRESENÇA (BOTÕES UNIFORMES NO CELULAR E AVATAR BLINDADO NO CHROME) ---
     window.renderAthletesList = function() {
       const tbody = document.getElementById('athletesTableBody');
       if (!tbody) return;
@@ -2950,13 +3041,16 @@
           `;
         }
 
-        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const fallbackName = encodeURIComponent(athlete.name || "TFCC");
+        const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const avatarUrl = (athlete.photoUrl && athlete.photoUrl.trim() !== '') ? athlete.photoUrl.trim() : fallbackAvatarUrl;
+        const safeName = (athlete.name || '').replace(/'/g, "\\'");
 
         tr.innerHTML = `
           <td class="py-3 px-3 sm:px-4 font-bold text-slate-800">
             <div class="flex items-center gap-2.5 sm:gap-3">
-              <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${(athlete.name || '').replace(/'/g, "\\'")}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-slate-300 hover:border-emerald-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
-                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128'">
+              <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${safeName}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 min-w-[40px] min-h-[40px] sm:w-12 sm:h-12 sm:min-w-[48px] sm:min-h-[48px] rounded-full border-2 border-slate-300 hover:border-emerald-500 overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
+                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover block" onerror="this.onerror=null; this.src='${fallbackAvatarUrl}'">
                 <div class="absolute inset-0 bg-emerald-600/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-emerald-800">
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </div>
@@ -2982,7 +3076,7 @@
           <td class="py-3 px-3 sm:px-4 text-right">
             <div class="flex items-center justify-end gap-1.5 sm:gap-2">
               ${!athlete.isSuspended ? `
-                <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone || ''}', '${athlete.name || ''}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
+                <button onclick="openWhatsappIndividual(${athlete.id}, '${athlete.phone || ''}', '${safeName}')" title="Enviar Convocação WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center text-xs border border-emerald-300"><i class="fa-brands fa-whatsapp"></i></button>
               ` : `
                 <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-300 flex items-center justify-center text-xs border border-slate-200 cursor-not-allowed" title="Atleta suspenso"><i class="fa-brands fa-whatsapp"></i></span>
               `}
@@ -3117,14 +3211,17 @@
         const nextAthlete = sortedByNext[0];
         const daysLeft = getDaysUntilNextBirthday(nextAthlete.birthDay, nextAthlete.birthMonth);
         const isToday = (daysLeft === 0);
-        const nextAvatar = nextAthlete.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(nextAthlete.name || 'TFCC')}&background=fef3c7&color=d97706&bold=true&size=256`;
+        const fallbackNextName = encodeURIComponent(nextAthlete.name || "TFCC");
+        const fallbackNextAvatarUrl = `https://ui-avatars.com/api/?name=${fallbackNextName}&background=fef3c7&color=d97706&bold=true&size=256`;
+        const nextAvatar = (nextAthlete.photoUrl && nextAthlete.photoUrl.trim() !== '') ? nextAthlete.photoUrl.trim() : fallbackNextAvatarUrl;
+        const safeNextName = (nextAthlete.name || '').replace(/'/g, "\\'");
         const bDayFormatted = String(nextAthlete.birthDay).padStart(2, '0') + '/' + String(nextAthlete.birthMonth).padStart(2, '0');
 
         banner.innerHTML = `
           <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white rounded-3xl p-5 sm:p-6 shadow-lg shadow-amber-500/20 flex flex-col md:flex-row items-center justify-between gap-5 border border-amber-300">
             <div class="flex items-center gap-4 w-full md:w-auto">
-              <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${(nextAthlete.name || '').replace(/'/g, "\\'")}')" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/80 overflow-hidden shrink-0 bg-white/20 shadow-md cursor-pointer hover:scale-105 transition-transform">
-                <img src="${nextAvatar}" alt="${nextAthlete.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(nextAthlete.name || 'TFCC')}&background=fef3c7&color=d97706&bold=true&size=256'">
+              <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${safeNextName}')" class="w-16 h-16 min-w-[64px] min-h-[64px] sm:w-20 sm:h-20 sm:min-w-[80px] sm:min-h-[80px] rounded-full border-4 border-white/80 overflow-hidden shrink-0 bg-white/20 flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-transform">
+                <img src="${nextAvatar}" alt="${nextAthlete.name}" class="w-full h-full object-cover block" onerror="this.onerror=null; this.src='${fallbackNextAvatarUrl}'">
               </div>
               <div>
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isToday ? 'bg-white text-amber-700 animate-pulse' : 'bg-amber-400/40 text-white border border-white/30'}">
@@ -3188,7 +3285,10 @@
         const bMonth = hasBday ? String(athlete.birthMonth).padStart(2, '0') : '--';
         const isTodayBirthday = hasBday && (todayDay === parseInt(athlete.birthDay) && todayMonth === parseInt(athlete.birthMonth));
 
-        const avatarUrl = athlete.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const fallbackName = encodeURIComponent(athlete.name || "TFCC");
+        const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const avatarUrl = (athlete.photoUrl && athlete.photoUrl.trim() !== '') ? athlete.photoUrl.trim() : fallbackAvatarUrl;
+        const safeName = (athlete.name || '').replace(/'/g, "\\'");
         const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
 
         let dateDisplayHtml = '';
@@ -3235,8 +3335,8 @@
         tr.innerHTML = `
           <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-3">
-              <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${(athlete.name || '').replace(/'/g, "\\'")}')" class="w-10 h-10 rounded-full border-2 border-slate-300 hover:border-amber-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all">
-                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=128'">
+              <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${safeName}')" class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full border-2 border-slate-300 hover:border-amber-500 overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center shadow-sm cursor-pointer transition-all">
+                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover block" onerror="this.onerror=null; this.src='${fallbackAvatarUrl}'">
               </div>
               <div class="flex flex-col">
                 <div class="flex items-center gap-2">
@@ -3348,7 +3448,10 @@
       document.getElementById('athleteModal').classList.remove('hidden');
     };
 
-    window.closeAthleteModal = function() { document.getElementById('athleteModal').classList.add('hidden'); };
+    window.closeAthleteModal = function() {
+      const modal = document.getElementById('athleteModal');
+      if (modal) modal.classList.add('hidden');
+    };
 
     function buildStarRatingSelector(currentStars) {
       selectedStarsForNewAthlete = currentStars;
@@ -3365,93 +3468,100 @@
     }
 
     window.saveAthlete = function() {
-      const id = document.getElementById('editAthleteId').value;
-      const name = document.getElementById('athleteNameInput').value.trim();
-      const phone = document.getElementById('athletePhoneInput').value.trim();
-      const photoUrl = document.getElementById('athletePhotoUrlInput').value.trim();
-      const birthDay = parseInt(document.getElementById('athleteBirthDayInput').value) || null;
-      const birthMonth = parseInt(document.getElementById('athleteBirthMonthSelect').value) || null;
-      const pinInput = document.getElementById('athletePinInput').value.trim();
-      const position = document.getElementById('athletePositionSelect').value;
-      const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput').value) || 110;
-      const isSuspended = document.getElementById('athleteSuspendedCheckbox').checked;
+      try {
+        const id = document.getElementById('editAthleteId')?.value || '';
+        const name = (document.getElementById('athleteNameInput')?.value || '').trim();
+        const phone = (document.getElementById('athletePhoneInput')?.value || '').trim();
+        const photoUrl = (document.getElementById('athletePhotoUrlInput')?.value || '').trim();
+        const birthDay = parseInt(document.getElementById('athleteBirthDayInput')?.value) || null;
+        const birthMonth = parseInt(document.getElementById('athleteBirthMonthSelect')?.value) || null;
+        const pinInput = (document.getElementById('athletePinInput')?.value || '').trim();
+        const position = document.getElementById('athletePositionSelect')?.value || 'Meia';
+        const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput')?.value) || 110;
+        const isSuspended = document.getElementById('athleteSuspendedCheckbox')?.checked || false;
 
-      const adminWifeName = document.getElementById('adminWifeName').value.trim();
-      const adminWifeDay = parseInt(document.getElementById('adminWifeDay').value) || null;
-      const adminWifeMonth = parseInt(document.getElementById('adminWifeMonth').value) || null;
+        const adminWifeName = (document.getElementById('adminWifeName')?.value || '').trim();
+        const adminWifeDay = parseInt(document.getElementById('adminWifeDay')?.value) || null;
+        const adminWifeMonth = parseInt(document.getElementById('adminWifeMonth')?.value) || null;
 
-      const children = [];
-      document.querySelectorAll('#adminChildrenContainer .child-row').forEach(row => {
-         const cName = row.querySelector('.child-name').value.trim();
-         const cDay = parseInt(row.querySelector('.child-day').value) || null;
-         const cMonth = parseInt(row.querySelector('.child-month').value) || null;
-         if (cName) children.push({ name: cName, day: cDay, month: cMonth });
-      });
-
-      const familyObj = {
-         wife: { name: adminWifeName, day: adminWifeDay, month: adminWifeMonth },
-         children: children
-      };
-      const familyDataFilled = adminWifeName !== '' || children.length > 0;
-
-      if (!name) return window.showToast("Digite o nome.");
-
-      if (birthDay && (birthDay < 1 || birthDay > 31)) {
-        return window.showToast("O dia de aniversário deve estar entre 1 e 31.");
-      }
-
-      if (pinInput && !/^\d{4}$/.test(pinInput)) {
-        return window.showToast("A senha deve conter exatamente 4 números.");
-      }
-
-      if (id) {
-        const athlete = window.athletes.find(a => a.id == id);
-        if (athlete) {
-          athlete.name = name; 
-          athlete.phone = phone; 
-          athlete.photoUrl = photoUrl;
-          athlete.birthDay = birthDay;
-          athlete.birthMonth = birthMonth;
-          if (pinInput) athlete.customPin = pinInput;
-          athlete.position = position; 
-          athlete.stars = selectedStarsForNewAthlete;
-          athlete.isSuspended = isSuspended; 
-          athlete.isKeeper = (position === 'Goleiro');
-          athlete.monthlyFee = monthlyFee;
-          athlete.family = familyObj;
-          athlete.familyDataFilled = athlete.familyDataFilled || familyDataFilled;
-        }
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o cadastro do atleta: ${name}`);
-        window.showToast("Atleta atualizado na nuvem!", "success");
-      } else {
-        const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
-        window.athletes.push({
-          id: newId, 
-          name: name, 
-          position: position, 
-          stars: selectedStarsForNewAthlete,
-          phone: phone, 
-          photoUrl: photoUrl, 
-          birthDay: birthDay,
-          birthMonth: birthMonth,
-          customPin: pinInput || (phone.replace(/\D/g, '').slice(-4) || '1234'),
-          isKeeper: (position === 'Goleiro'),
-          monthlyFee: monthlyFee, 
-          isSuspended: isSuspended, 
-          effectiveStartDate: null,
-          family: familyObj,
-          familyDataFilled: familyDataFilled
+        const children = [];
+        document.querySelectorAll('#adminChildrenContainer .child-row').forEach(row => {
+           const cName = (row.querySelector('.child-name')?.value || '').trim();
+           const cDay = parseInt(row.querySelector('.child-day')?.value) || null;
+           const cMonth = parseInt(row.querySelector('.child-month')?.value) || null;
+           if (cName) children.push({ name: cName, day: cDay, month: cMonth });
         });
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name}`);
-        window.showToast("Atleta cadastrado na nuvem!", "success");
-      }
 
-      window.saveData();
-      closeAthleteModal();
-      renderAthletesList();
-      renderBirthdaysList();
-      renderFinancial();
-      renderReports();
+        const familyObj = {
+           wife: { name: adminWifeName, day: adminWifeDay, month: adminWifeMonth },
+           children: children
+        };
+        const familyDataFilled = adminWifeName !== '' || children.length > 0;
+
+        if (!name) return window.showToast("Digite o nome.");
+
+        if (birthDay && (birthDay < 1 || birthDay > 31)) {
+          return window.showToast("O dia de aniversário deve estar entre 1 e 31.");
+        }
+
+        if (pinInput && !/^\d{4}$/.test(pinInput)) {
+          return window.showToast("A senha deve conter exatamente 4 números.");
+        }
+
+        if (id) {
+          const athlete = window.athletes.find(a => a.id == id);
+          if (athlete) {
+            athlete.name = name; 
+            athlete.phone = phone; 
+            athlete.photoUrl = photoUrl;
+            athlete.birthDay = birthDay;
+            athlete.birthMonth = birthMonth;
+            if (pinInput) athlete.customPin = pinInput;
+            athlete.position = position; 
+            athlete.stars = selectedStarsForNewAthlete;
+            athlete.isSuspended = isSuspended; 
+            athlete.isKeeper = (position === 'Goleiro');
+            athlete.monthlyFee = monthlyFee;
+            athlete.family = familyObj;
+            athlete.familyDataFilled = athlete.familyDataFilled || familyDataFilled;
+          }
+          window.closeAthleteModal();
+          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o cadastro do atleta: ${name}`);
+          window.showToast("Atleta atualizado na nuvem!", "success");
+        } else {
+          const newId = window.athletes.length > 0 ? Math.max(...window.athletes.map(a => a.id)) + 1 : 1;
+          window.athletes.push({
+            id: newId, 
+            name: name, 
+            position: position, 
+            stars: selectedStarsForNewAthlete,
+            phone: phone, 
+            photoUrl: photoUrl, 
+            birthDay: birthDay,
+            birthMonth: birthMonth,
+            customPin: pinInput || (phone.replace(/\D/g, '').slice(-4) || '1234'),
+            isKeeper: (position === 'Goleiro'),
+            monthlyFee: monthlyFee, 
+            isSuspended: isSuspended, 
+            effectiveStartDate: null,
+            family: familyObj,
+            familyDataFilled: familyDataFilled
+          });
+          window.closeAthleteModal();
+          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Cadastrou o novo atleta: ${name}`);
+          window.showToast("Atleta cadastrado na nuvem!", "success");
+        }
+
+        window.saveData();
+        window.renderAthletesList();
+        window.renderBirthdaysList();
+        window.renderFinancial();
+        window.renderReports();
+        if (typeof window.buildRouletteParticipants === 'function') window.buildRouletteParticipants();
+      } catch (err) {
+        console.error("Erro ao salvar atleta:", err);
+        window.closeAthleteModal();
+      }
     };
 
     window.confirmDeleteAthlete = function(id) {
