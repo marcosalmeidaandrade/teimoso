@@ -53,6 +53,29 @@
       0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
+    @media (max-width: 767px) {
+      #mainNavWrapper.mobile-cards-collapsible {
+        max-height: 420px;
+        opacity: 1;
+        overflow: hidden;
+        transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.2s ease,
+                    padding-top 0.25s ease,
+                    padding-bottom 0.25s ease,
+                    border-width 0.25s ease,
+                    transform 0.28s ease;
+        transform: translateY(0);
+      }
+      #mainNavWrapper.mobile-cards-collapsible.nav-collapsed-up {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        border-top-width: 0 !important;
+        transform: translateY(-12px);
+        pointer-events: none;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-white antialiased">
@@ -305,7 +328,7 @@
       </div>
 
       <!-- NAVIGATION TABS PANORÂMICA -->
-      <div id="mainNavWrapper" class="bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all">
+      <div id="mainNavWrapper" class="mobile-cards-collapsible bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all">
         <nav id="mainNavContainer" class="max-w-7xl mx-auto grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2">
           <button onclick="switchTab('presence')" id="tabBtn-presence" class="nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-600/20 border border-emerald-500">
             <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/20 flex items-center justify-center text-xs sm:text-sm shrink-0">
@@ -2876,11 +2899,12 @@
       const visibleCols = window.isAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-10' : 'grid-cols-4 sm:grid-cols-8';
 
       if (menuLayoutMode === 'cards') {
-        navWrapper.className = "bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all";
+        navWrapper.className = "mobile-cards-collapsible bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all";
         navContainer.className = `max-w-7xl mx-auto grid ${visibleCols} gap-1.5 sm:gap-2`;
         if (mainEl) mainEl.classList.remove('pb-24');
         if (labelEl) labelEl.innerText = "Menu: Cards";
         if (iconEl) iconEl.className = "fa-solid fa-table-cells-large text-emerald-600";
+        window.handleMobileCardsNavScroll();
       } else if (menuLayoutMode === 'bottom') {
         navWrapper.className = "fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-emerald-500/30 px-2 py-2 shadow-[0_-6px_20px_rgba(0,0,0,0.08)] sm:static sm:bg-slate-50/95 sm:border-t sm:border-slate-200/80 sm:shadow-none";
         navContainer.className = `max-w-7xl mx-auto grid ${visibleCols} gap-1.5 sm:gap-2`;
@@ -2896,6 +2920,31 @@
       }
       updateActiveTabButtonsUI();
     }
+
+    // --- RETRAÇÃO AUTOMÁTICA DOS BOTÕES DE MENU (CARDS) AO ROLAR NO SMARTPHONE ---
+    window.handleMobileCardsNavScroll = function() {
+      const navWrapper = document.getElementById('mainNavWrapper');
+      if (!navWrapper) return;
+
+      const isSmartphone = window.innerWidth < 768;
+      if (!isSmartphone || menuLayoutMode !== 'cards') {
+        navWrapper.classList.remove('nav-collapsed-up');
+        return;
+      }
+
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+      // Histerese suave para evitar efeito sanfona (flickering) no topo:
+      // Recolhe ao passar de 55px de rolagem e reabre ao voltar próximo ao topo (<= 15px)
+      if (currentScrollY > 55) {
+        navWrapper.classList.add('nav-collapsed-up');
+      } else if (currentScrollY <= 15) {
+        navWrapper.classList.remove('nav-collapsed-up');
+      }
+    };
+
+    window.addEventListener('scroll', window.handleMobileCardsNavScroll, { passive: true });
+    window.addEventListener('resize', window.handleMobileCardsNavScroll, { passive: true });
 
     function updateActiveTabButtonsUI() {
       ['presence', 'birthdays', 'draw', 'financial', 'reports', 'stats', 'consecutive', 'rules', 'photos', 'roulette'].forEach(t => {
