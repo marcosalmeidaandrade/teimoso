@@ -308,11 +308,6 @@
             <span class="text-[10px]">Fixar Fotos</span>
           </button>
 
-          <button onclick="downloadSelfHtmlFile()" id="btnDownloadHtmlAdmin" title="Baixar arquivo index.html completo pronto para publicar" class="px-2.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-sm shrink-0">
-            <i class="fa-solid fa-file-code text-xs"></i>
-            <span class="text-[10px]">Baixar index.html</span>
-          </button>
-
           <button onclick="openChangePasswordModal()" id="btnChangePassword" title="Alterar Minha Senha de Acesso" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all flex items-center gap-1 shrink-0 shadow-sm">
             <i class="fa-solid fa-key text-xs text-amber-500"></i>
             <span class="text-[10px] hidden sm:inline">Alterar Senha</span>
@@ -1735,41 +1730,41 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-        <button onclick="closePollVotingModal()" class="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all">
-          Ver Parciais
-        </button>
-        <button onclick="submitCraqueBagreVote()" class="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/30 active:scale-95">
-          Confirmar Voto ⚽
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FULLSCREEN PELADA PHOTO MODAL (GALERIA DE FOTOS) -->
-  <div id="fullscreenPeladaPhotoModal" onclick="closeFullscreenPeladaPhoto()" class="fixed inset-0 z-[370] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
-    <div class="w-full max-w-4xl flex items-center justify-between pt-2 text-slate-200">
-      <div class="flex items-center gap-2.5">
-        <i class="fa-solid fa-camera-retro text-pink-500 text-lg"></i>
-        <div>
-          <span id="fullscreenPeladaPhotoTitle" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider block">Pelada Teimoso F.C.C.</span>
-          <span class="text-[10px] text-slate-400 font-semibold">Registro Oficial da Galeria</span>
+  <!-- FULLSCREEN PELADA PHOTO MODAL (GALERIA DE FOTOS COM ZOOM NO SMARTPHONE) -->
+  <div id="fullscreenPeladaPhotoModal" class="fixed inset-0 z-[370] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 select-none transition-all duration-300 opacity-0 overflow-hidden">
+    <div class="w-full max-w-4xl flex items-center justify-between pt-2 text-slate-200 z-20">
+      <div class="flex items-center gap-2.5 truncate pr-2">
+        <i class="fa-solid fa-camera-retro text-pink-500 text-lg shrink-0"></i>
+        <div class="truncate">
+          <span id="fullscreenPeladaPhotoTitle" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider block truncate">Pelada Teimoso F.C.C.</span>
+          <span class="text-[10px] text-slate-400 font-semibold">Use dois dedos (pinça) para dar zoom na foto</span>
         </div>
       </div>
-      <button onclick="closeFullscreenPeladaPhoto()" class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors">
-        <i class="fa-solid fa-xmark text-base"></i>
-      </button>
-    </div>
-
-    <div class="relative flex items-center justify-center my-auto p-2 max-w-full">
-      <img id="fullscreenPeladaPhotoImg" src="" alt="Foto da Pelada" class="max-h-[75vh] max-w-[94vw] md:max-w-3xl object-contain rounded-3xl shadow-2xl border-4 border-white/20 transition-transform duration-300 transform scale-95">
-    </div>
-
-    <div class="pb-4 text-center">
-      <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-600/90 border border-pink-400 text-xs font-black text-white shadow-xl animate-pulse">
-        <i class="fa-solid fa-hand-pointer"></i>
-        <span>Clique novamente na tela para retornar às miniaturas</span>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="event.stopPropagation(); adjustPeladaPhotoZoom(-0.5)" title="Diminuir Zoom" class="w-9 h-9 rounded-full bg-slate-800/90 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors active:scale-95">
+          <i class="fa-solid fa-magnifying-glass-minus text-xs"></i>
+        </button>
+        <button onclick="event.stopPropagation(); resetPeladaPhotoZoom()" id="peladaZoomLevelBadge" title="Resetar Zoom" class="px-2.5 h-9 rounded-full bg-slate-800/90 border border-slate-700 text-[11px] font-black text-pink-400 hover:text-white flex items-center justify-center transition-colors">
+          1x
+        </button>
+        <button onclick="event.stopPropagation(); adjustPeladaPhotoZoom(0.5)" title="Aumentar Zoom" class="w-9 h-9 rounded-full bg-slate-800/90 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors active:scale-95">
+          <i class="fa-solid fa-magnifying-glass-plus text-xs"></i>
+        </button>
+        <button onclick="event.stopPropagation(); closeFullscreenPeladaPhoto()" class="w-9 h-9 rounded-full bg-rose-600/90 border border-rose-400 text-white hover:bg-rose-500 flex items-center justify-center transition-colors ml-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
       </div>
+    </div>
+
+    <div id="fullscreenPeladaPhotoViewport" class="relative flex-grow w-full flex items-center justify-center overflow-hidden my-2 touch-none cursor-grab active:cursor-grabbing">
+      <img id="fullscreenPeladaPhotoImg" src="" alt="Foto da Pelada" draggable="false" class="max-h-[75vh] max-w-[94vw] md:max-w-3xl object-contain rounded-2xl shadow-2xl border-2 border-white/20 transition-transform duration-150 ease-out origin-center will-change-transform">
+    </div>
+
+    <div class="pb-3 text-center z-20">
+      <button onclick="closeFullscreenPeladaPhoto()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-600/90 hover:bg-pink-500 border border-pink-400 text-xs font-black text-white shadow-xl transition-all active:scale-95">
+        <i class="fa-solid fa-hand-pointer"></i>
+        <span id="fullscreenPeladaBottomHint">Toque na tela (ou aqui) para retornar às miniaturas • Pinça p/ Zoom</span>
+      </button>
     </div>
   </div>
 
@@ -1798,6 +1793,7 @@
       console.warn("Firebase Messaging indisponível neste ambiente:", e);
     }
     const dbDocRef = doc(db, "teimoso_config", "dados_gerais");
+    const dbPhotosDocRef = doc(db, "teimoso_config", "galeria_fotos");
 
     try {
       localStorage.removeItem('teimoso_athletes');
@@ -2028,12 +2024,12 @@
       const target = athleteObj || window.currentUser || { name: 'Craque' };
       const fallbackName = encodeURIComponent(target.name || 'TFCC');
       const avatarUrl = target.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=256`;
-      const imgEl = document.getElementById('confirmAthleteAvatar');
+        const imgEl = document.getElementById('confirmAthleteAvatar');
+      imgEl.dataset.triedProxy = '0';
       imgEl.onerror = function() {
-        this.onerror = null;
-        this.src = `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=256`;
+        window.handleAvatarErrorWithProxy(this, target.photoUrl || '', fallbackName, 'e2e8f0', '059669', 256);
       };
-      imgEl.src = avatarUrl;
+      imgEl.src = window.getAthleteAvatarUrl(target, 'e2e8f0', '059669', 256);
       document.getElementById('confirmAthleteName').innerText = target.name || 'Craque';
       overlay.classList.remove('hidden');
       overlay.classList.add('flex', 'opacity-100');
@@ -2059,11 +2055,11 @@
       const fallbackName = encodeURIComponent(target.name || 'TFCC');
       const avatarUrl = target.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=fef3c7&color=d97706&bold=true&size=256`;
       const imgEl = document.getElementById('justifyAthleteAvatar');
+      imgEl.dataset.triedProxy = '0';
       imgEl.onerror = function() {
-        this.onerror = null;
-        this.src = `https://ui-avatars.com/api/?name=${fallbackName}&background=fef3c7&color=d97706&bold=true&size=256`;
+        window.handleAvatarErrorWithProxy(this, target.photoUrl || '', fallbackName, 'fef3c7', 'd97706', 256);
       };
-      imgEl.src = avatarUrl;
+      imgEl.src = window.getAthleteAvatarUrl(target, 'fef3c7', 'd97706', 256);
       document.getElementById('justifyAthleteName').innerText = target.name || 'Atleta';
       overlay.classList.remove('hidden');
       overlay.classList.add('flex', 'opacity-100');
@@ -2397,6 +2393,26 @@
     }
 
     // --- GRAVAÇÃO NA NUVEM FIRESTORE ---
+    window.savePhotosData = async function() {
+      if (!isCloudReady) return true;
+      if (!navigator.onLine) {
+        handleOffline();
+        window.showToast("Sem internet! Ação bloqueada para evitar perda de dados.", "error");
+        return false;
+      }
+      try {
+        await setDoc(dbPhotosDocRef, {
+          peladaPhotos: window.peladaPhotos || {},
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        return true;
+      } catch (error) {
+        console.error("Erro ao salvar fotos no Firestore:", error);
+        window.showToast("Erro ao salvar foto na nuvem (verifique o tamanho da imagem).", "error");
+        return false;
+      }
+    };
+
     window.saveData = async function() {
       if (!isCloudReady) return;
       if (!navigator.onLine) {
@@ -2408,7 +2424,6 @@
         await setDoc(dbDocRef, {
           datesList: window.datesList,
           peladaTimes: window.peladaTimes,
-          peladaPhotos: window.peladaPhotos,
           athletes: window.athletes,
           presences: window.presences,
           financialPayments: window.financialPayments,
@@ -2419,7 +2434,7 @@
           activityLogs: window.activityLogs,
           animationsEnabled: window.animationsEnabled,
           updatedAt: new Date().toISOString()
-        }, { merge: true });
+        });
       } catch (error) {
         console.error("Erro ao salvar no Firestore:", error);
         window.showToast("Erro ao conectar à nuvem. Verifique a internet.", "error");
@@ -2767,11 +2782,11 @@
       
       const qpAvatar = document.getElementById('quickPresenceAvatar');
       const fallbackQpName = encodeURIComponent(window.currentUser.name || 'TFCC');
+      qpAvatar.dataset.triedProxy = '0';
       qpAvatar.onerror = function() {
-        this.onerror = null;
-        this.src = `https://ui-avatars.com/api/?name=${fallbackQpName}&background=e2e8f0&color=059669&bold=true&size=256`;
+        window.handleAvatarErrorWithProxy(this, window.currentUser.photoUrl || '', fallbackQpName, 'e2e8f0', '059669', 256);
       };
-      qpAvatar.src = window.currentUser.photoUrl || `https://ui-avatars.com/api/?name=${fallbackQpName}&background=e2e8f0&color=059669&bold=true&size=256`;
+      qpAvatar.src = window.getAthleteAvatarUrl(window.currentUser, 'e2e8f0', '059669', 256);
       document.getElementById('quickPresenceName').innerText = window.currentUser.name.split(' ')[0];
       
       const [y, m, d] = window.currentDate.split('-');
@@ -2961,12 +2976,28 @@
       }, 3500);
 
       let isFirstSync = true;
+
+      // Listener dedicado para a Galeria de Fotos (documento separado para não estourar 1MB do Firestore)
+      onSnapshot(dbPhotosDocRef, (photosSnap) => {
+        if (photosSnap.exists()) {
+          const pData = photosSnap.data();
+          if (pData.peladaPhotos && typeof pData.peladaPhotos === 'object') {
+            window.peladaPhotos = { ...window.peladaPhotos, ...pData.peladaPhotos };
+            if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
+          }
+        }
+      }, (err) => {
+        console.warn("Aviso ao ler galeria dedicada:", err);
+      });
+
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (data.peladaPhotos && typeof data.peladaPhotos === 'object') window.peladaPhotos = data.peladaPhotos;
+          if (data.peladaPhotos && typeof data.peladaPhotos === 'object' && Object.keys(window.peladaPhotos || {}).length === 0) {
+            window.peladaPhotos = data.peladaPhotos;
+          }
           if (data.athletes && Array.isArray(data.athletes)) window.athletes = data.athletes;
           if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
           if (data.financialPayments && typeof data.financialPayments === 'object') window.financialPayments = data.financialPayments;
@@ -2979,6 +3010,28 @@
         }
 
         isCloudReady = true;
+
+        // RECUPERAÇÃO AUTOMÁTICA DA PELADA DE 01/11/2026 (E QUALQUER DATA COM HISTÓRICO SALVO)
+        let restoredAnyDate = false;
+        if (!Array.isArray(window.datesList)) window.datesList = [];
+        if (!window.peladaTimes) window.peladaTimes = {};
+
+        // Garante que 2026-11-01 e qualquer data que possua registros em window.presences volte para a lista
+        const datesToEnsure = new Set(['2026-11-01', ...Object.keys(window.presences || {})]);
+        datesToEnsure.forEach(dKey => {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dKey) && !window.datesList.includes(dKey)) {
+            window.datesList.push(dKey);
+            if (!window.peladaTimes[dKey]) window.peladaTimes[dKey] = '07:00';
+            restoredAnyDate = true;
+          }
+        });
+
+        if (restoredAnyDate) {
+          window.datesList.sort();
+          window.saveData();
+          window.showToast("✅ Pelada de 01/11/2026 restaurada com todo o histórico!", "success");
+        }
+
         const loader = document.getElementById('cloudLoadingOverlay');
         if (loader) {
           loader.classList.add('hidden');
@@ -4470,7 +4523,7 @@
     // --- GERENCIAR DATAS E LINKS/UPLOADS DE FOTOS DAS PELADAS ---
     window.pendingNewDateUploadedPhotos = [];
 
-    window.compressImageFileToDataUrl = function(file, maxWidth = 1100, quality = 0.72) {
+    window.compressImageFileToDataUrl = function(file, maxWidth = 900, quality = 0.62) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(evt) {
@@ -4478,16 +4531,27 @@
           img.onload = function() {
             let width = img.width;
             let height = img.height;
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
+            if (width > maxWidth || height > maxWidth) {
+              if (width >= height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
             }
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            // Garante que cada foto comprimida fique abaixo de ~140KB para caberem dezenas de fotos na nuvem
+            if (compressedDataUrl.length > 180000) {
+              compressedDataUrl = canvas.toDataURL('image/jpeg', 0.48);
+            }
             resolve(compressedDataUrl);
           };
           img.onerror = reject;
@@ -4573,14 +4637,15 @@
       try {
         window.showToast("Comprimindo e enviando foto para a nuvem...", "success");
         if (!window.peladaPhotos) window.peladaPhotos = {};
-        const existingList = window.parseStoredPeladaPhotos(dateStr);
+        const existingList = [...window.parseStoredPeladaPhotos(dateStr)];
         for (const file of files) {
-          const dataUrl = await window.compressImageFileToDataUrl(file);
+          const dataUrl = await window.compressImageFileToDataUrl(file, 900, 0.62);
           existingList.push(dataUrl);
         }
         window.peladaPhotos[dateStr] = existingList;
+        const savedOk = await window.savePhotosData();
+        if (!savedOk) return;
         window.recordUserInteraction(window.currentUser?.name || 'Admin', `Enviou ${files.length} foto(s) para a pelada de ${dateStr}`);
-        await window.saveData();
         window.renderPhotosTab();
         window.openManageDatesModal();
         window.showToast("Foto da pelada salva na nuvem com sucesso! 📸", "success");
@@ -4594,11 +4659,11 @@
 
     window.clearAllPhotosForDate = function(dateStr) {
       if (!window.isAdmin) return;
-      window.showConfirm(`Remover todas as fotos cadastradas na pelada de ${formatDateDisplay(dateStr)}?`, () => {
+      window.showConfirm(`Remover todas as fotos cadastradas na pelada de ${formatDateDisplay(dateStr)}?`, async () => {
         if (window.peladaPhotos && window.peladaPhotos[dateStr]) {
           delete window.peladaPhotos[dateStr];
+          await window.savePhotosData();
           window.recordUserInteraction(window.currentUser?.name || 'Admin', `Removeu as fotos da pelada de ${dateStr}`);
-          window.saveData();
           window.renderPhotosTab();
           window.openManageDatesModal();
           window.showToast("Fotos removidas desta data.", "success");
@@ -4631,6 +4696,7 @@
       }
       if (combinedPhotos.length > 0) {
         window.peladaPhotos[val] = combinedPhotos;
+        window.savePhotosData();
       }
 
       window.datesList.push(val); 
@@ -4724,8 +4790,8 @@
       } else {
         delete window.peladaPhotos[dateStr];
       }
+      window.savePhotosData();
       window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou fotos/links da pelada de ${dateStr}`);
-      window.saveData();
       window.renderPhotosTab();
       window.showToast("Fotos da pelada atualizadas na nuvem!", "success");
     };
@@ -4870,6 +4936,8 @@
       const titleEl = document.getElementById('fullscreenPeladaPhotoTitle');
       if (!modal || !img) return;
 
+      window.resetPeladaPhotoZoom(false);
+
       img.onerror = function() {
         this.onerror = null;
         this.src = 'https://placehold.co/800x800/fdf2f8/db2777?text=Foto+da+Pelada+Teimoso+FCC';
@@ -4882,22 +4950,163 @@
       void modal.offsetWidth;
       modal.classList.remove('opacity-0');
       modal.classList.add('opacity-100');
-      img.classList.remove('scale-95');
-      img.classList.add('scale-100');
+      window.initPeladaPhotoZoomGestures();
     };
 
     window.closeFullscreenPeladaPhoto = function() {
       const modal = document.getElementById('fullscreenPeladaPhotoModal');
       const img = document.getElementById('fullscreenPeladaPhotoImg');
       if (!modal || !img) return;
+      window.resetPeladaPhotoZoom(false);
       modal.classList.remove('opacity-100');
       modal.classList.add('opacity-0');
-      img.classList.remove('scale-100');
-      img.classList.add('scale-95');
       setTimeout(() => {
         modal.classList.remove('flex');
         modal.classList.add('hidden');
-      }, 300);
+      }, 280);
+    };
+
+    // --- MOTOR DE ZOOM (PINCH-TO-ZOOM + PAN + DOUBLE TAP) PARA SMARTPHONE ---
+    let peladaZoomScale = 1;
+    let peladaZoomTranslateX = 0;
+    let peladaZoomTranslateY = 0;
+    let peladaZoomGesturesInitialized = false;
+
+    function applyPeladaPhotoTransform(animate = true) {
+      const img = document.getElementById('fullscreenPeladaPhotoImg');
+      const badge = document.getElementById('peladaZoomLevelBadge');
+      const hint = document.getElementById('fullscreenPeladaBottomHint');
+      if (!img) return;
+      img.style.transition = animate ? 'transform 0.15s ease-out' : 'none';
+      img.style.transform = `translate3d(${peladaZoomTranslateX}px, ${peladaZoomTranslateY}px, 0) scale(${peladaZoomScale})`;
+      if (badge) badge.innerText = `${peladaZoomScale.toFixed(1).replace('.0', '')}x`;
+      if (hint) {
+        hint.innerText = peladaZoomScale > 1.05
+          ? 'Arraste para mover a foto • Toque aqui para retornar às miniaturas'
+          : 'Toque na tela (ou aqui) para retornar às miniaturas • Pinça p/ Zoom';
+      }
+    }
+
+    window.resetPeladaPhotoZoom = function(animate = true) {
+      peladaZoomScale = 1;
+      peladaZoomTranslateX = 0;
+      peladaZoomTranslateY = 0;
+      applyPeladaPhotoTransform(animate);
+    };
+
+    window.adjustPeladaPhotoZoom = function(delta) {
+      peladaZoomScale = Math.min(4, Math.max(1, +(peladaZoomScale + delta).toFixed(2)));
+      if (peladaZoomScale <= 1.02) {
+        peladaZoomScale = 1;
+        peladaZoomTranslateX = 0;
+        peladaZoomTranslateY = 0;
+      }
+      applyPeladaPhotoTransform(true);
+    };
+
+    window.initPeladaPhotoZoomGestures = function() {
+      if (peladaZoomGesturesInitialized) return;
+      const viewport = document.getElementById('fullscreenPeladaPhotoViewport');
+      if (!viewport) return;
+      peladaZoomGesturesInitialized = true;
+
+      let initialPinchDistance = null;
+      let initialScale = 1;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let movedDuringTouch = false;
+      let wasMultiTouch = false;
+      let lastTapTime = 0;
+
+      const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          wasMultiTouch = true;
+          movedDuringTouch = true;
+          initialPinchDistance = getTouchDist(e.touches[0], e.touches[1]);
+          initialScale = peladaZoomScale;
+        } else if (e.touches.length === 1) {
+          wasMultiTouch = false;
+          movedDuringTouch = false;
+          isDragging = true;
+          startX = e.touches[0].clientX - peladaZoomTranslateX;
+          startY = e.touches[0].clientY - peladaZoomTranslateY;
+        }
+      }, { passive: false });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialPinchDistance) {
+          e.preventDefault();
+          const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+          const ratio = currentDist / initialPinchDistance;
+          peladaZoomScale = Math.min(4.5, Math.max(1, initialScale * ratio));
+          if (peladaZoomScale <= 1.02) {
+            peladaZoomTranslateX = 0;
+            peladaZoomTranslateY = 0;
+          }
+          applyPeladaPhotoTransform(false);
+        } else if (e.touches.length === 1 && isDragging) {
+          const dx = e.touches[0].clientX - startX;
+          const dy = e.touches[0].clientY - startY;
+          if (Math.hypot(dx - peladaZoomTranslateX, dy - peladaZoomTranslateY) > 8) {
+            movedDuringTouch = true;
+          }
+          if (peladaZoomScale > 1.02) {
+            e.preventDefault();
+            const maxPan = 220 * (peladaZoomScale - 1);
+            peladaZoomTranslateX = Math.max(-maxPan, Math.min(maxPan, dx));
+            peladaZoomTranslateY = Math.max(-maxPan, Math.min(maxPan, dy));
+            applyPeladaPhotoTransform(false);
+          }
+        }
+      }, { passive: false });
+
+      viewport.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+          initialPinchDistance = null;
+        }
+        if (e.touches.length === 0) {
+          isDragging = false;
+          const now = Date.now();
+          if (!movedDuringTouch && !wasMultiTouch) {
+            // Toque duplo alterna zoom 1x <-> 2.5x; toque simples em 1x fecha o modal e volta às miniaturas
+            if (now - lastTapTime < 280) {
+              if (peladaZoomScale > 1.05) {
+                window.resetPeladaPhotoZoom(true);
+              } else {
+                peladaZoomScale = 2.5;
+                applyPeladaPhotoTransform(true);
+              }
+              lastTapTime = 0;
+            } else {
+              lastTapTime = now;
+              setTimeout(() => {
+                if (Date.now() - lastTapTime >= 270 && lastTapTime !== 0) {
+                  if (peladaZoomScale <= 1.05) {
+                    window.closeFullscreenPeladaPhoto();
+                  }
+                  lastTapTime = 0;
+                }
+              }, 280);
+            }
+          }
+        }
+      });
+
+      // Suporte para clique/roda do mouse no PC também
+      viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        window.adjustPeladaPhotoZoom(e.deltaY < 0 ? 0.3 : -0.3);
+      }, { passive: false });
+
+      viewport.addEventListener('click', (e) => {
+        if ('ontouchstart' in window) return; // Já tratado no touchend no smartphone
+        if (peladaZoomScale <= 1.05) {
+          window.closeFullscreenPeladaPhoto();
+        }
+      });
     };
 
     // --- WHATSAPP E EXPORTAÇÕES ---
