@@ -1122,8 +1122,8 @@
             <span id="badgeTotalPhotos" class="px-3.5 py-2 rounded-xl bg-pink-50 border border-pink-200 text-pink-700 text-xs font-black flex items-center gap-1.5 shadow-sm">
               <i class="fa-brands fa-instagram text-sm"></i> 0 Fotos Publicadas
             </span>
-            <button onclick="openManageDatesModal()" id="btnAdminManagePhotosShortcut" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm items-center gap-1.5">
-              <i class="fa-solid fa-link"></i> Gerenciar Links das Fotos
+            <button onclick="openManageDatesModal(true)" id="btnAdminManagePhotosShortcut" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm items-center gap-1.5">
+              <i class="fa-solid fa-camera"></i> Enviar / Gerenciar Fotos
             </button>
           </div>
         </div>
@@ -4685,14 +4685,41 @@
 
     window.clearAllPhotosForDate = function(dateStr) {
       if (!window.isAdmin) return;
-      window.showConfirm(`Remover todas as fotos cadastradas na pelada de ${formatDateDisplay(dateStr)}?`, async () => {
+      window.showConfirm(`Excluir somente as fotos da pelada de ${formatDateDisplay(dateStr)}?\n\n(A data da pelada e a lista de presença serão mantidas intactas!)`, async () => {
         if (window.peladaPhotos && window.peladaPhotos[dateStr]) {
           delete window.peladaPhotos[dateStr];
           await window.savePhotosData();
-          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Removeu as fotos da pelada de ${dateStr}`);
+          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu apenas as fotos da pelada de ${dateStr}`);
           window.renderPhotosTab();
-          window.openManageDatesModal();
-          window.showToast("Fotos removidas desta data.", "success");
+          const modal = document.getElementById('manageDatesModal');
+          if (modal && !modal.classList.contains('hidden')) {
+            window.openManageDatesModal(window.isPhotoOnlyModalMode);
+          }
+          window.showToast("Somente as fotos foram excluídas! A pelada continua intacta.", "success");
+        }
+      });
+    };
+
+    window.deleteSinglePeladaPhoto = function(dateStr, photoIndexZeroBased) {
+      if (!window.isAdmin) return window.showToast("Apenas administradores podem excluir fotos.", "error");
+      window.showConfirm(`Excluir somente esta foto da pelada de ${formatDateDisplay(dateStr)}?\n\n(A pelada e as presenças não serão afetadas)`, async () => {
+        const currentList = [...window.parseStoredPeladaPhotos(dateStr)];
+        if (photoIndexZeroBased >= 0 && photoIndexZeroBased < currentList.length) {
+          currentList.splice(photoIndexZeroBased, 1);
+          if (!window.peladaPhotos) window.peladaPhotos = {};
+          if (currentList.length > 0) {
+            window.peladaPhotos[dateStr] = currentList;
+          } else {
+            delete window.peladaPhotos[dateStr];
+          }
+          await window.savePhotosData();
+          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Excluiu 1 foto da pelada de ${dateStr}`);
+          window.renderPhotosTab();
+          const modal = document.getElementById('manageDatesModal');
+          if (modal && !modal.classList.contains('hidden')) {
+            window.openManageDatesModal(window.isPhotoOnlyModalMode);
+          }
+          window.showToast("Foto excluída com sucesso!", "success");
         }
       });
     };
@@ -4739,7 +4766,10 @@
       window.showToast("Data adicionada com sucesso na nuvem!", "success");
     };
 
-    window.openManageDatesModal = function() {
+    window.isPhotoOnlyModalMode = false;
+
+    window.openManageDatesModal = function(photoOnlyMode = false) {
+      window.isPhotoOnlyModalMode = Boolean(photoOnlyMode);
       const list = document.getElementById('manageDatesList'); 
       list.innerHTML = '';
       if (!window.peladaTimes) window.peladaTimes = {};
@@ -4776,18 +4806,20 @@
                   <input type="file" accept="image/*" multiple onchange="uploadPeladaPhotoForDate('${d}', event)" class="hidden">
                 </label>
                 ${totalPhotosInDate > 0 ? `
-                  <button onclick="clearAllPhotosForDate('${d}')" title="Limpar fotos desta data" class="px-2.5 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white rounded-xl font-bold text-[10px] transition-all border border-amber-300">
-                    Limpar Fotos
+                  <button onclick="clearAllPhotosForDate('${d}')" title="Excluir somente as fotos desta data" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 border border-rose-200">
+                    <i class="fa-solid fa-trash-can text-xs"></i> Excluir Foto(s)
                   </button>
                 ` : ''}
-                <div class="flex items-center gap-1.5 bg-white border border-slate-300 px-2.5 py-1 rounded-xl shadow-sm">
-                  <i class="fa-solid fa-clock text-emerald-600 text-xs"></i>
-                  <label class="text-[10px] uppercase font-bold text-slate-500">Horário:</label>
-                  <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
-                </div>
-                <button onclick="deleteDate('${d}')" title="Excluir data" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0 border border-rose-200">
-                  <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
+                ${!window.isPhotoOnlyModalMode ? `
+                  <div class="flex items-center gap-1.5 bg-white border border-slate-300 px-2.5 py-1 rounded-xl shadow-sm">
+                    <i class="fa-solid fa-clock text-emerald-600 text-xs"></i>
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Horário:</label>
+                    <input type="time" value="${currentTime}" onchange="updatePeladaTime('${d}', this.value)" class="bg-transparent border-0 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+                  </div>
+                  <button onclick="deleteDate('${d}')" title="Excluir data da pelada do calendário" class="px-2.5 py-1.5 bg-slate-100 text-slate-500 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 border border-slate-300">
+                    <i class="fa-solid fa-calendar-xmark text-xs"></i> Excluir Data
+                  </button>
+                ` : ''}
               </div>
             </div>
             <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-sm">
@@ -4903,6 +4935,11 @@
               <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-wider">
                 #${i + 1}
               </span>
+              ${window.isAdmin ? `
+                <button onclick="event.stopPropagation(); deleteSinglePeladaPhoto('${item.date}', ${item.indexInDate - 1})" title="Excluir somente esta foto" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white shadow-md flex items-center justify-center transition-all active:scale-95 border border-white/40">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              ` : ''}
             </div>
             <div class="p-3.5 flex items-center justify-between gap-2 bg-white">
               <div class="truncate">
@@ -4927,7 +4964,7 @@
 
       const nextSlotNumber = photoItems.length + 1;
       const nextPhotoPlaceholderCard = `
-        <div ${window.isAdmin ? 'onclick="openManageDatesModal()" title="Clique para enviar a próxima foto"' : ''} class="bg-white/90 border-2 border-dashed border-pink-300 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm transition-all flex flex-col ${window.isAdmin ? 'cursor-pointer hover:bg-pink-50/30' : ' select-none'}">
+        <div ${window.isAdmin ? 'onclick="openManageDatesModal(true)" title="Clique para enviar a próxima foto"' : ''} class="bg-white/90 border-2 border-dashed border-pink-300 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm transition-all flex flex-col ${window.isAdmin ? 'cursor-pointer hover:bg-pink-50/30' : 'select-none'}">
           <div class="relative aspect-square w-full bg-white flex flex-col items-center justify-center p-4 text-center space-y-2.5">
             <div class="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-200 text-pink-400 flex items-center justify-center text-xl shadow-inner">
               <i class="fa-solid ${window.isAdmin ? 'fa-plus' : 'fa-camera'}"></i>
