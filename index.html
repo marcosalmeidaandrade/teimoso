@@ -290,6 +290,15 @@
 
         <!-- CONTROLS & NOTIFICATIONS -->
         <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto flex-wrap">
+          <!-- SELETOR DE TEMPORADA (ANO) ABERTO PARA CONSULTA -->
+          <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-black shadow-sm shrink-0" title="Alternar temporada para consulta de histórico">
+            <i class="fa-solid fa-calendar-check text-emerald-600 text-xs"></i>
+            <span class="text-[10px] uppercase tracking-wider hidden md:inline text-emerald-700">Ano:</span>
+            <select id="seasonYearSelect" onchange="switchSeasonYear(this.value)" class="bg-transparent font-black text-xs text-emerald-900 focus:outline-none cursor-pointer">
+              <option value="2026">2026</option>
+            </select>
+          </div>
+
           <button onclick="toggleMarcaoAnimations()" id="btnToggleAnimationMarcao" title="Ativar/Desativar Animações (Exclusivo Marcão)" class="hidden px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold transition-all items-center gap-1.5 shrink-0 shadow-sm">
             <i id="iconToggleAnim" class="fa-solid fa-wand-magic-sparkles text-purple-600"></i>
             <span id="labelToggleAnim" class="text-[10px] hidden md:inline">Animações: ON</span>
@@ -1263,6 +1272,21 @@
       </div>
 
       <div class="space-y-3 pt-1">
+        <!-- VIRADA DE TEMPORADA ANUAL (EX: ZERAR PARA 2027 MANTENDO 2026 PARA CONSULTA) -->
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div>
+            <h4 class="text-xs font-black text-emerald-900 uppercase tracking-wide flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-plus text-emerald-600"></i> Virada de Ano / Iniciar Nova Temporada (2027)
+            </h4>
+            <p class="text-[10px] text-emerald-800 mt-1 leading-relaxed">
+              Arquiva e preserva <strong>100% do histórico de 2026</strong> para consulta no seletor de Ano do topo e inicia <strong>2027</strong> zerado (mantendo o cadastro, fotos, senhas e familiares de todos os atletas).
+            </p>
+          </div>
+          <button onclick="startNewSeasonYearPrompt()" class="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-2 shrink-0 active:scale-95">
+            <i class="fa-solid fa-rocket"></i> Iniciar Novo Ano
+          </button>
+        </div>
+
         <div class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:border-emerald-300 transition-all">
           <div>
             <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
@@ -2134,6 +2158,10 @@
     window.peladaTimes = { "2026-11-01": "07:00", "2026-11-03": "07:00", "2026-11-08": "07:00" };
     window.peladaPhotos = {};
     window.currentDate = "2026-11-08";
+    window.activeSeasonYear = 2026;
+    window.currentActiveClubYear = 2026;
+    window.availableSeasons = [2026];
+    window.seasonsArchive = {};
     window.athletes = [];
     window.presences = {};
     window.financialPayments = {};
@@ -2141,6 +2169,158 @@
     window.absenceFines = {};
     window.peladaGoals = {};
     window.peladaPolls = {};
+
+    window.getSelectedYearInt = function() {
+      return parseInt(window.activeSeasonYear) || 2026;
+    };
+
+    window.isViewingArchivedSeason = function() {
+      return window.getSelectedYearInt() !== (parseInt(window.currentActiveClubYear) || 2026);
+    };
+
+    window.populateSeasonSelector = function() {
+      const sel = document.getElementById('seasonYearSelect');
+      if (!sel) return;
+      const yearsSet = new Set([2026, ...(window.availableSeasons || []), parseInt(window.currentActiveClubYear) || 2026]);
+      Object.keys(window.seasonsArchive || {}).forEach(y => yearsSet.add(parseInt(y)));
+      (window.datesList || []).forEach(d => {
+        const y = parseInt(String(d).split('-')[0]);
+        if (y >= 2026) yearsSet.add(y);
+      });
+      const sortedYears = Array.from(yearsSet).filter(Boolean).sort((a, b) => b - a);
+      sel.innerHTML = sortedYears.map(y => {
+        const label = y === parseInt(window.currentActiveClubYear) ? `${y} (Atual)` : `${y} (Histórico)`;
+        return `<option value="${y}" ${y === window.getSelectedYearInt() ? 'selected' : ''}>${label}</option>`;
+      }).join('');
+    };
+
+    window.switchSeasonYear = function(yearVal) {
+      const targetYear = parseInt(yearVal) || 2026;
+      const currentActiveYear = parseInt(window.currentActiveClubYear) || 2026;
+      if (targetYear === window.activeSeasonYear) return;
+
+      // Se estava no ano ativo antes de trocar para um ano arquivado, guarda o snapshot atual em memória
+      if (window.activeSeasonYear === currentActiveYear) {
+        window._liveActiveSeasonCache = {
+          datesList: [...(window.datesList || [])],
+          peladaTimes: { ...(window.peladaTimes || {}) },
+          presences: JSON.parse(JSON.stringify(window.presences || {})),
+          financialPayments: JSON.parse(JSON.stringify(window.financialPayments || {})),
+          alwaysUpToDateMap: { ...(window.alwaysUpToDateMap || {}) },
+          absenceFines: JSON.parse(JSON.stringify(window.absenceFines || {})),
+          peladaGoals: JSON.parse(JSON.stringify(window.peladaGoals || {})),
+          peladaPolls: JSON.parse(JSON.stringify(window.peladaPolls || {}))
+        };
+      }
+
+      window.activeSeasonYear = targetYear;
+
+      if (targetYear === currentActiveYear && window._liveActiveSeasonCache) {
+        window.datesList = window._liveActiveSeasonCache.datesList;
+        window.peladaTimes = window._liveActiveSeasonCache.peladaTimes;
+        window.presences = window._liveActiveSeasonCache.presences;
+        window.financialPayments = window._liveActiveSeasonCache.financialPayments;
+        window.alwaysUpToDateMap = window._liveActiveSeasonCache.alwaysUpToDateMap;
+        window.absenceFines = window._liveActiveSeasonCache.absenceFines;
+        window.peladaGoals = window._liveActiveSeasonCache.peladaGoals;
+        window.peladaPolls = window._liveActiveSeasonCache.peladaPolls;
+      } else if (window.seasonsArchive && window.seasonsArchive[targetYear]) {
+        const arch = window.seasonsArchive[targetYear];
+        window.datesList = arch.datesList || [];
+        window.peladaTimes = arch.peladaTimes || {};
+        window.presences = arch.presences || {};
+        window.financialPayments = arch.financialPayments || {};
+        window.alwaysUpToDateMap = arch.alwaysUpToDateMap || {};
+        window.absenceFines = arch.absenceFines || {};
+        window.peladaGoals = arch.peladaGoals || {};
+        window.peladaPolls = arch.peladaPolls || {};
+      }
+
+      window.currentDate = getSmartDefaultDate();
+      window.populateSeasonSelector();
+      window.populateDateSelect();
+      window.renderAthletesList();
+      window.renderBirthdaysList();
+      window.renderFinancial();
+      window.renderReports();
+      if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
+      if (typeof window.renderConsecutiveAbsencesTab === 'function') window.renderConsecutiveAbsencesTab();
+      if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
+      window.checkDeadlinePassed();
+
+      window.showToast(
+        targetYear === currentActiveYear
+          ? `Temporada atual (${targetYear}) selecionada!`
+          : `Consultando histórico completo da temporada ${targetYear}!`,
+        "success"
+      );
+    };
+
+    window.startNewSeasonYearPrompt = function() {
+      if (!window.isAdmin) return window.showToast("Apenas administradores podem iniciar um novo ano.", "error");
+      const currentYear = parseInt(window.currentActiveClubYear) || 2026;
+      const nextYear = currentYear + 1;
+
+      window.showConfirm(
+        `🚀 INICIAR NOVA TEMPORADA (${nextYear})?\n\n1. Todo o ano de ${currentYear} (presenças, financeiro, multas, gols e fotos) ficará salvo e disponível no seletor "Ano: ${currentYear}" no topo para consulta eterna.\n2. Todos os atletas, fotos de perfil, senhas e familiares serão mantidos.\n3. O ano de ${nextYear} começará limpo e zerado (mensalidades Jan-Nov/${nextYear}, presenças, multas e artilharia).\n\nConfirma a virada para ${nextYear}?`,
+        async () => {
+          if (!window.seasonsArchive) window.seasonsArchive = {};
+          // Arquiva integralmente os dados do ano que está encerrando
+          window.seasonsArchive[currentYear] = {
+            archivedAt: new Date().toISOString(),
+            datesList: [...(window.datesList || [])],
+            peladaTimes: { ...(window.peladaTimes || {}) },
+            presences: JSON.parse(JSON.stringify(window.presences || {})),
+            financialPayments: JSON.parse(JSON.stringify(window.financialPayments || {})),
+            alwaysUpToDateMap: { ...(window.alwaysUpToDateMap || {}) },
+            absenceFines: JSON.parse(JSON.stringify(window.absenceFines || {})),
+            peladaGoals: JSON.parse(JSON.stringify(window.peladaGoals || {})),
+            peladaPolls: JSON.parse(JSON.stringify(window.peladaPolls || {}))
+          };
+
+          // Descobre o primeiro domingo de Janeiro do próximo ano como primeira data inicial
+          let firstSundayDay = 1;
+          for (let d = 1; d <= 7; d++) {
+            if (new Date(nextYear, 0, d).getDay() === 0) {
+              firstSundayDay = d;
+              break;
+            }
+          }
+          const firstDateNextYear = `${nextYear}-01-${String(firstSundayDay).padStart(2, '0')}`;
+
+          window.currentActiveClubYear = nextYear;
+          window.activeSeasonYear = nextYear;
+          if (!Array.isArray(window.availableSeasons)) window.availableSeasons = [2026];
+          if (!window.availableSeasons.includes(currentYear)) window.availableSeasons.push(currentYear);
+          if (!window.availableSeasons.includes(nextYear)) window.availableSeasons.push(nextYear);
+
+          // Zera contadores operacionais para a nova temporada mantendo todos os atletas
+          window.datesList = [firstDateNextYear];
+          window.peladaTimes = { [firstDateNextYear]: "07:00" };
+          window.currentDate = firstDateNextYear;
+          window.presences = {};
+          window.financialPayments = {};
+          window.alwaysUpToDateMap = {};
+          window.absenceFines = {};
+          window.peladaGoals = {};
+          window.peladaPolls = {};
+          window._liveActiveSeasonCache = null;
+
+          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Realizou a virada de temporada de ${currentYear} para ${nextYear}`);
+          await window.saveData();
+          window.populateSeasonSelector();
+          window.populateDateSelect();
+          window.renderAthletesList();
+          window.renderFinancial();
+          window.renderReports();
+          window.renderStatsAndPollTab();
+          window.renderConsecutiveAbsencesTab();
+          window.renderPhotosTab();
+          window.closeBackupModal();
+          window.showToast(`🎉 Temporada ${nextYear} iniciada! Você pode consultar ${currentYear} a qualquer momento no topo!`, "success");
+        }
+      );
+    };
 
     window.resetAllSessionFilters = function() {
       activeStatusFilter = null;
@@ -2431,9 +2611,15 @@
         handleOffline();
         return window.showToast("Sem internet! Ação bloqueada para evitar perda de dados.", "error");
       }
+      if (window.isViewingArchivedSeason()) {
+        return window.showToast(`Modo Histórico (${window.activeSeasonYear}): Mude para o ano atual no topo para fazer alterações.`, "error");
+      }
       try {
         pruneActivityLogs();
         await setDoc(dbDocRef, {
+          currentActiveClubYear: window.currentActiveClubYear || 2026,
+          availableSeasons: window.availableSeasons || [2026],
+          seasonsArchive: window.seasonsArchive || {},
           datesList: window.datesList,
           peladaTimes: window.peladaTimes,
           peladaPhotos: {},
@@ -2486,6 +2672,7 @@
     }
 
     window.isHistoricalReadOnlyDate = function(dateStr) {
+      if (window.isViewingArchivedSeason()) return true;
       if (window.isAdmin) return false;
       const { nextFutureDate, allSorted } = getPeladaTimelineInfo();
       if (nextFutureDate) {
@@ -3007,43 +3194,51 @@
       onSnapshot(dbDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
-          if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (!hasLoadedDedicatedPhotosDoc && data.peladaPhotos && typeof data.peladaPhotos === 'object' && Object.keys(data.peladaPhotos).length > 0) {
-            window.peladaPhotos = { ...data.peladaPhotos };
+          if (data.currentActiveClubYear) window.currentActiveClubYear = parseInt(data.currentActiveClubYear) || 2026;
+          if (Array.isArray(data.availableSeasons)) window.availableSeasons = data.availableSeasons;
+          if (data.seasonsArchive && typeof data.seasonsArchive === 'object') window.seasonsArchive = data.seasonsArchive;
+
+          // Só sobrescreve os dados em tela se o usuário estiver visualizando o ano ativo do clube
+          if (!window.isViewingArchivedSeason()) {
+            window.activeSeasonYear = window.currentActiveClubYear || 2026;
+            if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
+            if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
+            if (!hasLoadedDedicatedPhotosDoc && data.peladaPhotos && typeof data.peladaPhotos === 'object' && Object.keys(data.peladaPhotos).length > 0) {
+              window.peladaPhotos = { ...data.peladaPhotos };
+            }
+            if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
+            if (data.financialPayments && typeof data.financialPayments === 'object') window.financialPayments = data.financialPayments;
+            if (data.alwaysUpToDateMap && typeof data.alwaysUpToDateMap === 'object') window.alwaysUpToDateMap = data.alwaysUpToDateMap;
+            if (data.absenceFines && typeof data.absenceFines === 'object') window.absenceFines = data.absenceFines;
+            if (data.peladaGoals && typeof data.peladaGoals === 'object') window.peladaGoals = data.peladaGoals;
+            if (data.peladaPolls && typeof data.peladaPolls === 'object') window.peladaPolls = data.peladaPolls;
           }
           if (data.athletes && Array.isArray(data.athletes)) window.athletes = data.athletes;
-          if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
-          if (data.financialPayments && typeof data.financialPayments === 'object') window.financialPayments = data.financialPayments;
-          if (data.alwaysUpToDateMap && typeof data.alwaysUpToDateMap === 'object') window.alwaysUpToDateMap = data.alwaysUpToDateMap;
-          if (data.absenceFines && typeof data.absenceFines === 'object') window.absenceFines = data.absenceFines;
-          if (data.peladaGoals && typeof data.peladaGoals === 'object') window.peladaGoals = data.peladaGoals;
-          if (data.peladaPolls && typeof data.peladaPolls === 'object') window.peladaPolls = data.peladaPolls;
           if (data.activityLogs && Array.isArray(data.activityLogs)) window.activityLogs = data.activityLogs;
           if (typeof data.animationsEnabled === 'boolean') window.animationsEnabled = data.animationsEnabled;
         }
 
         isCloudReady = true;
 
-        // RECUPERAÇÃO AUTOMÁTICA DA PELADA DE 01/11/2026 (E QUALQUER DATA COM HISTÓRICO SALVO)
+        // RECUPERAÇÃO AUTOMÁTICA DA PELADA DE 01/11/2026 (APENAS NA TEMPORADA 2026)
         let restoredAnyDate = false;
         if (!Array.isArray(window.datesList)) window.datesList = [];
         if (!window.peladaTimes) window.peladaTimes = {};
 
-        // Garante que 2026-11-01 e qualquer data que possua registros em window.presences volte para a lista
-        const datesToEnsure = new Set(['2026-11-01', ...Object.keys(window.presences || {})]);
-        datesToEnsure.forEach(dKey => {
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dKey) && !window.datesList.includes(dKey)) {
-            window.datesList.push(dKey);
-            if (!window.peladaTimes[dKey]) window.peladaTimes[dKey] = '07:00';
-            restoredAnyDate = true;
-          }
-        });
+        if (window.getSelectedYearInt() === 2026) {
+          const datesToEnsure = new Set(['2026-11-01', ...Object.keys(window.presences || {})]);
+          datesToEnsure.forEach(dKey => {
+            if (/^2026-\d{2}-\d{2}$/.test(dKey) && !window.datesList.includes(dKey)) {
+              window.datesList.push(dKey);
+              if (!window.peladaTimes[dKey]) window.peladaTimes[dKey] = '07:00';
+              restoredAnyDate = true;
+            }
+          });
+        }
 
-        if (restoredAnyDate) {
+        if (restoredAnyDate && !window.isViewingArchivedSeason()) {
           window.datesList.sort();
           window.saveData();
-          window.showToast("✅ Pelada de 01/11/2026 restaurada com todo o histórico!", "success");
         }
 
         const loader = document.getElementById('cloudLoadingOverlay');
@@ -3053,11 +3248,13 @@
         }
 
         if (isFirstSync) {
+          window.activeSeasonYear = window.currentActiveClubYear || 2026;
           window.currentDate = getSmartDefaultDate();
           isFirstSync = false;
           setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
         }
 
+        window.populateSeasonSelector();
         updateActivityBadge();
         updateMarcaoAnimationButtonUI();
         window.populateDateSelect();
@@ -3860,6 +4057,8 @@
     function getAthleteFinancialStatus(athleteId) {
       if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
       const now = new Date();
+      const seasonYear = window.getSelectedYearInt();
+      const refNow = seasonYear < now.getFullYear() ? new Date(seasonYear, 11, 31, 23, 59, 59) : now;
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete) return 'uptodate';
       const payments = window.financialPayments[athleteId] || {};
@@ -3867,21 +4066,22 @@
       for (let mIndex = 0; mIndex < months.length; mIndex++) {
         const mKey = months[mIndex];
         const monthNum = mIndex + 1;
-        const dueDate = new Date(2026, monthNum - 1, 15);
+        const dueDate = new Date(seasonYear, monthNum - 1, 15);
         const paymentData = payments[mKey];
         const isPaid = paymentData && (paymentData.paid || safeNum(paymentData.amount) > 0);
         
         let effectivelySuspended = athlete.isSuspended;
-        if (athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
+        if (seasonYear === 2026 && athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
             effectivelySuspended = false;
         }
 
-        if (!isPaid && now > dueDate && !effectivelySuspended) return 'overdue';
+        if (!isPaid && refNow > dueDate && !effectivelySuspended) return 'overdue';
       }
 
       const rawFines = window.absenceFines[athleteId] || [];
       const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
-      const hasUnpaidFine = athleteFines.some(f => f && !f.paid && f.date >= '2026-11-01');
+      const minFineDate = seasonYear === 2026 ? '2026-11-01' : `${seasonYear}-01-01`;
+      const hasUnpaidFine = athleteFines.some(f => f && !f.paid && f.date >= minFineDate);
       if (hasUnpaidFine && !athlete.isSuspended) return 'overdue';
 
       return 'uptodate';
@@ -4939,7 +5139,14 @@
       const badgeEl = document.getElementById('badgeTotalPhotos');
       if (!container) return;
 
-      const sortedDates = [...(window.datesList || [])].sort(); // Ordem cronológica (mais antiga -> mais recente)
+      const selectedYearPrefix = String(window.getSelectedYearInt()) + '-';
+      const allPhotoDates = new Set([
+        ...(window.datesList || []),
+        ...Object.keys(window.peladaPhotos || {})
+      ]);
+      const sortedDates = Array.from(allPhotoDates)
+        .filter(d => String(d).startsWith(selectedYearPrefix))
+        .sort(); // Ordem cronológica (mais antiga -> mais recente) da temporada selecionada
       const photoItems = [];
 
       sortedDates.forEach(dateStr => {
@@ -5862,7 +6069,10 @@
 
       const sortedAthletes = [...window.athletes].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       const now = new Date();
-      const disableInput = !window.canEditFinancial ? 'disabled readonly' : '';
+      const seasonYear = window.getSelectedYearInt();
+      const refNow = seasonYear < now.getFullYear() ? new Date(seasonYear, 11, 31, 23, 59, 59) : now;
+      const canEditCurrentSeasonFin = window.canEditFinancial && !window.isViewingArchivedSeason();
+      const disableInput = !canEditCurrentSeasonFin ? 'disabled readonly' : '';
 
       sortedAthletes.forEach(athlete => {
         const payments = window.financialPayments[athlete.id] || {};
@@ -5878,23 +6088,23 @@
 
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
-          const dueDate = new Date(2026, mIndex, 15);
-          const firstDayAfterDue = new Date(2026, mIndex, 16);
+          const dueDate = new Date(seasonYear, mIndex, 15);
+          const firstDayAfterDue = new Date(seasonYear, mIndex, 16);
           let monthData = payments[mKey] || { paid: false, amount: 0 };
           let isPaid = monthData.paid === true || safeNum(monthData.amount) > 0;
           let paidAmount = safeNum(monthData.amount, 0);
           if (isPaid) athleteTotalPaid += paidAmount;
 
           let effectivelySuspended = athlete.isSuspended;
-          if (athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
+          if (seasonYear === 2026 && athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
             effectivelySuspended = false;
           }
 
           let interest = 0;
           if (!effectivelySuspended && !isPaid) {
             athletePendingInstallmentsAmount += suggestedFee;
-            if (now >= firstDayAfterDue) {
-              const daysLate = Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
+            if (refNow >= firstDayAfterDue) {
+              const daysLate = Math.floor((refNow - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1;
               interest = Math.max(0, daysLate) * 1.00;
               athleteTotalInterest += interest;
               athleteStrictOverdue += (suggestedFee + interest);
@@ -5904,12 +6114,12 @@
             }
           }
 
-          const isCellOverdue = !isPaid && (now > dueDate) && !effectivelySuspended;
+          const isCellOverdue = !isPaid && (refNow > dueDate) && !effectivelySuspended;
           let cellColorClass = isPaid
             ? "bg-sky-50 text-sky-800 border-sky-300"
             : (effectivelySuspended ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed" : (isCellOverdue ? "bg-rose-50 text-rose-800 border-rose-300" : "bg-amber-50/70 text-amber-800 border-amber-300"));
 
-          let statusTagText = isPaid ? "Quitado" : (effectivelySuspended ? "Isento" : (now > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)"));
+          let statusTagText = isPaid ? "Quitado" : (effectivelySuspended ? "Isento" : (refNow > dueDate ? `+R$ ${interest.toFixed(0)} juros` : "A Vencer (Dia 15)"));
           const suggestedInputValue = isPaid ? paidAmount : (effectivelySuspended ? 0 : (suggestedFee + interest));
           const settledDateHtml = (isPaid && monthData.settledAt)
             ? `<span class="text-[8px] text-slate-400 font-bold tracking-tight">Baixa: ${new Date(monthData.settledAt).toLocaleDateString('pt-BR')}</span>`
@@ -5919,8 +6129,8 @@
             <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative ${effectivelySuspended && !isPaid ? 'opacity-60' : ''}">
               <span class="text-[10px] uppercase font-bold text-slate-500">${mKey}</span>
               <div class="flex items-center gap-1.5 justify-center">
-                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput || (effectivelySuspended && !isPaid) ? 'disabled readonly' : ''} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${(window.canEditFinancial && !effectivelySuspended) ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
-                <input type="${effectivelySuspended && !isPaid ? 'text' : 'number'}" value="${effectivelySuspended && !isPaid ? '—' : suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${window.canEditFinancial && !effectivelySuspended ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (effectivelySuspended && !isPaid) ? 'disabled readonly' : ''} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} ${disableInput || (effectivelySuspended && !isPaid) ? 'disabled readonly' : ''} onchange="toggleMonthPaymentCheckbox(${athlete.id}, '${mKey}', this.checked)" class="w-3.5 h-3.5 rounded bg-white border-slate-300 text-emerald-600 focus:ring-0 ${(canEditCurrentSeasonFin && !effectivelySuspended) ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}">
+                <input type="${effectivelySuspended && !isPaid ? 'text' : 'number'}" value="${effectivelySuspended && !isPaid ? '—' : suggestedInputValue}" onchange="updateFinancialValue(${athlete.id}, '${mKey}', this.value)" ${canEditCurrentSeasonFin && !effectivelySuspended ? `ondblclick="doubleClickSettleMonth(${athlete.id}, '${mKey}')"` : ''} ${disableInput || (effectivelySuspended && !isPaid) ? 'disabled readonly' : ''} class="w-14 bg-white border rounded-lg py-1 px-1 text-center font-bold text-xs ${cellColorClass} focus:outline-none focus:border-emerald-500">
               </div>
               <span class="text-[8px] font-bold ${isPaid ? 'text-sky-700' : (effectivelySuspended ? 'text-slate-400' : (isCellOverdue ? 'text-rose-600' : 'text-amber-700'))}">${statusTagText}</span>
               ${settledDateHtml}
@@ -5929,14 +6139,15 @@
 
         const rawFines = window.absenceFines[athlete.id] || [];
         const athleteFines = Array.isArray(rawFines) ? rawFines : Object.values(rawFines || {});
+        const minFineDate = seasonYear === 2026 ? '2026-11-01' : `${seasonYear}-01-01`;
         let finesHtml = '';
 
         athleteFines.forEach((fine, fineIdx) => {
-          if (!fine || fine.date < '2026-11-01') return;
+          if (!fine || fine.date < minFineDate) return;
           if (fine.paid && fine.amountPaid !== undefined) athleteTotalPaid += safeNum(fine.amountPaid, 0);
 
           const fineDate = new Date(fine.date + 'T00:00:00');
-          let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
+          let daysPassed = Math.floor((refNow - fineDate) / (1000 * 60 * 60 * 24));
           if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
           const isConsecutive3 = fine.type === 'CONSECUTIVE_3';
           const defaultBase = isConsecutive3 ? safeNum(athlete.monthlyFee, 110) : 30.00;
@@ -6283,7 +6494,10 @@
     window.downloadBackupJSON = function() {
       if (!window.isAdmin) return;
       const dataToExport = {
-        app: "Teimoso F.C.C.", version: "2026.2", exportedAt: new Date().toISOString(),
+        app: "Teimoso F.C.C.", version: "2026.3", exportedAt: new Date().toISOString(),
+        currentActiveClubYear: window.currentActiveClubYear || 2026,
+        availableSeasons: window.availableSeasons || [2026],
+        seasonsArchive: window.seasonsArchive || {},
         datesList: window.datesList, peladaTimes: window.peladaTimes, peladaPhotos: window.peladaPhotos, athletes: window.athletes,
         presences: window.presences, financialPayments: window.financialPayments,
         alwaysUpToDateMap: window.alwaysUpToDateMap, absenceFines: window.absenceFines,
