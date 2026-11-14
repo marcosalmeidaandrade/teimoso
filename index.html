@@ -57,13 +57,11 @@
       max-height: 520px;
       opacity: 1;
       overflow: hidden;
-      transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity 0.2s ease,
-                  padding-top 0.25s ease,
-                  padding-bottom 0.25s ease,
-                  border-width 0.25s ease,
-                  transform 0.28s ease;
-      transform: translateY(0);
+      will-change: max-height, opacity, transform;
+      transition: max-height 0.22s ease-out,
+                  opacity 0.18s ease-out,
+                  transform 0.22s ease-out;
+      transform: translate3d(0, 0, 0);
     }
     #mainNavWrapper.mobile-cards-collapsible.nav-collapsed-up {
       max-height: 0 !important;
@@ -71,8 +69,14 @@
       padding-top: 0 !important;
       padding-bottom: 0 !important;
       border-top-width: 0 !important;
-      transform: translateY(-14px);
+      transform: translate3d(0, -10px, 0);
       pointer-events: none;
+    }
+    .photo-card-gpu {
+      content-visibility: auto;
+      contain-intrinsic-size: 220px;
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
   </style>
 </head>
@@ -1124,7 +1128,7 @@
           </div>
         </div>
 
-        <div id="photosGalleryContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div id="photosGalleryContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-28">
         </div>
       </section>
 
@@ -3077,45 +3081,57 @@
       navWrapper.className = "mobile-cards-collapsible bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all";
       navContainer.className = `max-w-7xl mx-auto grid ${visibleCols} gap-1.5 sm:gap-2`;
       if (mainEl) mainEl.classList.remove('pb-24');
-      window.handleMobileCardsNavScroll();
+      window.setMobileNavCollapsed(false);
       updateActiveTabButtonsUI();
     }
 
-    // --- RETRAÇÃO AUTOMÁTICA DOS BOTÕES DE MENU (CARDS) EM QUALQUER ABA AO DESLIZAR PARA BAIXO ---
+    // --- RETRAÇÃO OTIMIZADA (ZERO LAG / 60FPS GPU) DOS BOTÕES DE MENU (CARDS) ---
     let touchStartYForNav = null;
     let lastKnownScrollY = 0;
+    let isMobileNavCollapsed = false;
+    let navScrollRafPending = false;
+    let lastNavToggleTimestamp = 0;
 
-    function getActiveScrollTop(evtTarget) {
-      const winScroll = window.pageYOffset || window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      if (winScroll > 0) return winScroll;
-      if (evtTarget && evtTarget !== document && evtTarget !== window && typeof evtTarget.scrollTop === 'number') {
-        return evtTarget.scrollTop;
-      }
-      return 0;
-    }
-
-    window.handleMobileCardsNavScroll = function(evt) {
+    window.setMobileNavCollapsed = function(shouldCollapse) {
+      if (isMobileNavCollapsed === shouldCollapse) return;
+      const now = performance.now();
+      // Cooldown anti-efeito sanfona durante o deslize no smartphone
+      if (now - lastNavToggleTimestamp < 260) return;
       const navWrapper = document.getElementById('mainNavWrapper');
       if (!navWrapper) return;
-
-      const currentScrollY = getActiveScrollTop(evt?.target);
-      const scrollingDown = currentScrollY > lastKnownScrollY;
-      lastKnownScrollY = currentScrollY;
-
-      // Recolhe imediatamente ao rolar para baixo (> 15px) e reexibe ao retornar ao topo (<= 10px)
-      if (currentScrollY > 15 && scrollingDown) {
+      isMobileNavCollapsed = shouldCollapse;
+      lastNavToggleTimestamp = now;
+      if (shouldCollapse) {
         navWrapper.classList.add('nav-collapsed-up');
-      } else if (currentScrollY <= 10) {
+      } else {
         navWrapper.classList.remove('nav-collapsed-up');
       }
     };
 
-    // Captura scroll tanto da janela quanto de qualquer tabela/container interno em todas as abas
-    window.addEventListener('scroll', window.handleMobileCardsNavScroll, { passive: true, capture: true });
-    document.addEventListener('scroll', window.handleMobileCardsNavScroll, { passive: true, capture: true });
-    window.addEventListener('resize', window.handleMobileCardsNavScroll, { passive: true });
+    function getActiveScrollTop() {
+      return window.pageYOffset || window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
 
-    // Detector de gesto (swipe/deslizar no smartphone) para recolher mesmo na aba FOTOS quando há poucas fotos e pouco scroll
+    window.handleMobileCardsNavScroll = function() {
+      if (navScrollRafPending) return;
+      navScrollRafPending = true;
+      requestAnimationFrame(() => {
+        navScrollRafPending = false;
+        const currentScrollY = getActiveScrollTop();
+        const delta = currentScrollY - lastKnownScrollY;
+        lastKnownScrollY = currentScrollY;
+
+        if (currentScrollY <= 12) {
+          window.setMobileNavCollapsed(false);
+        } else if (delta > 8 && currentScrollY > 24) {
+          window.setMobileNavCollapsed(true);
+        }
+      });
+    };
+
+    window.addEventListener('scroll', window.handleMobileCardsNavScroll, { passive: true });
+
+    // Detector leve de gesto (swipe) para quando a aba tem pouco scroll vertical
     window.addEventListener('touchstart', (e) => {
       if (e.touches && e.touches.length === 1) {
         touchStartYForNav = e.touches[0].clientY;
@@ -3124,40 +3140,21 @@
 
     window.addEventListener('touchmove', (e) => {
       if (touchStartYForNav === null || !e.touches || e.touches.length !== 1) return;
-      // Ignora se o modal de foto em tela cheia estiver aberto
       const fullscreenPeladaModal = document.getElementById('fullscreenPeladaPhotoModal');
       if (fullscreenPeladaModal && !fullscreenPeladaModal.classList.contains('hidden')) return;
 
-      const navWrapper = document.getElementById('mainNavWrapper');
-      if (!navWrapper) return;
-
-      const deltaY = touchStartYForNav - e.touches[0].clientY; // positivo = deslizando a tela para ver abaixo
-      const currentScrollY = getActiveScrollTop(e.target);
-
-      // Recolhe mesmo com scroll 0 (ex: aba Fotos com 1 ou 2 fotos apenas) ao deslizar na tela
-      if (deltaY > 22) {
-        navWrapper.classList.add('nav-collapsed-up');
-      } else if (deltaY < -22 && currentScrollY <= 20) {
-        navWrapper.classList.remove('nav-collapsed-up');
+      const deltaY = touchStartYForNav - e.touches[0].clientY;
+      if (!isMobileNavCollapsed && deltaY > 28) {
+        touchStartYForNav = e.touches[0].clientY;
+        window.setMobileNavCollapsed(true);
+      } else if (isMobileNavCollapsed && deltaY < -35 && getActiveScrollTop() <= 20) {
+        touchStartYForNav = e.touches[0].clientY;
+        window.setMobileNavCollapsed(false);
       }
     }, { passive: true });
 
     window.addEventListener('touchend', () => {
       touchStartYForNav = null;
-    }, { passive: true });
-
-    // Suporte a roda do mouse / trackpad mesmo sem barra de rolagem longa (útil para testar no PC também)
-    window.addEventListener('wheel', (e) => {
-      const fullscreenPeladaModal = document.getElementById('fullscreenPeladaPhotoModal');
-      if (fullscreenPeladaModal && !fullscreenPeladaModal.classList.contains('hidden')) return;
-      const navWrapper = document.getElementById('mainNavWrapper');
-      if (!navWrapper) return;
-      const currentScrollY = getActiveScrollTop(e.target);
-      if (e.deltaY > 15) {
-        navWrapper.classList.add('nav-collapsed-up');
-      } else if (e.deltaY < -15 && currentScrollY <= 15) {
-        navWrapper.classList.remove('nav-collapsed-up');
-      }
     }, { passive: true });
 
     function updateActiveTabButtonsUI() {
@@ -3194,9 +3191,10 @@
         }
       });
       updateActiveTabButtonsUI();
+      isMobileNavCollapsed = false;
       const navWrapper = document.getElementById('mainNavWrapper');
       if (navWrapper) navWrapper.classList.remove('nav-collapsed-up');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'auto' });
       if (tab === 'birthdays') renderBirthdaysList();
       if (tab === 'financial') renderFinancial();
       if (tab === 'reports') renderReports();
@@ -4891,38 +4889,18 @@
         badgeEl.innerHTML = `<i class="fa-solid fa-images text-sm"></i> ${photoItems.length} ${photoItems.length === 1 ? 'Foto Publicada' : 'Fotos Publicadas'}`;
       }
 
-      if (photoItems.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3 shadow-sm">
-            <div class="w-16 h-16 rounded-2xl bg-pink-50 border border-pink-200 text-pink-500 flex items-center justify-center text-2xl mx-auto">
-              <i class="fa-solid fa-camera-retro"></i>
-            </div>
-            <h4 class="text-sm font-black uppercase tracking-wider text-slate-700">Nenhuma Foto Cadastrada Ainda</h4>
-            <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-              Os administradores podem enviar a foto direto da <strong>galeria do celular/computador</strong> (ou colar um link do Google Drive) clicando em <strong>Gerenciar Datas</strong> ou ao criar uma <strong>Nova Data</strong>.
-            </p>
-          </div>
-        `;
-        return;
-      }
-
       window.currentRenderedGalleryPhotos = photoItems;
 
-      container.innerHTML = photoItems.map((item, i) => {
+      const renderedCardsHtml = photoItems.map((item, i) => {
         const titleLabel = item.totalInDate > 1
           ? `Pelada ${item.dateFormatted} (Foto ${item.indexInDate}/${item.totalInDate})`
           : `Pelada ${item.dateFormatted}`;
 
         return `
-          <div onclick="openFullscreenPeladaPhotoByIndex(${i})" class="group bg-white border border-slate-200 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col">
+          <div onclick="openFullscreenPeladaPhotoByIndex(${i})" class="photo-card-gpu group bg-white border border-slate-200 sm:hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm transition-colors cursor-pointer flex flex-col">
             <div class="relative aspect-square w-full bg-slate-100 overflow-hidden flex items-center justify-center">
-              <img src="${item.imageUrl}" alt="${titleLabel}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='https://placehold.co/600x600/fdf2f8/db2777?text=Toque+para+Ver+Foto'">
-              <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/35 transition-all flex items-center justify-center">
-                <span class="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5">
-                  <i class="fa-solid fa-expand text-pink-600"></i> Ampliar Tela Cheia
-                </span>
-              </div>
-              <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-slate-900/75 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider">
+              <img src="${item.imageUrl}" alt="${titleLabel}" loading="lazy" decoding="async" class="w-full h-full object-cover sm:group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='https://placehold.co/600x600/fdf2f8/db2777?text=Toque+para+Ver+Foto'">
+              <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-wider">
                 #${i + 1}
               </span>
             </div>
@@ -4946,6 +4924,39 @@
           </div>
         `;
       }).join('');
+
+      const nextSlotNumber = photoItems.length + 1;
+      const nextPhotoPlaceholderCard = `
+        <div ${window.isAdmin ? 'onclick="openManageDatesModal()" title="Clique para enviar a próxima foto"' : ''} class="bg-white/90 border-2 border-dashed border-pink-300 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm transition-all flex flex-col ${window.isAdmin ? 'cursor-pointer hover:bg-pink-50/30' : ' select-none'}">
+          <div class="relative aspect-square w-full bg-white flex flex-col items-center justify-center p-4 text-center space-y-2.5">
+            <div class="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-200 text-pink-400 flex items-center justify-center text-xl shadow-inner">
+              <i class="fa-solid ${window.isAdmin ? 'fa-plus' : 'fa-camera'}"></i>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[11px] font-black uppercase tracking-wider text-slate-500 block">Aguardando Próxima Foto</span>
+              <span class="text-[10px] font-medium text-slate-400 block leading-snug">
+                ${window.isAdmin ? 'Toque aqui para enviar a próxima foto da pelada' : 'Espaço reservado para o registro do próximo domingo'}
+              </span>
+            </div>
+            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-wider">
+              #${nextSlotNumber}
+            </span>
+          </div>
+          <div class="p-3.5 flex items-center justify-between gap-2 bg-slate-50/80 border-t border-dashed border-slate-200">
+            <div class="truncate">
+              <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <i class="fa-regular fa-clock"></i> Em Breve
+              </div>
+              <div class="text-xs font-bold text-slate-400 truncate mt-0.5">Próximo Registro...</div>
+            </div>
+            <span class="w-8 h-8 rounded-xl bg-white text-slate-300 border border-slate-200 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-hourglass-half text-xs"></i>
+            </span>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = renderedCardsHtml + nextPhotoPlaceholderCard;
     };
 
     window.openFullscreenPeladaPhotoByIndex = function(index) {
