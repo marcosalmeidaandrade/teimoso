@@ -3083,6 +3083,7 @@
 
     // --- RETRAÇÃO AUTOMÁTICA DOS BOTÕES DE MENU (CARDS) EM QUALQUER ABA AO DESLIZAR PARA BAIXO ---
     let touchStartYForNav = null;
+    let lastKnownScrollY = 0;
 
     function getActiveScrollTop(evtTarget) {
       const winScroll = window.pageYOffset || window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
@@ -3098,11 +3099,13 @@
       if (!navWrapper) return;
 
       const currentScrollY = getActiveScrollTop(evt?.target);
+      const scrollingDown = currentScrollY > lastKnownScrollY;
+      lastKnownScrollY = currentScrollY;
 
-      // Recolhe ao rolar para baixo (> 35px) e reexibe ao retornar ao topo (<= 12px)
-      if (currentScrollY > 35) {
+      // Recolhe imediatamente ao rolar para baixo (> 15px) e reexibe ao retornar ao topo (<= 10px)
+      if (currentScrollY > 15 && scrollingDown) {
         navWrapper.classList.add('nav-collapsed-up');
-      } else if (currentScrollY <= 12) {
+      } else if (currentScrollY <= 10) {
         navWrapper.classList.remove('nav-collapsed-up');
       }
     };
@@ -3112,7 +3115,7 @@
     document.addEventListener('scroll', window.handleMobileCardsNavScroll, { passive: true, capture: true });
     window.addEventListener('resize', window.handleMobileCardsNavScroll, { passive: true });
 
-    // Detector de gesto (swipe/deslizar no smartphone) para recolher mesmo em abas mais curtas
+    // Detector de gesto (swipe/deslizar no smartphone) para recolher mesmo na aba FOTOS quando há poucas fotos e pouco scroll
     window.addEventListener('touchstart', (e) => {
       if (e.touches && e.touches.length === 1) {
         touchStartYForNav = e.touches[0].clientY;
@@ -3121,21 +3124,40 @@
 
     window.addEventListener('touchmove', (e) => {
       if (touchStartYForNav === null || !e.touches || e.touches.length !== 1) return;
+      // Ignora se o modal de foto em tela cheia estiver aberto
+      const fullscreenPeladaModal = document.getElementById('fullscreenPeladaPhotoModal');
+      if (fullscreenPeladaModal && !fullscreenPeladaModal.classList.contains('hidden')) return;
+
       const navWrapper = document.getElementById('mainNavWrapper');
       if (!navWrapper) return;
 
-      const deltaY = touchStartYForNav - e.touches[0].clientY; // positivo = deslizando conteúdo para baixo
+      const deltaY = touchStartYForNav - e.touches[0].clientY; // positivo = deslizando a tela para ver abaixo
       const currentScrollY = getActiveScrollTop(e.target);
 
-      if (deltaY > 28 && currentScrollY > 10) {
+      // Recolhe mesmo com scroll 0 (ex: aba Fotos com 1 ou 2 fotos apenas) ao deslizar na tela
+      if (deltaY > 22) {
         navWrapper.classList.add('nav-collapsed-up');
-      } else if (deltaY < -28 && currentScrollY <= 25) {
+      } else if (deltaY < -22 && currentScrollY <= 20) {
         navWrapper.classList.remove('nav-collapsed-up');
       }
     }, { passive: true });
 
     window.addEventListener('touchend', () => {
       touchStartYForNav = null;
+    }, { passive: true });
+
+    // Suporte a roda do mouse / trackpad mesmo sem barra de rolagem longa (útil para testar no PC também)
+    window.addEventListener('wheel', (e) => {
+      const fullscreenPeladaModal = document.getElementById('fullscreenPeladaPhotoModal');
+      if (fullscreenPeladaModal && !fullscreenPeladaModal.classList.contains('hidden')) return;
+      const navWrapper = document.getElementById('mainNavWrapper');
+      if (!navWrapper) return;
+      const currentScrollY = getActiveScrollTop(e.target);
+      if (e.deltaY > 15) {
+        navWrapper.classList.add('nav-collapsed-up');
+      } else if (e.deltaY < -15 && currentScrollY <= 15) {
+        navWrapper.classList.remove('nav-collapsed-up');
+      }
     }, { passive: true });
 
     function updateActiveTabButtonsUI() {
