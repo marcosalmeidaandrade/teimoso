@@ -4724,6 +4724,38 @@
       });
     };
 
+    window.replaceSinglePeladaPhoto = async function(dateStr, photoIndexZeroBased, event) {
+      if (!window.isAdmin) return window.showToast("Apenas administradores podem substituir fotos.", "error");
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        window.showToast("Substituindo foto na nuvem...", "success");
+        const dataUrl = await window.compressImageFileToDataUrl(file, 900, 0.62);
+        const currentList = [...window.parseStoredPeladaPhotos(dateStr)];
+        if (photoIndexZeroBased >= 0 && photoIndexZeroBased < currentList.length) {
+          currentList[photoIndexZeroBased] = dataUrl;
+        } else {
+          currentList.push(dataUrl);
+        }
+        if (!window.peladaPhotos) window.peladaPhotos = {};
+        window.peladaPhotos[dateStr] = currentList;
+        const savedOk = await window.savePhotosData();
+        if (!savedOk) return;
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Substituiu foto #${photoIndexZeroBased + 1} da pelada de ${dateStr}`);
+        window.renderPhotosTab();
+        const modal = document.getElementById('manageDatesModal');
+        if (modal && !modal.classList.contains('hidden')) {
+          window.openManageDatesModal(window.isPhotoOnlyModalMode);
+        }
+        window.showToast("Foto substituída com sucesso! 📸", "success");
+      } catch (err) {
+        console.error(err);
+        window.showToast("Erro ao substituir a foto.", "error");
+      } finally {
+        event.target.value = '';
+      }
+    };
+
     window.openNewDateModal = function() { 
       document.getElementById('newDateInput').value = ''; 
       document.getElementById('newTimeInput').value = '07:00'; 
@@ -4802,10 +4834,14 @@
               </div>
               <div class="flex items-center gap-2 self-end sm:self-auto flex-wrap">
                 <label class="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-black text-[10px] transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
-                  <i class="fa-solid fa-upload"></i> Enviar Foto (Galeria/PC)
+                  <i class="fa-solid fa-upload"></i> ${totalPhotosInDate > 0 ? 'Adicionar + Foto' : 'Enviar Foto (Galeria/PC)'}
                   <input type="file" accept="image/*" multiple onchange="uploadPeladaPhotoForDate('${d}', event)" class="hidden">
                 </label>
                 ${totalPhotosInDate > 0 ? `
+                  <label title="Substituir a foto principal desta data" class="px-3 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white rounded-xl font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 border border-amber-300 cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-camera-rotate text-xs"></i> Substituir Foto
+                    <input type="file" accept="image/*" onchange="replaceSinglePeladaPhoto('${d}', 0, event)" class="hidden">
+                  </label>
                   <button onclick="clearAllPhotosForDate('${d}')" title="Excluir somente as fotos desta data" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 border border-rose-200">
                     <i class="fa-solid fa-trash-can text-xs"></i> Excluir Foto(s)
                   </button>
@@ -4936,9 +4972,15 @@
                 #${i + 1}
               </span>
               ${window.isAdmin ? `
-                <button onclick="event.stopPropagation(); deleteSinglePeladaPhoto('${item.date}', ${item.indexInDate - 1})" title="Excluir somente esta foto" class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white shadow-md flex items-center justify-center transition-all active:scale-95 border border-white/40">
-                  <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
+                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5" onclick="event.stopPropagation()">
+                  <label title="Substituir esta foto" class="w-8 h-8 rounded-full bg-amber-500/95 hover:bg-amber-400 text-white shadow-md flex items-center justify-center transition-all active:scale-95 border border-white/40 cursor-pointer">
+                    <i class="fa-solid fa-camera-rotate text-xs"></i>
+                    <input type="file" accept="image/*" onchange="replaceSinglePeladaPhoto('${item.date}', ${item.indexInDate - 1}, event)" class="hidden">
+                  </label>
+                  <button onclick="deleteSinglePeladaPhoto('${item.date}', ${item.indexInDate - 1})" title="Excluir somente esta foto" class="w-8 h-8 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white shadow-md flex items-center justify-center transition-all active:scale-95 border border-white/40">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
+                </div>
               ` : ''}
             </div>
             <div class="p-3.5 flex items-center justify-between gap-2 bg-white">
