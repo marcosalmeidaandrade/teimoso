@@ -1609,7 +1609,7 @@
   </div>
 
   <!-- CUSTOM CONFIRM MODAL -->
-  <div id="customConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="customConfirmModal" class="hidden fixed inset-0 z-[390] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
       <div class="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mx-auto text-lg">
         <i class="fa-solid fa-triangle-exclamation"></i>
@@ -2401,6 +2401,8 @@
     }
 
     // --- GRAVAÇÃO NA NUVEM FIRESTORE ---
+    let hasLoadedDedicatedPhotosDoc = false;
+
     window.savePhotosData = async function() {
       if (!isCloudReady) return true;
       if (!navigator.onLine) {
@@ -2409,10 +2411,12 @@
         return false;
       }
       try {
+        hasLoadedDedicatedPhotosDoc = true;
+        // Sem { merge: true } para garantir que fotos/datas excluídas sejam realmente apagadas no Firestore
         await setDoc(dbPhotosDocRef, {
           peladaPhotos: window.peladaPhotos || {},
           updatedAt: new Date().toISOString()
-        }, { merge: true });
+        });
         return true;
       } catch (error) {
         console.error("Erro ao salvar fotos no Firestore:", error);
@@ -2432,6 +2436,7 @@
         await setDoc(dbDocRef, {
           datesList: window.datesList,
           peladaTimes: window.peladaTimes,
+          peladaPhotos: {},
           athletes: window.athletes,
           presences: window.presences,
           financialPayments: window.financialPayments,
@@ -2988,11 +2993,12 @@
       // Listener dedicado para a Galeria de Fotos (documento separado para não estourar 1MB do Firestore)
       onSnapshot(dbPhotosDocRef, (photosSnap) => {
         if (photosSnap.exists()) {
+          hasLoadedDedicatedPhotosDoc = true;
           const pData = photosSnap.data();
-          if (pData.peladaPhotos && typeof pData.peladaPhotos === 'object') {
-            window.peladaPhotos = { ...window.peladaPhotos, ...pData.peladaPhotos };
-            if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
-          }
+          window.peladaPhotos = (pData.peladaPhotos && typeof pData.peladaPhotos === 'object')
+            ? { ...pData.peladaPhotos }
+            : {};
+          if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
         }
       }, (err) => {
         console.warn("Aviso ao ler galeria dedicada:", err);
@@ -3003,8 +3009,8 @@
           const data = docSnap.data();
           if (data.datesList && Array.isArray(data.datesList) && data.datesList.length > 0) window.datesList = data.datesList;
           if (data.peladaTimes) window.peladaTimes = data.peladaTimes;
-          if (data.peladaPhotos && typeof data.peladaPhotos === 'object' && Object.keys(window.peladaPhotos || {}).length === 0) {
-            window.peladaPhotos = data.peladaPhotos;
+          if (!hasLoadedDedicatedPhotosDoc && data.peladaPhotos && typeof data.peladaPhotos === 'object' && Object.keys(data.peladaPhotos).length > 0) {
+            window.peladaPhotos = { ...data.peladaPhotos };
           }
           if (data.athletes && Array.isArray(data.athletes)) window.athletes = data.athletes;
           if (data.presences && typeof data.presences === 'object') window.presences = data.presences;
