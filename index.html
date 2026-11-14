@@ -303,6 +303,16 @@
             <span class="text-[10px] hidden lg:inline">Backup & Restore</span>
           </button>
 
+          <button onclick="freezeAllAthletePhotosToCloud()" id="btnFreezePhotosAdmin" title="Converter e salvar definitivamente todas as fotos dos atletas na nuvem para nunca mais expirarem" class="hidden px-2.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-black transition-all items-center gap-1.5 shadow-sm shrink-0">
+            <i class="fa-solid fa-camera-rotate text-xs text-amber-600"></i>
+            <span class="text-[10px]">Fixar Fotos</span>
+          </button>
+
+          <button onclick="downloadSelfHtmlFile()" id="btnDownloadHtmlAdmin" title="Baixar arquivo index.html completo pronto para publicar" class="px-2.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-sm shrink-0">
+            <i class="fa-solid fa-file-code text-xs"></i>
+            <span class="text-[10px]">Baixar index.html</span>
+          </button>
+
           <button onclick="openChangePasswordModal()" id="btnChangePassword" title="Alterar Minha Senha de Acesso" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-emerald-700 text-xs font-bold transition-all flex items-center gap-1 shrink-0 shadow-sm">
             <i class="fa-solid fa-key text-xs text-amber-500"></i>
             <span class="text-[10px] hidden sm:inline">Alterar Senha</span>
@@ -1342,9 +1352,15 @@
           <input type="text" id="athleteNameInput" placeholder="Ex: Carlos Alberto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
         <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">URL da Foto (Opcional):</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">URL da Foto (Opcional):</label>
+            <label class="px-2 py-0.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-md text-[9px] font-black uppercase cursor-pointer transition-colors">
+              <i class="fa-solid fa-upload mr-1"></i> Enviar do PC/Celular
+              <input type="file" accept="image/*" onchange="handleAthletePhotoFileUpload(event)" class="hidden">
+            </label>
+          </div>
           <input type="text" id="athletePhotoUrlInput" placeholder="https://link-da-foto.com/imagem.jpg" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
-          <p class="text-[9px] text-slate-500 mt-1">Cole o link da foto de perfil da web ou do WhatsApp.</p>
+          <p class="text-[9px] text-slate-500 mt-1">Cole o link da foto de perfil da web/WhatsApp ou envie da galeria.</p>
         </div>
 
         <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3">
@@ -1507,12 +1523,20 @@
           <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2">Horário da Pelada:</label>
           <input type="time" id="newTimeInput" value="07:00" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
         </div>
-        <div>
-          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
-            <i class="fa-brands fa-instagram text-pink-600"></i> Link da Foto / Instagram (Opcional):
+        <div class="bg-pink-50/60 border border-pink-200 rounded-2xl p-3 space-y-2">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-pink-700 flex items-center justify-between">
+            <span><i class="fa-solid fa-camera-retro mr-1"></i> Foto da Pelada (Opcional):</span>
+            <label class="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-[10px] font-black cursor-pointer shadow-sm transition-all flex items-center gap-1 active:scale-95">
+              <i class="fa-solid fa-upload"></i> Enviar do Celular/PC
+              <input type="file" accept="image/*" multiple onchange="handleNewDatePhotoUpload(event)" class="hidden">
+            </label>
           </label>
-          <input type="url" id="newPhotoUrlInput" placeholder="Cole o link da foto do Instagram..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-pink-500 focus:bg-white">
-          <p class="text-[9px] text-slate-400 mt-1">Você pode colar o link de mais de uma foto separando por vírgula.</p>
+          <input type="url" id="newPhotoUrlInput" placeholder="Ou cole link da foto (Google Drive, Imgur, etc.)..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-pink-500">
+          <div id="newDatePhotoPreviewInfo" class="hidden text-[10px] font-bold text-emerald-700 flex items-center justify-between bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg">
+            <span id="newDatePhotoPreviewText">Foto pronta para salvar!</span>
+            <button type="button" onclick="clearNewDateUploadedPhotos()" class="text-rose-600 hover:underline text-[10px] font-black">Remover</button>
+          </div>
+          <p class="text-[9px] text-slate-500 leading-tight">Dica: Você pode escolher a foto direto da galeria do celular (ela é otimizada automaticamente para a nuvem) ou colar links de imagem.</p>
         </div>
       </div>
       <div class="flex items-center gap-2 pt-2">
@@ -1534,34 +1558,12 @@
         </button>
       </div>
       <p class="text-xs text-slate-500">
-        Ajuste o horário de cada pelada, cole o <strong>link da foto do Instagram do Teimoso</strong> (ou múltiplos links separados por vírgula) ou remova datas não utilizadas:
+        Ajuste o horário de cada pelada, <strong>envie a foto direto da galeria do seu celular/computador</strong> (ou cole links de imagem/Google Drive) ou remova datas não utilizadas:
       </p>
       <div id="manageDatesList" class="divide-y divide-slate-100 overflow-y-auto flex-grow space-y-2.5 pr-1"></div>
       <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-        <span class="text-[10px] text-slate-500">Alterações de horário e links de fotos são salvas automaticamente na nuvem.</span>
+        <span class="text-[10px] text-slate-500">Alterações são salvas automaticamente na nuvem.</span>
         <button onclick="closeManageDatesModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FULLSCREEN PELADA PHOTO MODAL (GALERIA DE FOTOS) -->
-  <div id="fullscreenPeladaPhotoModal" onclick="closeFullscreenPeladaPhoto()" class="fixed inset-0 z-[380] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
-    <div class="w-full flex items-center justify-between max-w-3xl pt-2 text-slate-200">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-camera-retro text-pink-400"></i>
-        <span id="fullscreenPeladaPhotoTitle" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">Pelada Teimoso F.C.C.</span>
-      </div>
-      <button onclick="closeFullscreenPeladaPhoto()" class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors">
-        <i class="fa-solid fa-xmark text-base"></i>
-      </button>
-    </div>
-    <div class="relative flex items-center justify-center my-auto p-2 max-w-full">
-      <img id="fullscreenPeladaPhotoImg" src="" alt="Foto da Pelada" class="max-h-[75vh] max-w-[94vw] md:max-w-3xl object-contain rounded-2xl shadow-2xl border-2 border-white/20 transition-transform duration-300 transform scale-95">
-    </div>
-    <div class="pb-4 text-center">
-      <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-600/90 border border-pink-400 text-xs font-black text-white shadow-xl animate-pulse">
-        <i class="fa-solid fa-hand-pointer"></i>
-        <span>Clique novamente na tela para retornar às miniaturas</span>
       </div>
     </div>
   </div>
@@ -1620,9 +1622,9 @@
       <div class="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mx-auto text-lg">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <h3 id="confirmMessage" class="text-xs font-bold text-slate-800 leading-relaxed">Confirma esta operação?</h3>
+      <h3 id="confirmMessage" class="text-xs font-bold text-slate-800 leading-relaxed whitespace-pre-line">Confirma esta operação?</h3>
       <div class="flex items-center gap-2 pt-2">
-        <button onclick="closeConfirm()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button onclick="closeConfirm(true)" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">Cancelar</button>
         <button id="btnConfirmAction" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Confirmar</button>
       </div>
     </div>
@@ -1667,7 +1669,7 @@
     </div>
   </div>
 
-  <!-- SETTLE FINE MODAL (BAIXA DE MULTA NEGOCIÁVEL) -->
+  <!-- SETTLE FINE MODAL -->
   <div id="settleFineModal" class="hidden fixed inset-0 z-[360] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
       <div class="flex items-center justify-between">
@@ -1692,7 +1694,7 @@
     </div>
   </div>
 
-  <!-- POLL VOTING MODAL (CRAQUE & BAGRE DA PELADA 08:00 ÀS 10:00) -->
+  <!-- MODAL AUTOMÁTICO DE VOTAÇÃO (CRAQUE & BAGRE DA PELADA) -->
   <div id="pollVotingModal" class="hidden fixed inset-0 z-[345] bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-white border-2 border-amber-400 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1740,6 +1742,33 @@
         <button onclick="submitCraqueBagreVote()" class="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/30 active:scale-95">
           Confirmar Voto ⚽
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN PELADA PHOTO MODAL (GALERIA DE FOTOS) -->
+  <div id="fullscreenPeladaPhotoModal" onclick="closeFullscreenPeladaPhoto()" class="fixed inset-0 z-[370] bg-slate-950/95 backdrop-blur-lg hidden flex-col items-center justify-between p-4 cursor-pointer select-none transition-all duration-300 opacity-0">
+    <div class="w-full max-w-4xl flex items-center justify-between pt-2 text-slate-200">
+      <div class="flex items-center gap-2.5">
+        <i class="fa-solid fa-camera-retro text-pink-500 text-lg"></i>
+        <div>
+          <span id="fullscreenPeladaPhotoTitle" class="text-xs sm:text-sm font-black text-white uppercase tracking-wider block">Pelada Teimoso F.C.C.</span>
+          <span class="text-[10px] text-slate-400 font-semibold">Registro Oficial da Galeria</span>
+        </div>
+      </div>
+      <button onclick="closeFullscreenPeladaPhoto()" class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 text-slate-200 hover:text-white flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+    </div>
+
+    <div class="relative flex items-center justify-center my-auto p-2 max-w-full">
+      <img id="fullscreenPeladaPhotoImg" src="" alt="Foto da Pelada" class="max-h-[75vh] max-w-[94vw] md:max-w-3xl object-contain rounded-3xl shadow-2xl border-4 border-white/20 transition-transform duration-300 transform scale-95">
+    </div>
+
+    <div class="pb-4 text-center">
+      <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-600/90 border border-pink-400 text-xs font-black text-white shadow-xl animate-pulse">
+        <i class="fa-solid fa-hand-pointer"></i>
+        <span>Clique novamente na tela para retornar às miniaturas</span>
       </div>
     </div>
   </div>
@@ -1906,14 +1935,105 @@
     });
 
     // --- ANIMAÇÕES DE CONFIRMAÇÃO E JUSTIFICATIVA ---
+    window.getAthleteAvatarUrl = function(athleteObj, bgHex = 'e2e8f0', colorHex = '059669', size = 128) {
+      const fallbackName = encodeURIComponent(athleteObj?.name || 'TFCC');
+      const fallbackAvatar = `https://ui-avatars.com/api/?name=${fallbackName}&background=${bgHex}&color=${colorHex}&bold=true&size=${size}`;
+      const raw = (athleteObj?.photoUrl || '').trim();
+      if (!raw) return fallbackAvatar;
+      if (raw.startsWith('data:image/')) return raw;
+
+      // Se estiver rodando localmente (file://) e for link do Instagram/Facebook CDN, usa túnel wsrv.nl automaticamente para evitar bloqueio CORS local
+      const isLocalFile = window.location.protocol === 'file:';
+      if (isLocalFile && (raw.includes('cdninstagram.com') || raw.includes('fbcdn.net'))) {
+        return `https://wsrv.nl/?url=${encodeURIComponent(raw)}&w=256&h=256&fit=cover&output=jpg`;
+      }
+      return raw;
+    };
+
+    // Se a URL direta falhar (por bloqueio CORS do Instagram no PC ou celular), tenta via proxy wsrv.nl antes de cair nas iniciais
+    window.handleAvatarErrorWithProxy = function(imgEl, rawUrl, fallbackName, bgHex = 'e2e8f0', colorHex = '059669', size = 128) {
+      const initialsUrl = `https://ui-avatars.com/api/?name=${fallbackName}&background=${bgHex}&color=${colorHex}&bold=true&size=${size}`;
+      if (!rawUrl || rawUrl.startsWith('data:image/') || imgEl.dataset.triedProxy === '1') {
+        imgEl.onerror = null;
+        imgEl.src = initialsUrl;
+        return;
+      }
+      imgEl.dataset.triedProxy = '1';
+      imgEl.src = `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}&w=${size}&h=${size}&fit=cover&output=jpg`;
+    };
+
+    // Converte todas as fotos de links externos (Instagram) para Base64 permanente no Firestore com 1 clique
+    window.freezeAllAthletePhotosToCloud = async function() {
+      if (!window.isAdmin) return window.showToast("Apenas administradores podem usar esta função.", "error");
+      const externalAthletes = (window.athletes || []).filter(a => a.photoUrl && a.photoUrl.startsWith('http'));
+      if (externalAthletes.length === 0) {
+        return window.showToast("Todas as fotos já estão salvas definitivamente na nuvem!", "success");
+      }
+
+      window.showToast(`Fixando ${externalAthletes.length} foto(s) na nuvem para nunca mais expirarem...`, "success");
+      let convertedCount = 0;
+
+      for (const athlete of externalAthletes) {
+        try {
+          const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(athlete.photoUrl)}&w=200&h=200&fit=cover&output=jpg`;
+          const response = await fetch(proxyUrl);
+          if (!response.ok) continue;
+          const blob = await response.blob();
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          if (dataUrl && String(dataUrl).startsWith('data:image/')) {
+            athlete.photoUrl = dataUrl;
+            convertedCount++;
+          }
+        } catch (err) {
+          console.warn("Não foi possível converter foto de:", athlete.name, err);
+        }
+      }
+
+      if (convertedCount > 0) {
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Fixou permanentemente ${convertedCount} fotos de atletas na nuvem`);
+        await window.saveData();
+        window.renderAthletesList();
+        window.renderBirthdaysList();
+        window.showToast(`✅ ${convertedCount} foto(s) gravada(s) para sempre no banco! Nunca mais vão sumir!`, "success");
+      } else {
+        window.showToast("Os links atuais do Instagram já expiraram na Meta. Envie a foto pelo botão 'Enviar do PC/Celular'.", "error");
+      }
+    };
+
+    window.handleAthletePhotoFileUpload = async function(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const compressed = await window.compressImageFileToDataUrl(file, 320, 0.78);
+        const input = document.getElementById('athletePhotoUrlInput');
+        if (input) input.value = compressed;
+        window.showToast("Foto carregada! Clique em Salvar Atleta para gravar.", "success");
+      } catch (e) {
+        window.showToast("Erro ao carregar imagem.", "error");
+      } finally {
+        event.target.value = '';
+      }
+    };
+
     window.showAnimatedConfirmation = function(athleteObj) {
       if (!window.animationsEnabled) return;
       window.playAppSound('confirm');
       const overlay = document.getElementById('animatedConfirmOverlay');
       const content = document.getElementById('animatedConfirmContent');
       const target = athleteObj || window.currentUser || { name: 'Craque' };
-      const avatarUrl = target.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(target.name || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=256`;
-      document.getElementById('confirmAthleteAvatar').src = avatarUrl;
+      const fallbackName = encodeURIComponent(target.name || 'TFCC');
+      const avatarUrl = target.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=256`;
+      const imgEl = document.getElementById('confirmAthleteAvatar');
+      imgEl.onerror = function() {
+        this.onerror = null;
+        this.src = `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=256`;
+      };
+      imgEl.src = avatarUrl;
       document.getElementById('confirmAthleteName').innerText = target.name || 'Craque';
       overlay.classList.remove('hidden');
       overlay.classList.add('flex', 'opacity-100');
@@ -1936,8 +2056,14 @@
       const overlay = document.getElementById('animatedJustifyOverlay');
       const content = document.getElementById('animatedJustifyContent');
       const target = athleteObj || window.currentUser || { name: 'Atleta' };
-      const avatarUrl = target.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(target.name || 'TFCC')}&background=fef3c7&color=d97706&bold=true&size=256`;
-      document.getElementById('justifyAthleteAvatar').src = avatarUrl;
+      const fallbackName = encodeURIComponent(target.name || 'TFCC');
+      const avatarUrl = target.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=fef3c7&color=d97706&bold=true&size=256`;
+      const imgEl = document.getElementById('justifyAthleteAvatar');
+      imgEl.onerror = function() {
+        this.onerror = null;
+        this.src = `https://ui-avatars.com/api/?name=${fallbackName}&background=fef3c7&color=d97706&bold=true&size=256`;
+      };
+      imgEl.src = avatarUrl;
       document.getElementById('justifyAthleteName').innerText = target.name || 'Atleta';
       overlay.classList.remove('hidden');
       overlay.classList.add('flex', 'opacity-100');
@@ -2441,6 +2567,7 @@
       }
 
       const btnBackup = document.getElementById('btnBackupAdmin');
+      const btnFreezePhotos = document.getElementById('btnFreezePhotosAdmin');
       const btnManagePhotosShortcut = document.getElementById('btnAdminManagePhotosShortcut');
       if (window.isAdmin) {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold shrink-0 shadow-sm";
@@ -2454,6 +2581,7 @@
         document.getElementById('btnActivityLog').classList.remove('hidden');
         document.getElementById('btnBackupAdmin').classList.remove('hidden');
         document.getElementById('btnBackupAdmin').classList.add('flex');
+        if (btnFreezePhotos) { btnFreezePhotos.classList.remove('hidden'); btnFreezePhotos.classList.add('flex'); }
         if (btnManagePhotosShortcut) { btnManagePhotosShortcut.classList.remove('hidden'); btnManagePhotosShortcut.classList.add('flex'); }
       } else {
         document.getElementById('userBadge').className = "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shrink-0 shadow-sm";
@@ -2467,6 +2595,7 @@
         document.getElementById('btnActivityLog').classList.add('hidden');
         document.getElementById('btnActivityLog').classList.remove('flex');
         if (btnBackup) { btnBackup.classList.add('hidden'); btnBackup.classList.remove('flex'); }
+        if (btnFreezePhotos) { btnFreezePhotos.classList.add('hidden'); btnFreezePhotos.classList.remove('flex'); }
         if (btnManagePhotosShortcut) { btnManagePhotosShortcut.classList.add('hidden'); btnManagePhotosShortcut.classList.remove('flex'); }
       }
 
@@ -2636,7 +2765,13 @@
       const modal = document.getElementById('quickPresenceModal');
       const content = document.getElementById('quickPresenceContent');
       
-      document.getElementById('quickPresenceAvatar').src = window.currentUser.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(window.currentUser.name)}&background=e2e8f0&color=059669&bold=true&size=256`;
+      const qpAvatar = document.getElementById('quickPresenceAvatar');
+      const fallbackQpName = encodeURIComponent(window.currentUser.name || 'TFCC');
+      qpAvatar.onerror = function() {
+        this.onerror = null;
+        this.src = `https://ui-avatars.com/api/?name=${fallbackQpName}&background=e2e8f0&color=059669&bold=true&size=256`;
+      };
+      qpAvatar.src = window.currentUser.photoUrl || `https://ui-avatars.com/api/?name=${fallbackQpName}&background=e2e8f0&color=059669&bold=true&size=256`;
       document.getElementById('quickPresenceName').innerText = window.currentUser.name.split(' ')[0];
       
       const [y, m, d] = window.currentDate.split('-');
@@ -2662,10 +2797,9 @@
       const img = document.getElementById('fullscreenPhotoImage');
       const nameEl = document.getElementById('fullscreenPhotoAthleteName');
 
-      const fallbackName = encodeURIComponent(athleteName || 'TFCC');
       img.onerror = function() {
         this.onerror = null;
-        this.src = `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=512`;
+        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(athleteName || 'TFCC')}&background=e2e8f0&color=059669&bold=true&size=512`;
       };
 
       img.src = imageUrl;
@@ -3805,14 +3939,15 @@
         }
 
         const fallbackName = encodeURIComponent(athlete.name || 'TFCC');
-        const avatarUrl = athlete.photoUrl ? athlete.photoUrl : `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const avatarUrl = window.getAthleteAvatarUrl(athlete, 'e2e8f0', '059669', 128);
+        const safeRawPhoto = (athlete.photoUrl || '').replace(/'/g, "\\'");
         const safeName = (athlete.name || '').replace(/'/g, "\\'");
 
         tr.innerHTML = `
           <td class="py-3 px-3 sm:px-4 font-bold text-slate-800">
             <div class="flex items-center gap-2.5 sm:gap-3">
               <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${safeName}')" title="Toque para ampliar em tela cheia" class="w-10 h-10 min-w-[40px] min-h-[40px] sm:w-12 sm:h-12 sm:min-w-[48px] sm:min-h-[48px] rounded-full border-2 border-slate-300 hover:border-emerald-500 overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center shadow-sm cursor-pointer transition-all transform hover:scale-105 active:scale-95 group/pic relative">
-                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=128'">
+                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover" onerror="window.handleAvatarErrorWithProxy(this, '${safeRawPhoto}', '${fallbackName}', 'e2e8f0', '059669', 128)">
                 <div class="absolute inset-0 bg-emerald-600/10 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-emerald-800">
                   <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </div>
@@ -3974,7 +4109,8 @@
         const daysLeft = getDaysUntilNextBirthday(nextAthlete.birthDay, nextAthlete.birthMonth);
         const isToday = (daysLeft === 0);
         const fallbackNextName = encodeURIComponent(nextAthlete.name || 'TFCC');
-        const nextAvatar = nextAthlete.photoUrl || `https://ui-avatars.com/api/?name=${fallbackNextName}&background=fef3c7&color=d97706&bold=true&size=256`;
+        const nextAvatar = window.getAthleteAvatarUrl(nextAthlete, 'fef3c7', 'd97706', 256);
+        const safeNextRawPhoto = (nextAthlete.photoUrl || '').replace(/'/g, "\\'");
         const bDayFormatted = String(nextAthlete.birthDay).padStart(2, '0') + '/' + String(nextAthlete.birthMonth).padStart(2, '0');
         const safeNextName = (nextAthlete.name || '').replace(/'/g, "\\'");
 
@@ -3982,7 +4118,7 @@
           <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white rounded-3xl p-5 sm:p-6 shadow-lg shadow-amber-500/20 flex flex-col md:flex-row items-center justify-between gap-5 border border-amber-300">
             <div class="flex items-center gap-4 w-full md:w-auto">
               <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${safeNextName}')" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white/80 overflow-hidden shrink-0 bg-white/20 shadow-md cursor-pointer hover:scale-105 transition-transform">
-                <img src="${nextAvatar}" alt="${nextAthlete.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${fallbackNextName}&background=fef3c7&color=d97706&bold=true&size=256'">
+                <img src="${nextAvatar}" alt="${nextAthlete.name}" class="w-full h-full object-cover" onerror="window.handleAvatarErrorWithProxy(this, '${safeNextRawPhoto}', '${fallbackNextName}', 'fef3c7', 'd97706', 256)">
               </div>
               <div>
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isToday ? 'bg-white text-amber-700 animate-pulse' : 'bg-amber-400/40 text-white border border-white/30'}">
@@ -4047,7 +4183,8 @@
         const isTodayBirthday = hasBday && (todayDay === parseInt(athlete.birthDay) && todayMonth === parseInt(athlete.birthMonth));
 
         const fallbackName = encodeURIComponent(athlete.name || 'TFCC');
-        const avatarUrl = athlete.photoUrl || `https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=128`;
+        const avatarUrl = window.getAthleteAvatarUrl(athlete, 'e2e8f0', '059669', 128);
+        const safeRawPhoto = (athlete.photoUrl || '').replace(/'/g, "\\'");
         const posInfo = positionBadges[athlete.position] || { tag: "MEI", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
         const safeName = (athlete.name || '').replace(/'/g, "\\'");
 
@@ -4096,7 +4233,7 @@
           <td class="py-3 px-4 font-bold text-slate-800">
             <div class="flex items-center gap-3">
               <div onclick="openFullscreenPhoto(this.querySelector('img').src, '${safeName}')" class="w-10 h-10 rounded-full border-2 border-slate-300 hover:border-amber-500 overflow-hidden shrink-0 bg-slate-100 shadow-sm cursor-pointer transition-all">
-                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${fallbackName}&background=e2e8f0&color=059669&bold=true&size=128'">
+                <img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover" onerror="window.handleAvatarErrorWithProxy(this, '${safeRawPhoto}', '${fallbackName}', 'e2e8f0', '059669', 128)">
               </div>
               <div class="flex flex-col">
                 <div class="flex items-center gap-2">
@@ -4330,11 +4467,69 @@
       });
     };
 
-    // --- GERENCIAR DATAS E LINKS DE FOTOS DAS PELADAS ---
+    // --- GERENCIAR DATAS E LINKS/UPLOADS DE FOTOS DAS PELADAS ---
+    window.pendingNewDateUploadedPhotos = [];
+
+    window.compressImageFileToDataUrl = function(file, maxWidth = 1100, quality = 0.72) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const img = new Image();
+          img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressedDataUrl);
+          };
+          img.onerror = reject;
+          img.src = evt.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
+    window.parseStoredPeladaPhotos = function(dateStr) {
+      const raw = window.peladaPhotos?.[dateStr];
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw.filter(Boolean);
+      const str = String(raw).trim();
+      if (!str) return [];
+      if (str.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(str);
+          if (Array.isArray(parsed)) return parsed.filter(Boolean);
+        } catch (e) {}
+      }
+      if (str.startsWith('data:image/')) {
+        return [str];
+      }
+      return str.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    };
+
     window.resolveInstagramOrImageUrl = function(rawUrl) {
       const trimmed = (rawUrl || '').trim();
       if (!trimmed) return '';
-      // Se for um link de post/reel do Instagram (ex: https://www.instagram.com/p/CODIGO/), converte para endpoint de mídia direta quando possível
+      if (trimmed.startsWith('data:image/')) return trimmed;
+
+      const driveMatch = trimmed.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/i) || trimmed.match(/[?&]id=([A-Za-z0-9_-]+)/i);
+      if (driveMatch && driveMatch[1] && trimmed.includes('drive.google.com')) {
+        return `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w1200`;
+      }
+
+      if (trimmed.includes('dropbox.com') && trimmed.includes('dl=0')) {
+        return trimmed.replace('dl=0', 'raw=1');
+      }
+
       const igMatch = trimmed.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/i);
       if (igMatch && igMatch[1] && !trimmed.includes('/media')) {
         return `https://www.instagram.com/p/${igMatch[1]}/media/?size=l`;
@@ -4342,11 +4537,81 @@
       return trimmed;
     };
 
+    window.handleNewDatePhotoUpload = async function(event) {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      try {
+        window.showToast("Otimizando foto(s) para a nuvem...", "success");
+        for (const file of files) {
+          const dataUrl = await window.compressImageFileToDataUrl(file);
+          window.pendingNewDateUploadedPhotos.push(dataUrl);
+        }
+        const infoBox = document.getElementById('newDatePhotoPreviewInfo');
+        const infoText = document.getElementById('newDatePhotoPreviewText');
+        if (infoBox && infoText) {
+          infoBox.classList.remove('hidden');
+          infoText.innerText = `✅ ${window.pendingNewDateUploadedPhotos.length} foto(s) carregada(s) da galeria!`;
+        }
+      } catch (e) {
+        console.error(e);
+        window.showToast("Não foi possível carregar esta imagem.", "error");
+      } finally {
+        event.target.value = '';
+      }
+    };
+
+    window.clearNewDateUploadedPhotos = function() {
+      window.pendingNewDateUploadedPhotos = [];
+      const infoBox = document.getElementById('newDatePhotoPreviewInfo');
+      if (infoBox) infoBox.classList.add('hidden');
+    };
+
+    window.uploadPeladaPhotoForDate = async function(dateStr, event) {
+      if (!window.isAdmin) return window.showToast("Apenas administradores podem enviar fotos.", "error");
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      try {
+        window.showToast("Comprimindo e enviando foto para a nuvem...", "success");
+        if (!window.peladaPhotos) window.peladaPhotos = {};
+        const existingList = window.parseStoredPeladaPhotos(dateStr);
+        for (const file of files) {
+          const dataUrl = await window.compressImageFileToDataUrl(file);
+          existingList.push(dataUrl);
+        }
+        window.peladaPhotos[dateStr] = existingList;
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Enviou ${files.length} foto(s) para a pelada de ${dateStr}`);
+        await window.saveData();
+        window.renderPhotosTab();
+        window.openManageDatesModal();
+        window.showToast("Foto da pelada salva na nuvem com sucesso! 📸", "success");
+      } catch (err) {
+        console.error(err);
+        window.showToast("Erro ao processar a foto.", "error");
+      } finally {
+        event.target.value = '';
+      }
+    };
+
+    window.clearAllPhotosForDate = function(dateStr) {
+      if (!window.isAdmin) return;
+      window.showConfirm(`Remover todas as fotos cadastradas na pelada de ${formatDateDisplay(dateStr)}?`, () => {
+        if (window.peladaPhotos && window.peladaPhotos[dateStr]) {
+          delete window.peladaPhotos[dateStr];
+          window.recordUserInteraction(window.currentUser?.name || 'Admin', `Removeu as fotos da pelada de ${dateStr}`);
+          window.saveData();
+          window.renderPhotosTab();
+          window.openManageDatesModal();
+          window.showToast("Fotos removidas desta data.", "success");
+        }
+      });
+    };
+
     window.openNewDateModal = function() { 
       document.getElementById('newDateInput').value = ''; 
       document.getElementById('newTimeInput').value = '07:00'; 
       const photoInput = document.getElementById('newPhotoUrlInput');
       if (photoInput) photoInput.value = '';
+      window.clearNewDateUploadedPhotos();
       document.getElementById('newDateModal').classList.remove('hidden'); 
     };
     window.closeNewDateModal = function() { document.getElementById('newDateModal').classList.add('hidden'); };
@@ -4359,10 +4624,19 @@
       if (!window.peladaTimes) window.peladaTimes = {};
       if (!window.peladaPhotos) window.peladaPhotos = {};
       window.peladaTimes[val] = timeVal;
-      if (photoUrlVal) window.peladaPhotos[val] = photoUrlVal;
+
+      const combinedPhotos = [...(window.pendingNewDateUploadedPhotos || [])];
+      if (photoUrlVal) {
+        photoUrlVal.split(',').map(s => s.trim()).filter(Boolean).forEach(u => combinedPhotos.push(u));
+      }
+      if (combinedPhotos.length > 0) {
+        window.peladaPhotos[val] = combinedPhotos;
+      }
+
       window.datesList.push(val); 
       window.datesList.sort(); 
       window.currentDate = val;
+      window.clearNewDateUploadedPhotos();
       window.recordUserInteraction(window.currentUser?.name || 'Admin', `Criou pelada para ${formatDateDisplay(val)}`);
       
       window.saveData(); 
@@ -4382,7 +4656,11 @@
       const sortedDates = [...window.datesList].sort();
       sortedDates.forEach(d => {
         const currentTime = window.peladaTimes[d] || '07:00';
-        const currentPhotoUrl = (window.peladaPhotos[d] || '').replace(/"/g, '&quot;');
+        const storedList = window.parseStoredPeladaPhotos(d);
+        const urlLinksOnly = storedList.filter(item => !String(item).startsWith('data:image/')).join(', ').replace(/"/g, '&quot;');
+        const uploadedCount = storedList.filter(item => String(item).startsWith('data:image/')).length;
+        const totalPhotosInDate = storedList.length;
+
         const [y, m, day] = d.split('-');
         const dateObj = new Date(y, m - 1, day);
         const dayLabel = dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).toUpperCase();
@@ -4393,11 +4671,23 @@
               <div class="flex items-center gap-2.5">
                 <i class="fa-solid fa-calendar-check text-emerald-600 text-sm shrink-0"></i>
                 <div>
-                  <div class="font-bold text-slate-800 text-xs">${dayLabel}</div>
+                  <div class="font-bold text-slate-800 text-xs flex items-center gap-2">
+                    <span>${dayLabel}</span>
+                    ${totalPhotosInDate > 0 ? `<span class="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 border border-pink-300 text-[9px] font-black"><i class="fa-solid fa-image mr-0.5"></i> ${totalPhotosInDate} foto(s)</span>` : ''}
+                  </div>
                   <div class="text-[10px] text-slate-500 font-mono">${d}</div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 self-end sm:self-auto">
+              <div class="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                <label class="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-black text-[10px] transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95">
+                  <i class="fa-solid fa-upload"></i> Enviar Foto (Galeria/PC)
+                  <input type="file" accept="image/*" multiple onchange="uploadPeladaPhotoForDate('${d}', event)" class="hidden">
+                </label>
+                ${totalPhotosInDate > 0 ? `
+                  <button onclick="clearAllPhotosForDate('${d}')" title="Limpar fotos desta data" class="px-2.5 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white rounded-xl font-bold text-[10px] transition-all border border-amber-300">
+                    Limpar Fotos
+                  </button>
+                ` : ''}
                 <div class="flex items-center gap-1.5 bg-white border border-slate-300 px-2.5 py-1 rounded-xl shadow-sm">
                   <i class="fa-solid fa-clock text-emerald-600 text-xs"></i>
                   <label class="text-[10px] uppercase font-bold text-slate-500">Horário:</label>
@@ -4409,8 +4699,9 @@
               </div>
             </div>
             <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-sm">
-              <i class="fa-brands fa-instagram text-pink-600 text-sm shrink-0"></i>
-              <input type="url" value="${currentPhotoUrl}" onchange="updatePeladaPhotoUrl('${d}', this.value)" placeholder="Cole aqui o link da foto do Instagram da pelada (ou vários separados por vírgula)..." class="w-full bg-transparent border-0 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none">
+              <i class="fa-solid fa-link text-pink-600 text-xs shrink-0"></i>
+              <input type="url" value="${urlLinksOnly}" onchange="updatePeladaPhotoUrl('${d}', this.value)" placeholder="Opcional: Cole link direto de imagem ou link compartilhado do Google Drive..." class="w-full bg-transparent border-0 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none">
+              ${uploadedCount > 0 ? `<span class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0">+${uploadedCount} da galeria</span>` : ''}
             </div>
           </div>
         `;
@@ -4424,16 +4715,19 @@
         return;
       }
       if (!window.peladaPhotos) window.peladaPhotos = {};
-      const cleaned = (newPhotoUrl || '').trim();
-      if (cleaned) {
-        window.peladaPhotos[dateStr] = cleaned;
+      const existingUploads = window.parseStoredPeladaPhotos(dateStr).filter(item => String(item).startsWith('data:image/'));
+      const newUrls = (newPhotoUrl || '').split(',').map(s => s.trim()).filter(Boolean);
+      const combined = [...existingUploads, ...newUrls];
+
+      if (combined.length > 0) {
+        window.peladaPhotos[dateStr] = combined;
       } else {
         delete window.peladaPhotos[dateStr];
       }
-      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou o link de foto da pelada de ${dateStr}`);
+      window.recordUserInteraction(window.currentUser?.name || 'Admin', `Atualizou fotos/links da pelada de ${dateStr}`);
       window.saveData();
       window.renderPhotosTab();
-      window.showToast("Link da foto da pelada salvo na nuvem!", "success");
+      window.showToast("Fotos da pelada atualizadas na nuvem!", "success");
     };
 
     window.updatePeladaTime = function(dateStr, newTime) {
@@ -4483,12 +4777,8 @@
       const photoItems = [];
 
       sortedDates.forEach(dateStr => {
-        const rawLinks = window.peladaPhotos?.[dateStr];
-        if (!rawLinks) return;
-        const urls = String(rawLinks)
-          .split(',')
-          .map(u => u.trim())
-          .filter(Boolean);
+        const urls = window.parseStoredPeladaPhotos(dateStr);
+        if (!urls || urls.length === 0) return;
 
         urls.forEach((rawUrl, idx) => {
           photoItems.push({
@@ -4496,6 +4786,7 @@
             dateFormatted: formatDateDisplay(dateStr),
             rawUrl: rawUrl,
             imageUrl: window.resolveInstagramOrImageUrl(rawUrl),
+            isDirectUpload: String(rawUrl).startsWith('data:image/'),
             indexInDate: idx + 1,
             totalInDate: urls.length
           });
@@ -4503,7 +4794,7 @@
       });
 
       if (badgeEl) {
-        badgeEl.innerHTML = `<i class="fa-brands fa-instagram text-sm"></i> ${photoItems.length} ${photoItems.length === 1 ? 'Foto Publicada' : 'Fotos Publicadas'}`;
+        badgeEl.innerHTML = `<i class="fa-solid fa-images text-sm"></i> ${photoItems.length} ${photoItems.length === 1 ? 'Foto Publicada' : 'Fotos Publicadas'}`;
       }
 
       if (photoItems.length === 0) {
@@ -4514,25 +4805,24 @@
             </div>
             <h4 class="text-sm font-black uppercase tracking-wider text-slate-700">Nenhuma Foto Cadastrada Ainda</h4>
             <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-              Os administradores podem inserir o link das fotos do Instagram do Teimoso ao cadastrar uma <strong>Nova Data</strong> ou clicando em <strong>Gerenciar Datas</strong>.
+              Os administradores podem enviar a foto direto da <strong>galeria do celular/computador</strong> (ou colar um link do Google Drive) clicando em <strong>Gerenciar Datas</strong> ou ao criar uma <strong>Nova Data</strong>.
             </p>
           </div>
         `;
         return;
       }
 
+      window.currentRenderedGalleryPhotos = photoItems;
+
       container.innerHTML = photoItems.map((item, i) => {
-        const safeImgUrl = item.imageUrl.replace(/'/g, "\\'");
-        const safeRawUrl = item.rawUrl.replace(/'/g, "\\'");
         const titleLabel = item.totalInDate > 1
           ? `Pelada ${item.dateFormatted} (Foto ${item.indexInDate}/${item.totalInDate})`
           : `Pelada ${item.dateFormatted}`;
-        const safeTitle = titleLabel.replace(/'/g, "\\'");
 
         return `
-          <div onclick="openFullscreenPeladaPhoto('${safeImgUrl}', '${safeTitle}', '${safeRawUrl}')" class="group bg-white border border-slate-200 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col">
+          <div onclick="openFullscreenPeladaPhotoByIndex(${i})" class="group bg-white border border-slate-200 hover:border-pink-400 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col">
             <div class="relative aspect-square w-full bg-slate-100 overflow-hidden flex items-center justify-center">
-              <img src="${item.imageUrl}" alt="${titleLabel}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='https://placehold.co/600x600/fdf2f8/db2777?text=Foto+Instagram+Teimoso'">
+              <img src="${item.imageUrl}" alt="${titleLabel}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='https://placehold.co/600x600/fdf2f8/db2777?text=Toque+para+Ver+Foto'">
               <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/35 transition-all flex items-center justify-center">
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-white/95 text-slate-900 text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5">
                   <i class="fa-solid fa-expand text-pink-600"></i> Ampliar Tela Cheia
@@ -4549,13 +4839,28 @@
                 </div>
                 <div class="text-xs font-black text-slate-800 truncate mt-0.5">${item.dateFormatted}</div>
               </div>
-              <a href="${item.rawUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Abrir post original no Instagram" class="w-8 h-8 rounded-xl bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 flex items-center justify-center transition-colors shrink-0">
-                <i class="fa-brands fa-instagram text-sm"></i>
-              </a>
+              ${!item.isDirectUpload ? `
+                <a href="${item.rawUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Abrir link original" class="w-8 h-8 rounded-xl bg-pink-50 hover:bg-pink-600 text-pink-600 hover:text-white border border-pink-200 flex items-center justify-center transition-colors shrink-0">
+                  <i class="fa-solid fa-up-right-from-square text-xs"></i>
+                </a>
+              ` : `
+                <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0" title="Foto salva na nuvem do App">
+                  <i class="fa-solid fa-cloud-check text-xs"></i>
+                </span>
+              `}
             </div>
           </div>
         `;
       }).join('');
+    };
+
+    window.openFullscreenPeladaPhotoByIndex = function(index) {
+      const item = (window.currentRenderedGalleryPhotos || [])[index];
+      if (!item) return;
+      const titleLabel = item.totalInDate > 1
+        ? `Pelada ${item.dateFormatted} (Foto ${item.indexInDate}/${item.totalInDate})`
+        : `Pelada ${item.dateFormatted}`;
+      window.openFullscreenPeladaPhoto(item.imageUrl, titleLabel, item.rawUrl);
     };
 
     window.openFullscreenPeladaPhoto = function(imageUrl, titleText, rawUrl) {
@@ -5412,6 +5717,16 @@
       document.getElementById('finTotalInterest').innerText = formatCurrencyBR(totalGeneralInterest);
       document.getElementById('finTotalOverdue').innerText = formatCurrencyBR(totalGeneralStrictOverdue);
       document.getElementById('finTotalDue').innerText = formatCurrencyBR(totalGeneralDueUntilNov);
+
+      const lblPaid = document.getElementById('finLabel-paid');
+      const lblInterest = document.getElementById('finLabel-interest');
+      const lblOverdue = document.getElementById('finLabel-overdue');
+      const lblDue = document.getElementById('finLabel-due');
+
+      if (lblPaid) lblPaid.innerText = activeFinancialFilter === 'paid' ? `Total Geral Pago (${countFilterPaid} Atletas)` : 'Total Geral Pago';
+      if (lblInterest) lblInterest.innerText = activeFinancialFilter === 'interest' ? `Total de Juros Devidos (${countFilterInterest} Atletas)` : 'Total de Juros Devidos';
+      if (lblOverdue) lblOverdue.innerText = activeFinancialFilter === 'overdue' ? `Total em Atraso (${countFilterOverdue} Atletas)` : 'Total em Atraso';
+      if (lblDue) lblDue.innerText = activeFinancialFilter === 'due' ? `Total a Receber (${countFilterDue} Atletas)` : 'Total Geral a Receber Até Novembro';
     };
 
     window.settleAbsenceFine = function(athleteId, fineIndex) {
@@ -5530,8 +5845,74 @@
     window.openWhatsappFinancialIndividual = function(athleteId) {
       const athlete = window.athletes.find(a => a.id === athleteId);
       if (!athlete || !athlete.phone) return window.showToast("Atleta sem telefone.");
+      const status = getAthleteFinancialStatus(athleteId);
       const cleanPhone = athlete.phone.replace(/\D/g, '');
-      const msg = `Fala meu craque *${athlete.name}*! Passando para lembrar da regularização financeira junto ao *Teimoso F.C.C.* (Chave PIX: *teimosofcc@gmail.com*). Tamo junto! ⚽🟢⚪`;
+      const payments = window.financialPayments[athleteId] || {};
+      const now = new Date();
+      const suggestedFee = safeNum(athlete.monthlyFee, 110);
+
+      let msg = '';
+      if (status === 'uptodate') {
+        msg = `Fala meu camisa 10 *${athlete.name}*! ⚽🎩🏆\n\nPassando aqui para parabenizar pela pontualidade de craque exemplar! 🟢⚪✨ Suas mensalidades estão 100% em dia e o nosso caixa agradece demais! 🍻🥩\n\nDesejamos uma excelente resenha e boa festa a todos nós! Tamo junto! 🚀🥳\n\n_Mensagem automática do sistema de gestão do Teimoso F.C.C._`;
+      } else {
+        let totalMonthlyDue = 0;
+        let totalFinesDue = 0;
+        let pendingMonthsText = '';
+
+        months.forEach((mKey, mIndex) => {
+          const dueDate = new Date(2026, mIndex, 15);
+          const firstDayAfterDue = new Date(2026, mIndex, 16);
+          let monthData = payments[mKey] || { paid: false, amount: 0 };
+          let isPaid = monthData.paid === true || safeNum(monthData.amount) > 0;
+
+          let effectivelySuspended = athlete.isSuspended;
+          if (athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
+            effectivelySuspended = false;
+          }
+
+          if (now > dueDate && !isPaid && !effectivelySuspended) {
+            let interest = now >= firstDayAfterDue ? (Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
+            let monthTotal = suggestedFee + interest;
+            totalMonthlyDue += monthTotal;
+            pendingMonthsText += `• *${mKey.toUpperCase()}*: R$ ${suggestedFee.toFixed(2)} + R$ ${interest.toFixed(2)} (Juros) = *R$ ${monthTotal.toFixed(2)}*\n`;
+          }
+        });
+
+        const athleteFines = Array.isArray(window.absenceFines[athleteId])
+          ? window.absenceFines[athleteId]
+          : Object.values(window.absenceFines[athleteId] || {});
+        let finesText = '';
+        athleteFines.forEach(fine => {
+          if (fine && !fine.paid && fine.date >= '2026-11-01') {
+            const fineDate = new Date(fine.date + 'T00:00:00');
+            let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
+            if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
+            const isConsecutive3 = fine.type === 'CONSECUTIVE_3';
+            const baseAmt = safeNum(fine.baseAmount, isConsecutive3 ? suggestedFee : 30.00);
+            const fineInterest = daysPassed * 1.00;
+            const fineTotal = baseAmt + fineInterest;
+            totalFinesDue += fineTotal;
+            const fineLabel = isConsecutive3
+              ? `Penalidade 3 Ausências Consecutivas (${formatDateDisplay(fine.date)})`
+              : `Falta em ${formatDateDisplay(fine.date)}`;
+            finesText += `• *${fineLabel}*: R$ ${baseAmt.toFixed(2)} + R$ ${fineInterest.toFixed(2)} (${daysPassed} dias juros) = *R$ ${fineTotal.toFixed(2)}*\n`;
+          }
+        });
+
+        const grandTotal = totalMonthlyDue + totalFinesDue;
+
+        msg = `Fala meu craque *${athlete.name}*! ⚽🏃‍♂️💨\n\nPassando aqui com todo o carinho e aquele toque de bola refinado para te atualizar sobre os débitos pendentes no *Teimoso F.C.C.*! 📋😅\n\n`;
+        if (pendingMonthsText) {
+          msg += `🗓️ *MENSALIDADES VENCIDAS:*\n${pendingMonthsText}\n`;
+        }
+        if (finesText) {
+          msg += `⚠️ *MULTAS E PENALIDADES DE AUSÊNCIA:*\n${finesText}\n`;
+        }
+        msg += `💰 *TOTAL GERAL CONSOLIDADO: R$ ${grandTotal.toFixed(2)}*\n\n`;
+        msg += `Para regularizar e manter o churrasco e as chuteiras nos trinques, faça seu PIX para a chave oficial:\n🔑 *teimosofcc@gmail.com*\n\nAssim que fizer, envia o comprovante para a diretoria dar baixa! Tamo junto demais na próxima pelada! 🍻👊🟢⚪\n\n_Mensagem automática do sistema de gestão do Teimoso F.C.C._`;
+      }
+
+      window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Disparou cobrança financeira via WhatsApp para: ${athlete.name}`);
       window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
     };
 
@@ -5545,6 +5926,24 @@
     };
 
     // --- BACKUP, RELATÓRIOS E ROLETA ---
+    window.downloadSelfHtmlFile = function() {
+      try {
+        const clone = document.documentElement.cloneNode(true);
+        const btnDl = clone.querySelector('#btnDownloadHtmlAdmin');
+        if (btnDl) btnDl.remove();
+        const fullHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'index.html';
+        a.click();
+        window.showToast("Arquivo index.html completo baixado com sucesso!", "success");
+      } catch (e) {
+        console.error(e);
+        window.showToast("Copie o código diretamente da aba Código ao lado.", "error");
+      }
+    };
+
     window.openBackupModal = function() { if (window.isAdmin) document.getElementById('backupModal').classList.remove('hidden'); };
     window.closeBackupModal = function() { document.getElementById('backupModal').classList.add('hidden'); };
 
@@ -5678,8 +6077,29 @@
         resultInfo.classList.remove('opacity-0', 'scale-95');
         resultInfo.classList.add('opacity-100', 'scale-100');
         window.playAppSound('confirm');
+        createConfetti();
+        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Sorteou prêmio na festa para: ${winner.name} (${winner.type})`);
       }, 4600);
     };
+
+    function createConfetti() {
+      const container = document.getElementById('confettiContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      const colors = ['#38bdf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#ffffff'];
+      for (let i = 0; i < 100; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'absolute w-3 h-3 sm:w-4 sm:h-4 opacity-0';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.left = Math.random() * 100 + '%';
+        conf.style.top = '-10%';
+        if (Math.random() > 0.5) conf.style.borderRadius = '50%';
+        const duration = Math.random() * 2 + 2.5;
+        const delay = Math.random() * 0.5;
+        conf.style.animation = `fall ${duration}s linear ${delay}s forwards`;
+        container.appendChild(conf);
+      }
+    }
   </script>
 </body>
 </html>
