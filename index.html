@@ -1811,7 +1811,7 @@
   <!-- JAVASCRIPT APPLICATION CORE (NUVEM COM PERSISTÊNCIA FIRESTORE) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, initializeFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, initializeFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
     const firebaseConfig = {
@@ -4307,7 +4307,7 @@
         window.presences[window.currentDate][athleteId].attended = isChecked;
         const a = window.athletes.find(x => x.id === athleteId);
         window.recordUserInteraction(window.currentUser?.name || 'Admin', `Validou presença em campo para ${a?.name || 'Atleta'}: ${isChecked ? 'SIM' : 'NÃO'}`);
-        window.saveData();
+        window.syncSpecificData({ presences: { [window.currentDate]: { [athleteId]: window.presences[window.currentDate][athleteId] } } });
       }
     };
 
