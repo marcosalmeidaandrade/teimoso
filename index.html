@@ -1453,6 +1453,14 @@
           </div>
         </div>
 
+        <div class="bg-emerald-50/80 border border-emerald-300 rounded-2xl p-3 flex items-start gap-2.5 mt-2">
+          <input type="checkbox" id="athleteExemptMonthlyCheckbox" onchange="toggleAthleteExemptMonthlyUI(this.checked)" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-0 cursor-pointer">
+          <label for="athleteExemptMonthlyCheckbox" class="cursor-pointer flex-1">
+            <span class="block text-xs font-black uppercase text-emerald-800"><i class="fa-solid fa-shield-heart text-emerald-600 mr-1"></i> Isento de Mensalidades (Jan a Nov = R$ 0,00)</span>
+            <span class="block text-[10px] text-emerald-700 font-medium leading-snug mt-0.5">Marca o atleta como isento, zera todas as parcelas do ano para R$ 0,00 e mantém o status "Em dia".</span>
+          </label>
+        </div>
+
         <div class="bg-sky-50/60 border border-sky-200/80 rounded-2xl p-3 mt-2">
           <label class="block text-[11px] font-black uppercase tracking-wider text-sky-800 mb-2 flex items-center gap-1.5">
             <i class="fa-solid fa-people-roof text-sky-600"></i> Família (Sorteios Fim de Ano)
@@ -1803,7 +1811,7 @@
   <!-- JAVASCRIPT APPLICATION CORE (NUVEM COM PERSISTÊNCIA FIRESTORE) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, initializeFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
     const firebaseConfig = {
@@ -1817,7 +1825,12 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    let db;
+    try {
+      db = initializeFirestore(app, { experimentalForceLongPolling: true });
+    } catch (e) {
+      db = getFirestore(app);
+    }
     let messaging = null;
     try {
       messaging = getMessaging(app);
@@ -2596,7 +2609,7 @@
         await setDoc(dbPhotosDocRef, {
           peladaPhotos: window.peladaPhotos || {},
           updatedAt: new Date().toISOString()
-        });
+        }, { merge: true });
         return true;
       } catch (error) {
         console.error("Erro ao salvar fotos no Firestore:", error);
@@ -2637,6 +2650,21 @@
       } catch (error) {
         console.error("Erro ao salvar no Firestore:", error);
         window.showToast("Erro ao conectar à nuvem. Verifique a internet.", "error");
+      }
+    };
+
+    // Sincronização Cirúrgica (Deep Merge) para evitar perda de marcações simultâneas no domingo
+    window.syncSpecificData = async function(payload) {
+      if (!isCloudReady || !navigator.onLine) return;
+      if (window.isViewingArchivedSeason && window.isViewingArchivedSeason()) return;
+      try {
+        pruneActivityLogs();
+        payload.activityLogs = window.activityLogs;
+        payload.updatedAt = new Date().toISOString();
+        await setDoc(dbDocRef, payload, { merge: true });
+      } catch (err) {
+        console.error("Erro no syncSpecificData, usando fallback:", err);
+        window.saveData();
       }
     };
 
@@ -2864,30 +2892,14 @@
         const redirectedToPoll = window.checkAndAutoRedirectToPoll();
         if (redirectedToPoll) return;
 
-        // 2º: Verificar se há nova pelada futura para atletas comuns
+        // 2º: Selecionar automaticamente a próxima pelada e abrir direto o modal alegre (Tô Dentro / Justificar / Tô Fora)
         const { nextFutureDate } = getPeladaTimelineInfo();
         if (!window.isAdmin && nextFutureDate && !hasPromptedNewPeladaThisSession) {
           hasPromptedNewPeladaThisSession = true;
-          pendingFuturePeladaDate = nextFutureDate;
-          const formattedNewDate = formatDateDisplay(nextFutureDate);
-          window.showConfirm(
-            `⚽ NOVA PELADA DISPONÍVEL NO CALENDÁRIO!\n\nData: ${formattedNewDate}\n\nDeseja acessar e confirmar sua presença na nova pelada agora?`,
-            () => {
-              window.currentDate = pendingFuturePeladaDate;
-              populateDateSelect();
-              checkDeadlinePassed();
-              renderAthletesList();
-              setTimeout(() => {
-                const showed = window.showQuickPresenceModal();
-                if (!showed) window.checkAndPromptFamilyData(500);
-              }, 300);
-            },
-            () => {
-              window.showToast("Você está visualizando a pelada anterior em modo somente leitura.", "success");
-              window.checkAndPromptFamilyData(500);
-            }
-          );
-          return;
+          window.currentDate = nextFutureDate;
+          populateDateSelect();
+          checkDeadlinePassed();
+          renderAthletesList();
         }
 
         // 3º: Tela rápida de presença se ainda não respondeu
@@ -3852,7 +3864,10 @@
       }
 
       window.syncConsecutiveAbsencePenalties();
-      window.saveData();
+      const pRecordSync = window.presences[window.currentDate]?.[athleteId];
+      const syncPayload = { presences: { [window.currentDate]: { [athleteId]: pRecordSync } } };
+      if (window.absenceFines[athleteId]) syncPayload.absenceFines = { [athleteId]: window.absenceFines[athleteId] };
+      window.syncSpecificData(syncPayload);
       renderAthletesList();
       renderFinancial();
       renderConsecutiveAbsencesTab();
@@ -3879,7 +3894,10 @@
 
       window.syncConsecutiveAbsencePenalties();
       window.recordUserInteraction(actor, `Justificou ausência de ${targetAthlete?.name || 'Atleta'}: "${reason}"`);
-      window.saveData();
+      const pRecordJust = window.presences[window.currentDate]?.[currentJustifyAthleteId];
+      const justPayload = { presences: { [window.currentDate]: { [currentJustifyAthleteId]: pRecordJust } } };
+      if (window.absenceFines[currentJustifyAthleteId]) justPayload.absenceFines = { [currentJustifyAthleteId]: window.absenceFines[currentJustifyAthleteId] };
+      window.syncSpecificData(justPayload);
       closeJustifyModal();
       renderAthletesList();
       renderFinancial();
@@ -4055,6 +4073,8 @@
     }
 
     function getAthleteFinancialStatus(athleteId) {
+      const athObj = window.athletes.find(a => a.id === athleteId);
+      if (athObj && (athObj.isExemptMonthlyFee || Number(athObj.monthlyFee) === 0)) return 'uptodate';
       if (window.alwaysUpToDateMap[athleteId]) return 'uptodate';
       const now = new Date();
       const seasonYear = window.getSelectedYearInt();
@@ -4242,6 +4262,7 @@
                   <span class="text-xs sm:text-sm ${athlete.isSuspended ? 'line-through text-slate-500 font-semibold' : 'text-slate-800'}">${athlete.name}</span>
                   ${isSelf ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-emerald-600 text-white uppercase shrink-0 shadow-sm shadow-emerald-500/30 animate-pulse">VOCÊ</span>' : ''}
                   ${athlete.isSuspended ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 uppercase shrink-0">SUSPENSO</span>' : ''}
+                  ${(athlete.isExemptMonthlyFee || window.alwaysUpToDateMap?.[athlete.id] || Number(athlete.monthlyFee) === 0) ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase shrink-0"><i class="fa-solid fa-shield-heart mr-0.5"></i>Isento</span>' : ''}
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${finLabelColor}"><span class="w-1.5 h-1.5 rounded-full ${finDotColor}"></span> ${finLabel}</span>
                   ${birthdayBadge}
                 </div>
@@ -4577,6 +4598,21 @@
     };
 
     // --- CADASTRO E EDIÇÃO DE ATLETAS ---
+    window.toggleAthleteExemptMonthlyUI = function(isChecked) {
+      const feeInput = document.getElementById('athleteMonthlyFeeInput');
+      if (feeInput) {
+        if (isChecked) {
+          feeInput.value = 0;
+          feeInput.disabled = true;
+          feeInput.classList.add('opacity-50', 'bg-slate-100');
+        } else {
+          feeInput.value = 110;
+          feeInput.disabled = false;
+          feeInput.classList.remove('opacity-50', 'bg-slate-100');
+        }
+      }
+    };
+
     window.openNewAthleteModal = function() {
       document.getElementById('athleteModalTitle').innerHTML = `<i class="fa-solid fa-user-plus text-emerald-600"></i> Cadastrar Novo Atleta`;
       document.getElementById('editAthleteId').value = '';
@@ -4588,6 +4624,10 @@
       document.getElementById('athletePinInput').value = '';
       document.getElementById('athletePositionSelect').value = 'Meia';
       document.getElementById('athleteMonthlyFeeInput').value = '110';
+      document.getElementById('athleteMonthlyFeeInput').disabled = false;
+      document.getElementById('athleteMonthlyFeeInput').classList.remove('opacity-50', 'bg-slate-100');
+      const exemptChkNew = document.getElementById('athleteExemptMonthlyCheckbox');
+      if (exemptChkNew) exemptChkNew.checked = false;
       document.getElementById('athleteSuspendedCheckbox').checked = false;
       
       document.getElementById('adminWifeName').value = '';
@@ -4611,7 +4651,16 @@
       document.getElementById('athleteBirthMonthSelect').value = athlete.birthMonth || '';
       document.getElementById('athletePinInput').value = getAthleteEffectivePin(athlete);
       document.getElementById('athletePositionSelect').value = athlete.position;
-      document.getElementById('athleteMonthlyFeeInput').value = athlete.monthlyFee || 110;
+      const isExemptEdit = Boolean(athlete.isExemptMonthlyFee || window.alwaysUpToDateMap?.[athlete.id] || Number(athlete.monthlyFee) === 0);
+      const feeInputEdit = document.getElementById('athleteMonthlyFeeInput');
+      if (feeInputEdit) {
+        feeInputEdit.value = isExemptEdit ? 0 : (athlete.monthlyFee ?? 110);
+        feeInputEdit.disabled = isExemptEdit;
+        if (isExemptEdit) feeInputEdit.classList.add('opacity-50', 'bg-slate-100');
+        else feeInputEdit.classList.remove('opacity-50', 'bg-slate-100');
+      }
+      const exemptChkEdit = document.getElementById('athleteExemptMonthlyCheckbox');
+      if (exemptChkEdit) exemptChkEdit.checked = isExemptEdit;
       document.getElementById('athleteSuspendedCheckbox').checked = athlete.isSuspended || false;
       
       document.getElementById('adminWifeName').value = athlete?.family?.wife?.name || '';
@@ -4657,7 +4706,8 @@
         const birthMonth = parseInt(document.getElementById('athleteBirthMonthSelect')?.value) || null;
         const pinInput = (document.getElementById('athletePinInput')?.value || '').trim();
         const position = document.getElementById('athletePositionSelect')?.value || 'Meia';
-        const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput')?.value) || 110;
+        const isExempt = Boolean(document.getElementById('athleteExemptMonthlyCheckbox')?.checked);
+        const monthlyFee = isExempt ? 0 : (parseFloat(document.getElementById('athleteMonthlyFeeInput')?.value) || 0);
         const isSuspended = document.getElementById('athleteSuspendedCheckbox')?.checked || false;
 
         const adminWifeName = document.getElementById('adminWifeName')?.value.trim();
@@ -4696,6 +4746,7 @@
             athlete.isSuspended = isSuspended; 
             athlete.isKeeper = (position === 'Goleiro');
             athlete.monthlyFee = monthlyFee;
+            athlete.isExemptMonthlyFee = isExempt;
             athlete.family = familyObj;
             athlete.familyDataFilled = athlete.familyDataFilled || familyDataFilled;
           }
@@ -4714,7 +4765,8 @@
             birthMonth: birthMonth,
             customPin: pinInput || (phone.replace(/\D/g, '').slice(-4) || '1234'),
             isKeeper: (position === 'Goleiro'),
-            monthlyFee: monthlyFee, 
+            monthlyFee: monthlyFee,
+            isExemptMonthlyFee: isExempt,
             isSuspended: isSuspended, 
             effectiveStartDate: null,
             family: familyObj,
@@ -4724,6 +4776,15 @@
           window.showToast("Atleta cadastrado na nuvem!", "success");
         }
 
+        const targetIdExempt = id ? parseInt(id) : window.athletes[window.athletes.length - 1].id;
+        if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
+        window.alwaysUpToDateMap[targetIdExempt] = isExempt;
+        if (isExempt) {
+          if (!window.financialPayments[targetIdExempt]) window.financialPayments[targetIdExempt] = {};
+          months.forEach(mKey => {
+            window.financialPayments[targetIdExempt][mKey] = { paid: false, amount: 0, settledAt: null };
+          });
+        }
         window.saveData();
         window.closeAthleteModal();
         window.renderAthletesList();
@@ -5839,7 +5900,7 @@
       };
 
       window.recordUserInteraction(window.currentUser.name, `Votou na enquete Craque & Bagre da pelada (${window.currentDate})`);
-      window.saveData();
+      window.syncSpecificData({ peladaPolls: { [window.currentDate]: { votes: { [window.currentUser.id]: window.peladaPolls[window.currentDate].votes[window.currentUser.id] } } } });
       window.closePollVotingModal();
       window.renderStatsAndPollTab();
       window.playAppSound('confirm');
@@ -6084,7 +6145,8 @@
         const finLabelColor = finStatus === 'uptodate' ? 'text-emerald-700 bg-emerald-50 border border-emerald-300' : 'text-rose-700 bg-rose-50 border border-rose-300';
         const isExpanded = window.expandedFinCards.has(athlete.id);
         const isAlwaysUpToDate = window.alwaysUpToDateMap[athlete.id] === true;
-        const suggestedFee = safeNum(athlete.monthlyFee, 110);
+        const isExemptFin = Boolean(athlete.isExemptMonthlyFee || isAlwaysUpToDate || Number(athlete.monthlyFee) === 0);
+        const suggestedFee = isExemptFin ? 0 : safeNum(athlete.monthlyFee, 110);
 
         let monthsGridHtml = '';
         months.forEach((mKey, mIndex) => {
@@ -6095,7 +6157,7 @@
           let paidAmount = safeNum(monthData.amount, 0);
           if (isPaid) athleteTotalPaid += paidAmount;
 
-          let effectivelySuspended = athlete.isSuspended;
+          let effectivelySuspended = athlete.isSuspended || isExemptFin;
           if (seasonYear === 2026 && athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
             effectivelySuspended = false;
           }
