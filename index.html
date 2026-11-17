@@ -2975,7 +2975,7 @@
 
       athlete.customPin = p1;
       window.recordUserInteraction(athlete.name, "Alterou a própria senha de acesso (4 dígitos)");
-      window.saveData();
+      window.syncSpecificData({ athletesOnly: true });
       closeChangePasswordModal();
       window.showToast("Senha alterada com sucesso na nuvem!", "success");
     };
@@ -3142,7 +3142,7 @@
             const athlete = window.athletes.find(a => a.id === window.currentUser.id);
             if (athlete && athlete.fcmToken !== token) {
               athlete.fcmToken = token;
-              window.saveData();
+              window.syncSpecificData({ athletesOnly: true });
             }
           }
         }
@@ -4049,7 +4049,7 @@
       athlete.familyDataFilled = true;
 
       window.recordUserInteraction(athlete.name, "Atualizou o cadastro familiar para a Festa de Fim de Ano");
-      window.saveData();
+      window.syncSpecificData({ athletesOnly: true });
       window.closeFamilyDataPromptModal();
       window.showToast("Dados familiares salvos com sucesso! 🎁", "success");
     };
@@ -5818,7 +5818,7 @@
       window.peladaPolls[window.currentDate].forceOpen = !window.peladaPolls[window.currentDate].forceOpen;
       const isForced = window.peladaPolls[window.currentDate].forceOpen;
       window.recordUserInteraction(window.currentUser?.name || 'Admin', `${isForced ? 'Abriu' : 'Fechou'} manualmente a enquete Craque/Bagre de ${window.currentDate}`);
-      window.saveData();
+      window.syncSpecificData({ peladaPolls: { [window.currentDate]: { forceOpen: isForced } } });
       window.renderStatsAndPollTab();
       window.showToast(isForced ? "Enquete liberada manualmente para votação!" : "Enquete voltou ao horário automático (08h às 10h).", "success");
     };
@@ -5833,7 +5833,7 @@
 
       const athlete = window.athletes.find(a => a.id === athleteId);
       window.recordUserInteraction(window.currentUser?.name || 'Admin', `Ajustou gols de ${athlete?.name || 'Atleta'} para ${newGoals} em ${window.currentDate}`);
-      window.saveData();
+      window.syncSpecificData({ peladaGoals: { [window.currentDate]: { [athleteId]: newGoals } } });
       window.renderStatsAndPollTab();
     };
 
@@ -6344,7 +6344,7 @@
           window.showConfirm(`Desfazer a baixa da multa de ${target?.name}?`, () => {
             fine.paid = false; delete fine.amountPaid; delete fine.settledAt;
             window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Desfez a baixa de multa de ${target?.name || ''}`);
-            window.saveData(); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
+            window.syncSpecificData({ absenceFines: { [athleteId]: window.absenceFines[athleteId] } }); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
             window.showToast("Baixa desfeita!", "success");
           });
         } else {
@@ -6377,7 +6377,7 @@
         window.absenceFines[athleteId][fineIndex].settledAt = new Date().toISOString();
         const target = window.athletes.find(a => a.id === athleteId);
         window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Quitou multa de ${target?.name || ''} no valor de R$ ${amountPaid.toFixed(2)}`);
-        window.saveData(); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
+        window.syncSpecificData({ absenceFines: { [athleteId]: window.absenceFines[athleteId] } }); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
         window.showToast("Multa liquidada na nuvem!", "success");
         window.closeSettleFineModal();
       }
@@ -6391,7 +6391,7 @@
           let list = Array.isArray(window.absenceFines[athleteId]) ? window.absenceFines[athleteId] : Object.values(window.absenceFines[athleteId]);
           list.splice(fineIndex, 1);
           window.absenceFines[athleteId] = list;
-          window.saveData(); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
+          window.syncSpecificData({ absenceFines: { [athleteId]: window.absenceFines[athleteId] } }); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
           window.showToast("Multa excluída!", "success");
         }
       });
@@ -6400,7 +6400,7 @@
     window.toggleAlwaysUpToDate = function(athleteId, isChecked) {
       if (!window.canEditFinancial) return;
       window.alwaysUpToDateMap[athleteId] = isChecked;
-      window.saveData(); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
+      window.syncSpecificData({ alwaysUpToDateMap: { [athleteId]: isChecked } }); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
     };
 
     window.toggleMonthPaymentCheckbox = function(athleteId, mKey, isChecked) {
@@ -6417,7 +6417,7 @@
         amountToSet = fee + interest;
       }
       window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: amountToSet, settledAt: isChecked ? new Date().toISOString() : null };
-      window.saveData(); window.renderFinancial(); window.renderReports();
+      window.syncSpecificData({ financialPayments: { [athleteId]: { [mKey]: window.financialPayments[athleteId][mKey] } } }); window.renderFinancial(); window.renderReports();
     };
 
     window.doubleClickSettleMonth = function(athleteId, mKey) {
@@ -6431,7 +6431,7 @@
       let interest = now >= firstDayAfterDue ? Math.max(0, Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
       const totalAmount = fee + interest;
       window.financialPayments[athleteId][mKey] = { paid: true, amount: totalAmount, settledAt: new Date().toISOString() };
-      window.saveData(); window.renderFinancial(); window.renderReports();
+      window.syncSpecificData({ financialPayments: { [athleteId]: { [mKey]: window.financialPayments[athleteId][mKey] } } }); window.renderFinancial(); window.renderReports();
       window.showToast(`Parcela baixada (R$ ${totalAmount.toFixed(2)})!`, "success");
     };
 
@@ -6445,7 +6445,7 @@
         amount: numVal,
         settledAt: numVal > 0 ? (existingSettledAt || new Date().toISOString()) : null
       };
-      window.saveData(); window.renderFinancial(); window.renderReports();
+      window.syncSpecificData({ financialPayments: { [athleteId]: { [mKey]: window.financialPayments[athleteId][mKey] } } }); window.renderFinancial(); window.renderReports();
     };
 
     window.openWhatsappFinancialIndividual = function(athleteId) {
