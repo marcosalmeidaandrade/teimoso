@@ -2856,13 +2856,8 @@
       window.initPushNotifications();
       
       window.syncConsecutiveAbsencePenalties();
-      window.renderAthletesList();
-      window.renderBirthdaysList();
-      window.renderFinancial();
-      if (typeof window.renderConsecutiveAbsencesTab === 'function') window.renderConsecutiveAbsencesTab();
-      if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
-      if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
       window.checkDeadlinePassed();
+      window.renderActiveTabOnly();
       resetInactivityTimer();
 
       window.hasPromptedBirthdayThisSession = false;
@@ -3266,19 +3261,7 @@
           setTimeout(() => document.getElementById('loginPinInput').focus(), 300);
         }
 
-        window.populateSeasonSelector();
-        updateActivityBadge();
-        updateMarcaoAnimationButtonUI();
-        window.populateDateSelect();
-        window.syncConsecutiveAbsencePenalties();
-        window.renderAthletesList();
-        window.renderBirthdaysList();
-        window.renderFinancial();
-        window.renderReports();
-        if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
-        if (typeof window.renderConsecutiveAbsencesTab === 'function') window.renderConsecutiveAbsencesTab();
-        if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
-        window.checkDeadlinePassed();
+        window.scheduleSmartCloudRender();
       }, (error) => {
         console.error("Falha ao sincronizar com Firestore:", error);
       });
@@ -3387,6 +3370,42 @@
         }
       });
     }
+
+    
+    // --- TURBO DE VELOCIDADE: RENDERIZAÇÃO INTELIGENTE DA ABA ATIVA + DEBOUNCE ---
+    let _cloudRenderTimer = null;
+    window.renderActiveTabOnly = function() {
+      updateActivityBadge();
+      if (activeTab === 'presence') {
+        window.renderAthletesList();
+      } else if (activeTab === 'birthdays') {
+        window.renderBirthdaysList();
+      } else if (activeTab === 'financial') {
+        window.renderFinancial();
+      } else if (activeTab === 'reports') {
+        window.renderReports();
+      } else if (activeTab === 'stats' && typeof window.renderStatsAndPollTab === 'function') {
+        window.renderStatsAndPollTab();
+      } else if (activeTab === 'consecutive' && typeof window.renderConsecutiveAbsencesTab === 'function') {
+        window.renderConsecutiveAbsencesTab();
+      } else if (activeTab === 'photos' && typeof window.renderPhotosTab === 'function') {
+        window.renderPhotosTab();
+      } else if (activeTab === 'roulette' && typeof window.buildRouletteParticipants === 'function') {
+        window.buildRouletteParticipants();
+      }
+    };
+
+    window.scheduleSmartCloudRender = function() {
+      if (_cloudRenderTimer) clearTimeout(_cloudRenderTimer);
+      _cloudRenderTimer = setTimeout(() => {
+        window.populateSeasonSelector();
+        updateMarcaoAnimationButtonUI();
+        window.populateDateSelect();
+        window.syncConsecutiveAbsencePenalties();
+        window.checkDeadlinePassed();
+        window.renderActiveTabOnly();
+      }, 60);
+    };
 
     window.switchTab = function(tab) {
       if ((tab === 'draw' || tab === 'roulette') && !window.isAdmin) {
@@ -3740,8 +3759,7 @@
       window.recordUserInteraction(window.currentUser?.name || 'Visitante', `Alterou a visualização para a data: ${val}`);
       updateDateNavButtons();
       checkDeadlinePassed();
-      renderAthletesList();
-      renderStatsAndPollTab();
+      window.renderActiveTabOnly();
     };
 
     function formatDateDisplay(dateStr) {
@@ -3868,9 +3886,7 @@
       const syncPayload = { presences: { [window.currentDate]: { [athleteId]: pRecordSync } } };
       if (window.absenceFines[athleteId]) syncPayload.absenceFines = { [athleteId]: window.absenceFines[athleteId] };
       window.syncSpecificData(syncPayload);
-      renderAthletesList();
-      renderFinancial();
-      renderConsecutiveAbsencesTab();
+      window.renderActiveTabOnly();
 
       let delay = 500;
       if (newStatus === 'CONFIRMADO' && current !== 'CONFIRMADO') delay = 3200;
@@ -3899,9 +3915,7 @@
       if (window.absenceFines[currentJustifyAthleteId]) justPayload.absenceFines = { [currentJustifyAthleteId]: window.absenceFines[currentJustifyAthleteId] };
       window.syncSpecificData(justPayload);
       closeJustifyModal();
-      renderAthletesList();
-      renderFinancial();
-      renderConsecutiveAbsencesTab();
+      window.renderActiveTabOnly();
       window.showAnimatedJustification(targetAthlete);
       window.checkAndPromptBirthdayAfterAction(4700);
     };
@@ -6124,7 +6138,7 @@
       window.syncConsecutiveAbsencePenalties();
       const container = document.getElementById('financialAccordionContainer');
       if (!container) return;
-      container.innerHTML = '';
+      let financialCardsBuffer = '';
       let totalGeneralPaid = 0, totalGeneralInterest = 0, totalGeneralStrictOverdue = 0, totalGeneralDueUntilNov = 0;
       let countFilterPaid = 0, countFilterInterest = 0, countFilterOverdue = 0, countFilterDue = 0;
 
@@ -6273,7 +6287,7 @@
         if (activeFinancialFilter === 'overdue' && athleteStrictOverdue <= 0) return;
         if (activeFinancialFilter === 'due' && athleteTotalDueUntilNov <= 0) return;
 
-        container.innerHTML += `
+        financialCardsBuffer += `
           <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden group shadow-sm">
             <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-50 transition-colors focus:outline-none">
               <div class="flex items-center gap-3">
@@ -6319,6 +6333,7 @@
           </div>`;
       });
 
+      container.innerHTML = financialCardsBuffer;
       document.getElementById('finTotalPaid').innerText = formatCurrencyBR(totalGeneralPaid);
       document.getElementById('finTotalInterest').innerText = formatCurrencyBR(totalGeneralInterest);
       document.getElementById('finTotalOverdue').innerText = formatCurrencyBR(totalGeneralStrictOverdue);
@@ -6344,7 +6359,7 @@
           window.showConfirm(`Desfazer a baixa da multa de ${target?.name}?`, () => {
             fine.paid = false; delete fine.amountPaid; delete fine.settledAt;
             window.recordUserInteraction(window.currentUser?.name || 'Admin Financeiro', `Desfez a baixa de multa de ${target?.name || ''}`);
-            window.syncSpecificData({ absenceFines: { [athleteId]: window.absenceFines[athleteId] } }); window.renderFinancial(); window.renderAthletesList(); window.renderReports();
+            window.syncSpecificData({ absenceFines: { [athleteId]: window.absenceFines[athleteId] } }); window.renderActiveTabOnly();
             window.showToast("Baixa desfeita!", "success");
           });
         } else {
@@ -6417,7 +6432,7 @@
         amountToSet = fee + interest;
       }
       window.financialPayments[athleteId][mKey] = { paid: isChecked, amount: amountToSet, settledAt: isChecked ? new Date().toISOString() : null };
-      window.syncSpecificData({ financialPayments: { [athleteId]: { [mKey]: window.financialPayments[athleteId][mKey] } } }); window.renderFinancial(); window.renderReports();
+      window.syncSpecificData({ financialPayments: { [athleteId]: { [mKey]: window.financialPayments[athleteId][mKey] } } }); window.renderActiveTabOnly();
     };
 
     window.doubleClickSettleMonth = function(athleteId, mKey) {
