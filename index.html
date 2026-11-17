@@ -103,6 +103,21 @@
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
+  
+  <!-- SINGLE TAB ACTIVE OVERLAY (QUANDO UMA SEGUNDA ABA É ABERTA) -->
+  <div id="duplicateTabOverlay" class="fixed inset-0 z-[600] bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-6 text-center">
+    <div class="w-20 h-20 bg-sky-500/20 rounded-full flex items-center justify-center mb-4 border border-sky-400/40 shadow-[0_0_30px_rgba(14,165,233,0.3)]">
+      <i class="fa-solid fa-clone text-3xl text-sky-400"></i>
+    </div>
+    <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider mb-2">Aplicação Aberta em Outra Guia</h2>
+    <p class="text-xs sm:text-sm font-medium text-slate-300 max-w-sm leading-relaxed mb-6">
+      Detectamos que você abriu o <strong>Teimoso F.C.C.</strong> em uma nova janela ou guia. Para garantir máxima velocidade e segurança, esta primeira guia foi encerrada automaticamente.
+    </p>
+    <button onclick="window.location.reload()" class="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg active:scale-95 transition-all">
+      Usar Nesta Guia Aqui
+    </button>
+  </div>
+
   <div id="toastContainer" class="fixed top-5 right-5 z-[250] flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- MODAL DE ALERTA NO MEIO DA TELA (AVISO CENTRALIZADO PARA SMARTPHONES) -->
@@ -3406,6 +3421,63 @@
         window.renderActiveTabOnly();
       }, 60);
     };
+
+    
+    // --- CONTROLE DE ABA ÚNICA ATIVA (FECHA A 1ª ABA QUANDO A 2ª É ABERTA) ---
+    const _tabInstanceId = Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    let _tabChannel = null;
+
+    function deactivateThisOldTab() {
+      try {
+        if (window.currentUser) {
+          window.currentUser = null;
+          window.isAdmin = false;
+          window.canEditFinancial = false;
+        }
+        // Tenta fechar a aba antiga automaticamente (funciona se aberta via link/script)
+        window.close();
+      } catch (e) {}
+      // Caso o navegador impeça fechar a aba diretamente, congela a 1ª aba com aviso limpo
+      const dupOverlay = document.getElementById('duplicateTabOverlay');
+      if (dupOverlay) {
+        dupOverlay.classList.remove('hidden');
+        dupOverlay.classList.add('flex');
+      }
+      const loginOv = document.getElementById('globalLoginOverlay');
+      if (loginOv) loginOv.classList.add('hidden');
+    }
+
+    window.notifyNewTabActive = function() {
+      try {
+        if (_tabChannel) {
+          _tabChannel.postMessage({ type: 'NEW_TAB_ACTIVE', tabId: _tabInstanceId, timestamp: Date.now() });
+        }
+        localStorage.setItem('teimoso_active_tab_id', JSON.stringify({ tabId: _tabInstanceId, timestamp: Date.now() }));
+      } catch (e) {}
+    };
+
+    try {
+      if ('BroadcastChannel' in window) {
+        _tabChannel = new BroadcastChannel('teimoso_single_tab_channel');
+        _tabChannel.onmessage = (event) => {
+          if (event.data && event.data.type === 'NEW_TAB_ACTIVE' && event.data.tabId !== _tabInstanceId) {
+            deactivateThisOldTab();
+          }
+        };
+      }
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'teimoso_active_tab_id' && event.newValue) {
+          try {
+            const data = JSON.parse(event.newValue);
+            if (data.tabId && data.tabId !== _tabInstanceId) {
+              deactivateThisOldTab();
+            }
+          } catch (e) {}
+        }
+      });
+      // Ao abrir esta nova guia, já avisa imediatamente qualquer guia anterior para se encerrar!
+      window.notifyNewTabActive();
+    } catch (e) {}
 
     window.switchTab = function(tab) {
       if ((tab === 'draw' || tab === 'roulette') && !window.isAdmin) {
