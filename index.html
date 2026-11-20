@@ -7578,6 +7578,17 @@
     color: #6ee7b7 !important;
     border-color: #10b981 !important;
   }
+  #teimosoLoginCornerVisionBtn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 120;
+  }
+  #teimosoLoginCornerVisionBtn.is-forest {
+    background-color: #112a20 !important;
+    color: #6ee7b7 !important;
+    border-color: #10b981 !important;
+  }
   /* Layout responsivo da aba FESTA: no smartphone, JÁ SORTEADOS aparece no TOPO */
   #tab-roulette.teimoso-festa-grid:not(.hidden) {
     display: grid !important;
@@ -8566,9 +8577,6 @@
             athletesOnly: true,
             alwaysUpToDateMap: { [idKey]: Boolean(isChecked) }
           };
-          if (isChecked && zeroedMap) {
-            patchPayload.financialPayments = { [idKey]: zeroedMap };
-          }
           if (window.syncSpecificData.length >= 2) {
             window.syncSpecificData('alwaysUpToDateMap', { [idKey]: Boolean(isChecked) });
             if (isChecked && zeroedMap) {
@@ -8578,217 +8586,9 @@
             window.syncSpecificData(patchPayload);
           }
         }
-      } catch (eSync) {
-        console.warn('[Patch Festa] Erro ao sincronizar isenção do atleta:', eSync);
-      }
-      setTimeout(function() {
-        if (typeof window.saveData === 'function') {
-          try { window.saveData(); } catch (eSave) {}
-        }
-      }, 180);
+      } catch (eSync) {}
+    } catch (ePersist) {}
     }
-    function syncExemptCheckboxStateIntoAthlete(athId, isChecked) {
-      persistExemptAthleteOnly(athId, isChecked);
-    }
-    function sanitizeExemptAthletesOnFinancialRender() {
-      if (!Array.isArray(window.athletes)) return;
-      window.athletes.forEach(function(ath) {
-        if (!ath || !isAthleteExemptFromMonthly(ath)) return;
-        var idKey = String(ath.id);
-        ath.isExemptMonthlyFee = true;
-        ath.monthlyFee = 0;
-        if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
-        window.alwaysUpToDateMap[idKey] = true;
-        if (!window.financialPayments) window.financialPayments = {};
-        var curMap = window.financialPayments[idKey] || window.financialPayments[ath.id] || {};
-        var needsZero = false;
-        for (var i = 0; i < MONTHS_JAN_NOV.length; i++) {
-          var mk = MONTHS_JAN_NOV[i];
-          if (!curMap[mk] || curMap[mk].paid !== true || Number(curMap[mk].amount || 0) !== 0) {
-            needsZero = true;
-            break;
-          }
-        }
-        if (needsZero) {
-          zeroOnlyThisAthleteFinancial(ath.id);
-        }
-      });
-    }
-    function applyExemptVisualZeroingInFinancialDom() {
-      if (!Array.isArray(window.athletes)) return;
-      var exemptIds = new Set();
-      window.athletes.forEach(function(ath) {
-        if (ath && isAthleteExemptFromMonthly(ath)) {
-          exemptIds.add(String(ath.id));
-        }
-      });
-      if (exemptIds.size === 0) return;
-      var finSection = document.getElementById('tab-financial');
-      if (!finSection) return;
-      exemptIds.forEach(function(idStr) {
-        var toggleBtns = finSection.querySelectorAll('button[onclick*="toggleFinancialAccordion(' + idStr + ')"]');
-        toggleBtns.forEach(function(btn) {
-          var cardEl = btn.parentElement;
-          if (!cardEl) return;
-          var btnSpans = btn.querySelectorAll('span');
-          btnSpans.forEach(function(sp) {
-            var stxt = (sp.textContent || '').trim();
-            if (/Em Atraso/i.test(stxt) && sp.children.length === 0) {
-              sp.textContent = 'Em dia';
-              sp.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 hidden sm:inline-block';
-            } else if ((/^R\$\s*\d+[.,]\d{2}$/.test(stxt) || /^\+R\$\s*\d+/.test(stxt)) && sp.children.length === 0) {
-              if (!/Pago/i.test(sp.textContent)) {
-                sp.textContent = 'R$ 0,00';
-              }
-            }
-          });
-          var allTextNodes = cardEl.querySelectorAll('span, div, p, strong, input');
-          allTextNodes.forEach(function(el) {
-            if (el.tagName === 'INPUT') {
-              if (el.type === 'number') el.value = '0';
-              return;
-            }
-            var txt = (el.textContent || '').trim();
-            if (/^R\$\s*\d+[.,]\d{2}$/.test(txt) && txt !== 'R$ 0,00') {
-              if (el.children.length === 0) el.textContent = 'R$ 0,00';
-            } else if (/^\+R\$\s*\d+\s+juros$/i.test(txt)) {
-              if (el.children.length === 0) el.textContent = 'Quitado • Isento';
-            } else if (/^A Vencer/i.test(txt)) {
-              if (el.children.length === 0) el.textContent = 'Quitado • Isento';
-            } else if (/^Quitado$/i.test(txt)) {
-              if (el.children.length === 0) el.textContent = 'Quitado • Isento';
-            }
-          });
-        });
-      });
-    }
-    function applyExemptCheckboxToModalNow(athleteId) {
-      var ath = getAthleteByIdSafe(athleteId);
-      var chk = document.getElementById('athleteExemptMonthlyCheckbox');
-      var feeInp = document.getElementById('athleteMonthlyFeeInput');
-      if (!chk) return;
-      var exemptFlag = ath ? isAthleteExemptFromMonthly(ath) : false;
-      chk.checked = exemptFlag;
-      if (feeInp) {
-        if (exemptFlag) {
-          feeInp.value = 0;
-          feeInp.disabled = true;
-          feeInp.classList.add('opacity-50', 'bg-slate-100');
-        } else {
-          feeInp.disabled = false;
-          feeInp.classList.remove('opacity-50', 'bg-slate-100');
-          if (ath && Number(feeInp.value) === 0) feeInp.value = ath.monthlyFee || 110;
-        }
-      }
-    }
-    function wrapFinancialAndAthleteFns() {
-      if (typeof window.renderFinancial === 'function' && !window.renderFinancial._teimosoExemptWrapped) {
-        var origRenderFin = window.renderFinancial;
-        var wrappedRenderFin = function() {
-          sanitizeExemptAthletesOnFinancialRender();
-          var res = origRenderFin.apply(this, arguments);
-          applyExemptVisualZeroingInFinancialDom();
-          return res;
-        };
-        wrappedRenderFin._teimosoExemptWrapped = true;
-        window.renderFinancial = wrappedRenderFin;
-      }
-      if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal._teimosoExemptWrapped) {
-        var origOpenEdit = window.openEditAthleteModal;
-        var wrappedOpenEdit = function(id) {
-          var res = origOpenEdit.apply(this, arguments);
-          applyExemptCheckboxToModalNow(id);
-          [40, 140, 320].forEach(function(ms) {
-            setTimeout(function() { applyExemptCheckboxToModalNow(id); }, ms);
-          });
-          return res;
-        };
-        wrappedOpenEdit._teimosoExemptWrapped = true;
-        window.openEditAthleteModal = wrappedOpenEdit;
-      }
-      if (typeof window.saveAthlete === 'function' && !window.saveAthlete._teimosoExemptWrapped) {
-        var origSaveAthlete = window.saveAthlete;
-        var wrappedSaveAthlete = function() {
-          var editIdEl = document.getElementById('editAthleteId');
-          var editIdVal = editIdEl ? String(editIdEl.value || '').trim() : '';
-          var chk = document.getElementById('athleteExemptMonthlyCheckbox');
-          var isChecked = Boolean(chk && chk.checked);
-          var prevIds = Array.isArray(window.athletes) ? window.athletes.map(function(a) { return String(a.id); }) : [];
-          var res = origSaveAthlete.apply(this, arguments);
-          var targetId = editIdVal;
-          if (!targetId && Array.isArray(window.athletes) && window.athletes.length > 0) {
-            var newlyAdded = window.athletes.find(function(a) { return prevIds.indexOf(String(a.id)) === -1; });
-            targetId = newlyAdded ? String(newlyAdded.id) : String(window.athletes[window.athletes.length - 1].id);
-          }
-          if (targetId) {
-            persistExemptAthleteOnly(targetId, isChecked);
-          }
-          [80, 260, 600].forEach(function(ms) {
-            setTimeout(function() {
-              if (targetId) persistExemptAthleteOnly(targetId, isChecked);
-              if (typeof window.renderFinancial === 'function') window.renderFinancial();
-              if (typeof window.renderAthletesList === 'function') window.renderAthletesList();
-            }, ms);
-          });
-          return res;
-        };
-        wrappedSaveAthlete._teimosoExemptWrapped = true;
-        window.saveAthlete = wrappedSaveAthlete;
-      }
-    }
-    wrapFinancialAndAthleteFns();
-    document.addEventListener('change', function(ev) {
-      if (ev.target && ev.target.id === 'athleteExemptMonthlyCheckbox') {
-        var isChk = Boolean(ev.target.checked);
-        var feeInp = document.getElementById('athleteMonthlyFeeInput');
-        var editIdEl = document.getElementById('editAthleteId');
-        var athIdVal = editIdEl ? String(editIdEl.value || '').trim() : '';
-        if (feeInp) {
-          if (isChk) {
-            feeInp.value = 0;
-            feeInp.disabled = true;
-            feeInp.classList.add('opacity-50', 'bg-slate-100');
-          } else {
-            feeInp.disabled = false;
-            feeInp.classList.remove('opacity-50', 'bg-slate-100');
-            var curAth = athIdVal ? getAthleteByIdSafe(athIdVal) : null;
-            if (Number(feeInp.value) === 0) feeInp.value = (curAth && Number(curAth.monthlyFee) > 0) ? curAth.monthlyFee : 110;
-          }
-        }
-        if (athIdVal) {
-          persistExemptAthleteOnly(athIdVal, isChk);
-        }
-      }
-    }, true);
-    document.addEventListener('click', function(ev) {
-      var editBtn = ev.target && ev.target.closest ? ev.target.closest('button[onclick*="openEditAthleteModal"]') : null;
-      if (editBtn) {
-        var matchId = (editBtn.getAttribute('onclick') || '').match(/openEditAthleteModal\(([^)]+)\)/);
-        var parsedId = matchId ? matchId[1].replace(/['"]/g, '').trim() : '';
-        [50, 180].forEach(function(ms) {
-          setTimeout(function() { applyExemptCheckboxToModalNow(parsedId); }, ms);
-        });
-      }
-      var saveBtn = ev.target && ev.target.closest ? ev.target.closest('#athleteModal button[onclick*="saveAthlete"]') : null;
-      if (saveBtn) {
-        var editIdEl2 = document.getElementById('editAthleteId');
-        var chk2 = document.getElementById('athleteExemptMonthlyCheckbox');
-        if (editIdEl2 && editIdEl2.value && chk2) {
-          var idNow = String(editIdEl2.value).trim();
-          var chkNow = Boolean(chk2.checked);
-          persistExemptAthleteOnly(idNow, chkNow);
-          setTimeout(function() { persistExemptAthleteOnly(idNow, chkNow); }, 250);
-        }
-      }
-      var tabFin = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-financial') : null;
-      if (tabFin) {
-        wrapFinancialAndAthleteFns();
-        setTimeout(function() {
-          sanitizeExemptAthletesOnFinancialRender();
-          applyExemptVisualZeroingInFinancialDom();
-        }, 80);
-      }
-    }, true);
     var exemptGuardTicks = 0;
     var exemptGuardTimer = setInterval(function() {
       exemptGuardTicks++;
@@ -8797,6 +8597,108 @@
       applyExemptVisualZeroingInFinancialDom();
       if (exemptGuardTicks >= 120) clearInterval(exemptGuardTimer);
     }, 300);
+    var VISION_STORAGE_KEY = 'teimoso_app_vision_mode';
+    function getSavedVisionMode() {
+      try {
+        var v = localStorage.getItem(VISION_STORAGE_KEY);
+        return v === 'forest' ? 'forest' : 'light';
+      } catch (e) { return 'light'; }
+    }
+    function applyVisionMode(mode, persist) {
+      var isForest = (mode === 'forest');
+      document.documentElement.classList.toggle('teimoso-vision-forest', isForest);
+      document.body.classList.toggle('teimoso-vision-forest', isForest);
+      if (persist) {
+        try { localStorage.setItem(VISION_STORAGE_KEY, isForest ? 'forest' : 'light'); } catch (e) {}
+      }
+      var btn = document.getElementById('teimosoVisionSwitcherBtn');
+      var lbl = document.getElementById('teimosoVisionSwitcherLabel');
+      if (btn) {
+        btn.classList.toggle('is-forest', isForest);
+      }
+      if (lbl) {
+        lbl.textContent = isForest ? 'Visão: Verde Escuro (Alternativa)' : 'Visão: Branco Claro (Padrão)';
+      }
+      var cornerBtn = document.getElementById('teimosoLoginCornerVisionBtn');
+      var cornerIcon = document.getElementById('teimosoLoginCornerVisionIcon');
+      if (cornerBtn) {
+        cornerBtn.classList.toggle('is-forest', isForest);
+        cornerBtn.title = isForest ? 'Mudar para Branco Claro (Padrão)' : 'Mudar para Verde Escuro (Alternativa)';
+      }
+      if (cornerIcon) {
+        cornerIcon.className = isForest ? 'fa-solid fa-sun text-amber-300 text-sm' : 'fa-solid fa-leaf text-emerald-600 text-sm';
+      }
+      var hBtn = document.getElementById('teimosoHeaderVisionBtn');
+      if (hBtn) {
+        hBtn.classList.toggle('is-forest', isForest);
+        hBtn.title = isForest ? 'Mudar para Branco Claro (Padrão)' : 'Mudar para Verde Escuro (Alternativa)';
+      }
+    }
+    function toggleVisionModeNow(ev) {
+      if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      var nextMode = getSavedVisionMode() === 'forest' ? 'light' : 'forest';
+      applyVisionMode(nextMode, true);
+    }
+    function ensureLoginVisionSwitcher() {
+      var mode = getSavedVisionMode();
+      applyVisionMode(mode, false);
+      var loginOv = document.getElementById('globalLoginOverlay');
+      if (loginOv) {
+        if (!document.getElementById('teimosoLoginCornerVisionBtn')) {
+          var cornerBtn = document.createElement('button');
+          cornerBtn.type = 'button';
+          cornerBtn.id = 'teimosoLoginCornerVisionBtn';
+          cornerBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+          cornerBtn.className = 'w-11 h-11 rounded-2xl bg-white hover:bg-emerald-50 border border-slate-200 text-slate-700 shadow-lg flex items-center justify-center transition-all active:scale-95 cursor-pointer';
+          cornerBtn.innerHTML = '<i id="teimosoLoginCornerVisionIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
+          cornerBtn.addEventListener('click', toggleVisionModeNow);
+          loginOv.appendChild(cornerBtn);
+        }
+        var card = loginOv.querySelector('div.bg-white') || loginOv.querySelector('div.rounded-3xl') || loginOv.firstElementChild;
+        if (card && !document.getElementById('teimosoVisionSwitcherBtn')) {
+          var wrap = document.createElement('div');
+          wrap.id = 'teimosoVisionSwitcherWrap';
+          wrap.className = 'w-full pt-3 mt-1 border-t border-slate-200 flex flex-col items-center gap-1.5';
+          var caption = document.createElement('span');
+          caption.className = 'text-[10px] font-black uppercase tracking-wider text-slate-500';
+          caption.textContent = 'Tipo de Visão do Aplicativo';
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.id = 'teimosoVisionSwitcherBtn';
+          btn.className = 'w-full py-2.5 px-3.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-black flex items-center justify-between gap-2 transition-all active:scale-[0.99] cursor-pointer';
+          btn.innerHTML = '<span class="flex items-center gap-2"><i class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoVisionSwitcherLabel">Visão: Branco Claro (Padrão)</span></span><span class="px-2 py-0.5 rounded-md bg-emerald-600/15 text-emerald-700 text-[10px] uppercase">Alternar</span>';
+          btn.addEventListener('click', toggleVisionModeNow);
+          wrap.appendChild(caption);
+          wrap.appendChild(btn);
+          card.appendChild(wrap);
+        }
+        var loginHidden = loginOv.classList.contains('hidden') || loginOv.style.display === 'none';
+        var cBtn = document.getElementById('teimosoLoginCornerVisionBtn');
+        if (cBtn) cBtn.style.display = loginHidden ? 'none' : 'flex';
+      }
+      var soundBtn = document.getElementById('btnSoundToggle');
+      if (soundBtn && soundBtn.parentElement && !document.getElementById('teimosoHeaderVisionBtn')) {
+        var hBtn = document.createElement('button');
+        hBtn.type = 'button';
+        hBtn.id = 'teimosoHeaderVisionBtn';
+        hBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+        hBtn.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer';
+        hBtn.innerHTML = '<i class="fa-solid fa-leaf text-emerald-600"></i><span class="hidden md:inline text-[10px] uppercase">Visão</span>';
+        hBtn.addEventListener('click', toggleVisionModeNow);
+        soundBtn.parentElement.insertBefore(hBtn, soundBtn);
+      }
+      applyVisionMode(getSavedVisionMode(), false);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', ensureLoginVisionSwitcher);
+    } else {
+      ensureLoginVisionSwitcher();
+    }
+    window.addEventListener('load', ensureLoginVisionSwitcher);
+    setInterval(ensureLoginVisionSwitcher, 800);
   } catch (eExempt) {
     console.warn('[Teimoso Patch Isento Mensalidade]', eExempt);
   }
