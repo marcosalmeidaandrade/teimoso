@@ -7501,143 +7501,276 @@
     display: flex !important;
     visibility: visible !important;
   }
-  @keyframes teimosoConfettiFall {
-    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(380px) rotate(540deg); opacity: 0; }
+  @keyframes teimosoConfettiDrop {
+    0% { transform: translateY(-12px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(390px) rotate(540deg); opacity: 0; }
+  }
+  #teimosoRaffleRedirectToast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translate(-50%, -140%);
+    z-index: 9999;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #teimosoRaffleRedirectToast.show {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    pointer-events: auto;
   }
 </style>
+<script type="module">
+  import { getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+  import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+  try {
+    if (!window.__TEIMOSO_PREVIEW_SIM__) {
+      const fbApp = getApps().length > 0 ? getApps()[0] : initializeApp({
+        apiKey: 'AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ',
+        authDomain: 'teimosoweb.firebaseapp.com',
+        projectId: 'teimosoweb',
+        storageBucket: 'teimosoweb.firebasestorage.app',
+        messagingSenderId: '90879285758',
+        appId: '1:90879285758:web:ef602bfe90c131e0f808af'
+      });
+      const fbDb = getFirestore(fbApp);
+      const festaDocRef = doc(fbDb, 'teimoso_config', 'festa_sorteio');
+      window.__saveFestaRaffleCloud = async function(stateObj) {
+        try {
+          await setDoc(festaDocRef, {
+            enabled: Boolean(stateObj.enabled),
+            roundId: stateObj.roundId || null,
+            drawnIds: Array.isArray(stateObj.drawnIds) ? stateObj.drawnIds : [],
+            drawnHistory: Array.isArray(stateObj.drawnHistory) ? stateObj.drawnHistory : [],
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        } catch (err) {
+          console.warn('[Patch Festa Cloud] Erro ao salvar:', err);
+        }
+      };
+      onSnapshot(festaDocRef, function(snap) {
+        if (snap && snap.exists()) {
+          const d = snap.data() || {};
+          window.partyRaffleState = {
+            enabled: Boolean(d.enabled),
+            roundId: d.roundId || null,
+            drawnIds: Array.isArray(d.drawnIds) ? d.drawnIds : [],
+            drawnHistory: Array.isArray(d.drawnHistory) ? d.drawnHistory : []
+          };
+          if (typeof window.__onFestaCloudUpdate === 'function') {
+            window.__onFestaCloudUpdate();
+          }
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('[Patch Festa Cloud] Fallback local:', e);
+  }
+</script>
 <script>
 (function() {
   try {
-    // -----------------------------------------------------------------
-    // 1. UTILITÁRIOS SEGUROS DE IDENTIFICAÇÃO E PERMISSÃO
-    // -----------------------------------------------------------------
-    function normText(val) {
-      return String(val || '')
-        .toUpperCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .trim();
+    function normStr(val) {
+      return String(val || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
-
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    function escHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-
-    function checkIsAdmin() {
-      return (
-        window.isAdmin === true ||
-        (window.currentUser && (window.currentUser.isAdmin === true || window.currentUser.role === 'admin'))
-      );
-    }
-
-    function isUserLoggedIn() {
+    function isLoggedIn() {
       return Boolean(window.currentUser);
     }
-
+    function isUserAdmin() {
+      return (window.isAdmin === true || (window.currentUser && (window.currentUser.isAdmin === true || window.currentUser.role === 'admin')));
+    }
     function getLoggedAthlete() {
       if (!window.currentUser || !Array.isArray(window.athletes)) return null;
       var ath = null;
       if (window.currentUser.id !== undefined && window.currentUser.id !== null) {
-        ath = window.athletes.find(function(a) {
-          return Number(a.id) === Number(window.currentUser.id);
-        });
+        ath = window.athletes.find(function(a) { return Number(a.id) === Number(window.currentUser.id); });
       }
       if (!ath && window.currentUser.name) {
-        var targetName = normText(window.currentUser.name);
-        ath = window.athletes.find(function(a) {
-          return normText(a.name) === targetName;
-        });
+        var target = normStr(window.currentUser.name);
+        ath = window.athletes.find(function(a) { return normStr(a.name) === target; });
       }
       return ath || null;
     }
-
-    function isMyFamilyEntry(entry) {
+    function isMyFamilyMember(entry) {
       if (!window.currentUser || !entry) return false;
       if (window.currentUser.id !== undefined && window.currentUser.id !== null && Number(window.currentUser.id) !== 0) {
         if (Number(entry.athleteId) === Number(window.currentUser.id)) return true;
       }
-      if (window.currentUser.name && normText(entry.athleteName) === normText(window.currentUser.name)) {
-        return true;
-      }
+      if (window.currentUser.name && normStr(entry.athleteName) === normStr(window.currentUser.name)) return true;
       var ath = getLoggedAthlete();
       if (ath && Number(entry.athleteId) === Number(ath.id)) return true;
       return false;
     }
-
-    function ensureRaffleState() {
-      if (!window.partyRaffleState || typeof window.partyRaffleState !== 'object') {
-        window.partyRaffleState = { enabled: false, drawn: [] };
+    function getNormalizedRaffleState() {
+      var raw = window.partyRaffleState;
+      if (!raw || typeof raw !== 'object') {
+        window.partyRaffleState = { enabled: false, roundId: null, drawnIds: [], drawnHistory: [] };
+        return window.partyRaffleState;
       }
-      if (!Array.isArray(window.partyRaffleState.drawn)) {
-        window.partyRaffleState.drawn = [];
+      if (typeof raw.enabled !== 'boolean') raw.enabled = Boolean(raw.enabled);
+      if (raw.roundId === undefined) raw.roundId = raw.enabled ? 'active_round' : null;
+      if (!Array.isArray(raw.drawnHistory)) {
+        if (Array.isArray(raw.drawn)) {
+          raw.drawnHistory = raw.drawn.map(function(item, idx) {
+            return {
+              id: item.id || item.key || ('legacy_' + idx),
+              name: item.name || '',
+              relation: item.relation || '',
+              athleteId: item.athleteId,
+              athleteName: item.athleteName || 'Atleta',
+              order: item.order || (idx + 1),
+              time: item.time || ''
+            };
+          });
+        } else {
+          raw.drawnHistory = [];
+        }
       }
-      return window.partyRaffleState;
+      if (!Array.isArray(raw.drawnIds)) {
+        raw.drawnIds = raw.drawnHistory.map(function(h) { return h.id; });
+      }
+      return raw;
     }
-
-    function persistRaffleState() {
+    function syncRaffleStateToCloud(stateObj) {
       try {
-        var state = ensureRaffleState();
+        if (typeof window.__saveFestaRaffleCloud === 'function') {
+          window.__saveFestaRaffleCloud(stateObj);
+          return;
+        }
         if (typeof window.syncSpecificData === 'function') {
-          window.syncSpecificData({ partyRaffleState: state });
-        } else if (typeof window.saveData === 'function') {
-          window.saveData();
+          if (window.syncSpecificData.length >= 2) {
+            window.syncSpecificData('partyRaffleState', stateObj);
+          } else {
+            window.syncSpecificData({ partyRaffleState: stateObj });
+          }
         }
       } catch (err) {
-        console.warn('[Patch Festa] Falha ao persistir estado do sorteio:', err);
+        console.warn('[Patch Festa] Falha ao sincronizar partyRaffleState:', err);
       }
     }
-
-    function notifyUser(msg, type) {
+    function showAppFeedback(msg, type) {
       try {
         if (typeof window.showToast === 'function') {
           window.showToast(msg, type || 'info');
+          return;
         }
-      } catch (err) {}
+      } catch (e) {}
+      showRedirectBanner(msg);
     }
-
-    // -----------------------------------------------------------------
-    // 2. VISIBILIDADE SEGURA DA ABA FESTA (SOMENTE APÓS LOGIN)
-    // -----------------------------------------------------------------
+    var redirectToastTimer = null;
+    function showRedirectBanner(messageText) {
+      var toast = document.getElementById('teimosoRaffleRedirectToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'teimosoRaffleRedirectToast';
+        toast.className = 'bg-slate-900 border-2 border-emerald-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-md w-[92vw] text-xs sm:text-sm font-bold';
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = '<i class="fa-solid fa-gift text-emerald-400 text-lg shrink-0"></i><span>' + escHtml(messageText) + '</span>';
+      toast.classList.add('show');
+      if (redirectToastTimer) clearTimeout(redirectToastTimer);
+      redirectToastTimer = setTimeout(function() { toast.classList.remove('show'); }, 4500);
+    }
     function syncFestaTabVisibility() {
-      if (!isUserLoggedIn()) {
+      if (!isLoggedIn()) {
         document.body.classList.remove('teimoso-festa-unlocked');
         return;
       }
       document.body.classList.add('teimoso-festa-unlocked');
-      var tabBtn = document.getElementById('tabBtn-roulette');
-      if (tabBtn && tabBtn.classList.contains('hidden')) {
-        tabBtn.classList.remove('hidden');
+      var btn = document.getElementById('tabBtn-roulette');
+      if (btn) {
+        if (btn.classList.contains('hidden')) btn.classList.remove('hidden');
+        if (btn.style.display === 'none') btn.style.display = 'flex';
       }
     }
-
-    var festaBtnObserver = new MutationObserver(function() {
-      if (isUserLoggedIn()) {
-        syncFestaTabVisibility();
-      }
+    var festaTabObserver = new MutationObserver(function() {
+      if (isLoggedIn()) syncFestaTabVisibility();
     });
-
-    function attachFestaTabObserver() {
-      var tabBtn = document.getElementById('tabBtn-roulette');
-      if (tabBtn && !tabBtn.dataset.festaObserved) {
-        tabBtn.dataset.festaObserved = '1';
-        festaBtnObserver.observe(tabBtn, { attributes: true, attributeFilter: ['class', 'style'] });
+    function observeFestaTabButton() {
+      var btn = document.getElementById('tabBtn-roulette');
+      if (btn && !btn.dataset.festaSafeObserved) {
+        btn.dataset.festaSafeObserved = '1';
+        festaTabObserver.observe(btn, { attributes: true, attributeFilter: ['class', 'style'] });
       }
     }
-
-    // -----------------------------------------------------------------
-    // 3. GARANTIA DE ESTRUTURA HTML DA ABA FESTA (#tab-roulette)
-    // -----------------------------------------------------------------
-    function ensureRouletteSectionLayout() {
+    var loginSessionCounter = 0;
+    var lastWasLoggedIn = false;
+    var lastRedirectSignature = null;
+    var lastKnownEnabled = false;
+    var lastKnownRoundId = null;
+    function isFestaTabCurrentlyActive() {
       var sec = document.getElementById('tab-roulette');
-      if (!sec || sec.dataset.festaSafeLayout === '1') return;
-
-      sec.dataset.festaSafeLayout = '1';
+      return Boolean(sec && !sec.classList.contains('hidden'));
+    }
+    function highlightFestaNavButton() {
+      var navBtns = document.querySelectorAll('.nav-tab-btn');
+      navBtns.forEach(function(b) {
+        if (b.id === 'tabBtn-roulette') {
+          b.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+          b.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+        } else {
+          b.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-500');
+          b.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+        }
+      });
+    }
+    function navigateToFestaTabNow() {
+      syncFestaTabVisibility();
+      try {
+        if (typeof window.switchTab === 'function') {
+          window.switchTab('roulette');
+        }
+      } catch (err) {}
+      var sections = document.querySelectorAll('section[id^="tab-"]');
+      sections.forEach(function(s) {
+        if (s.id === 'tab-roulette') s.classList.remove('hidden');
+        else s.classList.add('hidden');
+      });
+      highlightFestaNavButton();
+      renderPartyRaffleSafe();
+    }
+    function checkAutoRedirectForActiveRaffle() {
+      var loggedNow = isLoggedIn();
+      if (loggedNow && !lastWasLoggedIn) {
+        loginSessionCounter++;
+        lastRedirectSignature = null;
+      }
+      if (!loggedNow) {
+        lastWasLoggedIn = false;
+        lastRedirectSignature = null;
+        lastKnownEnabled = false;
+        lastKnownRoundId = null;
+        return;
+      }
+      lastWasLoggedIn = true;
+      var state = getNormalizedRaffleState();
+      var enabledNow = Boolean(state.enabled);
+      var roundKey = String(state.roundId || 'active');
+      var redirectSignature = 'login_' + loginSessionCounter + '_round_' + roundKey;
+      var justEnabledRealtime = (!lastKnownEnabled && enabledNow);
+      var roundChangedRealtime = (enabledNow && lastKnownRoundId !== null && lastKnownRoundId !== roundKey);
+      if (enabledNow && (lastRedirectSignature !== redirectSignature || justEnabledRealtime || roundChangedRealtime)) {
+        lastRedirectSignature = redirectSignature;
+        var alreadyOnFesta = isFestaTabCurrentlyActive();
+        navigateToFestaTabNow();
+        if (!alreadyOnFesta || justEnabledRealtime) {
+          showRedirectBanner('🎉 Sorteio em andamento! Você foi direcionado para a aba FESTA.');
+        }
+      }
+      if (!enabledNow) {
+        lastRedirectSignature = null;
+      }
+      lastKnownEnabled = enabledNow;
+      lastKnownRoundId = enabledNow ? roundKey : null;
+    }
+    function ensureRouletteLayoutDOM() {
+      var sec = document.getElementById('tab-roulette');
+      if (!sec || sec.dataset.festaPatchMounted === '1') return;
+      sec.dataset.festaPatchMounted = '1';
       sec.innerHTML =
         '<div class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">' +
           '<div>' +
@@ -7706,10 +7839,6 @@
           '</div>' +
         '</div>';
     }
-
-    // -----------------------------------------------------------------
-    // 4. COLETA DE FAMILIARES CADASTRADOS
-    // -----------------------------------------------------------------
     function collectAllFamilyMembers() {
       var list = [];
       var athletes = Array.isArray(window.athletes) ? window.athletes : [];
@@ -7717,93 +7846,65 @@
         if (!ath || !ath.family) return;
         if (ath.family.wife && ath.family.wife.name && String(ath.family.wife.name).trim()) {
           var wName = String(ath.family.wife.name).trim();
-          list.push({
-            key: ath.id + '_wife_' + normText(wName),
-            name: wName,
-            relation: 'Esposa',
-            athleteId: ath.id,
-            athleteName: ath.name || 'Atleta'
-          });
+          list.push({ id: ath.id + '_wife_' + normStr(wName), name: wName, relation: 'Esposa', athleteId: ath.id, athleteName: ath.name || 'Atleta' });
         }
         if (Array.isArray(ath.family.children)) {
           ath.family.children.forEach(function(child, idx) {
             if (child && child.name && String(child.name).trim()) {
               var cName = String(child.name).trim();
-              list.push({
-                key: ath.id + '_child_' + idx + '_' + normText(cName),
-                name: cName,
-                relation: 'Filho(a)',
-                athleteId: ath.id,
-                athleteName: ath.name || 'Atleta'
-              });
+              list.push({ id: ath.id + '_child_' + idx + '_' + normStr(cName), name: cName, relation: 'Filho(a)', athleteId: ath.id, athleteName: ath.name || 'Atleta' });
             }
           });
         }
       });
       return list;
     }
-
-    // -----------------------------------------------------------------
-    // 5. RENDERIZAÇÃO DA ABA FESTA (COM DESTAQUE E ORDEM INVERSA)
-    // -----------------------------------------------------------------
-    var isSpinningNow = false;
-
-    function safeRenderPartyRaffleUI() {
+    var isRouletteSpinning = false;
+    function renderPartyRaffleSafe() {
       syncFestaTabVisibility();
-      ensureRouletteSectionLayout();
-
-      var state = ensureRaffleState();
+      ensureRouletteLayoutDOM();
+      var state = getNormalizedRaffleState();
       var enabled = Boolean(state.enabled);
-      var drawn = state.drawn;
-      var isAdm = checkIsAdmin();
-
-      var allFamily = collectAllFamilyMembers();
-      var drawnKeys = {};
-      drawn.forEach(function(d) { if (d && d.key) drawnKeys[d.key] = true; });
-
-      var available = allFamily.filter(function(item) {
-        return !drawnKeys[item.key];
-      });
-
-      // Ordena colocando os familiares do atleta logado no TOPO
+      var drawnIds = state.drawnIds;
+      var drawnHistory = state.drawnHistory;
+      var isAdm = isUserAdmin();
+      var drawnSet = {};
+      drawnIds.forEach(function(id) { drawnSet[id] = true; });
+      drawnHistory.forEach(function(h) { if (h && h.id) drawnSet[h.id] = true; });
+      var available = collectAllFamilyMembers().filter(function(item) { return !drawnSet[item.id]; });
       available.sort(function(a, b) {
-        var aMine = isMyFamilyEntry(a) ? 0 : 1;
-        var bMine = isMyFamilyEntry(b) ? 0 : 1;
+        var aMine = isMyFamilyMember(a) ? 0 : 1;
+        var bMine = isMyFamilyMember(b) ? 0 : 1;
         if (aMine !== bMine) return aMine - bMine;
         var cmpAth = String(a.athleteName).localeCompare(String(b.athleteName));
         if (cmpAth !== 0) return cmpAth;
         return String(a.name).localeCompare(String(b.name));
       });
-
-      // Badge de status
-      var statusBadge = document.getElementById('partyRaffleStatusBadge');
-      if (statusBadge) {
+      var badge = document.getElementById('partyRaffleStatusBadge');
+      if (badge) {
         if (enabled) {
-          statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
-          statusBadge.innerHTML = '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado';
+          badge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+          badge.innerHTML = '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado';
         } else {
-          statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
-          statusBadge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
+          badge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
+          badge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
         }
       }
-
-      // Botão EDITAR FAMÍLIA (bloqueado durante sorteio ativo)
       var btnEditFam = document.getElementById('btnEditMyFamilyParty');
       if (btnEditFam) {
         if (enabled) {
           btnEditFam.disabled = true;
           btnEditFam.className = 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2';
-          btnEditFam.title = 'Edição indisponível enquanto há um sorteio em andamento';
+          btnEditFam.title = 'Edição bloqueada enquanto o sorteio está em andamento';
         } else {
           btnEditFam.disabled = false;
           btnEditFam.className = 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2';
-          btnEditFam.title = 'Editar ou cadastrar familiares para a festa';
+          btnEditFam.title = 'Editar ou incluir esposa e filhos para a festa';
         }
       }
-
-      // Botão Habilitar / Encerrar Sorteio (exclusivo Admin)
       var btnToggle = document.getElementById('btnTogglePartyRaffleAdmin');
       var lblToggle = document.getElementById('labelTogglePartyRaffleAdmin');
+      var btnSpin = document.getElementById('btnStartRoulette');
       if (btnToggle) {
         if (isAdm) {
           btnToggle.classList.remove('hidden');
@@ -7820,14 +7921,11 @@
           btnToggle.style.display = 'none';
         }
       }
-
-      // Botão Girar a Roleta (visível e habilitado para Admin quando sorteio ativo)
-      var btnSpin = document.getElementById('btnStartRoulette');
       if (btnSpin) {
         if (isAdm) {
           btnSpin.classList.remove('hidden');
           btnSpin.style.display = 'inline-flex';
-          if (enabled && available.length > 0 && !isSpinningNow) {
+          if (enabled && available.length > 0 && !isRouletteSpinning) {
             btnSpin.disabled = false;
             btnSpin.className = 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2';
           } else {
@@ -7839,198 +7937,118 @@
           btnSpin.style.display = 'none';
         }
       }
-
-      // Lista DISPONÍVEIS NA URNA
       var countEl = document.getElementById('rouletteParticipantCount');
       if (countEl) countEl.textContent = String(available.length);
-
       var gridEl = document.getElementById('rouletteParticipantsGrid');
       if (gridEl) {
         if (available.length === 0) {
           gridEl.innerHTML = '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>';
         } else {
           gridEl.innerHTML = available.map(function(p) {
-            var mine = isMyFamilyEntry(p);
-            var safeName = escapeHtml(p.name);
-            var safeRel = escapeHtml(p.relation);
-            var safeAth = escapeHtml(p.athleteName);
+            var mine = isMyFamilyMember(p);
             if (mine) {
-              return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm">' +
-                '<i class="fa-solid fa-star text-emerald-600"></i>' +
-                '<span>' + safeName + '</span>' +
-                '<span class="text-[10px] font-bold text-emerald-800">(' + safeRel + ' &bull; ' + safeAth + ')</span>' +
-                '<span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span>' +
-              '</div>';
+              return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + escHtml(p.name) + '</span><span class="text-[10px] font-bold text-emerald-800">(' + escHtml(p.relation) + ' &bull; ' + escHtml(p.athleteName) + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>';
             }
-            return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-xs font-semibold">' +
-              '<i class="fa-solid fa-ticket text-slate-400"></i>' +
-              '<span>' + safeName + '</span>' +
-              '<span class="text-[10px] text-slate-400">(' + safeRel + ' &bull; ' + safeAth + ')</span>' +
-            '</div>';
+            return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + escHtml(p.name) + '</span><span class="text-[10px] text-slate-400">(' + escHtml(p.relation) + ' &bull; ' + escHtml(p.athleteName) + ')</span></div>';
           }).join('');
         }
       }
-
-      // Lista JÁ SORTEADOS NA RODADA (SEMPRE do último sorteado para o primeiro)
       var drawnCountEl = document.getElementById('rouletteDrawnCount');
-      if (drawnCountEl) drawnCountEl.textContent = String(drawn.length);
-
+      if (drawnCountEl) drawnCountEl.textContent = String(drawnHistory.length);
       var drawnListEl = document.getElementById('rouletteDrawnList');
       if (drawnListEl) {
-        if (drawn.length === 0) {
+        if (drawnHistory.length === 0) {
           drawnListEl.innerHTML = '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>';
         } else {
-          var reversedDrawn = drawn.map(function(entry, idx) {
-            return { data: entry, orderNum: idx + 1 };
-          }).reverse();
-
-          drawnListEl.innerHTML = reversedDrawn.map(function(item, revIdx) {
+          var reversed = drawnHistory.map(function(entry, idx) { return { data: entry, orderNum: entry.order || (idx + 1) }; }).reverse();
+          drawnListEl.innerHTML = reversed.map(function(item, revIdx) {
             var w = item.data;
             var isLatest = (revIdx === 0);
-            var rowStyle = isLatest ? 'bg-emerald-50 border-2 border-emerald-500 shadow-sm' : 'bg-amber-50/70 border border-amber-200';
-            var badgeStyle = isLatest ? 'bg-emerald-600' : 'bg-amber-500';
-            var latestBadge = isLatest ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '';
-            return '<div class="flex items-center justify-between ' + rowStyle + ' rounded-2xl px-3.5 py-2.5 text-xs">' +
-              '<div class="flex items-center gap-2.5 min-w-0">' +
-                '<span class="w-7 h-7 rounded-full ' + badgeStyle + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + item.orderNum + 'º</span>' +
-                '<div class="min-w-0">' +
-                  '<div class="font-black text-slate-800 truncate">' + escapeHtml(w.name) + latestBadge + '</div>' +
-                  '<div class="text-[10px] text-slate-500 font-semibold truncate">' + escapeHtml(w.relation) + ' de ' + escapeHtml(w.athleteName) + '</div>' +
-                '</div>' +
-              '</div>' +
-              '<span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + escapeHtml(w.time || '') + '</span>' +
-            '</div>';
+            var rowClass = isLatest ? 'bg-emerald-50 border-2 border-emerald-500 shadow-sm' : 'bg-amber-50/70 border border-amber-200';
+            var badgeClass = isLatest ? 'bg-emerald-600' : 'bg-amber-500';
+            var latestTag = isLatest ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '';
+            return '<div class="flex items-center justify-between ' + rowClass + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-7 h-7 rounded-full ' + badgeClass + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + item.orderNum + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + escHtml(w.name) + latestTag + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + escHtml(w.relation) + ' de ' + escHtml(w.athleteName) + '</div></div></div><span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + escHtml(w.time || '') + '</span></div>';
           }).join('');
           drawnListEl.scrollTop = 0;
         }
       }
     }
-
-    // -----------------------------------------------------------------
-    // 6. HABILITAR / ENCERRAR SORTEIO (ADMIN)
-    // -----------------------------------------------------------------
-    function safeTogglePartyRaffleSession() {
-      if (!checkIsAdmin()) {
-        notifyUser('Apenas administradores podem controlar o sorteio.', 'error');
+    function togglePartyRaffleSessionSafe() {
+      if (!isUserAdmin()) {
+        showAppFeedback('Apenas administradores podem controlar o sorteio.', 'error');
         return;
       }
-      if (isSpinningNow) return;
-
-      var state = ensureRaffleState();
-      var willEnable = !state.enabled;
-      window.partyRaffleState = { enabled: willEnable, drawn: [] };
-
+      if (isRouletteSpinning) return;
+      var current = getNormalizedRaffleState();
+      var willEnable = !current.enabled;
+      window.partyRaffleState = willEnable ? { enabled: true, roundId: Date.now(), drawnIds: [], drawnHistory: [] } : { enabled: false, roundId: null, drawnIds: [], drawnHistory: [] };
       var resInfo = document.getElementById('rouletteResultInfo');
-      if (resInfo) {
-        resInfo.classList.add('opacity-0', 'scale-95');
-        resInfo.classList.remove('opacity-100', 'scale-100');
-      }
+      if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
       var track = document.getElementById('rouletteTrack');
       if (track) {
         track.style.transition = 'none';
         track.style.transform = 'translateY(0px)';
-        track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">' +
-          (willEnable ? 'PRONTO PARA GIRAR!' : 'AGUARDANDO HABILITAR...') +
-          '</span></div>';
+        track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">' + (willEnable ? 'PRONTO PARA GIRAR!' : 'AGUARDANDO HABILITAR...') + '</span></div>';
       }
-
-      persistRaffleState();
-      safeRenderPartyRaffleUI();
-      notifyUser(
-        willEnable
-          ? 'Sorteio habilitado! Clique em Girar a Roleta.'
-          : 'Sorteio encerrado! Todos os nomes voltaram para a urna.',
-        'success'
-      );
+      if (willEnable) {
+        lastKnownEnabled = true;
+        lastKnownRoundId = String(window.partyRaffleState.roundId);
+        lastRedirectSignature = 'login_' + loginSessionCounter + '_round_' + lastKnownRoundId;
+      } else {
+        lastKnownEnabled = false;
+        lastKnownRoundId = null;
+        lastRedirectSignature = null;
+      }
+      syncRaffleStateToCloud(window.partyRaffleState);
+      renderPartyRaffleSafe();
+      showAppFeedback(willEnable ? 'Sorteio habilitado! Todos os atletas foram direcionados para a aba FESTA.' : 'Sorteio encerrado! Todos os nomes voltaram para a urna.', 'success');
     }
-
-    // -----------------------------------------------------------------
-    // 7. GIRAR A ROLETA SEM REPETIÇÃO (ADMIN)
-    // -----------------------------------------------------------------
-    function safeStartPartyRoulette() {
-      if (!checkIsAdmin()) {
-        notifyUser('Apenas administradores podem girar a roleta.', 'error');
-        return;
-      }
-      if (isSpinningNow) return;
-
-      var state = ensureRaffleState();
-      if (!state.enabled) {
-        notifyUser('Habilite o sorteio antes de girar a roleta.', 'error');
-        return;
-      }
-
-      var drawnKeys = {};
-      state.drawn.forEach(function(d) { if (d && d.key) drawnKeys[d.key] = true; });
-      var available = collectAllFamilyMembers().filter(function(item) { return !drawnKeys[item.key]; });
-
-      if (available.length === 0) {
-        notifyUser('Todos os familiares já foram sorteados! Encerre para reiniciar.', 'info');
-        return;
-      }
-
-      isSpinningNow = true;
-      safeRenderPartyRaffleUI();
-
+    function startPartyRouletteSafe() {
+      if (!isUserAdmin()) { showAppFeedback('Apenas administradores podem girar a roleta.', 'error'); return; }
+      if (isRouletteSpinning) return;
+      var state = getNormalizedRaffleState();
+      if (!state.enabled) { showAppFeedback('Habilite o sorteio antes de girar a roleta.', 'error'); return; }
+      var drawnSet = {};
+      state.drawnIds.forEach(function(id) { drawnSet[id] = true; });
+      var available = collectAllFamilyMembers().filter(function(item) { return !drawnSet[item.id]; });
+      if (available.length === 0) { showAppFeedback('Todos os familiares já foram sorteados! Encerre para iniciar nova rodada.', 'info'); return; }
+      isRouletteSpinning = true;
+      renderPartyRaffleSafe();
       var winner = available[Math.floor(Math.random() * available.length)];
       var track = document.getElementById('rouletteTrack');
       var displayBox = document.getElementById('rouletteDisplayBox');
       var resInfo = document.getElementById('rouletteResultInfo');
       var athNameEl = document.getElementById('rouletteAthleteName');
-
-      if (resInfo) {
-        resInfo.classList.add('opacity-0', 'scale-95');
-        resInfo.classList.remove('opacity-100', 'scale-100');
-      }
-
+      if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
       var spinItems = [];
-      var totalSlots = 28;
-      for (var i = 0; i < totalSlots - 1; i++) {
-        spinItems.push(available[Math.floor(Math.random() * available.length)]);
-      }
+      for (var i = 0; i < 27; i++) { spinItems.push(available[Math.floor(Math.random() * available.length)]); }
       spinItems.push(winner);
-
       var slotHeight = displayBox ? displayBox.clientHeight : 112;
       if (track) {
         track.style.transition = 'none';
         track.style.transform = 'translateY(0px)';
         track.innerHTML = spinItems.map(function(item, idx) {
-          var isFinal = (idx === spinItems.length - 1);
-          var txtColor = isFinal ? 'text-emerald-600' : 'text-slate-700';
-          return '<div style="height:' + slotHeight + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0">' +
-            '<span class="' + txtColor + ' font-black text-xl sm:text-3xl uppercase tracking-wide truncate max-w-full">' + escapeHtml(item.name) + '</span>' +
-            '<span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + escapeHtml(item.relation) + ' de ' + escapeHtml(item.athleteName) + '</span>' +
-          '</div>';
+          var txtColor = (idx === spinItems.length - 1) ? 'text-emerald-600' : 'text-slate-700';
+          return '<div style="height:' + slotHeight + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + txtColor + ' font-black text-xl sm:text-3xl uppercase tracking-wide truncate max-w-full">' + escHtml(item.name) + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + escHtml(item.relation) + ' de ' + escHtml(item.athleteName) + '</span></div>';
         }).join('');
-
         void track.offsetHeight;
         track.style.transition = 'transform 3.1s cubic-bezier(0.12, 0.85, 0.18, 1)';
         track.style.transform = 'translateY(-' + ((spinItems.length - 1) * slotHeight) + 'px)';
       }
-
       setTimeout(function() {
-        isSpinningNow = false;
-        var nowStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        ensureRaffleState().drawn.push({
-          key: winner.key,
-          name: winner.name,
-          relation: winner.relation,
-          athleteId: winner.athleteId,
-          athleteName: winner.athleteName,
-          time: nowStr
-        });
-
+        isRouletteSpinning = false;
+        var curState = getNormalizedRaffleState();
+        var nextOrder = curState.drawnHistory.length + 1;
+        var nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        curState.drawnIds.push(winner.id);
+        curState.drawnHistory.push({ id: winner.id, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, order: nextOrder, time: nowTime });
         if (athNameEl) athNameEl.textContent = winner.athleteName + ' (' + winner.relation + ')';
-        if (resInfo) {
-          resInfo.classList.remove('opacity-0', 'scale-95');
-          resInfo.classList.add('opacity-100', 'scale-100');
-        }
-
+        if (resInfo) { resInfo.classList.remove('opacity-0', 'scale-95'); resInfo.classList.add('opacity-100', 'scale-100'); }
         var conf = document.getElementById('confettiContainer');
         if (conf) {
           conf.innerHTML = '';
           var colors = ['#10b981', '#0ea5e9', '#f59e0b', '#ec4899', '#a855f7'];
-          for (var c = 0; c < 34; c++) {
+          for (var c = 0; c < 36; c++) {
             var piece = document.createElement('div');
             piece.style.position = 'absolute';
             piece.style.width = '8px';
@@ -8038,47 +8056,30 @@
             piece.style.background = colors[c % colors.length];
             piece.style.left = (Math.random() * 100) + '%';
             piece.style.top = '-12px';
-            piece.style.animation = 'teimosoConfettiFall ' + (1.8 + Math.random() * 1.5) + 's linear forwards';
+            piece.style.animation = 'teimosoConfettiDrop ' + (1.8 + Math.random() * 1.5) + 's linear forwards';
             conf.appendChild(piece);
           }
         }
-
-        if (typeof window.playAppSound === 'function') {
-          try { window.playAppSound('confirm'); } catch (e) {}
-        }
-        persistRaffleState();
-        safeRenderPartyRaffleUI();
+        if (typeof window.playAppSound === 'function') { try { window.playAppSound('confirm'); } catch (e) {} }
+        syncRaffleStateToCloud(curState);
+        renderPartyRaffleSafe();
       }, 3200);
     }
-
-    // -----------------------------------------------------------------
-    // 8. EDITAR FAMÍLIA (ABRE #familyDataModal PRÉ-PREENCHIDO)
-    // -----------------------------------------------------------------
-    function safeOpenEditFamilyFromFesta() {
-      var state = ensureRaffleState();
-      if (state.enabled) {
-        notifyUser('Não é possível editar a família durante um sorteio em andamento.', 'error');
-        return;
-      }
-
+    function openEditFamilyFromFestaSafe() {
+      var state = getNormalizedRaffleState();
+      if (state.enabled) { showAppFeedback('Edição de família bloqueada durante sorteio em andamento.', 'error'); return; }
       var modal = document.getElementById('familyDataModal');
-      if (!modal) {
-        notifyUser('Janela de edição familiar não encontrada nesta página.', 'error');
-        return;
-      }
-
+      if (!modal) { showAppFeedback('Modal de cadastro familiar não encontrado.', 'error'); return; }
       var ath = getLoggedAthlete();
       var content = document.getElementById('familyDataContent');
       var wName = document.getElementById('promptWifeName');
       var wDay = document.getElementById('promptWifeDay');
       var wMonth = document.getElementById('promptWifeMonth');
       var cCont = document.getElementById('promptChildrenContainer');
-
       var wife = (ath && ath.family && ath.family.wife) ? ath.family.wife : {};
       if (wName) wName.value = wife.name || '';
       if (wDay) wDay.value = wife.birthDay || '';
       if (wMonth) wMonth.value = wife.birthMonth || '';
-
       if (cCont) {
         cCont.innerHTML = '';
         var kids = (ath && ath.family && Array.isArray(ath.family.children)) ? ath.family.children : [];
@@ -8098,94 +8099,75 @@
           window.addPromptChildRow();
         }
       }
-
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       setTimeout(function() {
         modal.classList.remove('opacity-0');
         modal.classList.add('opacity-100');
-        if (content) {
-          content.classList.remove('scale-95');
-          content.classList.add('scale-100');
-        }
+        if (content) { content.classList.remove('scale-95'); content.classList.add('scale-100'); }
       }, 20);
     }
-
-    // -----------------------------------------------------------------
-    // 9. INSTALAÇÃO SEGURA DAS SOBRESCRITAS APÓS CARREGAMENTO DO APP
-    // -----------------------------------------------------------------
-    function installSafeFestaOverrides() {
-      window.renderPartyRaffleUI = safeRenderPartyRaffleUI;
-      window.renderRouletteTab = safeRenderPartyRaffleUI;
-      window.togglePartyRaffleSession = safeTogglePartyRaffleSession;
-      window.startPartyRoulette = safeStartPartyRoulette;
-      window.openEditFamilyFromFesta = safeOpenEditFamilyFromFesta;
-      window.openMyFamilyEditorFromParty = safeOpenEditFamilyFromFesta;
-
-      // Garante abertura da aba FESTA mesmo se switchTab original restringir
-      if (typeof window.switchTab === 'function' && !window.switchTab._festaSafeWrapped) {
-        var origSwitchTab = window.switchTab;
+    function installSafeOverrides() {
+      window.renderPartyRaffleUI = renderPartyRaffleSafe;
+      window.renderRouletteTab = renderPartyRaffleSafe;
+      window.togglePartyRaffleSession = togglePartyRaffleSessionSafe;
+      window.startPartyRoulette = startPartyRouletteSafe;
+      window.openEditFamilyFromFesta = openEditFamilyFromFestaSafe;
+      window.openMyFamilyEditorFromParty = openEditFamilyFromFestaSafe;
+      if (typeof window.switchTab === 'function' && !window.switchTab._teimosoFestaWrapped) {
+        var originalSwitchTab = window.switchTab;
         var wrappedSwitchTab = function(tabName) {
-          var res = origSwitchTab.apply(this, arguments);
+          var res = originalSwitchTab.apply(this, arguments);
           if (tabName === 'roulette') {
-            var allTabs = document.querySelectorAll('section[id^="tab-"]');
-            allTabs.forEach(function(s) {
+            var allSecs = document.querySelectorAll('section[id^="tab-"]');
+            allSecs.forEach(function(s) {
               if (s.id === 'tab-roulette') s.classList.remove('hidden');
               else s.classList.add('hidden');
             });
-            safeRenderPartyRaffleUI();
+            highlightFestaNavButton();
+            renderPartyRaffleSafe();
           }
           return res;
         };
-        wrappedSwitchTab._festaSafeWrapped = true;
+        wrappedSwitchTab._teimosoFestaWrapped = true;
         window.switchTab = wrappedSwitchTab;
       }
     }
-
-    // Delegação de cliques para manter a UI sincronizada após salvar família ou abrir aba
     document.addEventListener('click', function(ev) {
-      var el = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, #familyDataModal button') : null;
-      if (!el) return;
-      installSafeFestaOverrides();
-      if (el.id === 'tabBtn-roulette') {
-        setTimeout(safeRenderPartyRaffleUI, 60);
-      } else {
-        setTimeout(safeRenderPartyRaffleUI, 400);
-      }
+      var hit = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, #familyDataModal button') : null;
+      if (!hit) return;
+      installSafeOverrides();
+      if (hit.id === 'tabBtn-roulette') { setTimeout(renderPartyRaffleSafe, 50); }
+      else { setTimeout(renderPartyRaffleSafe, 400); }
     }, true);
-
-    // Inicialização discreta sem interferir no carregamento do Firebase/Login
-    function bootstrapSafePatch() {
-      attachFestaTabObserver();
-      installSafeFestaOverrides();
+    function bootstrapFestaPatch() {
+      observeFestaTabButton();
+      installSafeOverrides();
       syncFestaTabVisibility();
+      checkAutoRedirectForActiveRaffle();
     }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bootstrapSafePatch);
-    } else {
-      bootstrapSafePatch();
-    }
-    window.addEventListener('load', bootstrapSafePatch);
-
-    // Sincronização leve periódica para detectar login concluído e manter overrides ativos
-    var lastLoggedState = false;
+    window.__onFestaCloudUpdate = function() {
+      checkAutoRedirectForActiveRaffle();
+      if (!isRouletteSpinning) renderPartyRaffleSafe();
+    };
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', bootstrapFestaPatch); }
+    else { bootstrapFestaPatch(); }
+    window.addEventListener('load', bootstrapFestaPatch);
+    var lastRenderedHash = '';
     setInterval(function() {
-      var loggedNow = isUserLoggedIn();
-      if (loggedNow !== lastLoggedState) {
-        lastLoggedState = loggedNow;
-        syncFestaTabVisibility();
-        installSafeFestaOverrides();
-        if (loggedNow) safeRenderPartyRaffleUI();
-      } else if (loggedNow) {
-        syncFestaTabVisibility();
-        if (window.renderPartyRaffleUI !== safeRenderPartyRaffleUI) {
-          installSafeFestaOverrides();
-        }
+      syncFestaTabVisibility();
+      if (!isLoggedIn()) { checkAutoRedirectForActiveRaffle(); return; }
+      if (window.renderPartyRaffleUI !== renderPartyRaffleSafe) { installSafeOverrides(); }
+      checkAutoRedirectForActiveRaffle();
+      var st = getNormalizedRaffleState();
+      var currentHash = String(st.enabled) + '|' + String(st.roundId) + '|' + String(st.drawnHistory.length) + '|' + (Array.isArray(window.athletes) ? window.athletes.length : 0);
+      if (currentHash !== lastRenderedHash && !isRouletteSpinning) {
+        lastRenderedHash = currentHash;
+        renderPartyRaffleSafe();
       }
     }, 500);
   } catch (e) {
-    console.error('[Patch Festa]', e);
+    console.error('[Teimoso Patch Festa]', e);
   }
 })();
 </script>
