@@ -1157,32 +1157,47 @@
       </section>
 
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
-                                                      <section id="tab-roulette" class="hidden teimoso-festa-grid">
+                                                                  <section id="tab-roulette" class="hidden teimoso-festa-grid">
         <div id="partyHeaderCard" class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
-              <h3 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="fa-solid fa-gift text-sky-500 text-2xl"></i> Roleta de Sorteio da Festa</h3>
-              <span id="partyRaffleStatusBadge" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300"><i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado</span>
+              <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-gift text-sky-500 text-2xl"></i> Roleta de Sorteio da Festa
+              </h3>
+              <span id="partyRaffleStatusBadge" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300">
+                <i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado
+              </span>
             </div>
-            <p class="text-xs text-slate-500 mt-1">Sorteio exclusivo para <strong>familiares (esposas e filhos)</strong> cadastrados. Quem já foi sorteado sai da urna até o encerramento.</p>
+            <p class="text-xs text-slate-500 mt-1">Sorteio exclusivo para <strong>familiares (esposas e filhos)</strong> cadastrados. Acompanhe os sorteados em tempo real!</p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
-            <button type="button" onclick="openMyFamilyEditorFromParty()" id="btnEditMyFamilyParty" class="px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2"><i class="fa-solid fa-people-roof"></i> EDITAR FAMÍLIA</button>
-            <button type="button" onclick="togglePartyRaffleSession()" id="btnTogglePartyRaffleAdmin" class="hidden px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 items-center gap-2"><i class="fa-solid fa-power-off"></i> <span id="labelTogglePartyRaffleAdmin">Habilitar Sorteio</span></button>
-            <button type="button" onclick="startPartyRoulette()" id="btnStartRoulette" disabled class="hidden px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest items-center gap-2"><i class="fa-solid fa-rotate"></i> Girar a Roleta</button>
+            <button type="button" onclick="openMyFamilyEditorFromParty()" id="btnEditMyFamilyParty" class="px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2">
+              <i class="fa-solid fa-people-roof"></i> EDITAR FAMÍLIA
+            </button>
+            <button type="button" onclick="togglePartyRaffleSession()" id="btnTogglePartyRaffleAdmin" class="hidden px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 items-center gap-2">
+              <i class="fa-solid fa-power-off"></i> <span id="labelTogglePartyRaffleAdmin">Habilitar Sorteio</span>
+            </button>
+            <button type="button" onclick="startPartyRoulette()" id="btnStartRoulette" disabled class="hidden px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest items-center gap-2">
+              <i class="fa-solid fa-rotate"></i> Girar a Roleta
+            </button>
           </div>
         </div>
         <div id="partyRouletteStage" class="bg-slate-900 border-4 border-slate-800 rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[320px]">
-          <h2 class="text-sky-400 font-black tracking-widest uppercase text-sm mb-6 z-10">Sorteio de Brindes</h2>
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-900/40 via-slate-900 to-slate-900 pointer-events-none"></div>
+          <h2 class="text-sky-400 font-black tracking-widest uppercase text-sm mb-6 z-10">Sorteio de Brindes ao Vivo</h2>
           <div class="w-full max-w-2xl bg-white rounded-3xl border-8 border-slate-300 shadow-inner relative z-10 p-4">
             <div id="rouletteDisplayBox" class="bg-slate-50 rounded-xl h-24 sm:h-32 flex items-center justify-center overflow-hidden relative shadow-inner border border-slate-200">
               <div id="rouletteTrack" class="flex flex-col w-full text-center absolute top-0 left-0 transition-transform">
-                <div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-xl sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>
+                <div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full">
+                  <span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span>
+                </div>
               </div>
             </div>
           </div>
           <div id="rouletteResultInfo" class="mt-6 text-center z-10 opacity-0 transition-opacity duration-500 transform scale-95">
-            <div class="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider"><i class="fa-solid fa-trophy"></i> Vencedor Sorteado!</div>
+            <div class="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider">
+              <i class="fa-solid fa-trophy"></i> Vencedor Sorteado!
+            </div>
             <p id="rouletteFamilyTie" class="text-slate-400 text-xs mt-3 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>
           </div>
           <div id="confettiContainer" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
@@ -1192,14 +1207,22 @@
             <span class="flex items-center gap-2"><i class="fa-solid fa-users text-sky-600"></i> Disponíveis na Urna (<span id="rouletteParticipantCount">0</span>)</span>
             <span class="text-[10px] font-bold text-slate-400">Restantes p/ sortear</span>
           </h4>
-          <div id="rouletteParticipantsGrid" class="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-2"></div>
+          <div id="rouletteParticipantsGrid" class="flex flex-wrap gap-2 max-h-60 overflow-y-auto pr-2">
+            <span class="text-xs text-slate-400 font-bold">Carregando participantes...</span>
+          </div>
         </div>
         <div id="partyDrawnCard" class="bg-white border-2 border-amber-300 rounded-3xl p-5 shadow-md">
-          <h4 class="text-xs font-black uppercase tracking-wider text-amber-800 mb-3 flex items-center justify-between">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-500"></i> Já Sorteados na Rodada (<span id="rouletteDrawnCount">0</span>)</span>
-            <span class="text-[10px] font-bold text-amber-700">Último no Topo</span>
-          </h4>
-          <div id="rouletteDrawnList" class="space-y-2 max-h-60 overflow-y-auto pr-1"><div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div></div>
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h4 class="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-amber-500 text-sm"></i> Já Sorteados na Rodada (<span id="rouletteDrawnCount">0</span>)
+            </h4>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
+              <i class="fa-solid fa-bolt text-amber-600"></i> Último no Topo
+            </span>
+          </div>
+          <div id="rouletteDrawnList" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>
+          </div>
         </div>
       </section>
 
@@ -7964,337 +7987,624 @@
 <!-- TEIMOSO_FESTA_SAFE_PATCH_END -->
 
 
-<!-- TEIMOSO_SAFE_PATCH_V4_START -->
+
+
+<!-- TEIMOSO_SAFE_PATCH_V5_START -->
 <style>
-  body.teimoso-festa-unlocked #tabBtn-roulette { display: flex !important; visibility: visible !important; }
-  #teimosoRaffleBanner {
-    position: fixed; top: 14px; left: 50%; transform: translate(-50%, -150%);
-    z-index: 99999; transition: transform 0.35s ease, opacity 0.35s ease;
-    opacity: 0; pointer-events: none;
+  /* Abas FESTA e FINANCEIRO visíveis após login */
+  body.teimoso-festa-unlocked #tabBtn-roulette,
+  body.teimoso-festa-unlocked #tabBtn-financial {
+    display: flex !important;
+    visibility: visible !important;
   }
-  #teimosoRaffleBanner.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
-  /* Smartphones (< 1024px): JÁ SORTEADOS NA RODADA no topo da aba FESTA */
+
+  /* Banner discreto de redirecionamento em sorteio ativo */
+  #teimosoRaffleBanner {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translate(-50%, -150%);
+    z-index: 9999;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #teimosoRaffleBanner.show {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Layout da Aba Festa: no Smartphone (< 1024px), Já Sorteados aparece no TOPO */
   #tab-roulette.teimoso-festa-grid:not(.hidden) {
-    display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 1.25rem;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
   }
   #tab-roulette.teimoso-festa-grid #partyDrawnCard { order: 1; }
   #tab-roulette.teimoso-festa-grid #partyHeaderCard { order: 2; }
   #tab-roulette.teimoso-festa-grid #partyRouletteStage { order: 3; }
   #tab-roulette.teimoso-festa-grid #partyAvailableCard { order: 4; }
   @media (min-width: 1024px) {
-    #tab-roulette.teimoso-festa-grid:not(.hidden) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+    #tab-roulette.teimoso-festa-grid:not(.hidden) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
     #tab-roulette.teimoso-festa-grid #partyHeaderCard { order: 1; grid-column: span 2 / span 2; }
     #tab-roulette.teimoso-festa-grid #partyRouletteStage { order: 2; grid-column: span 2 / span 2; }
     #tab-roulette.teimoso-festa-grid #partyAvailableCard { order: 3; grid-column: span 1 / span 1; }
     #tab-roulette.teimoso-festa-grid #partyDrawnCard { order: 4; grid-column: span 1 / span 1; }
   }
-  /* Visão Alternativa: Verde Escuro (mantém Branco Claro por padrão) */
-  html.teimoso-vision-forest, body.teimoso-vision-forest { background-color: #0b1914 !important; color: #e6f4ee !important; }
-  body.teimoso-vision-forest .bg-white, body.teimoso-vision-forest .bg-slate-50, body.teimoso-vision-forest .bg-slate-50\/60, body.teimoso-vision-forest .bg-slate-50\/95 {
-    background-color: #11261e !important; color: #e6f4ee !important;
+
+  /* =====================================================================
+     VISÃO ALTERNATIVA: VERDE ESCURO
+     Mantém Branco Claro como padrão. Preserva 100% o formato/cor original
+     dos botões de presença e corrige o :hover no Financeiro.
+     ===================================================================== */
+  html.teimoso-vision-forest,
+  body.teimoso-vision-forest {
+    background-color: #0b1914 !important;
+    color: #e6f4ee !important;
   }
-  body.teimoso-vision-forest .bg-slate-100 { background-color: #0e2019 !important; color: #dceee6 !important; }
-  body.teimoso-vision-forest .border-slate-100, body.teimoso-vision-forest .border-slate-200, body.teimoso-vision-forest .border-slate-200\/80, body.teimoso-vision-forest .border-slate-300 {
+  body.teimoso-vision-forest header,
+  body.teimoso-vision-forest footer,
+  body.teimoso-vision-forest .bg-white,
+  body.teimoso-vision-forest .bg-slate-50,
+  body.teimoso-vision-forest .bg-slate-50\/60,
+  body.teimoso-vision-forest .bg-slate-50\/95 {
+    background-color: #11261e !important;
+    color: #e6f4ee !important;
+  }
+  body.teimoso-vision-forest .bg-slate-100 {
+    background-color: #0e2019 !important;
+    color: #dceee6 !important;
+  }
+  /* Corrige hover claro que apagava nomes e valores no tema escuro */
+  body.teimoso-vision-forest .hover\:bg-white:hover,
+  body.teimoso-vision-forest .hover\:bg-slate-50:hover,
+  body.teimoso-vision-forest .hover\:bg-slate-100:hover,
+  body.teimoso-vision-forest tr:hover,
+  body.teimoso-vision-forest #tab-financial button[onclick*='toggleFinancialAccordion']:hover {
+    background-color: #163529 !important;
+    color: #f0fdf8 !important;
+  }
+  body.teimoso-vision-forest #tab-financial button[onclick*='toggleFinancialAccordion']:hover span {
+    color: inherit;
+  }
+  body.teimoso-vision-forest .border-slate-100,
+  body.teimoso-vision-forest .border-slate-200,
+  body.teimoso-vision-forest .border-slate-200\/80,
+  body.teimoso-vision-forest .border-slate-300 {
     border-color: #1e4234 !important;
   }
-  body.teimoso-vision-forest .text-slate-800, body.teimoso-vision-forest .text-slate-900 { color: #f0fdf8 !important; }
-  body.teimoso-vision-forest .text-slate-700, body.teimoso-vision-forest .text-slate-600 { color: #c5e3d6 !important; }
-  body.teimoso-vision-forest .text-slate-500, body.teimoso-vision-forest .text-slate-400 { color: #8ab3a2 !important; }
-  body.teimoso-vision-forest .hover\:bg-white:hover, body.teimoso-vision-forest .hover\:bg-slate-50:hover, body.teimoso-vision-forest .hover\:bg-slate-100:hover, body.teimoso-vision-forest button:hover, body.teimoso-vision-forest tr:hover {
-    background-color: #163529 !important; color: #f0fdf8 !important;
+  body.teimoso-vision-forest .text-slate-800,
+  body.teimoso-vision-forest .text-slate-900 {
+    color: #f0fdf8 !important;
   }
-  body.teimoso-vision-forest input:not([type='checkbox']):not([type='radio']), body.teimoso-vision-forest select, body.teimoso-vision-forest textarea {
-    background-color: #0b1c15 !important; color: #ecfdf5 !important; border-color: #254f3e !important;
+  body.teimoso-vision-forest .text-slate-700,
+  body.teimoso-vision-forest .text-slate-600 {
+    color: #c5e3d6 !important;
+  }
+  body.teimoso-vision-forest .text-slate-500,
+  body.teimoso-vision-forest .text-slate-400 {
+    color: #8ab3a2 !important;
+  }
+  body.teimoso-vision-forest input:not([type='checkbox']):not([type='radio']),
+  body.teimoso-vision-forest select,
+  body.teimoso-vision-forest textarea {
+    background-color: #0b1c15 !important;
+    color: #ecfdf5 !important;
+    border-color: #254f3e !important;
+  }
+  body.teimoso-vision-forest #rouletteDisplayBox {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
   }
 </style>
+<script type="module">
+import { initializeApp as teimosoInitPartyApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getFirestore as teimosoGetPartyDb, initializeFirestore as teimosoInitPartyDb, doc as teimosoPartyDoc, setDoc as teimosoPartySetDoc, onSnapshot as teimosoPartyOnSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+try {
+  const __partyCfg = {
+      apiKey: "AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ",
+      authDomain: "teimosoweb.firebaseapp.com",
+      projectId: "teimosoweb",
+      storageBucket: "teimosoweb.firebasestorage.app",
+      messagingSenderId: "90879285758",
+      appId: "1:90879285758:web:ef602bfe90c131e0f808af",
+      measurementId: "G-3ESB69D4WQ"
+    };
+  const __partyApp = teimosoInitPartyApp(__partyCfg, "teimoso_party_live");
+  let __partyDb;
+  try {
+    __partyDb = teimosoInitPartyDb(__partyApp, { experimentalForceLongPolling: true });
+  } catch (eDb) {
+    __partyDb = teimosoGetPartyDb(__partyApp);
+  }
+  const __partyDocRef = teimosoPartyDoc(__partyDb, "teimoso_config", "sorteio_festa");
+
+  window.__teimosoSavePartyRaffleLive = async function(stateObj) {
+    try {
+      await teimosoPartySetDoc(__partyDocRef, {
+        enabled: Boolean(stateObj && stateObj.enabled),
+        spinning: Boolean(stateObj && stateObj.spinning),
+        currentWinner: (stateObj && stateObj.currentWinner) || null,
+        drawn: Array.isArray(stateObj && stateObj.drawn) ? stateObj.drawn : [],
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (err) {
+      console.warn('Falha ao gravar sorteio em tempo real:', err);
+    }
+  };
+
+  teimosoPartyOnSnapshot(__partyDocRef, function(snap) {
+    if (!snap || !snap.exists()) return;
+    const remote = snap.data() || {};
+    window.partyRaffleState = {
+      enabled: Boolean(remote.enabled),
+      spinning: Boolean(remote.spinning),
+      currentWinner: remote.currentWinner || null,
+      drawn: Array.isArray(remote.drawn) ? remote.drawn : [],
+      updatedAt: remote.updatedAt || ''
+    };
+    if (typeof window.__teimosoOnRemotePartyUpdate === 'function') {
+      window.__teimosoOnRemotePartyUpdate(window.partyRaffleState);
+    }
+  }, function(err) {
+    console.warn('Listener tempo real do sorteio:', err);
+  });
+} catch (eInit) {
+  console.warn('Canal tempo real do sorteio indisponível:', eInit);
+}
+</script>
 <script>
 (function() {
   'use strict';
+
   var VISION_KEY = 'teimoso_app_vision_mode';
-  var MONTHS_JAN_NOV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov'];
-  var partySpinning = false;
-  var postLoginRedirectLockUntil = 0;
-  var recentLocalWrites = {};
+  var MONTHS_JAN_NOV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
+  var localSpinLock = false;
+  var lastTrustedHumanMs = 0;
 
   function normStr(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 
-  function showRaffleBanner(msg) {
+  // ===========================================================================
+  // 1. CONTROLE DE VISÃO (BRANCO CLARO PADRÃO <-> VERDE ESCURO ALTERNATIVA)
+  //    Garante APENAS UMA opção no card de login + botão no cabeçalho interno
+  // ===========================================================================
+  function getSavedVision() {
+    try { return localStorage.getItem(VISION_KEY) === 'forest' ? 'forest' : 'light'; } catch (e) { return 'light'; }
+  }
+
+  function applyVisionMode(mode, persist) {
+    var isForest = (mode === 'forest');
+    if (document.documentElement) document.documentElement.classList.toggle('teimoso-vision-forest', isForest);
+    if (document.body) document.body.classList.toggle('teimoso-vision-forest', isForest);
+    if (persist) {
+      try { localStorage.setItem(VISION_KEY, isForest ? 'forest' : 'light'); } catch (e) {}
+    }
+    var lbl = document.getElementById('teimosoLoginVisionLabel');
+    if (lbl) lbl.textContent = isForest ? 'Visão: Verde Escuro (Alternativa)' : 'Visão: Branco Claro (Padrão)';
+    var cIcon = document.getElementById('teimosoLoginCornerIcon');
+    if (cIcon) cIcon.className = isForest ? 'fa-solid fa-sun text-amber-300 text-sm' : 'fa-solid fa-leaf text-emerald-600 text-sm';
+    var hLbl = document.getElementById('teimosoHeaderVisionLabel');
+    if (hLbl) hLbl.textContent = isForest ? 'Verde Escuro' : 'Branco Claro';
+    var hIcon = document.getElementById('teimosoHeaderVisionIcon');
+    if (hIcon) hIcon.className = isForest ? 'fa-solid fa-sun text-amber-300' : 'fa-solid fa-leaf text-emerald-600';
+  }
+
+  window.toggleTeimosoVisionMode = function(ev) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    var next = (getSavedVision() === 'forest') ? 'light' : 'forest';
+    applyVisionMode(next, true);
+  };
+
+  function ensureVisionSwitchers() {
+    // A) Tela de Login: remove duplicatas antigas e cria EXATAMENTE UMA opção
+    var loginOv = document.getElementById('globalLoginOverlay');
+    if (loginOv) {
+      var loginCard = loginOv.querySelector('div');
+      if (loginCard) {
+        // Remove qualquer bloco antigo duplicado de TIPO DE VISÃO DO APLICATIVO
+        Array.prototype.slice.call(loginCard.children).forEach(function(ch) {
+          var txt = normStr(ch.textContent || '');
+          if (txt.indexOf('TIPO DE VISAO DO APLICATIVO') !== -1 && ch.id !== 'teimosoSingleLoginVisionBox') {
+            ch.remove();
+          }
+        });
+        if (!document.getElementById('teimosoSingleLoginVisionBox')) {
+          var box = document.createElement('div');
+          box.id = 'teimosoSingleLoginVisionBox';
+          box.className = 'w-full pt-3 mt-1 border-t border-slate-200 flex flex-col items-center gap-1.5';
+          box.innerHTML = '<span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tipo de Visão do Aplicativo</span>' +
+            '<button type="button" onclick="toggleTeimosoVisionMode(event)" class="w-full py-2.5 px-3.5 rounded-xl border border-emerald-400/60 bg-emerald-500/10 text-emerald-700 text-xs font-black flex items-center justify-between gap-2 cursor-pointer transition-all active:scale-95">' +
+              '<span class="flex items-center gap-2"><i class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoLoginVisionLabel">Visão: Branco Claro (Padrão)</span></span>' +
+              '<span class="px-2 py-0.5 rounded bg-emerald-600/20 text-emerald-700 text-[10px] uppercase">Alternar</span>' +
+            '</button>';
+          loginCard.appendChild(box);
+        }
+      }
+      if (!document.getElementById('teimosoLoginCornerBtn')) {
+        var cBtn = document.createElement('button');
+        cBtn.type = 'button';
+        cBtn.id = 'teimosoLoginCornerBtn';
+        cBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+        cBtn.setAttribute('onclick', 'toggleTeimosoVisionMode(event)');
+        cBtn.className = 'fixed top-4 right-4 z-[130] w-11 h-11 rounded-2xl bg-white border border-slate-200 shadow-lg flex items-center justify-center cursor-pointer active:scale-95';
+        cBtn.innerHTML = '<i id="teimosoLoginCornerIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
+        loginOv.appendChild(cBtn);
+      }
+    }
+
+    // B) Cabeçalho interno da aplicação
+    if (!document.getElementById('teimosoHeaderVisionBtn')) {
+      var headerEl = document.querySelector('header');
+      if (headerEl) {
+        var logoutBtn = headerEl.querySelector('button[onclick*="logout"]') || headerEl.querySelector('button[onclick*="Sound"]');
+        var targetParent = logoutBtn ? logoutBtn.parentElement : null;
+        if (targetParent) {
+          var hBtn = document.createElement('button');
+          hBtn.type = 'button';
+          hBtn.id = 'teimosoHeaderVisionBtn';
+          hBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+          hBtn.setAttribute('onclick', 'toggleTeimosoVisionMode(event)');
+          hBtn.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0';
+          hBtn.innerHTML = '<i id="teimosoHeaderVisionIcon" class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoHeaderVisionLabel" class="hidden sm:inline text-[10px] uppercase">Branco Claro</span>';
+          targetParent.insertBefore(hBtn, logoutBtn);
+        }
+      }
+    }
+    applyVisionMode(getSavedVision(), false);
+  }
+
+  // ===========================================================================
+  // 2. ABA FESTA + REDIRECIONAMENTO AUTOMÁTICO + ABA FINANCEIRO SOMENTE LEITURA
+  // ===========================================================================
+  function showRaffleBanner(text) {
     var b = document.getElementById('teimosoRaffleBanner');
     if (!b) {
       b = document.createElement('div');
       b.id = 'teimosoRaffleBanner';
-      b.className = 'bg-slate-900 border-2 border-emerald-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-md w-[92vw] text-xs sm:text-sm font-bold';
-      b.innerHTML = '<i class="fa-solid fa-gift text-emerald-400 text-lg shrink-0"></i><span id="teimosoRaffleBannerTxt"></span>';
+      b.className = 'bg-slate-900 border-2 border-emerald-400 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 max-w-md w-[92vw] text-xs font-bold';
+      b.innerHTML = '<i class="fa-solid fa-gift text-emerald-400 text-base shrink-0"></i><span id="teimosoRaffleBannerTxt"></span>';
       document.body.appendChild(b);
     }
     var t = document.getElementById('teimosoRaffleBannerTxt');
-    if (t) t.textContent = msg;
+    if (t) t.textContent = text;
     b.classList.add('show');
     clearTimeout(showRaffleBanner._t);
-    showRaffleBanner._t = setTimeout(function() { b.classList.remove('show'); }, 4500);
+    showRaffleBanner._t = setTimeout(function() { b.classList.remove('show'); }, 4200);
   }
 
-  // 1. ALTERNÂNCIA DE VISÃO (BRANCO CLARO PADRÃO <-> VERDE ESCURO)
-  function getVisionMode() {
-    try { return localStorage.getItem(VISION_KEY) === 'forest' ? 'forest' : 'light'; } catch (e) { return 'light'; }
-  }
-  function applyVisionMode(mode, save) {
-    var isForest = (mode === 'forest');
-    document.documentElement.classList.toggle('teimoso-vision-forest', isForest);
-    if (document.body) document.body.classList.toggle('teimoso-vision-forest', isForest);
-    if (save) { try { localStorage.setItem(VISION_KEY, isForest ? 'forest' : 'light'); } catch (e) {} }
-    var cornerIcon = document.getElementById('teimosoLoginCornerVisionIcon');
-    if (cornerIcon) cornerIcon.className = isForest ? 'fa-solid fa-sun text-amber-300 text-sm' : 'fa-solid fa-leaf text-emerald-600 text-sm';
-    var cardLbl = document.getElementById('teimosoLoginCardVisionLabel') || document.getElementById('teimosoVisionSwitcherLabel');
-    if (cardLbl) cardLbl.textContent = isForest ? 'Visão: Verde Escuro (Alternativa)' : 'Visão: Branco Claro (Padrão)';
-    var hdrLbl = document.getElementById('teimosoHeaderVisionLabel');
-    if (hdrLbl) hdrLbl.textContent = isForest ? 'Verde Escuro' : 'Branco Claro';
-  }
-  window.toggleAppVisionMode = function(ev) {
-    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-    applyVisionMode(getVisionMode() === 'forest' ? 'light' : 'forest', true);
-  };
-  function ensureVisionSwitchers() {
-    var loginOv = document.getElementById('globalLoginOverlay');
-    if (loginOv) {
-      var card = loginOv.querySelector('div');
-      if (card) {
-        var visionBlocks = [];
-        Array.from(card.querySelectorAll('div')).forEach(function(el) {
-          var txt = (el.textContent || '').toUpperCase();
-          var isVisionContainer = (el.id === 'teimosoLoginCardVisionWrap' || (el.parentElement === card && (txt.indexOf('TIPO DE VIS') !== -1 || txt.indexOf('VISÃO:') !== -1 || txt.indexOf('VISAO:') !== -1)));
-          if (isVisionContainer) visionBlocks.push(el);
-        });
-        if (visionBlocks.length > 1) {
-          for (var i = 1; i < visionBlocks.length; i++) {
-            visionBlocks[i].remove();
-          }
-        }
-        if (visionBlocks.length === 0) {
-          var wrap = document.createElement('div');
-          wrap.id = 'teimosoLoginCardVisionWrap';
-          wrap.className = 'w-full pt-3 border-t border-slate-200 flex flex-col items-center gap-1.5';
-          wrap.innerHTML = '<span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tipo de Visão do Aplicativo</span><button type="button" onclick="toggleAppVisionMode(event)" class="w-full py-2 px-3 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 text-xs font-black flex items-center justify-between gap-2 cursor-pointer"><span class="flex items-center gap-2"><i class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoLoginCardVisionLabel">Visão: Branco Claro (Padrão)</span></span><span class="px-2 py-0.5 rounded bg-emerald-600/15 text-emerald-700 text-[10px] uppercase">Alternar</span></button>';
-          card.appendChild(wrap);
-        }
-      }
-      if (!document.getElementById('teimosoLoginCornerVisionBtn')) {
-        var cornerBtn = document.createElement('button');
-        cornerBtn.type = 'button';
-        cornerBtn.id = 'teimosoLoginCornerVisionBtn';
-        cornerBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
-        cornerBtn.className = 'fixed top-4 right-4 z-[130] w-11 h-11 rounded-2xl bg-white border border-slate-200 text-slate-700 shadow-lg flex items-center justify-center cursor-pointer active:scale-95';
-        cornerBtn.innerHTML = '<i id="teimosoLoginCornerVisionIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
-        cornerBtn.onclick = window.toggleAppVisionMode;
-        loginOv.appendChild(cornerBtn);
-      }
-    }
-    var soundBtn = document.getElementById('btnSoundToggle');
-    if (soundBtn && soundBtn.parentElement && !document.getElementById('teimosoHeaderVisionBtn')) {
-      var hBtn = document.createElement('button');
-      hBtn.type = 'button';
-      hBtn.id = 'teimosoHeaderVisionBtn';
-      hBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
-      hBtn.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-black flex items-center gap-1.5 shrink-0 cursor-pointer';
-      hBtn.innerHTML = '<i class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoHeaderVisionLabel" class="text-[10px] uppercase">Branco Claro</span>';
-      hBtn.onclick = window.toggleAppVisionMode;
-      soundBtn.parentElement.insertBefore(hBtn, soundBtn);
-    }
-    applyVisionMode(getVisionMode(), false);
-  }
-
-  // 2. REDIRECIONAMENTO AUTOMÁTICO PARA ABA FESTA QUANDO SORTEIO ESTIVER HABILITADO
   function isRaffleActive() {
-    return Boolean(window.partyRaffleState && window.partyRaffleState.enabled === true);
+    return Boolean(window.partyRaffleState && window.partyRaffleState.enabled);
   }
-  function enforceFestaTabIfActive(notifyUser) {
+
+  function enforceTabsAndRedirect(notifyUser) {
     var logged = Boolean(window.currentUser);
     if (document.body) document.body.classList.toggle('teimoso-festa-unlocked', logged);
-    var btn = document.getElementById('tabBtn-roulette');
-    if (btn && logged) {
-      btn.classList.remove('hidden');
-      btn.style.display = 'flex';
-    }
+    var festaBtn = document.getElementById('tabBtn-roulette');
+    if (festaBtn && logged) { festaBtn.classList.remove('hidden'); festaBtn.style.display = 'flex'; }
+    var finBtn = document.getElementById('tabBtn-financial');
+    if (finBtn && logged) { finBtn.classList.remove('hidden'); finBtn.style.display = 'flex'; }
+
     if (!logged || !isRaffleActive()) return;
-    var qp = document.getElementById('quickPresenceModal');
-    if (qp && !qp.classList.contains('hidden')) {
-      qp.classList.add('hidden');
-    }
+    // Quando há sorteio habilitado, leva atletas automaticamente para a aba FESTA
     var sec = document.getElementById('tab-roulette');
-    if (sec && sec.classList.contains('hidden') && typeof window.switchTab === 'function') {
+    if (sec && sec.classList.contains('hidden') && !window.isAdmin && typeof window.switchTab === 'function') {
       window.switchTab('roulette');
       if (notifyUser) showRaffleBanner('Sorteio em andamento! Você foi direcionado para a aba FESTA.');
     }
   }
 
-  // 3. ABA FESTA: HABILITAR/GIRAR/ENCERRAR, EDITAR FAMÍLIA E ORDEM INVERSA
-  function getLoggedAthlete() {
-    if (!window.currentUser || !Array.isArray(window.athletes)) return null;
-    var byId = window.athletes.find(function(a) { return Number(a.id) === Number(window.currentUser.id); });
-    if (byId) return byId;
-    var uNorm = normStr(window.currentUser.name);
-    return window.athletes.find(function(a) { return normStr(a.name) === uNorm; }) || null;
+  function enforceFinancialReadOnlyForAthletes() {
+    if (!window.currentUser) return;
+    var finBtn = document.getElementById('tabBtn-financial');
+    if (finBtn) {
+      finBtn.classList.remove('hidden');
+      finBtn.style.display = 'flex';
+      finBtn.style.visibility = 'visible';
+    }
+    var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
+    if (canEdit) return;
+    var finSec = document.getElementById('tab-financial');
+    if (!finSec) return;
+    finSec.querySelectorAll('input, select, textarea').forEach(function(el) {
+      var idLow = String(el.id || '').toLowerCase();
+      var phLow = String(el.placeholder || '').toLowerCase();
+      var isSearchOrFilter = (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
+      if (!isSearchOrFilter) {
+        el.disabled = true;
+        el.readOnly = true;
+        el.classList.add('opacity-75', 'cursor-not-allowed');
+      }
+    });
+    finSec.querySelectorAll('button').forEach(function(b) {
+      var oc = String(b.getAttribute('onclick') || '');
+      var isAllowed = (oc.indexOf('toggleFinancialAccordion') !== -1 || oc.indexOf('filterFinancial') !== -1 || oc.indexOf('setFinancialFilter') !== -1 || oc.indexOf('export') !== -1);
+      if (!isAllowed && oc && /(pay|save|delete|remove|fine|exempt|update|quitar|estornar|toggleAlways|mark|settle|add|edit)/i.test(oc)) {
+        b.style.display = 'none';
+        b.disabled = true;
+      }
+    });
   }
-  function isMyFamilyItem(item) {
+
+  // ===========================================================================
+  // 3. MOTOR DA ROLETA DA FESTA EM TEMPO REAL
+  // ===========================================================================
+  function getLoggedAthleteObj() {
+    if (!window.currentUser || !Array.isArray(window.athletes)) return null;
+    var ath = window.athletes.find(function(a) { return Number(a.id) === Number(window.currentUser.id); });
+    if (!ath && window.currentUser.name) {
+      var uNorm = normStr(window.currentUser.name);
+      ath = window.athletes.find(function(a) { return normStr(a.name) === uNorm; });
+    }
+    return ath || null;
+  }
+
+  function isMyFamily(item) {
     if (!window.currentUser) return false;
     if (window.currentUser.id && Number(item.athleteId) === Number(window.currentUser.id)) return true;
-    return Boolean(window.currentUser.name && normStr(item.athleteName) === normStr(window.currentUser.name));
+    if (window.currentUser.name && normStr(item.athleteName) === normStr(window.currentUser.name)) return true;
+    return false;
   }
-  function getAllFamilyParticipants() {
+
+  function getAllFamilyEntries() {
     var list = [];
-    (Array.isArray(window.athletes) ? window.athletes : []).forEach(function(a) {
+    var athletes = Array.isArray(window.athletes) ? window.athletes : [];
+    athletes.forEach(function(a) {
       if (!a || !a.family) return;
       if (a.family.wife && a.family.wife.name && String(a.family.wife.name).trim()) {
-        var wn = String(a.family.wife.name).trim();
-        list.push({ key: a.id + '_wife_' + normStr(wn), name: wn, relation: 'Esposa', athleteId: a.id, athleteName: a.name || 'Atleta' });
+        var wName = String(a.family.wife.name).trim();
+        list.push({ key: a.id + '_wife_' + normStr(wName), name: wName, relation: 'Esposa', athleteId: a.id, athleteName: a.name || 'Atleta' });
       }
       if (Array.isArray(a.family.children)) {
         a.family.children.forEach(function(c, idx) {
           if (c && c.name && String(c.name).trim()) {
-            var cn = String(c.name).trim();
-            list.push({ key: a.id + '_child_' + idx + '_' + normStr(cn), name: cn, relation: 'Filho(a)', athleteId: a.id, athleteName: a.name || 'Atleta' });
+            var cName = String(c.name).trim();
+            list.push({ key: a.id + '_child_' + idx + '_' + normStr(cName), name: cName, relation: 'Filho(a)', athleteId: a.id, athleteName: a.name || 'Atleta' });
           }
         });
       }
     });
     return list;
   }
+
+  function syncRouletteStageFromRemote(remote) {
+    if (localSpinLock) return;
+    var track = document.getElementById('rouletteTrack');
+    var resInfo = document.getElementById('rouletteResultInfo');
+    var athNameEl = document.getElementById('rouletteAthleteName');
+    if (!track) return;
+    track.style.transition = 'none';
+    track.style.transform = 'translateY(0px)';
+    if (!remote || !remote.enabled) {
+      if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
+      track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>';
+      return;
+    }
+    if (remote.spinning) {
+      if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
+      track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>';
+      return;
+    }
+    if (remote.currentWinner && remote.currentWinner.name) {
+      track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full px-3"><span class="text-emerald-600 font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + remote.currentWinner.name + '</span><span class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">' + remote.currentWinner.relation + ' de ' + remote.currentWinner.athleteName + '</span></div>';
+      if (athNameEl) athNameEl.textContent = remote.currentWinner.athleteName + ' (' + remote.currentWinner.relation + ')';
+      if (resInfo) { resInfo.classList.remove('opacity-0', 'scale-95'); resInfo.classList.add('opacity-100', 'scale-100'); }
+      return;
+    }
+    if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
+    track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR!</span></div>';
+  }
+
   function renderPartyRaffleUnified() {
+    enforceTabsAndRedirect(false);
     if (!window.partyRaffleState || typeof window.partyRaffleState !== 'object') {
-      window.partyRaffleState = { enabled: false, drawn: [] };
+      window.partyRaffleState = { enabled: false, spinning: false, currentWinner: null, drawn: [] };
     }
     if (!Array.isArray(window.partyRaffleState.drawn)) window.partyRaffleState.drawn = [];
+
     var enabled = Boolean(window.partyRaffleState.enabled);
+    var spinning = Boolean(window.partyRaffleState.spinning || localSpinLock);
     var drawn = window.partyRaffleState.drawn;
     var isAdm = Boolean(window.isAdmin);
+
+    var allEntries = getAllFamilyEntries();
     var drawnKeys = new Set(drawn.map(function(d) { return d.key; }));
-    var available = getAllFamilyParticipants().filter(function(item) { return !drawnKeys.has(item.key); });
+    var available = allEntries.filter(function(item) { return !drawnKeys.has(item.key); });
+
     available.sort(function(a, b) {
-      var am = isMyFamilyItem(a) ? 0 : 1;
-      var bm = isMyFamilyItem(b) ? 0 : 1;
-      if (am !== bm) return am - bm;
+      var aMine = isMyFamily(a) ? 0 : 1;
+      var bMine = isMyFamily(b) ? 0 : 1;
+      if (aMine !== bMine) return aMine - bMine;
       return String(a.athleteName).localeCompare(String(b.athleteName)) || String(a.name).localeCompare(String(b.name));
     });
-    var badge = document.getElementById('partyRaffleStatusBadge');
-    if (badge) {
-      badge.className = enabled ? 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300' : 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
-      badge.innerHTML = enabled ? '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado' : '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
+
+    var statusBadge = document.getElementById('partyRaffleStatusBadge');
+    if (statusBadge) {
+      if (enabled) {
+        statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+        statusBadge.innerHTML = '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado';
+      } else {
+        statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
+        statusBadge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
+      }
     }
-    var btnFam = document.getElementById('btnEditMyFamilyParty');
-    if (btnFam) {
-      btnFam.disabled = enabled;
-      btnFam.className = enabled ? 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2' : 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2';
+
+    var btnEditFam = document.getElementById('btnEditMyFamilyParty');
+    if (btnEditFam) {
+      btnEditFam.disabled = enabled;
+      btnEditFam.className = enabled
+        ? 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2'
+        : 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2 cursor-pointer';
     }
+
     var btnToggle = document.getElementById('btnTogglePartyRaffleAdmin');
     var lblToggle = document.getElementById('labelTogglePartyRaffleAdmin');
     var btnSpin = document.getElementById('btnStartRoulette');
+
     if (btnToggle) {
-      btnToggle.style.display = isAdm ? 'inline-flex' : 'none';
       if (isAdm) {
         btnToggle.classList.remove('hidden');
-        btnToggle.className = enabled ? 'px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2' : 'px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2';
+        btnToggle.style.display = 'inline-flex';
+        btnToggle.className = enabled
+          ? 'px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer'
+          : 'px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer';
         if (lblToggle) lblToggle.textContent = enabled ? 'Encerrar / Desabilitar Sorteio' : 'Habilitar Sorteio';
+      } else {
+        btnToggle.classList.add('hidden');
+        btnToggle.style.display = 'none';
       }
     }
+
     if (btnSpin) {
-      btnSpin.style.display = isAdm ? 'inline-flex' : 'none';
       if (isAdm) {
         btnSpin.classList.remove('hidden');
-        var canSpin = enabled && available.length > 0 && !partySpinning;
+        btnSpin.style.display = 'inline-flex';
+        var canSpin = enabled && available.length > 0 && !spinning;
         btnSpin.disabled = !canSpin;
-        btnSpin.className = canSpin ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2' : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
+        btnSpin.className = canSpin
+          ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2 cursor-pointer'
+          : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
+      } else {
+        btnSpin.classList.add('hidden');
+        btnSpin.style.display = 'none';
       }
     }
+
     var countEl = document.getElementById('rouletteParticipantCount');
     if (countEl) countEl.textContent = String(available.length);
+
     var gridEl = document.getElementById('rouletteParticipantsGrid');
     if (gridEl) {
-      gridEl.innerHTML = available.length === 0 ? '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>' : available.map(function(p) {
-        if (isMyFamilyItem(p)) {
-          return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + p.name + '</span><span class="text-[10px] font-bold text-emerald-800">(' + p.relation + ' &bull; ' + p.athleteName + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>';
-        }
-        return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + p.name + '</span><span class="text-[10px] text-slate-400">(' + p.relation + ' &bull; ' + p.athleteName + ')</span></div>';
-      }).join('');
+      if (available.length === 0) {
+        gridEl.innerHTML = '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>';
+      } else {
+        gridEl.innerHTML = available.map(function(p) {
+          if (isMyFamily(p)) {
+            return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + p.name + '</span><span class="text-[10px] font-bold text-emerald-800">(' + p.relation + ' &bull; ' + p.athleteName + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>';
+          }
+          return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + p.name + '</span><span class="text-[10px] text-slate-400">(' + p.relation + ' &bull; ' + p.athleteName + ')</span></div>';
+        }).join('');
+      }
     }
+
     var drawnCountEl = document.getElementById('rouletteDrawnCount');
     if (drawnCountEl) drawnCountEl.textContent = String(drawn.length);
+
     var drawnListEl = document.getElementById('rouletteDrawnList');
     if (drawnListEl) {
       if (drawn.length === 0) {
         drawnListEl.innerHTML = '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>';
       } else {
-        var rev = drawn.map(function(w, idx) { return { data: w, num: idx + 1 }; }).reverse();
-        drawnListEl.innerHTML = rev.map(function(it, rIdx) {
-          var w = it.data;
-          var latest = (rIdx === 0);
-          var boxCls = latest ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200';
-          var bdgCls = latest ? 'bg-emerald-600' : 'bg-amber-500';
-          var tag = latest ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '';
-          return '<div class="flex items-center justify-between ' + boxCls + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + bdgCls + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + it.num + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + w.name + tag + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + w.relation + ' de ' + w.athleteName + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + (w.time || '') + '</span></div>';
+        var orderedDesc = drawn.map(function(w, idx) { return { data: w, orderNum: idx + 1 }; }).reverse();
+        drawnListEl.innerHTML = orderedDesc.map(function(item, revIdx) {
+          var w = item.data;
+          var isLatest = (revIdx === 0);
+          var rowStyle = isLatest ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200';
+          var badgeStyle = isLatest ? 'bg-emerald-600' : 'bg-amber-500';
+          var latestTag = isLatest ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '';
+          return '<div class="flex items-center justify-between ' + rowStyle + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + badgeStyle + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + item.orderNum + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + w.name + latestTag + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + w.relation + ' de ' + w.athleteName + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + (w.time || '') + '</span></div>';
         }).join('');
         drawnListEl.scrollTop = 0;
       }
     }
+    syncRouletteStageFromRemote(window.partyRaffleState);
+  }
+
+  window.__teimosoOnRemotePartyUpdate = function(remote) {
+    enforceTabsAndRedirect(true);
+    renderPartyRaffleUnified();
+  };
+
+  function saveRaffleStateCloud() {
+    if (typeof window.__teimosoSavePartyRaffleLive === 'function') {
+      window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
+    }
   }
 
   function togglePartyRaffleUnified() {
-    if (!window.isAdmin || partySpinning) return;
-    var nextEnabled = !(window.partyRaffleState && window.partyRaffleState.enabled);
-    window.partyRaffleState = { enabled: nextEnabled, drawn: [] };
-    if (typeof window.syncSpecificData === 'function') {
-      window.syncSpecificData({ partyRaffleState: window.partyRaffleState });
+    if (!window.isAdmin) {
+      if (typeof window.showToast === 'function') window.showToast('Apenas administradores podem controlar o sorteio.', 'error');
+      return;
     }
+    if (localSpinLock) return;
+    var willEnable = !(window.partyRaffleState && window.partyRaffleState.enabled);
+    window.partyRaffleState = { enabled: willEnable, spinning: false, currentWinner: null, drawn: [] };
+    saveRaffleStateCloud();
     renderPartyRaffleUnified();
     if (typeof window.showToast === 'function') {
-      window.showToast(nextEnabled ? 'Sorteio habilitado! Todos os atletas foram direcionados para a aba FESTA.' : 'Sorteio encerrado! Todos os nomes voltaram para a urna.', 'success');
+      window.showToast(willEnable ? 'Sorteio habilitado em tempo real!' : 'Sorteio encerrado! Todos os nomes voltaram para a urna.', 'success');
     }
   }
 
   function startPartyRouletteUnified() {
-    if (!window.isAdmin || partySpinning || !isRaffleActive()) return;
+    if (!window.isAdmin || localSpinLock) return;
+    if (!window.partyRaffleState || !window.partyRaffleState.enabled) {
+      if (typeof window.showToast === 'function') window.showToast('Habilite o sorteio primeiro.', 'error');
+      return;
+    }
     var drawn = Array.isArray(window.partyRaffleState.drawn) ? window.partyRaffleState.drawn : [];
     var drawnKeys = new Set(drawn.map(function(d) { return d.key; }));
-    var available = getAllFamilyParticipants().filter(function(p) { return !drawnKeys.has(p.key); });
-    if (available.length === 0) return;
-    partySpinning = true;
+    var available = getAllFamilyEntries().filter(function(item) { return !drawnKeys.has(item.key); });
+    if (available.length === 0) {
+      if (typeof window.showToast === 'function') window.showToast('Todos os familiares já foram sorteados nesta rodada!', 'info');
+      return;
+    }
+
+    localSpinLock = true;
+    window.partyRaffleState.spinning = true;
+    saveRaffleStateCloud();
     renderPartyRaffleUnified();
+
     var winner = available[Math.floor(Math.random() * available.length)];
     var track = document.getElementById('rouletteTrack');
-    var box = document.getElementById('rouletteDisplayBox');
-    var slotH = box ? box.clientHeight : 112;
-    var items = [];
-    for (var i = 0; i < 26; i++) items.push(available[Math.floor(Math.random() * available.length)]);
-    items.push(winner);
+    var displayBox = document.getElementById('rouletteDisplayBox');
+    var resInfo = document.getElementById('rouletteResultInfo');
+    var athNameEl = document.getElementById('rouletteAthleteName');
+    if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
+
+    var spinItems = [];
+    for (var i = 0; i < 24; i++) spinItems.push(available[Math.floor(Math.random() * available.length)]);
+    spinItems.push(winner);
+
+    var slotHeight = displayBox ? displayBox.clientHeight : 112;
     if (track) {
       track.style.transition = 'none';
       track.style.transform = 'translateY(0px)';
-      track.innerHTML = items.map(function(it, idx) {
-        var c = (idx === items.length - 1) ? 'text-emerald-600' : 'text-slate-700';
-        return '<div style="height:' + slotH + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + c + ' font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + it.name + '</span><span class="text-[11px] font-bold text-slate-400 uppercase">' + it.relation + ' de ' + it.athleteName + '</span></div>';
+      track.innerHTML = spinItems.map(function(item, idx) {
+        var txtColor = (idx === spinItems.length - 1) ? 'text-emerald-600' : 'text-slate-700';
+        return '<div style="height:' + slotHeight + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + txtColor + ' font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + item.name + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + item.relation + ' de ' + item.athleteName + '</span></div>';
       }).join('');
       void track.offsetHeight;
-      track.style.transition = 'transform 3.1s cubic-bezier(0.12, 0.85, 0.18, 1)';
-      track.style.transform = 'translateY(-' + ((items.length - 1) * slotH) + 'px)';
+      track.style.transition = 'transform 2.6s cubic-bezier(0.12, 0.85, 0.18, 1)';
+      track.style.transform = 'translateY(-' + ((spinItems.length - 1) * slotHeight) + 'px)';
     }
+
     setTimeout(function() {
-      partySpinning = false;
+      localSpinLock = false;
       var nowStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      window.partyRaffleState.drawn.push({ key: winner.key, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, time: nowStr });
-      var info = document.getElementById('rouletteResultInfo');
-      var athEl = document.getElementById('rouletteAthleteName');
-      if (athEl) athEl.textContent = winner.athleteName + ' (' + winner.relation + ')';
-      if (info) { info.classList.remove('opacity-0', 'scale-95'); info.classList.add('opacity-100', 'scale-100'); }
+      var winnerObj = { key: winner.key, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, time: nowStr };
+      window.partyRaffleState.spinning = false;
+      window.partyRaffleState.currentWinner = winnerObj;
+      window.partyRaffleState.drawn.push(winnerObj);
+      if (athNameEl) athNameEl.textContent = winner.athleteName + ' (' + winner.relation + ')';
+      if (resInfo) { resInfo.classList.remove('opacity-0', 'scale-95'); resInfo.classList.add('opacity-100', 'scale-100'); }
       if (typeof window.playAppSound === 'function') window.playAppSound('confirm');
-      if (typeof window.syncSpecificData === 'function') window.syncSpecificData({ partyRaffleState: window.partyRaffleState });
+      saveRaffleStateCloud();
       renderPartyRaffleUnified();
-    }, 3200);
+    }, 2700);
   }
 
   function openMyFamilyEditorUnified() {
-    if (isRaffleActive()) return;
-    var ath = getLoggedAthlete();
+    if (isRaffleActive()) {
+      if (typeof window.showToast === 'function') window.showToast('Edição bloqueada durante o sorteio em andamento.', 'error');
+      return;
+    }
+    var athlete = getLoggedAthleteObj();
     var modal = document.getElementById('familyDataModal');
     var content = document.getElementById('familyDataContent');
     if (!modal) return;
@@ -8302,21 +8612,21 @@
     var wDay = document.getElementById('promptWifeDay');
     var wMonth = document.getElementById('promptWifeMonth');
     var cCont = document.getElementById('promptChildrenContainer');
-    if (wName) wName.value = (ath && ath.family && ath.family.wife && ath.family.wife.name) || '';
-    if (wDay) wDay.value = (ath && ath.family && ath.family.wife && ath.family.wife.birthDay) || '';
-    if (wMonth) wMonth.value = (ath && ath.family && ath.family.wife && ath.family.wife.birthMonth) || '';
+    if (wName) wName.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.name) ? athlete.family.wife.name : '';
+    if (wDay) wDay.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.birthDay) ? athlete.family.wife.birthDay : '';
+    if (wMonth) wMonth.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.birthMonth) ? athlete.family.wife.birthMonth : '';
     if (cCont) {
       cCont.innerHTML = '';
-      var kids = (ath && ath.family && Array.isArray(ath.family.children)) ? ath.family.children : [];
+      var kids = (athlete && athlete.family && Array.isArray(athlete.family.children)) ? athlete.family.children : [];
       if (kids.length > 0 && typeof window.addPromptChildRow === 'function') {
         kids.forEach(function(k) {
           window.addPromptChildRow();
-          var row = cCont.lastElementChild;
-          if (row) {
-            var ins = row.querySelectorAll('input');
-            var sel = row.querySelector('select');
-            if (ins[0]) ins[0].value = k.name || '';
-            if (ins[1]) ins[1].value = k.birthDay || '';
+          var lastRow = cCont.lastElementChild;
+          if (lastRow) {
+            var inputs = lastRow.querySelectorAll('input');
+            var sel = lastRow.querySelector('select');
+            if (inputs[0]) inputs[0].value = k.name || '';
+            if (inputs[1]) inputs[1].value = k.birthDay || '';
             if (sel) sel.value = k.birthMonth || '';
           }
         });
@@ -8324,97 +8634,141 @@
         window.addPromptChildRow();
       }
     }
-    modal.classList.remove('hidden'); modal.classList.add('flex');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     setTimeout(function() {
-      modal.classList.remove('opacity-0'); modal.classList.add('opacity-100');
+      modal.classList.remove('opacity-0');
+      modal.classList.add('opacity-100');
       if (content) { content.classList.remove('scale-95'); content.classList.add('scale-100'); }
     }, 20);
   }
 
-  // 4. ISENÇÃO DE MENSALIDADES ISOLADA POR ATLETA (SEM ALTERAR OS DEMAIS)
-  function installExemptIsolation() {
-    var origSaveAthlete = window.saveAthlete;
-    if (typeof origSaveAthlete !== 'function' || origSaveAthlete._exemptIsolated) return;
-    var wrappedSaveAthlete = function() {
-      var editIdRaw = (document.getElementById('editAthleteId') || {}).value;
-      var chk = document.getElementById('athleteExemptMonthlyCheckbox');
-      var isExempt = Boolean(chk && chk.checked);
-      var targetId = editIdRaw ? parseInt(editIdRaw, 10) : null;
-      var res = origSaveAthlete.apply(this, arguments);
-      if (!targetId && Array.isArray(window.athletes) && window.athletes.length > 0) {
-        targetId = window.athletes[window.athletes.length - 1].id;
-      }
-      if (targetId && Array.isArray(window.athletes)) {
-        window.athletes = window.athletes.map(function(a) {
-          if (Number(a.id) !== Number(targetId)) return a;
-          return Object.assign({}, a, { isExemptMonthlyFee: isExempt, monthlyFee: isExempt ? 0 : (Number(a.monthlyFee) || 110) });
-        });
-        if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
-        window.alwaysUpToDateMap[targetId] = isExempt;
-        if (isExempt) {
-          if (!window.financialPayments) window.financialPayments = {};
-          var zeroed = {};
-          MONTHS_JAN_NOV.forEach(function(m) { zeroed[m] = { paid: false, amount: 0, settledAt: null }; });
-          window.financialPayments[targetId] = zeroed;
-        }
-        recentLocalWrites['ath_' + targetId] = Date.now();
-        if (typeof window.syncSpecificData === 'function') {
-          var patch = { athletesOnly: true, alwaysUpToDateMap: {} };
-          patch.alwaysUpToDateMap[targetId] = isExempt;
-          if (isExempt) { patch.financialPayments = {}; patch.financialPayments[targetId] = window.financialPayments[targetId]; }
-          window.syncSpecificData(patch);
-        }
-      }
-      return res;
-    };
-    wrappedSaveAthlete._exemptIsolated = true;
-    window.saveAthlete = wrappedSaveAthlete;
-  }
+  // ===========================================================================
+  // 4. ISENÇÃO DE MENSALIDADES ISOLADA POR ATLETA (JAN A NOV = R$ 0,00)
+  // ===========================================================================
+  window.toggleAthleteExemptMonthlyUI = function(isChecked) {
+    var feeInput = document.getElementById('athleteMonthlyFeeInput');
+    if (!feeInput) return;
+    if (isChecked) {
+      feeInput.value = 0;
+      feeInput.disabled = true;
+      feeInput.classList.add('opacity-50', 'bg-slate-100');
+    } else {
+      feeInput.value = 110;
+      feeInput.disabled = false;
+      feeInput.classList.remove('opacity-50', 'bg-slate-100');
+    }
+  };
 
-  // 5. BLINDAGEM CONTRA PRESENÇAS FANTASMAS (CLIQUE HUMANO OBRIGATÓRIO + DATAS NOVAS ZERADAS)
-  function installGhostPresenceShield() {
-    var lastHumanPointerAt = 0;
-    document.addEventListener('pointerdown', function(ev) { if (ev && ev.isTrusted) lastHumanPointerAt = Date.now(); }, true);
-    document.addEventListener('click', function(ev) { if (ev && ev.isTrusted) lastHumanPointerAt = Date.now(); }, true);
-    ['setPresenceStatus', 'updatePresenceStatus', 'togglePresenceStatus', 'handleQuickPresence', 'toggleFieldAttendance'].forEach(function(fnName) {
-      var orig = window[fnName];
-      if (typeof orig !== 'function' || orig._ghostShielded) return;
-      var wrapped = function() {
-        if ((Date.now() - lastHumanPointerAt) > 4500) {
-          console.warn('[Shield] Bloqueada confirmação automática/fantasma em ' + fnName);
-          return;
-        }
-        var out = orig.apply(this, arguments);
+  function installExemptIsolation() {
+    var feeInput = document.getElementById('athleteMonthlyFeeInput');
+    if (feeInput && !document.getElementById('athleteExemptMonthlyCheckbox')) {
+      var gridParent = feeInput.closest('.grid') || feeInput.parentElement;
+      if (gridParent && gridParent.parentElement) {
+        var wrap = document.createElement('div');
+        wrap.className = 'bg-emerald-50/80 border border-emerald-300 rounded-2xl p-3 flex items-start gap-2.5 mt-2';
+        wrap.innerHTML = '<input type="checkbox" id="athleteExemptMonthlyCheckbox" onchange="toggleAthleteExemptMonthlyUI(this.checked)" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-0 cursor-pointer">' +
+          '<label for="athleteExemptMonthlyCheckbox" class="cursor-pointer flex-1">' +
+            '<span class="block text-xs font-black uppercase text-emerald-800"><i class="fa-solid fa-shield-heart text-emerald-600 mr-1"></i> Isento de Mensalidades (Jan a Nov = R$ 0,00)</span>' +
+            '<span class="block text-[10px] text-emerald-700 font-medium leading-snug mt-0.5">Zera mensalidade e parcelas de Jan a Nov apenas deste atleta, mantendo os demais intactos.</span>' +
+          '</label>';
+        gridParent.parentElement.insertBefore(wrap, gridParent.nextSibling);
+      }
+    }
+
+    if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal.__teimosoWrapped) {
+      var origOpenEdit = window.openEditAthleteModal;
+      window.openEditAthleteModal = function(id) {
+        var res = origOpenEdit.apply(this, arguments);
+        setTimeout(function() {
+          var ath = Array.isArray(window.athletes) ? window.athletes.find(function(a) { return Number(a.id) === Number(id); }) : null;
+          var isEx = Boolean(ath && (ath.isExemptMonthlyFee || (window.alwaysUpToDateMap && window.alwaysUpToDateMap[ath.id]) || Number(ath.monthlyFee) === 0));
+          var chk = document.getElementById('athleteExemptMonthlyCheckbox');
+          if (chk) chk.checked = isEx;
+          window.toggleAthleteExemptMonthlyUI(isEx);
+          var fi = document.getElementById('athleteMonthlyFeeInput');
+          if (fi && !isEx && ath) fi.value = (ath.monthlyFee != null ? ath.monthlyFee : 110);
+        }, 30);
+        return res;
+      };
+      window.openEditAthleteModal.__teimosoWrapped = true;
+    }
+
+    if (typeof window.saveAthlete === 'function' && !window.saveAthlete.__teimosoWrapped) {
+      var origSaveAth = window.saveAthlete;
+      window.saveAthlete = function() {
+        var editIdEl = document.getElementById('editAthleteId');
+        var targetId = editIdEl && editIdEl.value ? parseInt(editIdEl.value, 10) : null;
+        var chk = document.getElementById('athleteExemptMonthlyCheckbox');
+        var isEx = Boolean(chk && chk.checked);
+        var res = origSaveAth.apply(this, arguments);
         try {
-          var dKey = window.currentDate;
-          var aId = arguments[0];
-          if (dKey && aId && window.presences && window.presences[dKey] && window.presences[dKey][aId]) {
-            window.presences[dKey][aId].verifiedHuman = true;
-            window.presences[dKey][aId].actorId = window.currentUser ? window.currentUser.id : null;
-            window.presences[dKey][aId].actorName = window.currentUser ? window.currentUser.name : 'Usuário';
-            window.presences[dKey][aId].verifiedAt = new Date().toISOString();
+          if (!targetId && Array.isArray(window.athletes) && window.athletes.length > 0) {
+            targetId = window.athletes[window.athletes.length - 1].id;
           }
-        } catch (e) {}
-        return out;
+          if (targetId && Array.isArray(window.athletes)) {
+            var ath = window.athletes.find(function(a) { return Number(a.id) === Number(targetId); });
+            if (ath) {
+              ath.isExemptMonthlyFee = isEx;
+              if (isEx) ath.monthlyFee = 0;
+            }
+            if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
+            window.alwaysUpToDateMap[targetId] = isEx;
+            if (isEx) {
+              if (!window.financialPayments) window.financialPayments = {};
+              if (!window.financialPayments[targetId]) window.financialPayments[targetId] = {};
+              MONTHS_JAN_NOV.forEach(function(mKey) {
+                window.financialPayments[targetId][mKey] = { paid: false, amount: 0, settledAt: null };
+              });
+            }
+            if (typeof window.saveData === 'function') window.saveData();
+          }
+        } catch (eEx) {}
+        return res;
       };
-      wrapped._ghostShielded = true;
-      window[fnName] = wrapped;
-    });
-    var origAddDate = window.addNewDate;
-    if (typeof origAddDate === 'function' && !origAddDate._ghostShielded) {
-      var wrappedDate = function() {
-        var prev = new Set(Array.isArray(window.datesList) ? window.datesList : []);
-        var r = origAddDate.apply(this, arguments);
-        if (Array.isArray(window.datesList) && window.presences) {
-          window.datesList.forEach(function(dt) { if (!prev.has(dt)) window.presences[dt] = {}; });
-        }
-        return r;
-      };
-      wrappedDate._ghostShielded = true;
-      window.addNewDate = wrappedDate;
+      window.saveAthlete.__teimosoWrapped = true;
     }
   }
 
+  // ===========================================================================
+  // 5. BLINDAGEM CONTRA PRESENÇAS FANTASMAS (CLIQUE HUMANO REAL)
+  // ===========================================================================
+  ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
+    document.addEventListener(evtName, function(e) {
+      if (e && e.isTrusted) lastTrustedHumanMs = Date.now();
+    }, true);
+  });
+
+  function installGhostPresenceShield() {
+    ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence'].forEach(function(fnName) {
+      if (typeof window[fnName] === 'function' && !window[fnName].__ghostShielded) {
+        var origFn = window[fnName];
+        window[fnName] = function(athleteId, newStatus) {
+          var elapsed = Date.now() - lastTrustedHumanMs;
+          if (newStatus === 'CONFIRMADO' && elapsed > 2500) {
+            console.warn('Bloqueada tentativa automática de presença fantasma para atleta:', athleteId);
+            return;
+          }
+          var res = origFn.apply(this, arguments);
+          try {
+            if (window.presences && window.currentDate && window.presences[window.currentDate] && window.presences[window.currentDate][athleteId]) {
+              var rec = window.presences[window.currentDate][athleteId];
+              rec.verifiedHuman = true;
+              rec.actorId = window.currentUser ? window.currentUser.id : null;
+              rec.actorName = window.currentUser ? window.currentUser.name : 'Sistema';
+              rec.verifiedAt = new Date().toISOString();
+            }
+          } catch (eSh) {}
+          return res;
+        };
+        window[fnName].__ghostShielded = true;
+      }
+    });
+  }
+
+  // ===========================================================================
+  // 6. INSTALAÇÃO E VIGILÂNCIA CONTÍNUA
+  // ===========================================================================
   function installAllRuntimePatches() {
     window.renderPartyRaffleUI = renderPartyRaffleUnified;
     window.togglePartyRaffleSession = togglePartyRaffleUnified;
@@ -8423,30 +8777,39 @@
     installExemptIsolation();
     installGhostPresenceShield();
     ensureVisionSwitchers();
-    enforceFestaTabIfActive(false);
+    enforceTabsAndRedirect(false);
+    enforceFinancialReadOnlyForAthletes();
   }
 
-  installAllRuntimePatches();
-  document.addEventListener('DOMContentLoaded', installAllRuntimePatches);
+  document.addEventListener('click', function(ev) {
+    var target = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, #tabBtn-financial, #btnTogglePartyRaffleAdmin, #btnStartRoulette, #btnEditMyFamilyParty') : null;
+    if (target) {
+      installAllRuntimePatches();
+      if (target.id === 'tabBtn-roulette') setTimeout(renderPartyRaffleUnified, 60);
+      if (target.id === 'tabBtn-financial') setTimeout(enforceFinancialReadOnlyForAthletes, 80);
+    }
+    var famBtn = ev.target && ev.target.closest ? ev.target.closest('#familyDataModal button') : null;
+    if (famBtn) setTimeout(renderPartyRaffleUnified, 350);
+  }, true);
+
+  document.addEventListener('DOMContentLoaded', function() {
+    installAllRuntimePatches();
+    renderPartyRaffleUnified();
+  });
   window.addEventListener('load', function() {
     installAllRuntimePatches();
     renderPartyRaffleUnified();
   });
 
-  var prevRaffleEnabled = false;
   setInterval(function() {
-    installAllRuntimePatches();
-    var nowEnabled = isRaffleActive();
-    if (nowEnabled && !prevRaffleEnabled) {
-      enforceFestaTabIfActive(true);
-      renderPartyRaffleUnified();
-    } else if (nowEnabled) {
-      enforceFestaTabIfActive(false);
-    }
-    prevRaffleEnabled = nowEnabled;
-  }, 700);
+    ensureVisionSwitchers();
+    enforceTabsAndRedirect(false);
+    enforceFinancialReadOnlyForAthletes();
+    installExemptIsolation();
+    installGhostPresenceShield();
+  }, 1000);
 })();
 </script>
-<!-- TEIMOSO_SAFE_PATCH_V4_END -->
+<!-- TEIMOSO_SAFE_PATCH_V5_END -->
 </body>
 </html>
