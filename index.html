@@ -446,7 +446,7 @@
             </div>
           </button>
 
-          <button onclick="switchTab('roulette')" id="tabBtn-roulette" class="hidden nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-white text-slate-700 hover:bg-sky-50 hover:border-sky-300 border border-slate-200 shadow-sm">
+          <button onclick="switchTab('roulette')" id="tabBtn-roulette" class=" nav-tab-btn group p-2 sm:p-2.5 rounded-2xl text-xs font-bold transition-all flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-white text-slate-700 hover:bg-sky-50 hover:border-sky-300 border border-slate-200 shadow-sm">
             <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-xs sm:text-sm shrink-0">
               <i class="fa-solid fa-gift"></i>
             </span>
@@ -1157,7 +1157,7 @@
       </section>
 
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
-            <section id="tab-roulette" class="hidden space-y-6">
+                  <section id="tab-roulette" class="hidden space-y-6">
         <div class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -1171,10 +1171,13 @@
             <p class="text-xs text-slate-500 mt-1">Sorteio exclusivo para <strong>familiares (esposas e filhos)</strong> cadastrados. Quem já foi sorteado sai da urna até o encerramento do sorteio.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
-            <button onclick="togglePartyRaffleSession()" id="btnTogglePartyRaffleAdmin" class="px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2">
+            <button onclick="openMyFamilyEditorFromParty()" id="btnEditMyFamilyParty" class="px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2">
+              <i class="fa-solid fa-people-roof"></i> EDITAR FAMÍLIA
+            </button>
+            <button onclick="togglePartyRaffleSession()" id="btnTogglePartyRaffleAdmin" class="hidden px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 items-center gap-2">
               <i class="fa-solid fa-power-off"></i> <span id="labelTogglePartyRaffleAdmin">Habilitar Sorteio</span>
             </button>
-            <button onclick="startPartyRoulette()" id="btnStartRoulette" disabled class="px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest flex items-center gap-2">
+            <button onclick="startPartyRoulette()" id="btnStartRoulette" disabled class="hidden px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest items-center gap-2">
               <i class="fa-solid fa-rotate"></i> Girar a Roleta
             </button>
           </div>
