@@ -7543,69 +7543,98 @@
 </style>
 <script type="module">
   import { getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
   try {
-    if (!window.__TEIMOSO_PREVIEW_SIM__) {
-      const fbApp = getApps().length > 0 ? getApps()[0] : initializeApp({
-        apiKey: 'AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ',
-        authDomain: 'teimosoweb.firebaseapp.com',
-        projectId: 'teimosoweb',
-        storageBucket: 'teimosoweb.firebasestorage.app',
-        messagingSenderId: '90879285758',
-        appId: '1:90879285758:web:ef602bfe90c131e0f808af'
+    const fbApp = getApps().length > 0 ? getApps()[0] : initializeApp({
+      apiKey: 'AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ',
+      authDomain: 'teimosoweb.firebaseapp.com',
+      projectId: 'teimosoweb',
+      storageBucket: 'teimosoweb.firebasestorage.app',
+      messagingSenderId: '90879285758',
+      appId: '1:90879285758:web:ef602bfe90c131e0f808af'
+    });
+    const fbDb = getFirestore(fbApp);
+    const festaDocRef = doc(fbDb, 'teimoso_config', 'festa_sorteio');
+    const mainDocRef = doc(fbDb, 'teimoso_config', 'dados_gerais');
+    let lastAppliedTs = 0;
+    let localWriteQueue = Promise.resolve();
+    window.__recentLocalMutations = window.__recentLocalMutations || {};
+    window.__markLocalMutation = function(pathKey) {
+      if (!pathKey) return;
+      window.__recentLocalMutations[pathKey] = Date.now() + 2500;
+    };
+    window.__isProtectedByRecentLocalWrite = function(pathKey) {
+      const exp = window.__recentLocalMutations && window.__recentLocalMutations[pathKey];
+      return Boolean(exp && exp > Date.now());
+    };
+    window.__enqueueAtomicDotPatch = function(dotMap, fallbackMergeObj) {
+      if (!dotMap || Object.keys(dotMap).length === 0) return Promise.resolve();
+      dotMap.updatedAt = new Date().toISOString();
+      localWriteQueue = localWriteQueue.then(async function() {
+        try {
+          await updateDoc(mainDocRef, dotMap);
+        } catch (errDot) {
+          if (fallbackMergeObj && typeof fallbackMergeObj === 'object') {
+            fallbackMergeObj.updatedAt = dotMap.updatedAt;
+            await setDoc(mainDocRef, fallbackMergeObj, { merge: true });
+          }
+        }
+      }).catch(function(e) {
+        console.warn('[Patch Festa Atomic Queue]', e);
       });
-      const fbDb = getFirestore(fbApp);
-      const festaDocRef = doc(fbDb, 'teimoso_config', 'festa_sorteio');
-      const mainDocRef = doc(fbDb, 'teimoso_config', 'dados_gerais');
-      let lastAppliedTs = 0;
-      function applyIncomingRaffleState(rawState) {
-        if (!rawState || typeof rawState !== 'object') return;
-        const ts = rawState.updatedAt ? Date.parse(rawState.updatedAt) || 0 : 0;
-        if (ts > 0 && ts < lastAppliedTs) return;
-        if (ts > 0) lastAppliedTs = ts;
-        const rawHistory = Array.isArray(rawState.drawnHistory) ? rawState.drawnHistory : (Array.isArray(rawState.drawn) ? rawState.drawn : []);
-        window.partyRaffleState = {
-          enabled: Boolean(rawState.enabled),
-          roundId: rawState.roundId || (rawState.enabled ? 'active_round' : null),
-          drawnIds: Array.isArray(rawState.drawnIds) ? rawState.drawnIds : rawHistory.map(function(h, idx) { return h.id || h.key || ('d_' + idx); }),
-          drawnHistory: rawHistory,
-          updatedAt: rawState.updatedAt || null
-        };
-        if (typeof window.__onFestaCloudUpdate === 'function') {
-          window.__onFestaCloudUpdate();
-        }
-      }
-      window.__saveFestaRaffleCloud = async function(stateObj) {
-        const payload = {
-          enabled: Boolean(stateObj.enabled),
-          roundId: stateObj.roundId || null,
-          drawnIds: Array.isArray(stateObj.drawnIds) ? stateObj.drawnIds : [],
-          drawnHistory: Array.isArray(stateObj.drawnHistory) ? stateObj.drawnHistory : [],
-          updatedAt: new Date().toISOString()
-        };
-        lastAppliedTs = Date.parse(payload.updatedAt) || Date.now();
-        await Promise.allSettled([
-          setDoc(mainDocRef, { partyRaffleState: payload }, { merge: true }).catch(function(e) { console.warn('[Patch Festa] dados_gerais:', e); }),
-          setDoc(festaDocRef, payload, { merge: true }).catch(function(e) { console.warn('[Patch Festa] festa_sorteio:', e); })
-        ]);
+      return localWriteQueue;
+    };
+    function applyIncomingRaffleState(rawState) {
+      if (!rawState || typeof rawState !== 'object') return;
+      if (window.__isProtectedByRecentLocalWrite('partyRaffleState')) return;
+      const ts = rawState.updatedAt ? Date.parse(rawState.updatedAt) || 0 : 0;
+      if (ts > 0 && ts < lastAppliedTs) return;
+      if (ts > 0) lastAppliedTs = ts;
+      const rawHistory = Array.isArray(rawState.drawnHistory) ? rawState.drawnHistory : (Array.isArray(rawState.drawn) ? rawState.drawn : []);
+      window.partyRaffleState = {
+        enabled: Boolean(rawState.enabled),
+        roundId: rawState.roundId || (rawState.enabled ? 'active_round' : null),
+        drawnIds: Array.isArray(rawState.drawnIds) ? rawState.drawnIds : rawHistory.map(function(h, idx) { return h.id || h.key || ('d_' + idx); }),
+        drawnHistory: rawHistory,
+        updatedAt: rawState.updatedAt || null
       };
-      onSnapshot(mainDocRef, function(snap) {
-        if (snap && snap.exists()) {
-          const d = snap.data() || {};
-          if (d.partyRaffleState) applyIncomingRaffleState(d.partyRaffleState);
-        }
-      }, function(err) { console.warn('[Patch Festa] onSnapshot dados_gerais:', err); });
-      onSnapshot(festaDocRef, function(snap) {
-        if (snap && snap.exists()) {
-          applyIncomingRaffleState(snap.data());
-        }
-      }, function(err) { console.warn('[Patch Festa] onSnapshot festa_sorteio:', err); });
-      getDoc(mainDocRef).then(function(snap) {
-        if (snap && snap.exists() && snap.data() && snap.data().partyRaffleState) {
-          applyIncomingRaffleState(snap.data().partyRaffleState);
-        }
-      }).catch(function() {});
+      if (typeof window.__onFestaCloudUpdate === 'function') {
+        window.__onFestaCloudUpdate();
+      }
     }
+    window.__saveFestaRaffleCloud = async function(stateObj) {
+      const payload = {
+        enabled: Boolean(stateObj.enabled),
+        roundId: stateObj.roundId || null,
+        drawnIds: Array.isArray(stateObj.drawnIds) ? stateObj.drawnIds : [],
+        drawnHistory: Array.isArray(stateObj.drawnHistory) ? stateObj.drawnHistory : [],
+        updatedAt: new Date().toISOString()
+      };
+      window.__markLocalMutation('partyRaffleState');
+      lastAppliedTs = Date.parse(payload.updatedAt) || Date.now();
+      await Promise.allSettled([
+        updateDoc(mainDocRef, { partyRaffleState: payload, updatedAt: payload.updatedAt }).catch(function() {
+          return setDoc(mainDocRef, { partyRaffleState: payload, updatedAt: payload.updatedAt }, { merge: true });
+        }),
+        setDoc(festaDocRef, payload, { merge: true }).catch(function(e) { console.warn('[Patch Festa] festa_sorteio:', e); })
+      ]);
+    };
+    onSnapshot(mainDocRef, function(snap) {
+      if (snap && snap.exists()) {
+        const d = snap.data() || {};
+        if (d.partyRaffleState) applyIncomingRaffleState(d.partyRaffleState);
+      }
+    }, function(err) { console.warn('[Patch Festa] onSnapshot dados_gerais:', err); });
+    onSnapshot(festaDocRef, function(snap) {
+      if (snap && snap.exists()) {
+        applyIncomingRaffleState(snap.data());
+      }
+    }, function(err) { console.warn('[Patch Festa] onSnapshot festa_sorteio:', err); });
+    getDoc(mainDocRef).then(function(snap) {
+      if (snap && snap.exists() && snap.data() && snap.data().partyRaffleState) {
+        applyIncomingRaffleState(snap.data().partyRaffleState);
+      }
+    }).catch(function() {});
   } catch (e) {
     console.warn('[Patch Festa Cloud] Fallback local:', e);
   }
@@ -7613,6 +7642,84 @@
 <script>
 (function() {
   try {
+    if (typeof window.syncSpecificData === 'function' && !window.syncSpecificData._teimosoAtomicWrapped) {
+      var origSyncSpecific = window.syncSpecificData;
+      var wrappedSyncSpecific = function(payloadOrKey, maybeVal) {
+        if (typeof window.__enqueueAtomicDotPatch === 'function') {
+          var obj = (typeof payloadOrKey === 'string') ? (function() { var o = {}; o[payloadOrKey] = maybeVal; return o; })() : (payloadOrKey || {});
+          var dotMap = {};
+          var hasDot = false;
+          if (obj.presences && typeof obj.presences === 'object') {
+            Object.keys(obj.presences).forEach(function(dKey) {
+              var aMap = obj.presences[dKey];
+              if (aMap && typeof aMap === 'object') {
+                Object.keys(aMap).forEach(function(aId) {
+                  dotMap['presences.' + dKey + '.' + aId] = aMap[aId];
+                  if (window.__markLocalMutation) window.__markLocalMutation('presence_' + dKey + '_' + aId);
+                  hasDot = true;
+                });
+              }
+            });
+          }
+          if (obj.absenceFines && typeof obj.absenceFines === 'object') {
+            Object.keys(obj.absenceFines).forEach(function(aId) {
+              dotMap['absenceFines.' + aId] = obj.absenceFines[aId];
+              hasDot = true;
+            });
+          }
+          if (obj.financialPayments && typeof obj.financialPayments === 'object') {
+            Object.keys(obj.financialPayments).forEach(function(aId) {
+              var mMap = obj.financialPayments[aId];
+              if (mMap && typeof mMap === 'object') {
+                Object.keys(mMap).forEach(function(mKey) {
+                  dotMap['financialPayments.' + aId + '.' + mKey] = mMap[mKey];
+                  if (window.__markLocalMutation) window.__markLocalMutation('fin_' + aId + '_' + mKey);
+                  hasDot = true;
+                });
+              }
+            });
+          }
+          if (obj.alwaysUpToDateMap && typeof obj.alwaysUpToDateMap === 'object') {
+            Object.keys(obj.alwaysUpToDateMap).forEach(function(aId) {
+              dotMap['alwaysUpToDateMap.' + aId] = obj.alwaysUpToDateMap[aId];
+              hasDot = true;
+            });
+          }
+          if (obj.peladaGoals && typeof obj.peladaGoals === 'object') {
+            Object.keys(obj.peladaGoals).forEach(function(dKey) {
+              var gMap = obj.peladaGoals[dKey];
+              if (gMap && typeof gMap === 'object') {
+                Object.keys(gMap).forEach(function(aId) {
+                  dotMap['peladaGoals.' + dKey + '.' + aId] = gMap[aId];
+                  hasDot = true;
+                });
+              }
+            });
+          }
+          if (obj.peladaPolls && typeof obj.peladaPolls === 'object') {
+            Object.keys(obj.peladaPolls).forEach(function(dKey) {
+              var pObj = obj.peladaPolls[dKey];
+              if (pObj && pObj.votes && typeof pObj.votes === 'object') {
+                Object.keys(pObj.votes).forEach(function(vId) {
+                  dotMap['peladaPolls.' + dKey + '.votes.' + vId] = pObj.votes[vId];
+                  hasDot = true;
+                });
+              }
+            });
+          }
+          if (obj.partyRaffleState) {
+            dotMap.partyRaffleState = obj.partyRaffleState;
+            hasDot = true;
+          }
+          if (hasDot) {
+            return window.__enqueueAtomicDotPatch(dotMap, obj);
+          }
+        }
+        return origSyncSpecific.apply(this, arguments);
+      };
+      wrappedSyncSpecific._teimosoAtomicWrapped = true;
+      window.syncSpecificData = wrappedSyncSpecific;
+    }
     function normStr(val) {
       return String(val || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
@@ -8299,7 +8406,7 @@
         lastRenderedHash = currentHash;
         renderPartyRaffleSafe();
       }
-    }, 500);
+    }, 1200);
   } catch (e) {
     console.error('[Teimoso Patch Festa]', e);
   }
