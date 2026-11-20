@@ -1157,7 +1157,7 @@
       </section>
 
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
-                  <section id="tab-roulette" class="hidden space-y-6">
+                        <section id="tab-roulette" class="hidden space-y-6">
         <div class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -3816,7 +3816,7 @@
     };
 
     window.switchTab = function(tab) {
-      if ((tab === 'draw' || tab === 'roulette') && !window.isAdmin) {
+      if ((tab === 'draw' ) && !window.isAdmin) {
         window.showToast("Esta aba é restrita aos administradores.", "error");
         return;
       }
@@ -7094,5 +7094,147 @@
       }
     }
   </script>
+<!-- PARTY_TAB_FORCE_VISIBLE_START -->
+<style id="forceFestaTabStyle">
+  #tabBtn-roulette,
+  button[onclick*="switchTab('roulette')"],
+  button[onclick*="switchTab(\"roulette\")"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+</style>
+<script id="forceFestaTabScript">
+  (function() {
+    function normalizeStrLocal(s) {
+      return String(s || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+    function findLoggedAthleteLocal() {
+      const list = window.athletes || [];
+      if (!window.currentUser) return null;
+      if (window.currentUser.id && window.currentUser.id !== 0) {
+        const byId = list.find(a => String(a.id) === String(window.currentUser.id));
+        if (byId) return byId;
+      }
+      const uName = normalizeStrLocal(window.currentUser.name);
+      if (uName) {
+        return list.find(a => normalizeStrLocal(a.name) === uName) || list.find(a => normalizeStrLocal(a.name).includes(uName));
+      }
+      return null;
+    }
+    window.openMyFamilyEditorFromParty = function() {
+      if (window.partyRaffleState && window.partyRaffleState.enabled) {
+        if (typeof window.showToast === "function") window.showToast("Não é possível editar familiares enquanto um sorteio estiver em andamento!", "error");
+        return;
+      }
+      const athlete = findLoggedAthleteLocal();
+      if (!athlete) {
+        if (typeof window.showToast === "function") window.showToast("Faça login com seu perfil de atleta para editar sua família.", "error");
+        return;
+      }
+      const modal = document.getElementById("familyDataModal");
+      const content = document.getElementById("familyDataContent");
+      if (!modal) return;
+      const wNameEl = document.getElementById("promptWifeName");
+      const wDayEl = document.getElementById("promptWifeDay");
+      const wMonthEl = document.getElementById("promptWifeMonth");
+      if (wNameEl) wNameEl.value = athlete?.family?.wife?.name || "";
+      if (wDayEl) wDayEl.value = athlete?.family?.wife?.birthDay || "";
+      if (wMonthEl) wMonthEl.value = athlete?.family?.wife?.birthMonth || "";
+      const childrenContainer = document.getElementById("promptChildrenContainer");
+      if (childrenContainer) {
+        childrenContainer.innerHTML = "";
+        const kids = Array.isArray(athlete?.family?.children) ? athlete.family.children : [];
+        if (kids.length > 0) {
+          kids.forEach(function(ch) {
+            if (typeof window.addPromptChildRow === "function") {
+              window.addPromptChildRow();
+              const rows = childrenContainer.querySelectorAll(":scope > div");
+              const lastRow = rows[rows.length - 1];
+              if (lastRow) {
+                const inpName = lastRow.querySelector("input[type=text]") || lastRow.querySelector("input:not([type=number])");
+                const inpDay = lastRow.querySelector("input[type=number]");
+                const selMonth = lastRow.querySelector("select");
+                if (inpName) inpName.value = ch.name || "";
+                if (inpDay) inpDay.value = ch.birthDay || "";
+                if (selMonth) selMonth.value = ch.birthMonth || "";
+              }
+            }
+          });
+        } else if (typeof window.addPromptChildRow === "function") {
+          window.addPromptChildRow();
+        }
+      }
+      modal.style.display = "flex";
+      modal.classList.remove("hidden");
+      requestAnimationFrame(function() {
+        modal.classList.remove("opacity-0");
+        if (content) content.classList.remove("scale-95");
+      });
+    };
+    function patchFamilyModalCloseAndSave() {
+      if (typeof window.skipFamilyData === "function" && !window.skipFamilyData._patchedByParty) {
+        const origSkip = window.skipFamilyData;
+        window.skipFamilyData = function() {
+          origSkip.apply(this, arguments);
+          const modal = document.getElementById("familyDataModal");
+          if (modal) { modal.classList.add("hidden", "opacity-0"); modal.style.display = ""; }
+        };
+        window.skipFamilyData._patchedByParty = true;
+      }
+      if (typeof window.saveFamilyDataPrompt === "function" && !window.saveFamilyDataPrompt._patchedByParty) {
+        const origSave = window.saveFamilyDataPrompt;
+        window.saveFamilyDataPrompt = function() {
+          const res = origSave.apply(this, arguments);
+          const modal = document.getElementById("familyDataModal");
+          if (modal) { modal.classList.add("hidden", "opacity-0"); modal.style.display = ""; }
+          setTimeout(function() {
+            if (typeof window.renderPartyRaffleUI === "function") window.renderPartyRaffleUI();
+          }, 150);
+          return res;
+        };
+        window.saveFamilyDataPrompt._patchedByParty = true;
+      }
+    }
+    function forceShowFestaTabBtn() {
+      const btns = document.querySelectorAll('#tabBtn-roulette, button[onclick*="roulette"]');
+      btns.forEach(function(btn) {
+        if (btn.classList.contains("hidden")) btn.classList.remove("hidden");
+        if (btn.style.display === "none") btn.style.display = "flex";
+        if (btn.hasAttribute("hidden")) btn.removeAttribute("hidden");
+      });
+    }
+    forceShowFestaTabBtn();
+    document.addEventListener("DOMContentLoaded", function() { forceShowFestaTabBtn(); patchFamilyModalCloseAndSave(); });
+    window.addEventListener("load", function() { forceShowFestaTabBtn(); patchFamilyModalCloseAndSave(); });
+    try {
+      const observer = new MutationObserver(function() { forceShowFestaTabBtn(); });
+      const startObs = function() {
+        const target = document.getElementById("mainNavContainer") || document.body;
+        if (target) observer.observe(target, { attributes: true, subtree: true, attributeFilter: ["class", "style", "hidden"] });
+      };
+      if (document.body) startObs();
+      else document.addEventListener("DOMContentLoaded", startObs);
+    } catch (e) {}
+    document.addEventListener("click", function(ev) {
+      const editBtn = ev.target && ev.target.closest ? ev.target.closest("#btnEditMyFamilyParty") : null;
+      if (editBtn) { patchFamilyModalCloseAndSave(); }
+      const btn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, button[onclick*="roulette"]') : null;
+      if (btn) {
+        patchFamilyModalCloseAndSave();
+        setTimeout(function() {
+          const sec = document.getElementById("tab-roulette");
+          if (sec && sec.classList.contains("hidden")) {
+            document.querySelectorAll("main > section").forEach(function(s) { s.classList.add("hidden"); });
+            sec.classList.remove("hidden");
+          }
+          if (typeof window.renderPartyRaffleUI === "function") window.renderPartyRaffleUI();
+        }, 30);
+      }
+    });
+  })();
+</script>
+<!-- PARTY_TAB_FORCE_VISIBLE_END -->
 </body>
 </html>
