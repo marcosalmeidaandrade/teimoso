@@ -1157,7 +1157,7 @@
       </section>
 
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
-                                          <section id="tab-roulette" class="hidden teimoso-festa-grid">
+                                                <section id="tab-roulette" class="hidden teimoso-festa-grid">
         <div id="partyHeaderCard" class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -8860,6 +8860,7 @@
 })();
 </script>
 <!-- TEIMOSO_FESTA_SAFE_PATCH_END -->
+
 <!-- TEIMOSO_SAFE_PATCH_V4_START -->
 <style>
   body.teimoso-festa-unlocked #tabBtn-roulette { display: flex !important; visibility: visible !important; }
@@ -8954,17 +8955,26 @@
   };
   function ensureVisionSwitchers() {
     var loginOv = document.getElementById('globalLoginOverlay');
-    if (loginOv && !document.getElementById('teimosoLoginCornerVisionBtn')) {
-      var cornerBtn = document.createElement('button');
-      cornerBtn.type = 'button';
-      cornerBtn.id = 'teimosoLoginCornerVisionBtn';
-      cornerBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
-      cornerBtn.className = 'fixed top-4 right-4 z-[130] w-11 h-11 rounded-2xl bg-white border border-slate-200 text-slate-700 shadow-lg flex items-center justify-center cursor-pointer active:scale-95';
-      cornerBtn.innerHTML = '<i id="teimosoLoginCornerVisionIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
-      cornerBtn.onclick = window.toggleAppVisionMode;
-      loginOv.appendChild(cornerBtn);
+    if (loginOv) {
+      var allVisionWraps = loginOv.querySelectorAll('#teimosoLoginCardVisionWrap');
+      if (allVisionWraps.length > 1) {
+        for (var i = 1; i < allVisionWraps.length; i++) {
+          allVisionWraps[i].remove();
+        }
+      }
+      if (!document.getElementById('teimosoLoginCornerVisionBtn')) {
+        var cornerBtn = document.createElement('button');
+        cornerBtn.type = 'button';
+        cornerBtn.id = 'teimosoLoginCornerVisionBtn';
+        cornerBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+        cornerBtn.className = 'fixed top-4 right-4 z-[130] w-11 h-11 rounded-2xl bg-white border border-slate-200 text-slate-700 shadow-lg flex items-center justify-center cursor-pointer active:scale-95';
+        cornerBtn.innerHTML = '<i id="teimosoLoginCornerVisionIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
+        cornerBtn.onclick = window.toggleAppVisionMode;
+        loginOv.appendChild(cornerBtn);
+      }
       var card = loginOv.querySelector('div');
-      if (card && !document.getElementById('teimosoLoginCardVisionWrap')) {
+      var hasExistingVisionText = card && /TIPO DE VIS[AÃ]O DO APLICATIVO/i.test(card.textContent || '');
+      if (card && !document.getElementById('teimosoLoginCardVisionWrap') && !hasExistingVisionText) {
         var wrap = document.createElement('div');
         wrap.id = 'teimosoLoginCardVisionWrap';
         wrap.className = 'w-full pt-3 border-t border-slate-200 flex flex-col items-center gap-1.5';
