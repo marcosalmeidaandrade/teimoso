@@ -1157,7 +1157,7 @@
       </section>
 
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
-                        <section id="tab-roulette" class="hidden space-y-6">
+                              <section id="tab-roulette" class="hidden space-y-6">
         <div class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -7094,6 +7094,7 @@
       }
     }
   </script>
+
 <!-- PARTY_TAB_FORCE_VISIBLE_START -->
 <style id="forceFestaTabStyle">
   #tabBtn-roulette,
@@ -7122,6 +7123,61 @@
         return list.find(a => normalizeStrLocal(a.name) === uName) || list.find(a => normalizeStrLocal(a.name).includes(uName));
       }
       return null;
+    }
+    function isParticipantMineLocal(p, myAthlete, myNormName) {
+      if (myAthlete && p.athleteId !== undefined && p.athleteId !== null && String(p.athleteId) === String(myAthlete.id)) return true;
+      if (myNormName && p.athleteName && normalizeStrLocal(p.athleteName) === myNormName) return true;
+      return false;
+    }
+    function applyMyFamilyHighlightOnUrn() {
+      const gridEl = document.getElementById("rouletteParticipantsGrid");
+      if (!gridEl) return;
+      const state = window.partyRaffleState || { enabled: false, drawnWinners: [] };
+      const drawnUids = new Set((state.drawnWinners || []).map(w => w.uid));
+      const allEligible = [];
+      (window.athletes || []).forEach(function(ath) {
+        if (ath.isSuspended || !ath.family) return;
+        if (ath.family.wife && ath.family.wife.name && ath.family.wife.name.trim()) {
+          const wName = ath.family.wife.name.trim();
+          allEligible.push({ uid: "wife_" + ath.id + "_" + wName.toLowerCase(), athleteId: ath.id, name: wName, relation: "Esposa", athleteName: ath.name });
+        }
+        if (Array.isArray(ath.family.children)) {
+          ath.family.children.forEach(function(ch, idx) {
+            if (ch && ch.name && ch.name.trim()) {
+              const cName = ch.name.trim();
+              allEligible.push({ uid: "child_" + ath.id + "_" + idx + "_" + cName.toLowerCase(), athleteId: ath.id, name: cName, relation: "Filho(a)", athleteName: ath.name });
+            }
+          });
+        }
+      });
+      const remainingPool = allEligible.filter(function(p) { return !drawnUids.has(p.uid); });
+      const countEl = document.getElementById("rouletteParticipantCount");
+      if (countEl) countEl.innerText = remainingPool.length;
+      if (remainingPool.length === 0) return;
+      const myAthlete = findLoggedAthleteLocal();
+      const myNormName = normalizeStrLocal(myAthlete ? myAthlete.name : (window.currentUser ? window.currentUser.name : ""));
+      const sortedPool = remainingPool.slice().sort(function(a, b) {
+        const aMine = isParticipantMineLocal(a, myAthlete, myNormName) ? 1 : 0;
+        const bMine = isParticipantMineLocal(b, myAthlete, myNormName) ? 1 : 0;
+        return bMine - aMine;
+      });
+      gridEl.innerHTML = sortedPool.map(function(p) {
+        if (isParticipantMineLocal(p, myAthlete, myNormName)) {
+          return '<span class="px-3.5 py-2 rounded-xl bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black flex items-center gap-1.5 shadow-md ring-2 ring-emerald-200"><i class="fa-solid fa-star text-amber-500"></i> ' + p.name + ' <span class="px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider">SEU FAMILIAR</span> <span class="text-[10px] text-emerald-800 font-bold">(' + p.relation + ' • ' + p.athleteName + ')</span></span>';
+        }
+        return '<span class="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-[11px] font-semibold flex items-center gap-1.5 opacity-85"><i class="fa-solid fa-ticket text-slate-400"></i> ' + p.name + ' <span class="text-[9px] text-slate-400 font-medium">(' + p.relation + ' • ' + p.athleteName + ')</span></span>';
+      }).join("");
+    }
+    function patchRenderPartyRaffleUI() {
+      if (typeof window.renderPartyRaffleUI === "function" && !window.renderPartyRaffleUI._patchedHighlight) {
+        const origRender = window.renderPartyRaffleUI;
+        window.renderPartyRaffleUI = function() {
+          const res = origRender.apply(this, arguments);
+          applyMyFamilyHighlightOnUrn();
+          return res;
+        };
+        window.renderPartyRaffleUI._patchedHighlight = true;
+      }
     }
     window.openMyFamilyEditorFromParty = function() {
       if (window.partyRaffleState && window.partyRaffleState.enabled) {
@@ -7190,7 +7246,9 @@
           const modal = document.getElementById("familyDataModal");
           if (modal) { modal.classList.add("hidden", "opacity-0"); modal.style.display = ""; }
           setTimeout(function() {
+            patchRenderPartyRaffleUI();
             if (typeof window.renderPartyRaffleUI === "function") window.renderPartyRaffleUI();
+            else applyMyFamilyHighlightOnUrn();
           }, 150);
           return res;
         };
@@ -7206,8 +7264,8 @@
       });
     }
     forceShowFestaTabBtn();
-    document.addEventListener("DOMContentLoaded", function() { forceShowFestaTabBtn(); patchFamilyModalCloseAndSave(); });
-    window.addEventListener("load", function() { forceShowFestaTabBtn(); patchFamilyModalCloseAndSave(); });
+    document.addEventListener("DOMContentLoaded", function() { forceShowFestaTabBtn(); patchFamilyModalCloseAndSave(); patchRenderPartyRaffleUI(); });
+    window.addEventListener("load", function() { forceShowFestaTabBtn(); patchFamilyModalCloseAndSave(); patchRenderPartyRaffleUI(); });
     try {
       const observer = new MutationObserver(function() { forceShowFestaTabBtn(); });
       const startObs = function() {
@@ -7219,10 +7277,11 @@
     } catch (e) {}
     document.addEventListener("click", function(ev) {
       const editBtn = ev.target && ev.target.closest ? ev.target.closest("#btnEditMyFamilyParty") : null;
-      if (editBtn) { patchFamilyModalCloseAndSave(); }
+      if (editBtn) { patchFamilyModalCloseAndSave(); patchRenderPartyRaffleUI(); }
       const btn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, button[onclick*="roulette"]') : null;
       if (btn) {
         patchFamilyModalCloseAndSave();
+        patchRenderPartyRaffleUI();
         setTimeout(function() {
           const sec = document.getElementById("tab-roulette");
           if (sec && sec.classList.contains("hidden")) {
@@ -7230,7 +7289,8 @@
             sec.classList.remove("hidden");
           }
           if (typeof window.renderPartyRaffleUI === "function") window.renderPartyRaffleUI();
-        }, 30);
+          else applyMyFamilyHighlightOnUrn();
+        }, 40);
       }
     });
   })();
