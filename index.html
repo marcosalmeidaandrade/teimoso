@@ -1157,7 +1157,7 @@
       </section>
 
       <!-- ================= TAB 6: ROLETA (EXCLUSIVO ADMINS) ================= -->
-                                                                  <section id="tab-roulette" class="hidden teimoso-festa-grid">
+                                                                        <section id="tab-roulette" class="hidden teimoso-festa-grid">
         <div id="partyHeaderCard" class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -7989,7 +7989,8 @@
 
 
 
-<!-- TEIMOSO_SAFE_PATCH_V5_START -->
+
+<!-- TEIMOSO_SAFE_PATCH_V6_START -->
 <style>
   /* Abas FESTA e FINANCEIRO visíveis após login */
   body.teimoso-festa-unlocked #tabBtn-roulette,
@@ -8038,8 +8039,8 @@
 
   /* =====================================================================
      VISÃO ALTERNATIVA: VERDE ESCURO
-     Mantém Branco Claro como padrão. Preserva 100% o formato/cor original
-     dos botões de presença e corrige o :hover no Financeiro.
+     Mantém Branco Claro como padrão. Preserva 100% os botões de presença
+     e corrige o :hover no Financeiro.
      ===================================================================== */
   html.teimoso-vision-forest,
   body.teimoso-vision-forest {
@@ -8059,7 +8060,6 @@
     background-color: #0e2019 !important;
     color: #dceee6 !important;
   }
-  /* Corrige hover claro que apagava nomes e valores no tema escuro */
   body.teimoso-vision-forest .hover\:bg-white:hover,
   body.teimoso-vision-forest .hover\:bg-slate-50:hover,
   body.teimoso-vision-forest .hover\:bg-slate-100:hover,
@@ -8165,6 +8165,7 @@ try {
   var MONTHS_JAN_NOV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
   var localSpinLock = false;
   var lastTrustedHumanMs = 0;
+  var isReorderingFinDom = false;
 
   function normStr(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -8172,7 +8173,6 @@ try {
 
   // ===========================================================================
   // 1. CONTROLE DE VISÃO (BRANCO CLARO PADRÃO <-> VERDE ESCURO ALTERNATIVA)
-  //    Garante APENAS UMA opção no card de login + botão no cabeçalho interno
   // ===========================================================================
   function getSavedVision() {
     try { return localStorage.getItem(VISION_KEY) === 'forest' ? 'forest' : 'light'; } catch (e) { return 'light'; }
@@ -8202,29 +8202,16 @@ try {
   };
 
   function ensureVisionSwitchers() {
-    // A) Tela de Login: remove duplicatas antigas e cria EXATAMENTE UMA opção
     var loginOv = document.getElementById('globalLoginOverlay');
     if (loginOv) {
       var loginCard = loginOv.querySelector('div');
       if (loginCard) {
-        // Remove qualquer bloco antigo duplicado de TIPO DE VISÃO DO APLICATIVO
         Array.prototype.slice.call(loginCard.children).forEach(function(ch) {
           var txt = normStr(ch.textContent || '');
-          if (txt.indexOf('TIPO DE VISAO DO APLICATIVO') !== -1 && ch.id !== 'teimosoSingleLoginVisionBox') {
+          if (txt.indexOf('TIPO DE VISAO DO APLICATIVO') !== -1 || ch.id === 'teimosoSingleLoginVisionBox') {
             ch.remove();
           }
         });
-        if (!document.getElementById('teimosoSingleLoginVisionBox')) {
-          var box = document.createElement('div');
-          box.id = 'teimosoSingleLoginVisionBox';
-          box.className = 'w-full pt-3 mt-1 border-t border-slate-200 flex flex-col items-center gap-1.5';
-          box.innerHTML = '<span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tipo de Visão do Aplicativo</span>' +
-            '<button type="button" onclick="toggleTeimosoVisionMode(event)" class="w-full py-2.5 px-3.5 rounded-xl border border-emerald-400/60 bg-emerald-500/10 text-emerald-700 text-xs font-black flex items-center justify-between gap-2 cursor-pointer transition-all active:scale-95">' +
-              '<span class="flex items-center gap-2"><i class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoLoginVisionLabel">Visão: Branco Claro (Padrão)</span></span>' +
-              '<span class="px-2 py-0.5 rounded bg-emerald-600/20 text-emerald-700 text-[10px] uppercase">Alternar</span>' +
-            '</button>';
-          loginCard.appendChild(box);
-        }
       }
       if (!document.getElementById('teimosoLoginCornerBtn')) {
         var cBtn = document.createElement('button');
@@ -8238,7 +8225,6 @@ try {
       }
     }
 
-    // B) Cabeçalho interno da aplicação
     if (!document.getElementById('teimosoHeaderVisionBtn')) {
       var headerEl = document.querySelector('header');
       if (headerEl) {
@@ -8260,7 +8246,7 @@ try {
   }
 
   // ===========================================================================
-  // 2. ABA FESTA + REDIRECIONAMENTO AUTOMÁTICO + ABA FINANCEIRO SOMENTE LEITURA
+  // 2. ABA FESTA + ABA FINANCEIRO ABERTA (SOMENTE VISUALIZAÇÃO + LOGADO NO TOPO)
   // ===========================================================================
   function showRaffleBanner(text) {
     var b = document.getElementById('teimosoRaffleBanner');
@@ -8291,7 +8277,6 @@ try {
     if (finBtn && logged) { finBtn.classList.remove('hidden'); finBtn.style.display = 'flex'; }
 
     if (!logged || !isRaffleActive()) return;
-    // Quando há sorteio habilitado, leva atletas automaticamente para a aba FESTA
     var sec = document.getElementById('tab-roulette');
     if (sec && sec.classList.contains('hidden') && !window.isAdmin && typeof window.switchTab === 'function') {
       window.switchTab('roulette');
@@ -8329,6 +8314,114 @@ try {
         b.disabled = true;
       }
     });
+  }
+
+  function prioritizeAndOrderFinancialCards(autoExpandLogged) {
+    if (isReorderingFinDom || !window.currentUser) return;
+    var finSec = document.getElementById('tab-financial');
+    if (!finSec) return;
+    var loggedAth = getLoggedAthleteObj();
+    var loggedId = loggedAth ? Number(loggedAth.id) : (window.currentUser && window.currentUser.id ? Number(window.currentUser.id) : null);
+
+    if (autoExpandLogged && loggedId && !isNaN(loggedId)) {
+      if (window.expandedFinCards && typeof window.expandedFinCards.add === 'function' && !window.expandedFinCards.has(loggedId)) {
+        if (typeof window.toggleFinancialAccordion === 'function') {
+          isReorderingFinDom = true;
+          try { window.toggleFinancialAccordion(loggedId); } catch (eExp) {}
+          isReorderingFinDom = false;
+        } else {
+          window.expandedFinCards.add(loggedId);
+          if (typeof window.renderFinancial === 'function') {
+            try { window.renderFinancial(); } catch (eRen) {}
+          }
+        }
+      }
+    }
+
+    var accBtns = Array.prototype.slice.call(finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]'));
+    if (accBtns.length < 2) return;
+
+    var items = [];
+    var listParent = null;
+    accBtns.forEach(function(btn) {
+      var oc = String(btn.getAttribute('onclick') || '');
+      var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
+      var athId = m ? parseInt(m[1], 10) : null;
+      var card = btn.parentElement;
+      if (!card || !card.parentElement) return;
+      if (!listParent) listParent = card.parentElement;
+      if (card.parentElement !== listParent) return;
+      var athObj = (athId !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === athId; }) : null;
+      var athName = athObj && athObj.name ? String(athObj.name) : String(btn.textContent || '').trim();
+      items.push({ card: card, athId: athId, name: athName });
+    });
+    if (!listParent || items.length < 2) return;
+
+    var sorted = items.slice().sort(function(a, b) {
+      var aIsSelf = (loggedId !== null && a.athId === loggedId) ? 0 : 1;
+      var bIsSelf = (loggedId !== null && b.athId === loggedId) ? 0 : 1;
+      if (aIsSelf !== bIsSelf) return aIsSelf - bIsSelf;
+      return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+    });
+
+    var orderChanged = false;
+    for (var idx = 0; idx < sorted.length; idx++) {
+      if (sorted[idx].card !== items[idx].card) { orderChanged = true; break; }
+    }
+
+    isReorderingFinDom = true;
+    try {
+      if (orderChanged) {
+        sorted.forEach(function(it) { listParent.appendChild(it.card); });
+      }
+      sorted.forEach(function(it) {
+        if (loggedId !== null && it.athId === loggedId) {
+          it.card.classList.add('ring-2', 'ring-emerald-400/70');
+        } else {
+          it.card.classList.remove('ring-2', 'ring-emerald-400/70');
+        }
+      });
+    } finally {
+      isReorderingFinDom = false;
+    }
+  }
+
+  function installFinancialViewHooks() {
+    if (typeof window.renderFinancial === 'function' && !window.renderFinancial.__teimosoFinWrapped) {
+      var origRenderFin = window.renderFinancial;
+      window.renderFinancial = function() {
+        var res = origRenderFin.apply(this, arguments);
+        setTimeout(function() {
+          prioritizeAndOrderFinancialCards(false);
+          enforceFinancialReadOnlyForAthletes();
+        }, 15);
+        return res;
+      };
+      window.renderFinancial.__teimosoFinWrapped = true;
+    }
+
+    if (typeof window.switchTab === 'function' && !window.switchTab.__teimosoFinTabWrapped) {
+      var origSwitchTab = window.switchTab;
+      window.switchTab = function(tab) {
+        var res = origSwitchTab.apply(this, arguments);
+        if (tab === 'financial' && window.currentUser) {
+          var finSec = document.getElementById('tab-financial');
+          if (finSec && finSec.classList.contains('hidden')) {
+            document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
+            finSec.classList.remove('hidden');
+            if (typeof window.renderFinancial === 'function') {
+              try { window.renderFinancial(); } catch (eRf) {}
+            }
+          }
+          setTimeout(function() {
+            prioritizeAndOrderFinancialCards(true);
+            enforceFinancialReadOnlyForAthletes();
+          }, 40);
+        }
+        return res;
+      };
+      window.switchTab.__teimosoFinTabWrapped = true;
+    }
   }
 
   // ===========================================================================
@@ -8676,6 +8769,20 @@ try {
       }
     }
 
+    if (typeof window.openNewAthleteModal === 'function' && !window.openNewAthleteModal.__teimosoWrapped) {
+      var origOpenNew = window.openNewAthleteModal;
+      window.openNewAthleteModal = function() {
+        var res = origOpenNew.apply(this, arguments);
+        setTimeout(function() {
+          var chk = document.getElementById('athleteExemptMonthlyCheckbox');
+          if (chk) chk.checked = false;
+          window.toggleAthleteExemptMonthlyUI(false);
+        }, 20);
+        return res;
+      };
+      window.openNewAthleteModal.__teimosoWrapped = true;
+    }
+
     if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal.__teimosoWrapped) {
       var origOpenEdit = window.openEditAthleteModal;
       window.openEditAthleteModal = function(id) {
@@ -8776,6 +8883,7 @@ try {
     window.openMyFamilyEditorFromParty = openMyFamilyEditorUnified;
     installExemptIsolation();
     installGhostPresenceShield();
+    installFinancialViewHooks();
     ensureVisionSwitchers();
     enforceTabsAndRedirect(false);
     enforceFinancialReadOnlyForAthletes();
@@ -8786,7 +8894,12 @@ try {
     if (target) {
       installAllRuntimePatches();
       if (target.id === 'tabBtn-roulette') setTimeout(renderPartyRaffleUnified, 60);
-      if (target.id === 'tabBtn-financial') setTimeout(enforceFinancialReadOnlyForAthletes, 80);
+      if (target.id === 'tabBtn-financial') {
+        setTimeout(function() {
+          prioritizeAndOrderFinancialCards(true);
+          enforceFinancialReadOnlyForAthletes();
+        }, 80);
+      }
     }
     var famBtn = ev.target && ev.target.closest ? ev.target.closest('#familyDataModal button') : null;
     if (famBtn) setTimeout(renderPartyRaffleUnified, 350);
@@ -8805,11 +8918,12 @@ try {
     ensureVisionSwitchers();
     enforceTabsAndRedirect(false);
     enforceFinancialReadOnlyForAthletes();
+    installFinancialViewHooks();
     installExemptIsolation();
     installGhostPresenceShield();
   }, 1000);
 })();
 </script>
-<!-- TEIMOSO_SAFE_PATCH_V5_END -->
+<!-- TEIMOSO_SAFE_PATCH_V6_END -->
 </body>
 </html>
