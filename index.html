@@ -2672,7 +2672,7 @@
           peladaTimes: window.peladaTimes,
           peladaPhotos: {},
           athletes: window.athletes,
-          presences: window.presences,
+          /* [BLINDAGEM] presences removido do saveData global para impedir sobrescrita entre celulares */
           financialPayments: window.financialPayments,
           alwaysUpToDateMap: window.alwaysUpToDateMap,
           absenceFines: window.absenceFines,
@@ -2688,82 +2688,149 @@
       }
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
+        // [BLINDAGEM PRESENÇA INDIVIDUAL] Gravação atômica por célula via updateDoc
     window.syncSpecificData = async function(payload) {
-      if (!isCloudReady || !navigator.onLine) return;
-      if (window.isViewingArchivedSeason && window.isViewingArchivedSeason()) return;
+      if (!isCloudReady) return;
+      if (!navigator.onLine) {
+        if (typeof handleOffline === 'function') handleOffline();
+        if (typeof window.showToast === 'function') window.showToast('Sem internet! Alteração bloqueada para evitar conflito.', 'error');
+        return;
+      }
+      if (typeof window.isViewingArchivedSeason === 'function' && window.isViewingArchivedSeason()) {
+        if (typeof window.showToast === 'function') window.showToast('Modo Histórico: mude para o ano atual para alterar.', 'error');
+        return;
+      }
+      if (!payload || typeof payload !== 'object') return;
       try {
-        pruneActivityLogs();
+        if (typeof pruneActivityLogs === 'function') pruneActivityLogs();
         const dotUpdates = { updatedAt: new Date().toISOString() };
-        if (payload.presences) {
+        let hasFieldUpdate = false;
+
+        // 1. PRESENÇAS: grava EXCLUSIVAMENTE a célula presences.{data}.{atletaId}
+        if (payload.presences && typeof payload.presences === 'object') {
           for (const [dateKey, athletesMap] of Object.entries(payload.presences)) {
+            if (!dateKey || !athletesMap || typeof athletesMap !== 'object') continue;
             for (const [athId, pRec] of Object.entries(athletesMap)) {
-              dotUpdates["presences." + dateKey + "." + athId] = pRec;
+              if (athId === undefined || athId === null || athId === '') continue;
+              dotUpdates['presences.' + dateKey + '.' + athId] = pRec;
+              hasFieldUpdate = true;
             }
           }
         }
-        if (payload.absenceFines) {
+
+        // 2. MULTAS DE AUSÊNCIA: grava apenas o atleta afetado
+        if (payload.absenceFines && typeof payload.absenceFines === 'object') {
           for (const [athId, finesArr] of Object.entries(payload.absenceFines)) {
-            dotUpdates["absenceFines." + athId] = finesArr;
+            dotUpdates['absenceFines.' + athId] = finesArr;
+            hasFieldUpdate = true;
           }
         }
-        if (payload.financialPayments) {
+
+        // 3. PAGAMENTOS FINANCEIROS: grava apenas o mês/atleta alterado
+        if (payload.financialPayments && typeof payload.financialPayments === 'object') {
           for (const [athId, monthsMap] of Object.entries(payload.financialPayments)) {
+            if (!monthsMap || typeof monthsMap !== 'object') continue;
             for (const [mKey, mVal] of Object.entries(monthsMap)) {
-              dotUpdates["financialPayments." + athId + "." + mKey] = mVal;
+              dotUpdates['financialPayments.' + athId + '.' + mKey] = mVal;
+              hasFieldUpdate = true;
             }
           }
         }
-        if (payload.alwaysUpToDateMap) {
+
+        // 4. STATUS ISENTO/EM DIA: grava apenas o atleta
+        if (payload.alwaysUpToDateMap && typeof payload.alwaysUpToDateMap === 'object') {
           for (const [athId, boolVal] of Object.entries(payload.alwaysUpToDateMap)) {
-            dotUpdates["alwaysUpToDateMap." + athId] = boolVal;
+            dotUpdates['alwaysUpToDateMap.' + athId] = boolVal;
+            hasFieldUpdate = true;
           }
         }
-        if (payload.peladaGoals) {
+
+        // 5. GOLS DA PELADA: grava apenas a célula data/atleta
+        if (payload.peladaGoals && typeof payload.peladaGoals === 'object') {
           for (const [dateKey, goalsMap] of Object.entries(payload.peladaGoals)) {
+            if (!goalsMap || typeof goalsMap !== 'object') continue;
             for (const [athId, gVal] of Object.entries(goalsMap)) {
-              dotUpdates["peladaGoals." + dateKey + "." + athId] = gVal;
+              dotUpdates['peladaGoals.' + dateKey + '.' + athId] = gVal;
+              hasFieldUpdate = true;
             }
           }
         }
-        if (payload.peladaPolls) {
+
+        // 6. ENQUETE CRAQUE & BAGRE: grava apenas o voto do usuário
+        if (payload.peladaPolls && typeof payload.peladaPolls === 'object') {
           for (const [dateKey, pollObj] of Object.entries(payload.peladaPolls)) {
-            if (typeof pollObj.forceOpen === "boolean") {
-              dotUpdates["peladaPolls." + dateKey + ".forceOpen"] = pollObj.forceOpen;
+            if (!pollObj || typeof pollObj !== 'object') continue;
+            if (typeof pollObj.forceOpen === 'boolean') {
+              dotUpdates['peladaPolls.' + dateKey + '.forceOpen'] = pollObj.forceOpen;
+              hasFieldUpdate = true;
             }
-            if (pollObj.votes) {
+            if (pollObj.votes && typeof pollObj.votes === 'object') {
               for (const [voterId, voteData] of Object.entries(pollObj.votes)) {
-                dotUpdates["peladaPolls." + dateKey + ".votes." + voterId] = voteData;
+                dotUpdates['peladaPolls.' + dateKey + '.votes.' + voterId] = voteData;
+                hasFieldUpdate = true;
               }
             }
           }
         }
-        if (payload.peladaTimes) {
+
+        // 7. HORÁRIOS, SESSÕES E SORTEIO DA FESTA
+        if (payload.peladaTimes && typeof payload.peladaTimes === 'object') {
           for (const [dateKey, tVal] of Object.entries(payload.peladaTimes)) {
-            dotUpdates["peladaTimes." + dateKey] = tVal;
+            dotUpdates['peladaTimes.' + dateKey] = tVal;
+            hasFieldUpdate = true;
           }
         }
-        if (payload.activeSessions) {
-          for (const [userKey, sessVal] of Object.entries(payload.activeSessions)) {
-            dotUpdates["activeSessions." + userKey] = sessVal;
+        if (payload.activeSessions && typeof payload.activeSessions === 'object') {
+          for (const [uKey, sessVal] of Object.entries(payload.activeSessions)) {
+            dotUpdates['activeSessions.' + uKey] = sessVal;
+            hasFieldUpdate = true;
           }
         }
-        if (payload.partyRaffleState) {
+        if (payload.partyRaffleState !== undefined) {
           dotUpdates.partyRaffleState = payload.partyRaffleState;
+          hasFieldUpdate = true;
         }
-        if (payload.athletesOnly) {
-          dotUpdates.athletes = window.athletes;
-        }
+
+        if (!hasFieldUpdate) return;
         await updateDoc(dbDocRef, dotUpdates);
       } catch (err) {
-        console.warn("Fallback merge acionado:", err);
-        try {
-          payload.updatedAt = new Date().toISOString();
-          delete payload.athletesOnly;
-          await setDoc(dbDocRef, payload, { merge: true });
-        } catch (e2) {
-          console.error("Erro ao sincronizar:", e2);
+        console.error('[BLINDAGEM] Erro no updateDoc atômico:', err);
+        // NUNCA chama window.saveData() para não sobrescrever outros atletas
+        if (err && err.code === 'not-found') {
+          try {
+            const safeFallback = Object.assign({}, payload, { updatedAt: new Date().toISOString() });
+            await setDoc(dbDocRef, safeFallback, { merge: true });
+          } catch (e2) {
+            console.error('[BLINDAGEM] Erro ao criar documento inicial:', e2);
+          }
+        } else if (typeof window.showToast === 'function') {
+          window.showToast('Falha de conexão ao salvar. Tente novamente.', 'error');
         }
       }
+    };
+
+    // Helper exclusivo para gravar 1 único atleta em 1 única data
+    window.saveSinglePresenceAtomic = async function(dateKey, athleteId) {
+      const dKey = dateKey || window.currentDate;
+      if (!dKey || athleteId === undefined || athleteId === null) return;
+      const rec = (window.presences && window.presences[dKey]) ? window.presences[dKey][athleteId] : null;
+      if (rec && typeof rec === 'object') {
+        rec.verifiedHuman = true;
+        rec.actorId = window.currentUser ? (window.currentUser.id ?? null) : null;
+        rec.actorName = window.currentUser ? (window.currentUser.name || 'Sistema') : 'Sistema';
+        rec.verifiedAt = new Date().toISOString();
+      }
+      const payload = {
+        presences: {
+          [dKey]: {
+            [athleteId]: rec
+          }
+        }
+      };
+      if (window.absenceFines && window.absenceFines[athleteId]) {
+        payload.absenceFines = { [athleteId]: window.absenceFines[athleteId] };
+      }
+      await window.syncSpecificData(payload);
     };
 
     function getPeladaTimelineInfo() {
@@ -8925,5 +8992,46 @@ try {
 })();
 </script>
 <!-- TEIMOSO_SAFE_PATCH_V6_END -->
+<!-- TEIMOSO_PRESENCE_SHIELD_V1_START -->
+<script>
+(function() {
+  'use strict';
+  var lastTrustedHumanActionMs = 0;
+  ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
+    document.addEventListener(evtName, function(e) {
+      if (e && e.isTrusted) lastTrustedHumanActionMs = Date.now();
+    }, true);
+  });
+
+  function wrapPresenceGuards() {
+    var targetFns = ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence', 'toggleFieldAttendance', 'toggleAttended'];
+    targetFns.forEach(function(fnName) {
+      if (typeof window[fnName] === 'function' && !window[fnName].__teimosoAtomicShield) {
+        var orig = window[fnName];
+        window[fnName] = function() {
+          if (!navigator.onLine) {
+            if (typeof window.showToast === 'function') {
+              window.showToast('Sem internet! Confirmação bloqueada para evitar dessincronização.', 'error');
+            }
+            return;
+          }
+          var elapsed = Date.now() - lastTrustedHumanActionMs;
+          if (elapsed > 3000) {
+            console.warn('[BLINDAGEM] Bloqueada tentativa automática sem clique humano em ' + fnName + '.');
+            return;
+          }
+          return orig.apply(this, arguments);
+        };
+        window[fnName].__teimosoAtomicShield = true;
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', wrapPresenceGuards);
+  window.addEventListener('load', wrapPresenceGuards);
+  setInterval(wrapPresenceGuards, 1200);
+})();
+</script>
+<!-- TEIMOSO_PRESENCE_SHIELD_V1_END -->
 </body>
 </html>
