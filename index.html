@@ -2689,7 +2689,7 @@
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
         // [BLINDAGEM PRESENÇA INDIVIDUAL] Gravação atômica por célula via updateDoc
-            window.syncSpecificData = async function(payload) {
+                window.syncSpecificData = async function(payload) {
       if (!isCloudReady || !navigator.onLine) return;
       if (typeof window.isViewingArchivedSeason === 'function' && window.isViewingArchivedSeason()) {
         if (typeof window.showToast === 'function') window.showToast('Modo Histórico: mude para o ano atual para alterar.', 'error');
@@ -2780,6 +2780,8 @@
       }
       await window.syncSpecificData(payload);
     };
+
+    
 
     
 
@@ -8947,25 +8949,25 @@ try {
 <!-- TEIMOSO_SAFE_PATCH_V6_END -->
 
 
+
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
 <style>
-  #tab-financial.teimoso-fin-readonly input[type='number'],
-  #tab-financial.teimoso-fin-readonly input[type='checkbox'],
-  #tab-financial.teimoso-fin-readonly input[type='radio'],
-  #tab-financial.teimoso-fin-readonly select,
-  #tab-financial.teimoso-fin-readonly textarea {
-    pointer-events: none !important;
-    opacity: 0.75 !important;
+  /* Quando atleta comum abre o Financeiro, oculta a árvore pesada de edição e exibe o modo ultra-leve */
+  #tab-financial.teimoso-fast-readonly > :not(#teimosoFastFinView) {
+    display: none !important;
   }
 </style>
 <script>
 (function() {
   'use strict';
   var lastTrustedHumanActionMs = 0;
-  var finAutoExpandedKey = null;
-  var finDomLock = false;
-  var finNeedsRender = false;
+  var finSnapshotUserKey = null;
+  var finSnapshotData = null;
+  var finSnapshotExpandedIds = {};
+  var finSnapshotSearchTerm = '';
   var finBtnVisibleDone = false;
+  var FIN_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
+  var FIN_MONTH_LABELS = { jan: 'Jan', fev: 'Fev', mar: 'Mar', abr: 'Abr', mai: 'Mai', jun: 'Jun', jul: 'Jul', ago: 'Ago', set: 'Set', out: 'Out', nov: 'Nov' };
 
   ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
     document.addEventListener(evtName, function(e) {
@@ -9003,11 +9005,19 @@ try {
   }
 
   // =========================================================================
-  // FINANCEIRO ABERTO PARA TODOS (SOMENTE VISUALIZAÇÃO + LOGADO 1º + A-Z)
-  // OTIMIZADO: LAZY RENDER + DOCUMENTFRAGMENT + ZERO POLLING PESADO
+  // FINANCEIRO ULTRA-RÁPIDO (SNAPSHOT DO LOGIN • SEM TEMPO REAL PARA ATLETAS)
   // =========================================================================
   function normFinName(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  }
+
+  function escapeFinHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fmtFinBRL(v) {
+    var n = Number(v) || 0;
+    return 'R$ ' + n.toFixed(2).replace('.', ',');
   }
 
   function getLoggedFinAthleteId() {
@@ -9023,30 +9033,6 @@ try {
     return null;
   }
 
-  function isFinAllowedInteractive(el) {
-    if (!el) return false;
-    var tag = (el.tagName || '').toUpperCase();
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
-      var typeLow = String(el.type || '').toLowerCase();
-      if (typeLow === 'checkbox' || typeLow === 'radio' || typeLow === 'number') return false;
-      var idLow = String(el.id || '').toLowerCase();
-      var phLow = String(el.placeholder || '').toLowerCase();
-      return (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
-    }
-    var btn = el.closest ? el.closest('button') : (tag === 'BUTTON' ? el : null);
-    if (btn) {
-      var oc = String(btn.getAttribute('onclick') || '');
-      if (oc.indexOf('toggleFinancialAccordion') !== -1) return true;
-      if (/(filterFinancial|setFinancialFilter|clearFinancialFilter)/i.test(oc)) return true;
-      if (!oc) {
-        var txt = normFinName(btn.textContent || '');
-        if (txt === 'TODOS' || txt === 'EM DIA' || txt === 'EM ATRASO' || txt === 'ISENTOS') return true;
-      }
-      return false;
-    }
-    return false;
-  }
-
   function ensureFinancialTabButtonVisible() {
     if (!window.currentUser) return;
     var finBtn = document.getElementById('tabBtn-financial');
@@ -9057,104 +9043,191 @@ try {
     }
   }
 
-  function enforceFinancialViewUI() {
-    if (!window.currentUser) return;
-    ensureFinancialTabButtonVisible();
-
-    var finSec = document.getElementById('tab-financial');
-    if (!finSec || finSec.classList.contains('hidden')) return;
-
-    var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
+  function captureLoginFinancialSnapshot(forceRefresh) {
+    if (!window.currentUser) {
+      finSnapshotUserKey = null;
+      finSnapshotData = null;
+      return null;
+    }
     var loggedId = getLoggedFinAthleteId();
-
-    finSec.classList.toggle('teimoso-fin-readonly', !canEdit);
-
-    var banner = document.getElementById('teimosoFinReadOnlyBanner');
-    if (!canEdit) {
-      if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'teimosoFinReadOnlyBanner';
-        banner.className = 'bg-sky-50 border border-sky-200 text-sky-800 rounded-2xl px-4 py-2.5 text-xs font-bold flex items-center gap-2 mb-3';
-        banner.innerHTML = '<i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Modo somente visualização: você pode consultar a situação financeira de todos os atletas (seu perfil aparece primeiro, seguido da ordem alfabética).</span>';
-        finSec.insertBefore(banner, finSec.firstChild);
-      }
-      if (banner.style.display !== 'flex') banner.style.display = 'flex';
-    } else if (banner && banner.style.display !== 'none') {
-      banner.style.display = 'none';
+    var uKey = (loggedId !== null ? String(loggedId) : String(window.currentUser.name || 'user'));
+    if (!forceRefresh && finSnapshotData && finSnapshotUserKey === uKey) {
+      return finSnapshotData;
     }
+    if (!Array.isArray(window.athletes) || window.athletes.length === 0) return null;
 
-    if (!finDomLock) {
-      var accBtns = finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]');
-      if (accBtns.length >= 1) {
-        var athNameMap = {};
-        if (Array.isArray(window.athletes)) {
-          for (var k = 0; k < window.athletes.length; k++) {
-            var aObj = window.athletes[k];
-            if (aObj && aObj.id !== undefined) athNameMap[Number(aObj.id)] = String(aObj.name || '');
-          }
-        }
+    var seasonYear = (typeof window.getSelectedYearInt === 'function') ? window.getSelectedYearInt() : (new Date().getFullYear());
+    var now = new Date();
+    var paymentsAll = window.financialPayments || {};
+    var upToDateMap = window.alwaysUpToDateMap || {};
+    var finesAll = window.absenceFines || {};
 
-        var items = [];
-        var listParent = null;
-        for (var idx = 0; idx < accBtns.length; idx++) {
-          var btn = accBtns[idx];
-          var oc = btn.getAttribute('onclick') || '';
-          var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
-          var athId = m ? parseInt(m[1], 10) : null;
-          var card = btn.parentElement;
-          if (!card || !card.parentElement) continue;
-          if (!listParent) listParent = card.parentElement;
-          if (card.parentElement !== listParent) continue;
-          var athName = (athId !== null && athNameMap[athId]) ? athNameMap[athId] : String(btn.textContent || '').trim();
-          items.push({ card: card, athId: athId, name: athName });
-        }
-
-        if (listParent && items.length >= 1) {
-          var sorted = items.slice().sort(function(a, b) {
-            var aSelf = (loggedId !== null && a.athId === loggedId) ? 0 : 1;
-            var bSelf = (loggedId !== null && b.athId === loggedId) ? 0 : 1;
-            if (aSelf !== bSelf) return aSelf - bSelf;
-            return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
-          });
-
-          var changed = false;
-          for (var i = 0; i < sorted.length; i++) {
-            if (sorted[i].card !== items[i].card) { changed = true; break; }
-          }
-
-          finDomLock = true;
-          try {
-            if (changed) {
-              var frag = document.createDocumentFragment();
-              for (var j = 0; j < sorted.length; j++) frag.appendChild(sorted[j].card);
-              listParent.appendChild(frag);
-            }
-            for (var p = 0; p < sorted.length; p++) {
-              var it = sorted[p];
-              if (loggedId !== null && it.athId === loggedId) {
-                it.card.classList.add('ring-2', 'ring-emerald-400');
-              } else {
-                it.card.classList.remove('ring-2', 'ring-emerald-400');
-              }
-            }
-          } finally {
-            finDomLock = false;
-          }
-        }
+    var list = window.athletes.filter(function(a) { return a && a.name; }).map(function(ath) {
+      var athId = Number(ath.id);
+      var isExempt = Boolean(ath.isExemptMonthlyFee || upToDateMap[athId] === true || Number(ath.monthlyFee) === 0);
+      var baseFee = isExempt ? 0 : (Number(ath.monthlyFee) || 110);
+      var athPay = paymentsAll[athId] || {};
+      var athFines = Array.isArray(finesAll[athId]) ? finesAll[athId] : [];
+      var unpaidFinesTotal = 0;
+      for (var f = 0; f < athFines.length; f++) {
+        if (athFines[f] && !athFines[f].paid) unpaidFinesTotal += (Number(athFines[f].amount) || 0);
       }
-    }
 
-    if (!canEdit) {
-      var allButtons = finSec.querySelectorAll('button');
-      for (var bIdx = 0; bIdx < allButtons.length; bIdx++) {
-        var bEl = allButtons[bIdx];
-        if (!isFinAllowedInteractive(bEl)) {
-          bEl.style.display = 'none';
-          bEl.disabled = true;
-        }
+      var totalPaid = 0;
+      var pendingInstallments = 0;
+      var hasOverdue = false;
+      var monthsInfo = [];
+
+      for (var m = 0; m < FIN_MONTHS.length; m++) {
+        var mKey = FIN_MONTHS[m];
+        var mData = athPay[mKey] || { paid: false, amount: 0 };
+        var isPaid = (mData.paid === true) || ((Number(mData.amount) || 0) > 0);
+        var paidAmt = Number(mData.amount) || 0;
+        if (isPaid) totalPaid += paidAmt;
+
+        var effSusp = Boolean(ath.isSuspended || isExempt);
+        var dueDate = new Date(seasonYear, m, 15, 23, 59, 59);
+        var isOverdue = !isPaid && !effSusp && (now > dueDate);
+        if (isOverdue) hasOverdue = true;
+        if (!isPaid && !effSusp) pendingInstallments += baseFee;
+
+        monthsInfo.push({
+          key: mKey,
+          label: FIN_MONTH_LABELS[mKey] || mKey,
+          isPaid: isPaid,
+          paidAmt: paidAmt,
+          isExempt: isExempt,
+          effSusp: effSusp,
+          isOverdue: isOverdue,
+          baseFee: baseFee
+        });
       }
-    }
+
+      var isUpToDate = isExempt || (!hasOverdue && unpaidFinesTotal <= 0);
+      return {
+        id: athId,
+        name: String(ath.name),
+        normName: normFinName(ath.name),
+        isSuspended: Boolean(ath.isSuspended),
+        isExempt: isExempt,
+        isUpToDate: isUpToDate,
+        totalPaid: totalPaid,
+        pendingInstallments: pendingInstallments,
+        unpaidFinesTotal: unpaidFinesTotal,
+        months: monthsInfo
+      };
+    });
+
+    // Próprio atleta logado SEMPRE em 1º lugar; demais em ordem alfabética (A-Z)
+    list.sort(function(a, b) {
+      var aSelf = (loggedId !== null && a.id === loggedId) ? 0 : 1;
+      var bSelf = (loggedId !== null && b.id === loggedId) ? 0 : 1;
+      if (aSelf !== bSelf) return aSelf - bSelf;
+      return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+    });
+
+    finSnapshotUserKey = uKey;
+    finSnapshotExpandedIds = {};
+    if (loggedId !== null) finSnapshotExpandedIds[loggedId] = true;
+    finSnapshotData = {
+      loggedId: loggedId,
+      capturedAt: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      items: list
+    };
+    return finSnapshotData;
   }
+
+  function buildMonthsDetailHtml(item) {
+    var html = '<div class="border-t border-slate-200 bg-slate-50/70 p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">';
+    for (var i = 0; i < item.months.length; i++) {
+      var mo = item.months[i];
+      var cls = mo.isPaid
+        ? 'bg-sky-50 border-sky-200 text-sky-800'
+        : (mo.effSusp ? 'bg-slate-100 border-slate-200 text-slate-500' : (mo.isOverdue ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-amber-50 border-amber-200 text-amber-800'));
+      var tag = mo.isPaid ? ('Quitado • ' + fmtFinBRL(mo.paidAmt)) : (mo.isExempt ? 'Isento (R$ 0)' : (mo.effSusp ? 'Isento' : (mo.isOverdue ? 'Em Atraso' : 'A Vencer')));
+      html += '<div class="rounded-xl border px-2 py-1.5 text-center ' + cls + '">' +
+        '<div class="text-[10px] font-black uppercase">' + mo.label + '</div>' +
+        '<div class="text-[10px] font-bold mt-0.5 truncate">' + tag + '</div>' +
+      '</div>';
+    }
+    html += '</div>';
+    if (item.unpaidFinesTotal > 0) {
+      html += '<div class="px-3.5 py-2 bg-rose-50 border-t border-rose-200 text-[11px] font-bold text-rose-700 flex items-center justify-between"><span><i class="fa-solid fa-triangle-exclamation mr-1"></i> Multas pendentes</span><span>' + fmtFinBRL(item.unpaidFinesTotal) + '</span></div>';
+    }
+    return html;
+  }
+
+  function renderFastReadOnlyFinancial(forceCapture) {
+    var finSec = document.getElementById('tab-financial');
+    if (!finSec) return;
+    finSec.classList.add('teimoso-fast-readonly');
+
+    var snap = captureLoginFinancialSnapshot(Boolean(forceCapture));
+    if (!snap) return;
+
+    var container = document.getElementById('teimosoFastFinView');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'teimosoFastFinView';
+      container.className = 'space-y-3';
+      finSec.insertBefore(container, finSec.firstChild);
+    }
+
+    var searchNorm = normFinName(finSnapshotSearchTerm);
+    var parts = [];
+    parts.push(
+      '<div class="bg-sky-50 border border-sky-200 text-sky-900 rounded-2xl px-4 py-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
+        '<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Somente visualização (posição do login às ' + snap.capturedAt + '). Seu perfil aparece primeiro; demais em ordem alfabética.</span></div>' +
+        '<input type="text" id="teimosoFastFinSearch" value="' + escapeFinHtml(finSnapshotSearchTerm) + '" placeholder="Filtrar atleta..." oninput="window.__teimosoFilterFastFin(this.value)" class="bg-white border border-sky-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 w-full sm:w-52 focus:outline-none focus:border-sky-400">' +
+      '</div>'
+    );
+
+    parts.push('<div class="space-y-2">');
+    for (var i = 0; i < snap.items.length; i++) {
+      var it = snap.items[i];
+      if (searchNorm && it.normName.indexOf(searchNorm) === -1) continue;
+      var isSelf = (snap.loggedId !== null && it.id === snap.loggedId);
+      var isOpen = Boolean(finSnapshotExpandedIds[it.id]);
+      var dotCls = it.isUpToDate ? 'bg-emerald-500' : 'bg-rose-500';
+      var badgeCls = it.isUpToDate ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200';
+      var badgeTxt = it.isExempt ? 'Isento' : (it.isUpToDate ? 'Em Dia' : 'Em Atraso');
+      var cardBorder = isSelf ? 'border-emerald-400 ring-2 ring-emerald-400/50' : 'border-slate-200';
+
+      parts.push(
+        '<div class="bg-white border ' + cardBorder + ' rounded-2xl overflow-hidden shadow-sm">' +
+          '<button type="button" onclick="window.__teimosoToggleFastFinCard(' + it.id + ')" class="w-full p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left hover:bg-slate-50 transition-colors cursor-pointer">' +
+            '<div class="flex items-center gap-2.5 flex-wrap">' +
+              '<span class="w-2.5 h-2.5 rounded-full ' + dotCls + ' shrink-0"></span>' +
+              '<span class="font-black text-slate-800 text-xs sm:text-sm">' + escapeFinHtml(it.name) + '</span>' +
+              (isSelf ? '<span class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">VOCÊ</span>' : '') +
+              (it.isSuspended ? '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-black uppercase">Suspenso</span>' : '') +
+              '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ' + badgeCls + '">' + badgeTxt + '</span>' +
+            '</div>' +
+            '<div class="flex items-center justify-between sm:justify-end gap-3 text-[11px] font-bold">' +
+              '<div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalPaid) + '</span></div>' +
+              '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-xs sm:text-sm font-black">' + fmtFinBRL(it.pendingInstallments) + '</span></div>' +
+              '<i class="fa-solid fa-chevron-' + (isOpen ? 'up' : 'down') + ' text-slate-400 text-xs ml-1"></i>' +
+            '</div>' +
+          '</button>' +
+          (isOpen ? buildMonthsDetailHtml(it) : '') +
+        '</div>'
+      );
+    }
+    parts.push('</div>');
+    container.innerHTML = parts.join('');
+  }
+
+  window.__teimosoToggleFastFinCard = function(athId) {
+    finSnapshotExpandedIds[athId] = !finSnapshotExpandedIds[athId];
+    renderFastReadOnlyFinancial(false);
+  };
+
+  window.__teimosoFilterFastFin = function(val) {
+    finSnapshotSearchTerm = String(val || '');
+    renderFastReadOnlyFinancial(false);
+    var inp = document.getElementById('teimosoFastFinSearch');
+    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+  };
 
   function wrapFinancialHooks() {
     var hookedRender = false;
@@ -9165,39 +9238,26 @@ try {
         var origRenderFin = window.renderFinancial;
         window.renderFinancial = function(forceRun) {
           ensureFinancialTabButtonVisible();
+          var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
           var finSec = document.getElementById('tab-financial');
-          // LAZY RENDER: se a aba Financeiro não estiver visível, não gasta CPU reconstruindo todos os cards
-          if (!forceRun && finSec && finSec.classList.contains('hidden')) {
-            finNeedsRender = true;
+
+          // ATLETA COMUM: não roda o renderizador pesado nem atualiza em tempo real!
+          if (window.currentUser && !canEdit) {
+            if (!finSnapshotData) captureLoginFinancialSnapshot(false);
+            if (forceRun && finSec && !finSec.classList.contains('hidden')) {
+              renderFastReadOnlyFinancial(false);
+            }
             return;
           }
-          finNeedsRender = false;
 
-          var loggedId = getLoggedFinAthleteId();
-          var userKey = loggedId !== null ? String(loggedId) : null;
-          if (userKey && finAutoExpandedKey !== userKey && window.expandedFinCards && typeof window.expandedFinCards.add === 'function') {
-            window.expandedFinCards.add(loggedId);
-            finAutoExpandedKey = userKey;
+          // ADMIN / EDITOR: restaura visão de edição e mantém Lazy Render quando a aba está fechada
+          if (finSec) finSec.classList.remove('teimoso-fast-readonly');
+          var fastBox = document.getElementById('teimosoFastFinView');
+          if (fastBox) fastBox.remove();
+          if (!forceRun && finSec && finSec.classList.contains('hidden')) {
+            return;
           }
-
-          var origIsAdmin = window.isAdmin;
-          var origCanEdit = window.canEditFinancial;
-          var res;
-          if (window.currentUser && !origIsAdmin && !origCanEdit) {
-            window.isAdmin = true;
-            window.canEditFinancial = true;
-            try {
-              res = origRenderFin.apply(this, arguments);
-            } finally {
-              window.isAdmin = origIsAdmin;
-              window.canEditFinancial = origCanEdit;
-            }
-          } else {
-            res = origRenderFin.apply(this, arguments);
-          }
-
-          enforceFinancialViewUI();
-          return res;
+          return origRenderFin.apply(this, arguments);
         };
         window.renderFinancial.__teimosoAllViewWrapped = true;
       }
@@ -9216,10 +9276,11 @@ try {
               document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
               finSec.classList.remove('hidden');
             }
-            if (typeof window.renderFinancial === 'function') {
+            var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
+            if (!canEdit) {
+              renderFastReadOnlyFinancial(false);
+            } else if (typeof window.renderFinancial === 'function') {
               try { window.renderFinancial(true); } catch (e) {}
-            } else {
-              enforceFinancialViewUI();
             }
           }
           return res;
@@ -9231,20 +9292,6 @@ try {
 
     return hookedRender && hookedSwitch;
   }
-
-  ['click', 'change', 'input', 'submit'].forEach(function(evtType) {
-    document.addEventListener(evtType, function(e) {
-      if (!window.currentUser || window.isAdmin || window.canEditFinancial) return;
-      var finSec = document.getElementById('tab-financial');
-      if (!finSec || finSec.classList.contains('hidden') || !finSec.contains(e.target)) return;
-      if (isFinAllowedInteractive(e.target)) return;
-      var clickable = e.target && e.target.closest ? e.target.closest('button, input, select, textarea, a, label') : null;
-      if (clickable && !isFinAllowedInteractive(clickable)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    }, true);
-  });
 
   var bootTicks = 0;
   var bootTimer = null;
@@ -9264,7 +9311,7 @@ try {
 
   document.addEventListener('DOMContentLoaded', bootShieldAndFinancial);
   window.addEventListener('load', bootShieldAndFinancial);
-  bootTimer = setInterval(bootShieldAndFinancial, 500);
+  bootTimer = setInterval(bootShieldAndFinancial, 400);
 })();
 </script>
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_END -->
