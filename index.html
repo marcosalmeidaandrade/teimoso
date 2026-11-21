@@ -6530,6 +6530,25 @@
     };
 
     window.renderFinancial = function() {
+      /* [BLINDAGEM FINANCEIRO] Lazy Render + Contabilização 100% Oficial dos Admins para todos os atletas (Somente Visualização) */
+      const __finTabSec = document.getElementById('tab-financial');
+      if (__finTabSec && __finTabSec.classList.contains('hidden')) { return; }
+      const __isRegAth = Boolean(window.currentUser && !window.isAdmin && !window.canEditFinancial);
+      const __curFinUsrKey = window.currentUser ? String(window.currentUser.id || window.currentUser.name || '') : '';
+      if (__isRegAth && window.__teimosoFinRenderedUserKey !== __curFinUsrKey) {
+        window.__teimosoFinRenderedUserKey = __curFinUsrKey;
+        window.__teimosoFinRenderedOnce = false;
+      }
+      if (__isRegAth && window.__teimosoFinRenderedOnce && !window.__teimosoAllowFinRefreshOnce) { return; }
+      window.__teimosoLastAdminFinRenderAt = Date.now();
+      const __prevIsAdmFin = window.isAdmin;
+      const __prevCanEditFin = window.canEditFinancial;
+      if (__isRegAth) {
+        window.isAdmin = true;
+        window.canEditFinancial = true;
+      }
+      try {
+
       /* [BLINDAGEM PERFORMANCE] Corta renderização pesada de edição para atletas comuns e quando aba Financeiro está oculta */
       if (window.currentUser && !window.isAdmin && !window.canEditFinancial) { return; }
       const __finTabSec = document.getElementById('tab-financial');
@@ -6748,6 +6767,18 @@
       if (lblDue) lblDue.innerText = activeFinancialFilter === 'due' ? `Total a Receber (${countFilterDue} Atletas)` : 'Total Geral a Receber Até Novembro';
     
       if (typeof container !== 'undefined' && container) { container.innerHTML = __teimosoFinDomBuf; }
+    
+      } finally {
+        if (__isRegAth) {
+          window.isAdmin = __prevIsAdmFin;
+          window.canEditFinancial = __prevCanEditFin;
+          window.__teimosoFinRenderedOnce = true;
+          window.__teimosoAllowFinRefreshOnce = false;
+        }
+        if (typeof window.__teimosoPostRenderFinancial === 'function') {
+          window.__teimosoPostRenderFinancial(__isRegAth);
+        }
+      }
     };
 
     window.settleAbsenceFine = function(athleteId, fineIndex) {
@@ -8966,8 +8997,14 @@ try {
 
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
 <style>
-  /* Quando atleta comum abre o Financeiro, oculta a árvore pesada de edição e exibe o modo ultra-leve */
-  #tab-financial.teimoso-fast-readonly > :not(#teimosoFastFinView) {
+  /* Modo somente visualização no Financeiro para atletas comuns (valores 100% iguais aos admins) */
+  #tab-financial.teimoso-fin-readonly input:not([type='search']):not([id*='search']):not([id*='Search']):not([id*='filter']):not([id*='Filter']),
+  #tab-financial.teimoso-fin-readonly select:not([id*='filter']):not([id*='Filter']),
+  #tab-financial.teimoso-fin-readonly textarea {
+    pointer-events: none !important;
+    opacity: 0.85;
+  }
+  #tab-financial.teimoso-fin-readonly .teimoso-fin-admin-only-hidden {
     display: none !important;
   }
 </style>
@@ -8975,11 +9012,6 @@ try {
 (function() {
   'use strict';
   var lastTrustedHumanActionMs = 0;
-  var finSnapshotUserKey = null;
-  var finSnapshotData = null;
-  var finSnapshotSearchTerm = '';
-  var finSnapshotStatusFilter = 'all';
-  var FIN_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
 
   ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
     document.addEventListener(evtName, function(e) {
@@ -8989,15 +9021,6 @@ try {
 
   function normFinName(str) {
     return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-  }
-
-  function escapeFinHtml(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function fmtFinBRL(val) {
-    var n = Number(val) || 0;
-    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function isFinancialEditorUser() {
@@ -9025,249 +9048,100 @@ try {
     }
   }
 
-  function captureLoginFinancialSnapshot(forceRefresh) {
-    if (!window.currentUser || !Array.isArray(window.athletes)) return null;
+  function lockFinancialReadOnlyDom(finSec) {
+    if (!finSec) return;
+    finSec.classList.add('teimoso-fin-readonly');
+
+    var inputs = finSec.querySelectorAll('input, select, textarea');
+    for (var i = 0; i < inputs.length; i++) {
+      var el = inputs[i];
+      var idLow = String(el.id || '').toLowerCase();
+      var phLow = String(el.placeholder || '').toLowerCase();
+      var isSearchOrFilter = (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
+      if (!isSearchOrFilter) {
+        el.disabled = true;
+        el.readOnly = true;
+      }
+    }
+
+    var buttons = finSec.querySelectorAll('button');
+    for (var b = 0; b < buttons.length; b++) {
+      var btn = buttons[b];
+      var oc = String(btn.getAttribute('onclick') || '');
+      var txt = normFinName(btn.textContent || '');
+      var isAccordion = oc.indexOf('toggleFinancialAccordion') !== -1;
+      var isFilter = (oc.indexOf('filterFinancial') !== -1 || oc.indexOf('setFinancialFilter') !== -1);
+      if (isAccordion || isFilter) continue;
+      var isAdminAction = /(cobrar|inadimplent|whatsapp|quitar|estornar|isentar|multa|salvar|excluir|remover|adicionar|editar|lancar)/i.test(txt) ||
+        /(pay|save|delete|remove|fine|exempt|update|quitar|estornar|toggleAlways|mark|settle|add|edit|cobr|whatsapp|notify|send|openEdit)/i.test(oc);
+      if (isAdminAction) {
+        btn.classList.add('teimoso-fin-admin-only-hidden');
+        btn.disabled = true;
+      }
+    }
+  }
+
+  function reorderFinancialCardsFast(finSec) {
+    if (!finSec || !window.currentUser) return;
     var loggedId = getLoggedFinAthleteId();
-    var uKey = String(loggedId || window.currentUser.name || 'user');
-    if (!forceRefresh && finSnapshotData && finSnapshotUserKey === uKey) {
-      return finSnapshotData;
+    var accBtns = finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]');
+    if (!accBtns || accBtns.length < 2) return;
+
+    var items = [];
+    var listParent = null;
+    for (var i = 0; i < accBtns.length; i++) {
+      var btn = accBtns[i];
+      var oc = String(btn.getAttribute('onclick') || '');
+      var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
+      var athId = m ? parseInt(m[1], 10) : null;
+      var card = btn.parentElement;
+      if (!card || !card.parentElement) continue;
+      if (!listParent) listParent = card.parentElement;
+      if (card.parentElement !== listParent) continue;
+      var athObj = (athId !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === athId; }) : null;
+      var athName = athObj && athObj.name ? String(athObj.name) : String(btn.textContent || '').trim();
+      items.push({ card: card, athId: athId, name: athName });
     }
+    if (!listParent || items.length < 2) return;
 
-    var now = new Date();
-    var seasonYear = (typeof window.getSelectedYearInt === 'function') ? window.getSelectedYearInt() : now.getFullYear();
-    var paymentsMap = window.financialPayments || {};
-    var upToDateMap = window.alwaysUpToDateMap || {};
-    var finesMap = window.absenceFines || {};
-
-    var list = window.athletes.filter(function(a) { return a && a.name; }).map(function(ath) {
-      var athId = Number(ath.id);
-      var isExempt = Boolean(ath.isExemptMonthlyFee || upToDateMap[athId] === true || Number(ath.monthlyFee) === 0);
-      var baseFee = isExempt ? 0 : (Number(ath.monthlyFee) || 110);
-      var athPay = paymentsMap[athId] || {};
-      var athFines = Array.isArray(finesMap[athId]) ? finesMap[athId] : [];
-      var unpaidFinesTotal = 0;
-      for (var f = 0; f < athFines.length; f++) {
-        if (athFines[f] && !athFines[f].paid) unpaidFinesTotal += (Number(athFines[f].amount) || 0);
-      }
-
-      var totalPaid = 0;
-      var pendingInstallments = 0;
-      var overdueInstallments = 0;
-      var totalInterest = 0;
-      var hasOverdue = false;
-      var monthsList = [];
-
-      for (var m = 0; m < FIN_MONTHS.length; m++) {
-        var mKey = FIN_MONTHS[m];
-        var mData = athPay[mKey] || { paid: false, amount: 0 };
-        var isPaid = (mData.paid === true) || ((Number(mData.amount) || 0) > 0);
-        var paidAmt = Number(mData.amount) || 0;
-        if (isPaid) totalPaid += paidAmt;
-
-        var effSusp = Boolean(ath.isSuspended || isExempt);
-        var dueDate = new Date(seasonYear, m, 15, 23, 59, 59);
-        var isOverdue = !isPaid && !effSusp && (now > dueDate);
-        var monthInterest = 0;
-        if (isOverdue) {
-          hasOverdue = true;
-          overdueInstallments += baseFee;
-          if (typeof mData.interest === 'number') {
-            monthInterest = mData.interest;
-          } else {
-            var monthsLate = Math.max(1, (now.getFullYear() - seasonYear) * 12 + (now.getMonth() - m));
-            monthInterest = Math.round(baseFee * 0.05 * monthsLate * 100) / 100;
-          }
-          totalInterest += monthInterest;
-        }
-        if (!isPaid && !effSusp) pendingInstallments += baseFee;
-        monthsList.push({
-          key: mKey,
-          label: mKey.toUpperCase(),
-          status: isExempt ? 'exempt' : (isPaid ? 'paid' : (isOverdue ? 'overdue' : 'pending')),
-          paidAmt: paidAmt,
-          dueAmt: isExempt ? 0 : baseFee,
-          interest: monthInterest
-        });
-      }
-
-      var totalOverdueAll = overdueInstallments + totalInterest + unpaidFinesTotal;
-      var totalGeneralNov = pendingInstallments + totalInterest + unpaidFinesTotal;
-      var isUpToDate = isExempt || (!hasOverdue && unpaidFinesTotal <= 0);
-      return {
-        id: athId,
-        name: String(ath.name),
-        normName: normFinName(ath.name),
-        isSuspended: Boolean(ath.isSuspended),
-        isExempt: isExempt,
-        isUpToDate: isUpToDate,
-        totalPaid: totalPaid,
-        pendingInstallments: pendingInstallments,
-        totalInterest: totalInterest,
-        overdueInstallments: overdueInstallments,
-        unpaidFinesTotal: unpaidFinesTotal,
-        totalOverdueAll: totalOverdueAll,
-        totalGeneralNov: totalGeneralNov,
-        months: monthsList
-      };
-    });
-
-    var totals = { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, totalOverdueAll: 0, totalGeneralNovAll: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
-    for (var t = 0; t < list.length; t++) {
-      totals.totalPaid += list[t].totalPaid;
-      totals.totalPending += list[t].pendingInstallments;
-      totals.totalOverdue += list[t].overdueInstallments;
-      totals.totalInterest += list[t].totalInterest;
-      totals.totalFines += list[t].unpaidFinesTotal;
-      totals.totalOverdueAll += list[t].totalOverdueAll;
-      totals.totalGeneralNovAll += list[t].totalGeneralNov;
-      if (list[t].isExempt) totals.exemptCount++;
-      if (list[t].isUpToDate) totals.upToDateCount++; else totals.overdueCount++;
-    }
-
-    list.sort(function(a, b) {
-      var aSelf = (loggedId !== null && a.id === loggedId) ? 0 : 1;
-      var bSelf = (loggedId !== null && b.id === loggedId) ? 0 : 1;
+    var sorted = items.slice().sort(function(a, b) {
+      var aSelf = (loggedId !== null && a.athId === loggedId) ? 0 : 1;
+      var bSelf = (loggedId !== null && b.athId === loggedId) ? 0 : 1;
       if (aSelf !== bSelf) return aSelf - bSelf;
       return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
     });
 
-    finSnapshotUserKey = uKey;
-    finSnapshotData = {
-      loggedId: loggedId,
-      capturedAt: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      totals: totals,
-      items: list
-    };
-    return finSnapshotData;
+    var changed = false;
+    for (var k = 0; k < sorted.length; k++) {
+      if (sorted[k].card !== items[k].card) { changed = true; break; }
+    }
+    if (changed) {
+      var frag = document.createDocumentFragment();
+      for (var s = 0; s < sorted.length; s++) {
+        frag.appendChild(sorted[s].card);
+      }
+      listParent.appendChild(frag);
+    }
+
+    for (var h = 0; h < sorted.length; h++) {
+      if (loggedId !== null && sorted[h].athId === loggedId) {
+        sorted[h].card.classList.add('border-2', 'border-emerald-400', 'shadow-md');
+      } else {
+        sorted[h].card.classList.remove('border-emerald-400');
+      }
+    }
   }
 
-  window.__teimosoToggleFastFinCard = function(athId) {
-    var panel = document.getElementById('teimosoFastFinPanel_' + athId);
-    var icon = document.getElementById('teimosoFastFinChev_' + athId);
-    if (!panel) return;
-    var isHidden = panel.classList.contains('hidden');
-    if (isHidden) {
-      if (!panel.getAttribute('data-loaded') && finSnapshotData && Array.isArray(finSnapshotData.items)) {
-        var athItem = finSnapshotData.items.find(function(x) { return Number(x.id) === Number(athId); });
-        if (athItem && Array.isArray(athItem.months)) {
-          var mHtml = athItem.months.map(function(mo) {
-            var boxCls = mo.status === 'exempt' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : (mo.status === 'paid' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : (mo.status === 'overdue' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-slate-50 border-slate-200 text-slate-600'));
-            var stLbl = mo.status === 'exempt' ? 'Isento' : (mo.status === 'paid' ? 'Pago' : (mo.status === 'overdue' ? 'Em Atraso' : 'A Vencer'));
-            var valTxt = mo.status === 'paid' ? fmtFinBRL(mo.paidAmt) : fmtFinBRL(mo.dueAmt + (mo.interest || 0));
-            return '<div class="border rounded-xl p-2.5 text-center ' + boxCls + '">' +
-              '<div class="text-[10px] font-black uppercase tracking-wider">' + mo.label + '</div>' +
-              '<div class="text-xs font-black mt-0.5">' + valTxt + '</div>' +
-              '<div class="text-[9px] font-bold uppercase mt-0.5">' + stLbl + '</div>' +
-            '</div>';
-          }).join('');
-          panel.innerHTML = '<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">' + mHtml + '</div>';
-          panel.setAttribute('data-loaded', '1');
-        }
-      }
-      panel.classList.remove('hidden');
-      if (icon) icon.style.transform = 'rotate(180deg)';
-    } else {
-      panel.classList.add('hidden');
-      if (icon) icon.style.transform = 'rotate(0deg)';
-    }
-  };
-
-  function renderFastReadOnlyFinancial(forceCapture) {
+  window.__teimosoPostRenderFinancial = function(isRegularAthlete) {
     var finSec = document.getElementById('tab-financial');
     if (!finSec) return;
-    finSec.classList.add('teimoso-fast-readonly');
-
-    var snap = captureLoginFinancialSnapshot(Boolean(forceCapture));
-    if (!snap) return;
-
-    var container = document.getElementById('teimosoFastFinView');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'teimosoFastFinView';
-      container.className = 'space-y-4';
-      finSec.appendChild(container);
+    if (isRegularAthlete) {
+      lockFinancialReadOnlyDom(finSec);
+      reorderFinancialCardsFast(finSec);
+    } else {
+      finSec.classList.remove('teimoso-fin-readonly');
     }
-    var tot = snap.totals || { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, totalOverdueAll: 0, totalGeneralNovAll: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
-    var parts = [];
-
-    parts.push(
-      '<div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
-        '<div>' +
-          '<h3 class="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">' +
-            '<i class="fa-solid fa-wallet text-emerald-600"></i> Gestão Financeira de Mensalidades' +
-          '</h3>' +
-          '<p class="text-xs text-slate-500 mt-1">Consulte seus pagamentos e mensalidades. Edição restrita para <strong class="text-slate-700">PABLO PADILHA</strong> e <strong class="text-slate-700">MARCÃO</strong>.</p>' +
-        '</div>' +
-      '</div>'
-    );
-
-    parts.push(
-      '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">' +
-        '<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">' +
-          '<div>' +
-            '<div class="text-[11px] font-black uppercase tracking-wide text-slate-500">Total Geral Pago</div>' +
-            '<div class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">' + fmtFinBRL(tot.totalPaid) + '</div>' +
-          '</div>' +
-          '<div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-circle-check text-lg"></i></div>' +
-        '</div>' +
-        '<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">' +
-          '<div>' +
-            '<div class="text-[11px] font-black uppercase tracking-wide text-slate-500">Total de Juros Devidos</div>' +
-            '<div class="text-xl sm:text-2xl font-black text-amber-600 mt-1">' + fmtFinBRL(tot.totalInterest) + '</div>' +
-          '</div>' +
-          '<div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-clock text-lg"></i></div>' +
-        '</div>' +
-        '<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">' +
-          '<div>' +
-            '<div class="text-[11px] font-black uppercase tracking-wide text-rose-600">Total em Atraso</div>' +
-            '<div class="text-xl sm:text-2xl font-black text-rose-600 mt-1">' + fmtFinBRL(tot.totalOverdueAll) + '</div>' +
-          '</div>' +
-          '<div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>' +
-        '</div>' +
-        '<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">' +
-          '<div>' +
-            '<div class="text-[11px] font-black uppercase tracking-wide text-purple-700 leading-snug">Total Geral a Receber até Novembro</div>' +
-            '<div class="text-xl sm:text-2xl font-black text-purple-600 mt-1">' + fmtFinBRL(tot.totalGeneralNovAll) + '</div>' +
-          '</div>' +
-          '<div class="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-calendar-check text-lg"></i></div>' +
-        '</div>' +
-      '</div>'
-    );
-
-    parts.push('<div id="teimosoFastFinList" class="space-y-3">');
-    for (var i = 0; i < snap.items.length; i++) {
-      var it = snap.items[i];
-      var isSelf = (snap.loggedId !== null && it.id === snap.loggedId);
-      var dotCls = it.isUpToDate ? 'bg-emerald-500' : 'bg-rose-500';
-      var badgeCls = it.isUpToDate ? 'text-emerald-700 bg-emerald-50 border-emerald-300' : 'text-rose-700 bg-rose-50 border-rose-300';
-      var badgeTxt = it.isExempt ? 'Isento' : (it.isUpToDate ? 'Em dia' : 'Em Atraso');
-      var cardBorder = isSelf ? 'border-2 border-emerald-400 shadow-md' : 'border border-slate-200 shadow-sm';
-
-      parts.push(
-        '<div class="bg-white ' + cardBorder + ' rounded-2xl overflow-hidden">' +
-          '<button type="button" onclick="window.__teimosoToggleFastFinCard(' + it.id + ')" class="w-full p-4 sm:px-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-left hover:bg-slate-50/70 transition-colors cursor-pointer">' +
-            '<div class="flex items-center gap-3 flex-wrap">' +
-              '<span class="w-3 h-3 rounded-full ' + dotCls + ' shrink-0"></span>' +
-              '<span class="font-black text-slate-800 text-xs sm:text-sm uppercase tracking-wide">' + escapeFinHtml(it.name) + '</span>' +
-              (it.isSuspended ? '<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-black uppercase">Suspenso</span>' : '') +
-              '<span class="px-3 py-0.5 rounded-full text-[10px] font-bold border ' + badgeCls + '">' + badgeTxt + '</span>' +
-            '</div>' +
-            '<div class="flex items-center justify-between lg:justify-end gap-3 sm:gap-5 text-[11px] sm:text-xs font-bold flex-wrap">' +
-              '<div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase tracking-wide">Pago</span><span class="text-emerald-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalPaid) + '</span></div>' +
-              '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3 sm:pl-4"><span class="text-[9px] uppercase tracking-wide">Parcelas</span><span class="text-slate-800 text-xs sm:text-sm font-black">' + fmtFinBRL(it.pendingInstallments) + '</span></div>' +
-              '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3 sm:pl-4"><span class="text-[9px] uppercase tracking-wide">Juros</span><span class="text-amber-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalInterest) + '</span></div>' +
-              '<div class="flex flex-col text-rose-600 border-l border-slate-200 pl-3 sm:pl-4"><span class="text-[9px] uppercase tracking-wide">Total em Atraso</span><span class="text-rose-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalOverdueAll) + '</span></div>' +
-              '<div class="flex flex-col text-purple-700 border-l border-slate-200 pl-3 sm:pl-4"><span class="text-[9px] uppercase tracking-wide">Total Geral até Novembro</span><span class="text-purple-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalGeneralNov) + '</span></div>' +
-              '<i id="teimosoFastFinChev_' + it.id + '" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform ml-1"></i>' +
-            '</div>' +
-          '</button>' +
-          '<div id="teimosoFastFinPanel_' + it.id + '" class="hidden border-t border-slate-100 bg-slate-50/60 p-3.5 sm:p-4"></div>' +
-        '</div>'
-      );
-    }
-    parts.push('</div>');
-    container.innerHTML = parts.join('');
-  }
+  };
 
   function wrapPresenceFunctions() {
     ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence'].forEach(function(fnName) {
@@ -9302,16 +9176,20 @@ try {
             document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
             finSec.classList.remove('hidden');
           }
-          if (isFinancialEditorUser()) {
-            if (finSec) finSec.classList.remove('teimoso-fast-readonly');
-            var fastEl = document.getElementById('teimosoFastFinView');
-            if (fastEl) fastEl.remove();
-            var lastAt = window.__teimosoLastAdminFinRenderAt || 0;
-            if ((Date.now() - lastAt) > 200 && typeof window.renderFinancial === 'function') {
-              try { window.renderFinancial(); } catch (eRf) {}
+          var curUserKey = String(getLoggedFinAthleteId() || window.currentUser.name || '');
+          if (window.__teimosoFinRenderedUserKey !== curUserKey) {
+            window.__teimosoFinRenderedUserKey = curUserKey;
+            window.__teimosoFinRenderedOnce = false;
+          }
+          var lastAt = window.__teimosoLastAdminFinRenderAt || 0;
+          if (typeof window.renderFinancial === 'function') {
+            if (isFinancialEditorUser()) {
+              if ((Date.now() - lastAt) > 200) {
+                try { window.renderFinancial(); } catch (eRf1) {}
+              }
+            } else if (!window.__teimosoFinRenderedOnce) {
+              try { window.renderFinancial(); } catch (eRf2) {}
             }
-          } else {
-            renderFastReadOnlyFinancial(false);
           }
         }
         return res;
@@ -9326,21 +9204,52 @@ try {
     wrapPresenceFunctions();
     wrapFinancialHooks();
     ensureFinTabButtonVisible();
-    if (window.currentUser && !isFinancialEditorUser() && !finSnapshotData && Array.isArray(window.athletes) && window.athletes.length > 0) {
-      captureLoginFinancialSnapshot(true);
-    }
     if (bootTicks >= 40) clearInterval(bootTimer);
   }, 250);
 
+  /* Permite apenas abrir/fechar cards e filtros no Financeiro para atletas comuns; bloqueia qualquer edição */
   document.addEventListener('click', function(ev) {
-    var btn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-financial') : null;
-    if (btn && window.currentUser) {
+    var finTabBtn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-financial') : null;
+    if (finTabBtn && window.currentUser) {
       wrapFinancialHooks();
-      if (!isFinancialEditorUser()) {
-        setTimeout(function() { renderFastReadOnlyFinancial(false); }, 10);
+      return;
+    }
+    var finSec = document.getElementById('tab-financial');
+    if (!finSec || !finSec.contains(ev.target) || isFinancialEditorUser()) return;
+
+    var accBtn = ev.target && ev.target.closest ? ev.target.closest('button[onclick*="toggleFinancialAccordion"]') : null;
+    if (accBtn) {
+      window.__teimosoAllowFinRefreshOnce = true;
+      return;
+    }
+    var clickedBtn = ev.target && ev.target.closest ? ev.target.closest('button') : null;
+    if (clickedBtn) {
+      var oc = String(clickedBtn.getAttribute('onclick') || '');
+      if (oc.indexOf('filterFinancial') !== -1 || oc.indexOf('setFinancialFilter') !== -1) {
+        window.__teimosoAllowFinRefreshOnce = true;
+        return;
       }
+      ev.preventDefault();
+      ev.stopPropagation();
     }
   }, true);
+
+  ['change', 'input'].forEach(function(evtName) {
+    document.addEventListener(evtName, function(ev) {
+      var finSec = document.getElementById('tab-financial');
+      if (!finSec || !finSec.contains(ev.target) || isFinancialEditorUser()) return;
+      var el = ev.target;
+      var idLow = String(el.id || '').toLowerCase();
+      var phLow = String(el.placeholder || '').toLowerCase();
+      var isSearchOrFilter = (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
+      if (isSearchOrFilter) {
+        window.__teimosoAllowFinRefreshOnce = true;
+        return;
+      }
+      ev.preventDefault();
+      ev.stopPropagation();
+    }, true);
+  });
 })();
 </script>
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_END -->
