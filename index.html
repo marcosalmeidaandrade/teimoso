@@ -2664,7 +2664,7 @@
       }
       try {
         pruneActivityLogs();
-        await setDoc(dbDocRef, {
+        await __teimosoSafeSetDoc(dbDocRef, {
           currentActiveClubYear: window.currentActiveClubYear || 2026,
           availableSeasons: window.availableSeasons || [2026],
           seasonsArchive: window.seasonsArchive || {},
@@ -2686,6 +2686,34 @@
         console.error("Erro ao salvar no Firestore:", error);
         window.showToast("Erro ao conectar à nuvem. Verifique a internet.", "error");
       }
+    }
+    /* =========================================================================
+       [BLINDAGEM DEFINITIVA] Wrapper obrigatório { merge: true } para setDoc
+       Impede que a omissão de 'presences' no saveData() apague o campo na nuvem.
+       ========================================================================= */
+    async function __teimosoSafeSetDoc(ref, data, options) {
+      if (typeof isCloudReady !== 'undefined' && !isCloudReady) return;
+      if (!navigator.onLine) {
+        if (typeof window.showToast === 'function') window.showToast('Sem internet! Gravação bloqueada para proteger as presenças.', 'error');
+        return;
+      }
+      const safeOptions = Object.assign({}, options || {}, { merge: true });
+      const safeData = Object.assign({}, data || {});
+      if (safeData.presences && typeof safeData.presences === 'object') {
+        const dKeys = Object.keys(safeData.presences);
+        const isSingleAthletePatch = Boolean(
+          safeData.__allowSinglePresenceMerge ||
+          (dKeys.length === 1 &&
+            safeData.presences[dKeys[0]] &&
+            typeof safeData.presences[dKeys[0]] === 'object' &&
+            Object.keys(safeData.presences[dKeys[0]]).length === 1)
+        );
+        if (!isSingleAthletePatch) {
+          delete safeData.presences;
+        }
+      }
+      delete safeData.__allowSinglePresenceMerge;
+      return setDoc(ref, safeData, safeOptions);
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
         // [BLINDAGEM PRESENÇA INDIVIDUAL] Gravação atômica por célula via updateDoc
