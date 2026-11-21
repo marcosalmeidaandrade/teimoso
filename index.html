@@ -2689,7 +2689,7 @@
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
         // [BLINDAGEM PRESENÇA INDIVIDUAL] Gravação atômica por célula via updateDoc
-        window.syncSpecificData = async function(payload) {
+            window.syncSpecificData = async function(payload) {
       if (!isCloudReady || !navigator.onLine) return;
       if (typeof window.isViewingArchivedSeason === 'function' && window.isViewingArchivedSeason()) {
         if (typeof window.showToast === 'function') window.showToast('Modo Histórico: mude para o ano atual para alterar.', 'error');
@@ -2780,6 +2780,8 @@
       }
       await window.syncSpecificData(payload);
     };
+
+    
 
     // Helper exclusivo para gravar 1 único atleta em 1 única data
     
@@ -8944,13 +8946,26 @@ try {
 </script>
 <!-- TEIMOSO_SAFE_PATCH_V6_END -->
 
+
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
+<style>
+  #tab-financial.teimoso-fin-readonly input[type='number'],
+  #tab-financial.teimoso-fin-readonly input[type='checkbox'],
+  #tab-financial.teimoso-fin-readonly input[type='radio'],
+  #tab-financial.teimoso-fin-readonly select,
+  #tab-financial.teimoso-fin-readonly textarea {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+  }
+</style>
 <script>
 (function() {
   'use strict';
   var lastTrustedHumanActionMs = 0;
   var finAutoExpandedKey = null;
   var finDomLock = false;
+  var finNeedsRender = false;
+  var finBtnVisibleDone = false;
 
   ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
     document.addEventListener(evtName, function(e) {
@@ -8960,30 +8975,36 @@ try {
 
   function wrapPresenceGuards() {
     var targetFns = ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence', 'toggleFieldAttendance', 'toggleAttended'];
+    var wrappedAny = false;
     targetFns.forEach(function(fnName) {
-      if (typeof window[fnName] === 'function' && !window[fnName].__teimosoAtomicShield) {
-        var orig = window[fnName];
-        window[fnName] = function() {
-          if (!navigator.onLine) {
-            if (typeof window.showToast === 'function') {
-              window.showToast('Sem internet! Confirmação bloqueada para evitar dessincronização.', 'error');
+      if (typeof window[fnName] === 'function') {
+        if (!window[fnName].__teimosoAtomicShield) {
+          var orig = window[fnName];
+          window[fnName] = function() {
+            if (!navigator.onLine) {
+              if (typeof window.showToast === 'function') {
+                window.showToast('Sem internet! Confirmação bloqueada para evitar dessincronização.', 'error');
+              }
+              return;
             }
-            return;
-          }
-          var elapsed = Date.now() - lastTrustedHumanActionMs;
-          if (elapsed > 3000) {
-            console.warn('[BLINDAGEM] Bloqueada tentativa automática sem clique humano em ' + fnName + '.');
-            return;
-          }
-          return orig.apply(this, arguments);
-        };
-        window[fnName].__teimosoAtomicShield = true;
+            var elapsed = Date.now() - lastTrustedHumanActionMs;
+            if (elapsed > 3000) {
+              console.warn('[BLINDAGEM] Bloqueada tentativa automática sem clique humano em ' + fnName + '.');
+              return;
+            }
+            return orig.apply(this, arguments);
+          };
+          window[fnName].__teimosoAtomicShield = true;
+        }
+        wrappedAny = true;
       }
     });
+    return wrappedAny;
   }
 
   // =========================================================================
   // FINANCEIRO ABERTO PARA TODOS (SOMENTE VISUALIZAÇÃO + LOGADO 1º + A-Z)
+  // OTIMIZADO: LAZY RENDER + DOCUMENTFRAGMENT + ZERO POLLING PESADO
   // =========================================================================
   function normFinName(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -9006,10 +9027,10 @@ try {
     if (!el) return false;
     var tag = (el.tagName || '').toUpperCase();
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
-      var idLow = String(el.id || '').toLowerCase();
-      var phLow = String(el.placeholder || '').toLowerCase();
       var typeLow = String(el.type || '').toLowerCase();
       if (typeLow === 'checkbox' || typeLow === 'radio' || typeLow === 'number') return false;
+      var idLow = String(el.id || '').toLowerCase();
+      var phLow = String(el.placeholder || '').toLowerCase();
       return (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
     }
     var btn = el.closest ? el.closest('button') : (tag === 'BUTTON' ? el : null);
@@ -9017,27 +9038,36 @@ try {
       var oc = String(btn.getAttribute('onclick') || '');
       if (oc.indexOf('toggleFinancialAccordion') !== -1) return true;
       if (/(filterFinancial|setFinancialFilter|clearFinancialFilter)/i.test(oc)) return true;
-      var txt = normFinName(btn.textContent || '');
-      if (!oc && (txt === 'TODOS' || txt === 'EM DIA' || txt === 'EM ATRASO' || txt === 'ISENTOS')) return true;
+      if (!oc) {
+        var txt = normFinName(btn.textContent || '');
+        if (txt === 'TODOS' || txt === 'EM DIA' || txt === 'EM ATRASO' || txt === 'ISENTOS') return true;
+      }
       return false;
     }
     return false;
   }
 
-  function enforceFinancialViewUI() {
+  function ensureFinancialTabButtonVisible() {
     if (!window.currentUser) return;
     var finBtn = document.getElementById('tabBtn-financial');
     if (finBtn) {
-      finBtn.classList.remove('hidden');
-      finBtn.style.display = 'flex';
-      finBtn.style.visibility = 'visible';
+      if (finBtn.classList.contains('hidden')) finBtn.classList.remove('hidden');
+      if (finBtn.style.display !== 'flex') finBtn.style.display = 'flex';
+      finBtnVisibleDone = true;
     }
+  }
+
+  function enforceFinancialViewUI() {
+    if (!window.currentUser) return;
+    ensureFinancialTabButtonVisible();
 
     var finSec = document.getElementById('tab-financial');
-    if (!finSec) return;
+    if (!finSec || finSec.classList.contains('hidden')) return;
 
     var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
     var loggedId = getLoggedFinAthleteId();
+
+    finSec.classList.toggle('teimoso-fin-readonly', !canEdit);
 
     var banner = document.getElementById('teimosoFinReadOnlyBanner');
     if (!canEdit) {
@@ -9048,28 +9078,36 @@ try {
         banner.innerHTML = '<i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Modo somente visualização: você pode consultar a situação financeira de todos os atletas (seu perfil aparece primeiro, seguido da ordem alfabética).</span>';
         finSec.insertBefore(banner, finSec.firstChild);
       }
-      banner.style.display = 'flex';
-    } else if (banner) {
+      if (banner.style.display !== 'flex') banner.style.display = 'flex';
+    } else if (banner && banner.style.display !== 'none') {
       banner.style.display = 'none';
     }
 
     if (!finDomLock) {
-      var accBtns = Array.prototype.slice.call(finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]'));
+      var accBtns = finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]');
       if (accBtns.length >= 1) {
+        var athNameMap = {};
+        if (Array.isArray(window.athletes)) {
+          for (var k = 0; k < window.athletes.length; k++) {
+            var aObj = window.athletes[k];
+            if (aObj && aObj.id !== undefined) athNameMap[Number(aObj.id)] = String(aObj.name || '');
+          }
+        }
+
         var items = [];
         var listParent = null;
-        accBtns.forEach(function(btn) {
-          var oc = String(btn.getAttribute('onclick') || '');
+        for (var idx = 0; idx < accBtns.length; idx++) {
+          var btn = accBtns[idx];
+          var oc = btn.getAttribute('onclick') || '';
           var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
           var athId = m ? parseInt(m[1], 10) : null;
           var card = btn.parentElement;
-          if (!card || !card.parentElement) return;
+          if (!card || !card.parentElement) continue;
           if (!listParent) listParent = card.parentElement;
-          if (card.parentElement !== listParent) return;
-          var athObj = (athId !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === athId; }) : null;
-          var athName = (athObj && athObj.name) ? String(athObj.name) : String(btn.textContent || '').trim();
+          if (card.parentElement !== listParent) continue;
+          var athName = (athId !== null && athNameMap[athId]) ? athNameMap[athId] : String(btn.textContent || '').trim();
           items.push({ card: card, athId: athId, name: athName });
-        });
+        }
 
         if (listParent && items.length >= 1) {
           var sorted = items.slice().sort(function(a, b) {
@@ -9087,15 +9125,18 @@ try {
           finDomLock = true;
           try {
             if (changed) {
-              sorted.forEach(function(it) { listParent.appendChild(it.card); });
+              var frag = document.createDocumentFragment();
+              for (var j = 0; j < sorted.length; j++) frag.appendChild(sorted[j].card);
+              listParent.appendChild(frag);
             }
-            sorted.forEach(function(it) {
+            for (var p = 0; p < sorted.length; p++) {
+              var it = sorted[p];
               if (loggedId !== null && it.athId === loggedId) {
                 it.card.classList.add('ring-2', 'ring-emerald-400');
               } else {
                 it.card.classList.remove('ring-2', 'ring-emerald-400');
               }
-            });
+            }
           } finally {
             finDomLock = false;
           }
@@ -9104,82 +9145,98 @@ try {
     }
 
     if (!canEdit) {
-      finSec.querySelectorAll('input, select, textarea').forEach(function(el) {
-        if (!isFinAllowedInteractive(el)) {
-          el.disabled = true;
-          el.readOnly = true;
-          el.classList.add('opacity-75', 'cursor-not-allowed');
+      var allButtons = finSec.querySelectorAll('button');
+      for (var bIdx = 0; bIdx < allButtons.length; bIdx++) {
+        var bEl = allButtons[bIdx];
+        if (!isFinAllowedInteractive(bEl)) {
+          bEl.style.display = 'none';
+          bEl.disabled = true;
         }
-      });
-      finSec.querySelectorAll('button').forEach(function(btn) {
-        if (!isFinAllowedInteractive(btn)) {
-          btn.style.display = 'none';
-          btn.disabled = true;
-        }
-      });
+      }
     }
   }
 
   function wrapFinancialHooks() {
-    if (typeof window.renderFinancial === 'function' && !window.renderFinancial.__teimosoAllViewWrapped) {
-      var origRenderFin = window.renderFinancial;
-      window.renderFinancial = function() {
-        var loggedId = getLoggedFinAthleteId();
-        var userKey = loggedId !== null ? String(loggedId) : null;
-        if (userKey && finAutoExpandedKey !== userKey && window.expandedFinCards && typeof window.expandedFinCards.add === 'function') {
-          window.expandedFinCards.add(loggedId);
-          finAutoExpandedKey = userKey;
-        }
+    var hookedRender = false;
+    var hookedSwitch = false;
 
-        var origIsAdmin = window.isAdmin;
-        var origCanEdit = window.canEditFinancial;
-        var res;
-        if (window.currentUser && !origIsAdmin && !origCanEdit) {
-          window.isAdmin = true;
-          window.canEditFinancial = true;
-          try {
-            res = origRenderFin.apply(this, arguments);
-          } finally {
-            window.isAdmin = origIsAdmin;
-            window.canEditFinancial = origCanEdit;
-          }
-        } else {
-          res = origRenderFin.apply(this, arguments);
-        }
-
-        enforceFinancialViewUI();
-        return res;
-      };
-      window.renderFinancial.__teimosoAllViewWrapped = true;
-    }
-
-    if (typeof window.switchTab === 'function' && !window.switchTab.__teimosoFinOpenWrapped) {
-      var origSwitchTab = window.switchTab;
-      window.switchTab = function(tab) {
-        var res = origSwitchTab.apply(this, arguments);
-        if (tab === 'financial' && window.currentUser) {
+    if (typeof window.renderFinancial === 'function') {
+      if (!window.renderFinancial.__teimosoAllViewWrapped) {
+        var origRenderFin = window.renderFinancial;
+        window.renderFinancial = function(forceRun) {
+          ensureFinancialTabButtonVisible();
           var finSec = document.getElementById('tab-financial');
-          if (finSec && finSec.classList.contains('hidden')) {
-            document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
-            finSec.classList.remove('hidden');
+          // LAZY RENDER: se a aba Financeiro não estiver visível, não gasta CPU reconstruindo todos os cards
+          if (!forceRun && finSec && finSec.classList.contains('hidden')) {
+            finNeedsRender = true;
+            return;
           }
-          if (typeof window.renderFinancial === 'function') {
-            try { window.renderFinancial(); } catch (e) {}
+          finNeedsRender = false;
+
+          var loggedId = getLoggedFinAthleteId();
+          var userKey = loggedId !== null ? String(loggedId) : null;
+          if (userKey && finAutoExpandedKey !== userKey && window.expandedFinCards && typeof window.expandedFinCards.add === 'function') {
+            window.expandedFinCards.add(loggedId);
+            finAutoExpandedKey = userKey;
+          }
+
+          var origIsAdmin = window.isAdmin;
+          var origCanEdit = window.canEditFinancial;
+          var res;
+          if (window.currentUser && !origIsAdmin && !origCanEdit) {
+            window.isAdmin = true;
+            window.canEditFinancial = true;
+            try {
+              res = origRenderFin.apply(this, arguments);
+            } finally {
+              window.isAdmin = origIsAdmin;
+              window.canEditFinancial = origCanEdit;
+            }
           } else {
-            enforceFinancialViewUI();
+            res = origRenderFin.apply(this, arguments);
           }
-        }
-        return res;
-      };
-      window.switchTab.__teimosoFinOpenWrapped = true;
+
+          enforceFinancialViewUI();
+          return res;
+        };
+        window.renderFinancial.__teimosoAllViewWrapped = true;
+      }
+      hookedRender = true;
     }
+
+    if (typeof window.switchTab === 'function') {
+      if (!window.switchTab.__teimosoFinOpenWrapped) {
+        var origSwitchTab = window.switchTab;
+        window.switchTab = function(tab) {
+          var res = origSwitchTab.apply(this, arguments);
+          ensureFinancialTabButtonVisible();
+          if (tab === 'financial' && window.currentUser) {
+            var finSec = document.getElementById('tab-financial');
+            if (finSec && finSec.classList.contains('hidden')) {
+              document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
+              finSec.classList.remove('hidden');
+            }
+            if (typeof window.renderFinancial === 'function') {
+              try { window.renderFinancial(true); } catch (e) {}
+            } else {
+              enforceFinancialViewUI();
+            }
+          }
+          return res;
+        };
+        window.switchTab.__teimosoFinOpenWrapped = true;
+      }
+      hookedSwitch = true;
+    }
+
+    return hookedRender && hookedSwitch;
   }
 
   ['click', 'change', 'input', 'submit'].forEach(function(evtType) {
     document.addEventListener(evtType, function(e) {
       if (!window.currentUser || window.isAdmin || window.canEditFinancial) return;
       var finSec = document.getElementById('tab-financial');
-      if (!finSec || !finSec.contains(e.target)) return;
+      if (!finSec || finSec.classList.contains('hidden') || !finSec.contains(e.target)) return;
       if (isFinAllowedInteractive(e.target)) return;
       var clickable = e.target && e.target.closest ? e.target.closest('button, input, select, textarea, a, label') : null;
       if (clickable && !isFinAllowedInteractive(clickable)) {
@@ -9189,15 +9246,25 @@ try {
     }, true);
   });
 
+  var bootTicks = 0;
+  var bootTimer = null;
   function bootShieldAndFinancial() {
-    wrapPresenceGuards();
-    wrapFinancialHooks();
-    enforceFinancialViewUI();
+    bootTicks++;
+    var okPres = wrapPresenceGuards();
+    var okFin = wrapFinancialHooks();
+    ensureFinancialTabButtonVisible();
+    if (okPres && okFin && finBtnVisibleDone && bootTimer) {
+      clearInterval(bootTimer);
+      bootTimer = null;
+    } else if (bootTicks >= 40 && bootTimer) {
+      clearInterval(bootTimer);
+      bootTimer = null;
+    }
   }
 
   document.addEventListener('DOMContentLoaded', bootShieldAndFinancial);
   window.addEventListener('load', bootShieldAndFinancial);
-  setInterval(bootShieldAndFinancial, 1000);
+  bootTimer = setInterval(bootShieldAndFinancial, 500);
 })();
 </script>
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_END -->
