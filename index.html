@@ -2689,149 +2689,100 @@
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
         // [BLINDAGEM PRESENÇA INDIVIDUAL] Gravação atômica por célula via updateDoc
-    window.syncSpecificData = async function(payload) {
-      if (!isCloudReady) return;
-      if (!navigator.onLine) {
-        if (typeof handleOffline === 'function') handleOffline();
-        if (typeof window.showToast === 'function') window.showToast('Sem internet! Alteração bloqueada para evitar conflito.', 'error');
-        return;
-      }
+        window.syncSpecificData = async function(payload) {
+      if (!isCloudReady || !navigator.onLine) return;
       if (typeof window.isViewingArchivedSeason === 'function' && window.isViewingArchivedSeason()) {
         if (typeof window.showToast === 'function') window.showToast('Modo Histórico: mude para o ano atual para alterar.', 'error');
         return;
       }
-      if (!payload || typeof payload !== 'object') return;
       try {
         if (typeof pruneActivityLogs === 'function') pruneActivityLogs();
         const dotUpdates = { updatedAt: new Date().toISOString() };
-        let hasFieldUpdate = false;
-
-        // 1. PRESENÇAS: grava EXCLUSIVAMENTE a célula presences.{data}.{atletaId}
-        if (payload.presences && typeof payload.presences === 'object') {
+        if (payload && payload.presences) {
           for (const [dateKey, athletesMap] of Object.entries(payload.presences)) {
-            if (!dateKey || !athletesMap || typeof athletesMap !== 'object') continue;
+            if (!athletesMap) continue;
             for (const [athId, pRec] of Object.entries(athletesMap)) {
-              if (athId === undefined || athId === null || athId === '') continue;
               dotUpdates['presences.' + dateKey + '.' + athId] = pRec;
-              hasFieldUpdate = true;
             }
           }
         }
-
-        // 2. MULTAS DE AUSÊNCIA: grava apenas o atleta afetado
-        if (payload.absenceFines && typeof payload.absenceFines === 'object') {
+        if (payload && payload.absenceFines) {
           for (const [athId, finesArr] of Object.entries(payload.absenceFines)) {
             dotUpdates['absenceFines.' + athId] = finesArr;
-            hasFieldUpdate = true;
           }
         }
-
-        // 3. PAGAMENTOS FINANCEIROS: grava apenas o mês/atleta alterado
-        if (payload.financialPayments && typeof payload.financialPayments === 'object') {
+        if (payload && payload.financialPayments) {
           for (const [athId, monthsMap] of Object.entries(payload.financialPayments)) {
-            if (!monthsMap || typeof monthsMap !== 'object') continue;
+            if (!monthsMap) continue;
             for (const [mKey, mVal] of Object.entries(monthsMap)) {
               dotUpdates['financialPayments.' + athId + '.' + mKey] = mVal;
-              hasFieldUpdate = true;
             }
           }
         }
-
-        // 4. STATUS ISENTO/EM DIA: grava apenas o atleta
-        if (payload.alwaysUpToDateMap && typeof payload.alwaysUpToDateMap === 'object') {
+        if (payload && payload.alwaysUpToDateMap) {
           for (const [athId, boolVal] of Object.entries(payload.alwaysUpToDateMap)) {
             dotUpdates['alwaysUpToDateMap.' + athId] = boolVal;
-            hasFieldUpdate = true;
           }
         }
-
-        // 5. GOLS DA PELADA: grava apenas a célula data/atleta
-        if (payload.peladaGoals && typeof payload.peladaGoals === 'object') {
+        if (payload && payload.peladaGoals) {
           for (const [dateKey, goalsMap] of Object.entries(payload.peladaGoals)) {
-            if (!goalsMap || typeof goalsMap !== 'object') continue;
+            if (!goalsMap) continue;
             for (const [athId, gVal] of Object.entries(goalsMap)) {
               dotUpdates['peladaGoals.' + dateKey + '.' + athId] = gVal;
-              hasFieldUpdate = true;
             }
           }
         }
-
-        // 6. ENQUETE CRAQUE & BAGRE: grava apenas o voto do usuário
-        if (payload.peladaPolls && typeof payload.peladaPolls === 'object') {
+        if (payload && payload.peladaPolls) {
           for (const [dateKey, pollObj] of Object.entries(payload.peladaPolls)) {
-            if (!pollObj || typeof pollObj !== 'object') continue;
+            if (!pollObj) continue;
             if (typeof pollObj.forceOpen === 'boolean') {
               dotUpdates['peladaPolls.' + dateKey + '.forceOpen'] = pollObj.forceOpen;
-              hasFieldUpdate = true;
             }
-            if (pollObj.votes && typeof pollObj.votes === 'object') {
+            if (pollObj.votes) {
               for (const [voterId, voteData] of Object.entries(pollObj.votes)) {
                 dotUpdates['peladaPolls.' + dateKey + '.votes.' + voterId] = voteData;
-                hasFieldUpdate = true;
               }
             }
           }
         }
-
-        // 7. HORÁRIOS, SESSÕES E SORTEIO DA FESTA
-        if (payload.peladaTimes && typeof payload.peladaTimes === 'object') {
+        if (payload && payload.peladaTimes) {
           for (const [dateKey, tVal] of Object.entries(payload.peladaTimes)) {
             dotUpdates['peladaTimes.' + dateKey] = tVal;
-            hasFieldUpdate = true;
           }
         }
-        if (payload.activeSessions && typeof payload.activeSessions === 'object') {
-          for (const [uKey, sessVal] of Object.entries(payload.activeSessions)) {
-            dotUpdates['activeSessions.' + uKey] = sessVal;
-            hasFieldUpdate = true;
+        if (payload && payload.activeSessions) {
+          for (const [userKey, sessVal] of Object.entries(payload.activeSessions)) {
+            dotUpdates['activeSessions.' + userKey] = sessVal;
           }
         }
-        if (payload.partyRaffleState !== undefined) {
+        if (payload && payload.partyRaffleState) {
           dotUpdates.partyRaffleState = payload.partyRaffleState;
-          hasFieldUpdate = true;
         }
-
-        if (!hasFieldUpdate) return;
         await updateDoc(dbDocRef, dotUpdates);
       } catch (err) {
-        console.error('[BLINDAGEM] Erro no updateDoc atômico:', err);
-        // NUNCA chama window.saveData() para não sobrescrever outros atletas
-        if (err && err.code === 'not-found') {
-          try {
-            const safeFallback = Object.assign({}, payload, { updatedAt: new Date().toISOString() });
-            await setDoc(dbDocRef, safeFallback, { merge: true });
-          } catch (e2) {
-            console.error('[BLINDAGEM] Erro ao criar documento inicial:', e2);
-          }
-        } else if (typeof window.showToast === 'function') {
-          window.showToast('Falha de conexão ao salvar. Tente novamente.', 'error');
+        console.error('[BLINDAGEM] Erro ao gravar célula individual no Firestore:', err);
+        if (typeof window.showToast === 'function') {
+          window.showToast('Erro de conexão ao salvar. Tente novamente.', 'error');
         }
       }
     };
 
-    // Helper exclusivo para gravar 1 único atleta em 1 única data
     window.saveSinglePresenceAtomic = async function(dateKey, athleteId) {
-      const dKey = dateKey || window.currentDate;
-      if (!dKey || athleteId === undefined || athleteId === null) return;
-      const rec = (window.presences && window.presences[dKey]) ? window.presences[dKey][athleteId] : null;
-      if (rec && typeof rec === 'object') {
-        rec.verifiedHuman = true;
-        rec.actorId = window.currentUser ? (window.currentUser.id ?? null) : null;
-        rec.actorName = window.currentUser ? (window.currentUser.name || 'Sistema') : 'Sistema';
-        rec.verifiedAt = new Date().toISOString();
+      if (!isCloudReady || !navigator.onLine) {
+        if (typeof window.showToast === 'function') window.showToast('Sem internet! Confirmação não enviada.', 'error');
+        return;
       }
-      const payload = {
-        presences: {
-          [dKey]: {
-            [athleteId]: rec
-          }
-        }
-      };
+      if (!dateKey || athleteId === undefined || athleteId === null) return;
+      const pRec = window.presences && window.presences[dateKey] ? window.presences[dateKey][athleteId] : null;
+      const payload = { presences: { [dateKey]: { [athleteId]: pRec } } };
       if (window.absenceFines && window.absenceFines[athleteId]) {
         payload.absenceFines = { [athleteId]: window.absenceFines[athleteId] };
       }
       await window.syncSpecificData(payload);
     };
+
+    // Helper exclusivo para gravar 1 único atleta em 1 única data
+    
 
     function getPeladaTimelineInfo() {
       const sorted = [...(window.datesList || [])].sort();
@@ -8992,11 +8943,15 @@ try {
 })();
 </script>
 <!-- TEIMOSO_SAFE_PATCH_V6_END -->
-<!-- TEIMOSO_PRESENCE_SHIELD_V1_START -->
+
+<!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
 <script>
 (function() {
   'use strict';
   var lastTrustedHumanActionMs = 0;
+  var finAutoExpandedKey = null;
+  var finDomLock = false;
+
   ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
     document.addEventListener(evtName, function(e) {
       if (e && e.isTrusted) lastTrustedHumanActionMs = Date.now();
@@ -9027,11 +8982,224 @@ try {
     });
   }
 
-  document.addEventListener('DOMContentLoaded', wrapPresenceGuards);
-  window.addEventListener('load', wrapPresenceGuards);
-  setInterval(wrapPresenceGuards, 1200);
+  // =========================================================================
+  // FINANCEIRO ABERTO PARA TODOS (SOMENTE VISUALIZAÇÃO + LOGADO 1º + A-Z)
+  // =========================================================================
+  function normFinName(s) {
+    return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  }
+
+  function getLoggedFinAthleteId() {
+    if (!window.currentUser) return null;
+    if (window.currentUser.id !== undefined && window.currentUser.id !== null && Number(window.currentUser.id) !== 0) {
+      return Number(window.currentUser.id);
+    }
+    if (window.currentUser.name && Array.isArray(window.athletes)) {
+      var uNorm = normFinName(window.currentUser.name);
+      var found = window.athletes.find(function(a) { return a && normFinName(a.name) === uNorm; });
+      if (found && found.id !== undefined && found.id !== null) return Number(found.id);
+    }
+    return null;
+  }
+
+  function isFinAllowedInteractive(el) {
+    if (!el) return false;
+    var tag = (el.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+      var idLow = String(el.id || '').toLowerCase();
+      var phLow = String(el.placeholder || '').toLowerCase();
+      var typeLow = String(el.type || '').toLowerCase();
+      if (typeLow === 'checkbox' || typeLow === 'radio' || typeLow === 'number') return false;
+      return (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
+    }
+    var btn = el.closest ? el.closest('button') : (tag === 'BUTTON' ? el : null);
+    if (btn) {
+      var oc = String(btn.getAttribute('onclick') || '');
+      if (oc.indexOf('toggleFinancialAccordion') !== -1) return true;
+      if (/(filterFinancial|setFinancialFilter|clearFinancialFilter)/i.test(oc)) return true;
+      var txt = normFinName(btn.textContent || '');
+      if (!oc && (txt === 'TODOS' || txt === 'EM DIA' || txt === 'EM ATRASO' || txt === 'ISENTOS')) return true;
+      return false;
+    }
+    return false;
+  }
+
+  function enforceFinancialViewUI() {
+    if (!window.currentUser) return;
+    var finBtn = document.getElementById('tabBtn-financial');
+    if (finBtn) {
+      finBtn.classList.remove('hidden');
+      finBtn.style.display = 'flex';
+      finBtn.style.visibility = 'visible';
+    }
+
+    var finSec = document.getElementById('tab-financial');
+    if (!finSec) return;
+
+    var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
+    var loggedId = getLoggedFinAthleteId();
+
+    var banner = document.getElementById('teimosoFinReadOnlyBanner');
+    if (!canEdit) {
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'teimosoFinReadOnlyBanner';
+        banner.className = 'bg-sky-50 border border-sky-200 text-sky-800 rounded-2xl px-4 py-2.5 text-xs font-bold flex items-center gap-2 mb-3';
+        banner.innerHTML = '<i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Modo somente visualização: você pode consultar a situação financeira de todos os atletas (seu perfil aparece primeiro, seguido da ordem alfabética).</span>';
+        finSec.insertBefore(banner, finSec.firstChild);
+      }
+      banner.style.display = 'flex';
+    } else if (banner) {
+      banner.style.display = 'none';
+    }
+
+    if (!finDomLock) {
+      var accBtns = Array.prototype.slice.call(finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]'));
+      if (accBtns.length >= 1) {
+        var items = [];
+        var listParent = null;
+        accBtns.forEach(function(btn) {
+          var oc = String(btn.getAttribute('onclick') || '');
+          var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
+          var athId = m ? parseInt(m[1], 10) : null;
+          var card = btn.parentElement;
+          if (!card || !card.parentElement) return;
+          if (!listParent) listParent = card.parentElement;
+          if (card.parentElement !== listParent) return;
+          var athObj = (athId !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === athId; }) : null;
+          var athName = (athObj && athObj.name) ? String(athObj.name) : String(btn.textContent || '').trim();
+          items.push({ card: card, athId: athId, name: athName });
+        });
+
+        if (listParent && items.length >= 1) {
+          var sorted = items.slice().sort(function(a, b) {
+            var aSelf = (loggedId !== null && a.athId === loggedId) ? 0 : 1;
+            var bSelf = (loggedId !== null && b.athId === loggedId) ? 0 : 1;
+            if (aSelf !== bSelf) return aSelf - bSelf;
+            return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+          });
+
+          var changed = false;
+          for (var i = 0; i < sorted.length; i++) {
+            if (sorted[i].card !== items[i].card) { changed = true; break; }
+          }
+
+          finDomLock = true;
+          try {
+            if (changed) {
+              sorted.forEach(function(it) { listParent.appendChild(it.card); });
+            }
+            sorted.forEach(function(it) {
+              if (loggedId !== null && it.athId === loggedId) {
+                it.card.classList.add('ring-2', 'ring-emerald-400');
+              } else {
+                it.card.classList.remove('ring-2', 'ring-emerald-400');
+              }
+            });
+          } finally {
+            finDomLock = false;
+          }
+        }
+      }
+    }
+
+    if (!canEdit) {
+      finSec.querySelectorAll('input, select, textarea').forEach(function(el) {
+        if (!isFinAllowedInteractive(el)) {
+          el.disabled = true;
+          el.readOnly = true;
+          el.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+      });
+      finSec.querySelectorAll('button').forEach(function(btn) {
+        if (!isFinAllowedInteractive(btn)) {
+          btn.style.display = 'none';
+          btn.disabled = true;
+        }
+      });
+    }
+  }
+
+  function wrapFinancialHooks() {
+    if (typeof window.renderFinancial === 'function' && !window.renderFinancial.__teimosoAllViewWrapped) {
+      var origRenderFin = window.renderFinancial;
+      window.renderFinancial = function() {
+        var loggedId = getLoggedFinAthleteId();
+        var userKey = loggedId !== null ? String(loggedId) : null;
+        if (userKey && finAutoExpandedKey !== userKey && window.expandedFinCards && typeof window.expandedFinCards.add === 'function') {
+          window.expandedFinCards.add(loggedId);
+          finAutoExpandedKey = userKey;
+        }
+
+        var origIsAdmin = window.isAdmin;
+        var origCanEdit = window.canEditFinancial;
+        var res;
+        if (window.currentUser && !origIsAdmin && !origCanEdit) {
+          window.isAdmin = true;
+          window.canEditFinancial = true;
+          try {
+            res = origRenderFin.apply(this, arguments);
+          } finally {
+            window.isAdmin = origIsAdmin;
+            window.canEditFinancial = origCanEdit;
+          }
+        } else {
+          res = origRenderFin.apply(this, arguments);
+        }
+
+        enforceFinancialViewUI();
+        return res;
+      };
+      window.renderFinancial.__teimosoAllViewWrapped = true;
+    }
+
+    if (typeof window.switchTab === 'function' && !window.switchTab.__teimosoFinOpenWrapped) {
+      var origSwitchTab = window.switchTab;
+      window.switchTab = function(tab) {
+        var res = origSwitchTab.apply(this, arguments);
+        if (tab === 'financial' && window.currentUser) {
+          var finSec = document.getElementById('tab-financial');
+          if (finSec && finSec.classList.contains('hidden')) {
+            document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
+            finSec.classList.remove('hidden');
+          }
+          if (typeof window.renderFinancial === 'function') {
+            try { window.renderFinancial(); } catch (e) {}
+          } else {
+            enforceFinancialViewUI();
+          }
+        }
+        return res;
+      };
+      window.switchTab.__teimosoFinOpenWrapped = true;
+    }
+  }
+
+  ['click', 'change', 'input', 'submit'].forEach(function(evtType) {
+    document.addEventListener(evtType, function(e) {
+      if (!window.currentUser || window.isAdmin || window.canEditFinancial) return;
+      var finSec = document.getElementById('tab-financial');
+      if (!finSec || !finSec.contains(e.target)) return;
+      if (isFinAllowedInteractive(e.target)) return;
+      var clickable = e.target && e.target.closest ? e.target.closest('button, input, select, textarea, a, label') : null;
+      if (clickable && !isFinAllowedInteractive(clickable)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    }, true);
+  });
+
+  function bootShieldAndFinancial() {
+    wrapPresenceGuards();
+    wrapFinancialHooks();
+    enforceFinancialViewUI();
+  }
+
+  document.addEventListener('DOMContentLoaded', bootShieldAndFinancial);
+  window.addEventListener('load', bootShieldAndFinancial);
+  setInterval(bootShieldAndFinancial, 1000);
 })();
 </script>
-<!-- TEIMOSO_PRESENCE_SHIELD_V1_END -->
+<!-- TEIMOSO_PRESENCE_SHIELD_V2_END -->
 </body>
 </html>
