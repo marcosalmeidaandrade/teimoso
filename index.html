@@ -6538,7 +6538,7 @@
       window.syncConsecutiveAbsencePenalties();
       const container = document.getElementById('financialAccordionContainer');
       if (!container) return;
-      container.innerHTML = '';
+      let __teimosoFinDomBuf = '';
       let totalGeneralPaid = 0, totalGeneralInterest = 0, totalGeneralStrictOverdue = 0, totalGeneralDueUntilNov = 0;
       let countFilterPaid = 0, countFilterInterest = 0, countFilterOverdue = 0, countFilterDue = 0;
 
@@ -6600,7 +6600,7 @@
             ? `<span class="text-[8px] text-slate-400 font-bold tracking-tight">Baixa: ${new Date(monthData.settledAt).toLocaleDateString('pt-BR')}</span>`
             : '';
 
-          monthsGridHtml += `
+          if (isExpanded) monthsGridHtml += `
             <div class="flex flex-col gap-1 items-center bg-white border border-slate-200 p-2 rounded-xl shadow-sm relative ${effectivelySuspended && !isPaid ? 'opacity-60' : ''}">
               <span class="text-[10px] uppercase font-bold text-slate-500">${mKey}</span>
               <div class="flex items-center gap-1.5 justify-center">
@@ -6686,7 +6686,7 @@
         if (activeFinancialFilter === 'overdue' && athleteStrictOverdue <= 0) return;
         if (activeFinancialFilter === 'due' && athleteTotalDueUntilNov <= 0) return;
 
-        container.innerHTML += `
+        __teimosoFinDomBuf += `
           <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden group shadow-sm">
             <button onclick="toggleFinancialAccordion(${athlete.id})" class="w-full p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-left hover:bg-slate-50 transition-colors focus:outline-none">
               <div class="flex items-center gap-3">
@@ -6746,6 +6746,8 @@
       if (lblInterest) lblInterest.innerText = activeFinancialFilter === 'interest' ? `Total de Juros Devidos (${countFilterInterest} Atletas)` : 'Total de Juros Devidos';
       if (lblOverdue) lblOverdue.innerText = activeFinancialFilter === 'overdue' ? `Total em Atraso (${countFilterOverdue} Atletas)` : 'Total em Atraso';
       if (lblDue) lblDue.innerText = activeFinancialFilter === 'due' ? `Total a Receber (${countFilterDue} Atletas)` : 'Total Geral a Receber Até Novembro';
+    
+      if (typeof container !== 'undefined' && container) { container.innerHTML = __teimosoFinDomBuf; }
     };
 
     window.settleAbsenceFine = function(athleteId, fineIndex) {
@@ -8958,6 +8960,8 @@ try {
 
 
 
+
+
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
 <style>
   /* Quando atleta comum abre o Financeiro, oculta a árvore pesada de edição e exibe o modo ultra-leve */
@@ -8971,11 +8975,9 @@ try {
   var lastTrustedHumanActionMs = 0;
   var finSnapshotUserKey = null;
   var finSnapshotData = null;
-  var finSnapshotExpandedIds = {};
   var finSnapshotSearchTerm = '';
-  var finBtnVisibleDone = false;
+  var finSnapshotStatusFilter = 'all';
   var FIN_MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
-  var FIN_MONTH_LABELS = { jan: 'Jan', fev: 'Fev', mar: 'Mar', abr: 'Abr', mai: 'Mai', jun: 'Jun', jul: 'Jul', ago: 'Ago', set: 'Set', out: 'Out', nov: 'Nov' };
 
   ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
     document.addEventListener(evtName, function(e) {
@@ -8983,99 +8985,64 @@ try {
     }, true);
   });
 
-  function wrapPresenceGuards() {
-    var targetFns = ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence', 'toggleFieldAttendance', 'toggleAttended'];
-    var wrappedAny = false;
-    targetFns.forEach(function(fnName) {
-      if (typeof window[fnName] === 'function') {
-        if (!window[fnName].__teimosoAtomicShield) {
-          var orig = window[fnName];
-          window[fnName] = function() {
-            if (!navigator.onLine) {
-              if (typeof window.showToast === 'function') {
-                window.showToast('Sem internet! Confirmação bloqueada para evitar dessincronização.', 'error');
-              }
-              return;
-            }
-            var elapsed = Date.now() - lastTrustedHumanActionMs;
-            if (elapsed > 3000) {
-              console.warn('[BLINDAGEM] Bloqueada tentativa automática sem clique humano em ' + fnName + '.');
-              return;
-            }
-            return orig.apply(this, arguments);
-          };
-          window[fnName].__teimosoAtomicShield = true;
-        }
-        wrappedAny = true;
-      }
-    });
-    return wrappedAny;
+  function normFinName(str) {
+    return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 
-  // =========================================================================
-  // FINANCEIRO ULTRA-RÁPIDO (SNAPSHOT DO LOGIN • SEM TEMPO REAL PARA ATLETAS)
-  // =========================================================================
-  function normFinName(s) {
-    return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  function escapeFinHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  function escapeFinHtml(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function fmtFinBRL(v) {
-    var n = Number(v) || 0;
+  function fmtFinBRL(val) {
+    var n = Number(val) || 0;
     return 'R$ ' + n.toFixed(2).replace('.', ',');
+  }
+
+  function isFinancialEditorUser() {
+    return Boolean(window.isAdmin || window.canEditFinancial);
   }
 
   function getLoggedFinAthleteId() {
     if (!window.currentUser) return null;
-    if (window.currentUser.id !== undefined && window.currentUser.id !== null && Number(window.currentUser.id) !== 0) {
-      return Number(window.currentUser.id);
-    }
+    if (window.currentUser.id && !isNaN(Number(window.currentUser.id))) return Number(window.currentUser.id);
     if (window.currentUser.name && Array.isArray(window.athletes)) {
-      var uNorm = normFinName(window.currentUser.name);
-      var found = window.athletes.find(function(a) { return a && normFinName(a.name) === uNorm; });
-      if (found && found.id !== undefined && found.id !== null) return Number(found.id);
+      var target = normFinName(window.currentUser.name);
+      var found = window.athletes.find(function(a) { return a && normFinName(a.name) === target; });
+      if (found) return Number(found.id);
     }
     return null;
   }
 
-  function ensureFinancialTabButtonVisible() {
+  function ensureFinTabButtonVisible() {
     if (!window.currentUser) return;
     var finBtn = document.getElementById('tabBtn-financial');
     if (finBtn) {
-      if (finBtn.classList.contains('hidden')) finBtn.classList.remove('hidden');
-      if (finBtn.style.display !== 'flex') finBtn.style.display = 'flex';
-      finBtnVisibleDone = true;
+      finBtn.classList.remove('hidden');
+      finBtn.style.display = 'flex';
+      finBtn.style.visibility = 'visible';
     }
   }
 
   function captureLoginFinancialSnapshot(forceRefresh) {
-    if (!window.currentUser) {
-      finSnapshotUserKey = null;
-      finSnapshotData = null;
-      return null;
-    }
+    if (!window.currentUser || !Array.isArray(window.athletes)) return null;
     var loggedId = getLoggedFinAthleteId();
-    var uKey = (loggedId !== null ? String(loggedId) : String(window.currentUser.name || 'user'));
+    var uKey = String(loggedId || window.currentUser.name || 'user');
     if (!forceRefresh && finSnapshotData && finSnapshotUserKey === uKey) {
       return finSnapshotData;
     }
-    if (!Array.isArray(window.athletes) || window.athletes.length === 0) return null;
 
-    var seasonYear = (typeof window.getSelectedYearInt === 'function') ? window.getSelectedYearInt() : (new Date().getFullYear());
     var now = new Date();
-    var paymentsAll = window.financialPayments || {};
+    var seasonYear = (typeof window.getSelectedYearInt === 'function') ? window.getSelectedYearInt() : now.getFullYear();
+    var paymentsMap = window.financialPayments || {};
     var upToDateMap = window.alwaysUpToDateMap || {};
-    var finesAll = window.absenceFines || {};
+    var finesMap = window.absenceFines || {};
 
     var list = window.athletes.filter(function(a) { return a && a.name; }).map(function(ath) {
       var athId = Number(ath.id);
       var isExempt = Boolean(ath.isExemptMonthlyFee || upToDateMap[athId] === true || Number(ath.monthlyFee) === 0);
       var baseFee = isExempt ? 0 : (Number(ath.monthlyFee) || 110);
-      var athPay = paymentsAll[athId] || {};
-      var athFines = Array.isArray(finesAll[athId]) ? finesAll[athId] : [];
+      var athPay = paymentsMap[athId] || {};
+      var athFines = Array.isArray(finesMap[athId]) ? finesMap[athId] : [];
       var unpaidFinesTotal = 0;
       for (var f = 0; f < athFines.length; f++) {
         if (athFines[f] && !athFines[f].paid) unpaidFinesTotal += (Number(athFines[f].amount) || 0);
@@ -9084,8 +9051,8 @@ try {
       var totalPaid = 0;
       var pendingInstallments = 0;
       var overdueInstallments = 0;
+      var totalInterest = 0;
       var hasOverdue = false;
-      var monthsInfo = [];
 
       for (var m = 0; m < FIN_MONTHS.length; m++) {
         var mKey = FIN_MONTHS[m];
@@ -9097,24 +9064,23 @@ try {
         var effSusp = Boolean(ath.isSuspended || isExempt);
         var dueDate = new Date(seasonYear, m, 15, 23, 59, 59);
         var isOverdue = !isPaid && !effSusp && (now > dueDate);
+        var monthInterest = 0;
         if (isOverdue) {
           hasOverdue = true;
           overdueInstallments += baseFee;
+          if (typeof mData.interest === 'number') {
+            monthInterest = mData.interest;
+          } else {
+            var monthsLate = Math.max(1, (now.getFullYear() - seasonYear) * 12 + (now.getMonth() - m));
+            monthInterest = Math.round(baseFee * 0.05 * monthsLate * 100) / 100;
+          }
+          totalInterest += monthInterest;
         }
         if (!isPaid && !effSusp) pendingInstallments += baseFee;
-
-        monthsInfo.push({
-          key: mKey,
-          label: FIN_MONTH_LABELS[mKey] || mKey,
-          isPaid: isPaid,
-          paidAmt: paidAmt,
-          isExempt: isExempt,
-          effSusp: effSusp,
-          isOverdue: isOverdue,
-          baseFee: baseFee
-        });
       }
 
+      var totalOverdueAll = overdueInstallments + totalInterest + unpaidFinesTotal;
+      var totalGeneralNov = pendingInstallments + totalInterest + unpaidFinesTotal;
       var isUpToDate = isExempt || (!hasOverdue && unpaidFinesTotal <= 0);
       return {
         id: athId,
@@ -9125,22 +9091,25 @@ try {
         isUpToDate: isUpToDate,
         totalPaid: totalPaid,
         pendingInstallments: pendingInstallments,
+        totalInterest: totalInterest,
         overdueInstallments: overdueInstallments,
         unpaidFinesTotal: unpaidFinesTotal,
-        months: monthsInfo
+        totalOverdueAll: totalOverdueAll,
+        totalGeneralNov: totalGeneralNov
       };
     });
 
-    var totals = { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, upToDateCount: 0, overdueCount: 0 };
+    var totals = { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
     for (var t = 0; t < list.length; t++) {
       totals.totalPaid += list[t].totalPaid;
       totals.totalPending += list[t].pendingInstallments;
       totals.totalOverdue += list[t].overdueInstallments;
+      totals.totalInterest += list[t].totalInterest;
       totals.totalFines += list[t].unpaidFinesTotal;
+      if (list[t].isExempt) totals.exemptCount++;
       if (list[t].isUpToDate) totals.upToDateCount++; else totals.overdueCount++;
     }
 
-    // Próprio atleta logado SEMPRE em 1º lugar; demais em ordem alfabética (A-Z)
     list.sort(function(a, b) {
       var aSelf = (loggedId !== null && a.id === loggedId) ? 0 : 1;
       var bSelf = (loggedId !== null && b.id === loggedId) ? 0 : 1;
@@ -9149,8 +9118,6 @@ try {
     });
 
     finSnapshotUserKey = uKey;
-    finSnapshotExpandedIds = {};
-    if (loggedId !== null) finSnapshotExpandedIds[loggedId] = true;
     finSnapshotData = {
       loggedId: loggedId,
       capturedAt: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -9160,24 +9127,31 @@ try {
     return finSnapshotData;
   }
 
-  function buildMonthsDetailHtml(item) {
-    var html = '<div class="border-t border-slate-200 bg-slate-50/70 p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">';
-    for (var i = 0; i < item.months.length; i++) {
-      var mo = item.months[i];
-      var cls = mo.isPaid
-        ? 'bg-sky-50 border-sky-200 text-sky-800'
-        : (mo.effSusp ? 'bg-slate-100 border-slate-200 text-slate-500' : (mo.isOverdue ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-amber-50 border-amber-200 text-amber-800'));
-      var tag = mo.isPaid ? ('Quitado • ' + fmtFinBRL(mo.paidAmt)) : (mo.isExempt ? 'Isento (R$ 0)' : (mo.effSusp ? 'Isento' : (mo.isOverdue ? 'Em Atraso' : 'A Vencer')));
-      html += '<div class="rounded-xl border px-2 py-1.5 text-center ' + cls + '">' +
-        '<div class="text-[10px] font-black uppercase">' + mo.label + '</div>' +
-        '<div class="text-[10px] font-bold mt-0.5 truncate">' + tag + '</div>' +
-      '</div>';
+  function applyFastFinFiltersDom() {
+    var searchNorm = normFinName(finSnapshotSearchTerm);
+    var statusF = finSnapshotStatusFilter || 'all';
+    var listEl = document.getElementById('teimosoFastFinList');
+    if (!listEl) return;
+    var cards = listEl.children;
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      var nm = c.getAttribute('data-fast-fin-name') || '';
+      var st = c.getAttribute('data-fast-fin-status') || '';
+      var ex = c.getAttribute('data-fast-fin-exempt') === '1';
+      var matchName = (!searchNorm || nm.indexOf(searchNorm) !== -1);
+      var matchStatus = (statusF === 'all') || (statusF === 'uptodate' && st === 'uptodate') || (statusF === 'overdue' && st === 'overdue') || (statusF === 'exempt' && ex);
+      if (matchName && matchStatus) c.classList.remove('hidden');
+      else c.classList.add('hidden');
     }
-    html += '</div>';
-    if (item.unpaidFinesTotal > 0) {
-      html += '<div class="px-3.5 py-2 bg-rose-50 border-t border-rose-200 text-[11px] font-bold text-rose-700 flex items-center justify-between"><span><i class="fa-solid fa-triangle-exclamation mr-1"></i> Multas pendentes</span><span>' + fmtFinBRL(item.unpaidFinesTotal) + '</span></div>';
+    var btns = document.querySelectorAll('#teimosoFastFinFilterBar button[data-fin-filter]');
+    for (var b = 0; b < btns.length; b++) {
+      var key = btns[b].getAttribute('data-fin-filter');
+      if (key === statusF) {
+        btns[b].className = 'px-3 py-1.5 rounded-xl text-[11px] font-black uppercase bg-emerald-600 text-white shadow-sm cursor-pointer';
+      } else {
+        btns[b].className = 'px-3 py-1.5 rounded-xl text-[11px] font-black uppercase bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer';
+      }
     }
-    return html;
   }
 
   function renderFastReadOnlyFinancial(forceCapture) {
@@ -9196,12 +9170,10 @@ try {
       finSec.insertBefore(container, finSec.firstChild);
     }
 
-    var searchNorm = normFinName(finSnapshotSearchTerm);
-    var tot = snap.totals || { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, upToDateCount: 0, overdueCount: 0 };
-    var totalOverdueAndFines = (tot.totalOverdue || 0) + (tot.totalFines || 0);
+    var tot = snap.totals || { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
+    var totalOverdueAndFines = (tot.totalOverdue || 0) + (tot.totalInterest || 0) + (tot.totalFines || 0);
     var parts = [];
 
-    // CARDS DE TOTALIZADORES VISÍVEIS PARA TODOS OS ATLETAS
     parts.push(
       '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">' +
         '<div class="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-sm">' +
@@ -9231,173 +9203,135 @@ try {
     );
 
     parts.push(
-      '<div class="bg-sky-50 border border-sky-200 text-sky-900 rounded-2xl px-4 py-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
-        '<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Somente visualização (posição do login às ' + snap.capturedAt + '). Seu perfil aparece primeiro; demais em ordem alfabética.</span></div>' +
-        '<input type="text" id="teimosoFastFinSearch" value="' + escapeFinHtml(finSnapshotSearchTerm) + '" placeholder="Filtrar atleta..." oninput="window.__teimosoFilterFastFin(this.value)" class="bg-white border border-sky-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 w-full sm:w-52 focus:outline-none focus:border-sky-400">' +
+      '<div class="bg-sky-50 border border-sky-200 text-sky-900 rounded-2xl p-3.5 text-xs space-y-2.5">' +
+        '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
+          '<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Somente visualização (posição do login às ' + snap.capturedAt + '). Seu perfil aparece primeiro; demais em ordem alfabética.</span></div>' +
+          '<input type="text" id="teimosoFastFinSearch" value="' + escapeFinHtml(finSnapshotSearchTerm) + '" placeholder="Filtrar atleta..." oninput="window.__teimosoFilterFastFin(this.value)" class="bg-white border border-sky-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 w-full sm:w-52 focus:outline-none focus:border-sky-400">' +
+        '</div>' +
+        '<div id="teimosoFastFinFilterBar" class="flex flex-wrap items-center gap-1.5">' +
+          '<button type="button" data-fin-filter="all" onclick="window.__teimosoSetFastFinStatus(\'all\')">Todos (' + snap.items.length + ')</button>' +
+          '<button type="button" data-fin-filter="uptodate" onclick="window.__teimosoSetFastFinStatus(\'uptodate\')">Em Dia (' + tot.upToDateCount + ')</button>' +
+          '<button type="button" data-fin-filter="overdue" onclick="window.__teimosoSetFastFinStatus(\'overdue\')">Em Atraso (' + tot.overdueCount + ')</button>' +
+          '<button type="button" data-fin-filter="exempt" onclick="window.__teimosoSetFastFinStatus(\'exempt\')">Isentos (' + tot.exemptCount + ')</button>' +
+        '</div>' +
       '</div>'
     );
 
     parts.push('<div id="teimosoFastFinList" class="space-y-2">');
     for (var i = 0; i < snap.items.length; i++) {
       var it = snap.items[i];
-      var hideCard = Boolean(searchNorm && it.normName.indexOf(searchNorm) === -1);
       var isSelf = (snap.loggedId !== null && it.id === snap.loggedId);
-      var isOpen = Boolean(finSnapshotExpandedIds[it.id]);
       var dotCls = it.isUpToDate ? 'bg-emerald-500' : 'bg-rose-500';
       var badgeCls = it.isUpToDate ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200';
       var badgeTxt = it.isExempt ? 'Isento' : (it.isUpToDate ? 'Em Dia' : 'Em Atraso');
       var cardBorder = isSelf ? 'border-emerald-400 ring-2 ring-emerald-400/50' : 'border-slate-200';
 
       parts.push(
-        '<div data-fast-fin-name="' + escapeFinHtml(it.normName) + '" class="bg-white border ' + cardBorder + ' rounded-2xl overflow-hidden shadow-sm' + (hideCard ? ' hidden' : '') + '">' +
-          '<button type="button" onclick="window.__teimosoToggleFastFinCard(' + it.id + ')" class="w-full p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left hover:bg-slate-50 transition-colors cursor-pointer">' +
-            '<div class="flex items-center gap-2.5 flex-wrap">' +
-              '<span class="w-2.5 h-2.5 rounded-full ' + dotCls + ' shrink-0"></span>' +
-              '<span class="font-black text-slate-800 text-xs sm:text-sm">' + escapeFinHtml(it.name) + '</span>' +
-              (isSelf ? '<span class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">VOCÊ</span>' : '') +
-              (it.isSuspended ? '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-black uppercase">Suspenso</span>' : '') +
-              '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ' + badgeCls + '">' + badgeTxt + '</span>' +
-            '</div>' +
-            '<div class="flex items-center justify-between sm:justify-end gap-3 text-[11px] font-bold">' +
-              '<div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalPaid) + '</span></div>' +
-              '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-xs sm:text-sm font-black">' + fmtFinBRL(it.pendingInstallments) + '</span></div>' +
-              '<i id="teimosoFastFinChev_' + it.id + '" class="fa-solid fa-chevron-' + (isOpen ? 'up' : 'down') + ' text-slate-400 text-xs ml-1"></i>' +
-            '</div>' +
-          '</button>' +
-          '<div id="teimosoFastFinDetail_' + it.id + '" data-built="' + (isOpen ? '1' : '0') + '" class="' + (isOpen ? '' : 'hidden') + '">' + (isOpen ? buildMonthsDetailHtml(it) : '') + '</div>' +
+        '<div data-fast-fin-name="' + escapeFinHtml(it.normName) + '" data-fast-fin-status="' + (it.isUpToDate ? 'uptodate' : 'overdue') + '" data-fast-fin-exempt="' + (it.isExempt ? '1' : '0') + '" class="bg-white border ' + cardBorder + ' rounded-2xl p-4 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">' +
+          '<div class="flex items-center gap-2.5 flex-wrap">' +
+            '<span class="w-3 h-3 rounded-full ' + dotCls + ' shrink-0"></span>' +
+            '<span class="font-black text-slate-800 text-xs sm:text-sm">' + escapeFinHtml(it.name) + '</span>' +
+            (isSelf ? '<span class="px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">VOCÊ</span>' : '') +
+            (it.isSuspended ? '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-black uppercase">Suspenso</span>' : '') +
+            '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ' + badgeCls + '">' + badgeTxt + '</span>' +
+          '</div>' +
+          '<div class="flex items-center justify-between lg:justify-end gap-3 sm:gap-4 text-[11px] sm:text-xs font-bold flex-wrap">' +
+            '<div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase tracking-wide">Pago</span><span class="text-emerald-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalPaid) + '</span></div>' +
+            '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase tracking-wide">Parcelas</span><span class="text-slate-800 text-xs sm:text-sm font-black">' + fmtFinBRL(it.pendingInstallments) + '</span></div>' +
+            '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase tracking-wide">Juros</span><span class="text-amber-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalInterest) + '</span></div>' +
+            '<div class="flex flex-col text-rose-600 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase tracking-wide">Total em Atraso</span><span class="text-rose-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalOverdueAll) + '</span></div>' +
+            '<div class="flex flex-col text-purple-700 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase tracking-wide">Total Geral até Novembro</span><span class="text-purple-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalGeneralNov) + '</span></div>' +
+          '</div>' +
         '</div>'
       );
     }
     parts.push('</div>');
     container.innerHTML = parts.join('');
+    applyFastFinFiltersDom();
   }
-
-  window.__teimosoToggleFastFinCard = function(athId) {
-    var willOpen = !finSnapshotExpandedIds[athId];
-    finSnapshotExpandedIds[athId] = willOpen;
-    var detailBox = document.getElementById('teimosoFastFinDetail_' + athId);
-    var chev = document.getElementById('teimosoFastFinChev_' + athId);
-    if (detailBox && finSnapshotData) {
-      if (willOpen) {
-        if (detailBox.getAttribute('data-built') !== '1') {
-          var found = finSnapshotData.items.find(function(x) { return x.id === athId; });
-          if (found) detailBox.innerHTML = buildMonthsDetailHtml(found);
-          detailBox.setAttribute('data-built', '1');
-        }
-        detailBox.classList.remove('hidden');
-      } else {
-        detailBox.classList.add('hidden');
-      }
-      if (chev) chev.className = 'fa-solid fa-chevron-' + (willOpen ? 'up' : 'down') + ' text-slate-400 text-xs ml-1';
-      return;
-    }
-    renderFastReadOnlyFinancial(false);
-  };
 
   window.__teimosoFilterFastFin = function(val) {
     finSnapshotSearchTerm = String(val || '');
-    var searchNorm = normFinName(finSnapshotSearchTerm);
-    var listEl = document.getElementById('teimosoFastFinList');
-    if (listEl) {
-      var cards = listEl.children;
-      for (var i = 0; i < cards.length; i++) {
-        var nm = cards[i].getAttribute('data-fast-fin-name') || '';
-        if (!searchNorm || nm.indexOf(searchNorm) !== -1) cards[i].classList.remove('hidden');
-        else cards[i].classList.add('hidden');
-      }
-      return;
-    }
-    renderFastReadOnlyFinancial(false);
+    applyFastFinFiltersDom();
   };
 
+  window.__teimosoSetFastFinStatus = function(statusKey) {
+    finSnapshotStatusFilter = statusKey || 'all';
+    applyFastFinFiltersDom();
+  };
+
+  function wrapPresenceFunctions() {
+    ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence'].forEach(function(fnName) {
+      if (typeof window[fnName] === 'function' && !window[fnName].__blindadoShield) {
+        var orig = window[fnName];
+        window[fnName] = function(athleteId, newStatus) {
+          if (!navigator.onLine) {
+            if (typeof window.showToast === 'function') window.showToast('Sem internet! Confirmação bloqueada para evitar sobrescrita.', 'error');
+            return;
+          }
+          var elapsed = Date.now() - lastTrustedHumanActionMs;
+          if (elapsed > 3500) {
+            console.warn('[Blindagem] Bloqueado disparo automático sem toque humano em', fnName, athleteId, newStatus);
+            return;
+          }
+          return orig.apply(this, arguments);
+        };
+        window[fnName].__blindadoShield = true;
+      }
+    });
+  }
+
   function wrapFinancialHooks() {
-    var hookedRender = false;
-    var hookedSwitch = false;
-
-    if (typeof window.renderFinancial === 'function') {
-      if (!window.renderFinancial.__teimosoAllViewWrapped) {
-        var origRenderFin = window.renderFinancial;
-        window.renderFinancial = function(forceRun) {
-          ensureFinancialTabButtonVisible();
-          var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
+    if (typeof window.switchTab === 'function' && !window.switchTab.__blindadoFinTab) {
+      var origSwitch = window.switchTab;
+      window.switchTab = function(tab) {
+        var res = origSwitch.apply(this, arguments);
+        ensureFinTabButtonVisible();
+        if (tab === 'financial' && window.currentUser) {
           var finSec = document.getElementById('tab-financial');
-
-          // ATLETA COMUM: não roda o renderizador pesado nem atualiza em tempo real!
-          if (window.currentUser && !canEdit) {
-            if (!finSnapshotData) captureLoginFinancialSnapshot(false);
-            if (forceRun && finSec && !finSec.classList.contains('hidden')) {
-              renderFastReadOnlyFinancial(false);
+          if (finSec && finSec.classList.contains('hidden')) {
+            document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
+            finSec.classList.remove('hidden');
+          }
+          if (isFinancialEditorUser()) {
+            if (finSec) finSec.classList.remove('teimoso-fast-readonly');
+            var fastEl = document.getElementById('teimosoFastFinView');
+            if (fastEl) fastEl.remove();
+            var lastAt = window.__teimosoLastAdminFinRenderAt || 0;
+            if ((Date.now() - lastAt) > 200 && typeof window.renderFinancial === 'function') {
+              try { window.renderFinancial(); } catch (eRf) {}
             }
-            return;
+          } else {
+            renderFastReadOnlyFinancial(false);
           }
-
-          // ADMIN / EDITOR: restaura visão de edição e mantém Lazy Render quando a aba está fechada
-          if (finSec) finSec.classList.remove('teimoso-fast-readonly');
-          var fastBox = document.getElementById('teimosoFastFinView');
-          if (fastBox) fastBox.remove();
-          if (!forceRun && finSec && finSec.classList.contains('hidden')) {
-            return;
-          }
-          return origRenderFin.apply(this, arguments);
-        };
-        window.renderFinancial.__teimosoAllViewWrapped = true;
-      }
-      hookedRender = true;
+        }
+        return res;
+      };
+      window.switchTab.__blindadoFinTab = true;
     }
-
-    if (typeof window.switchTab === 'function') {
-      if (!window.switchTab.__teimosoFinOpenWrapped) {
-        var origSwitchTab = window.switchTab;
-        window.switchTab = function(tab) {
-          var res = origSwitchTab.apply(this, arguments);
-          ensureFinancialTabButtonVisible();
-          if (tab === 'financial' && window.currentUser) {
-            var finSec = document.getElementById('tab-financial');
-            if (finSec && finSec.classList.contains('hidden')) {
-              document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
-              finSec.classList.remove('hidden');
-            }
-            var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
-            if (!canEdit) {
-              renderFastReadOnlyFinancial(false);
-            } else if (typeof window.renderFinancial === 'function') {
-              var alreadyRan = (Date.now() - (window.__teimosoLastAdminFinRenderAt || 0)) < 250;
-              if (!alreadyRan) {
-                requestAnimationFrame(function() {
-                  try { window.renderFinancial(true); } catch (e) {}
-                });
-              }
-            }
-          }
-          return res;
-        };
-        window.switchTab.__teimosoFinOpenWrapped = true;
-      }
-      hookedSwitch = true;
-    }
-
-    return hookedRender && hookedSwitch;
   }
 
   var bootTicks = 0;
-  var bootTimer = null;
-  function bootShieldAndFinancial() {
+  var bootTimer = setInterval(function() {
     bootTicks++;
-    var okPres = wrapPresenceGuards();
-    var okFin = wrapFinancialHooks();
-    ensureFinancialTabButtonVisible();
-    if (okPres && okFin && finBtnVisibleDone && bootTimer) {
-      clearInterval(bootTimer);
-      bootTimer = null;
-    } else if (bootTicks >= 40 && bootTimer) {
-      clearInterval(bootTimer);
-      bootTimer = null;
+    wrapPresenceFunctions();
+    wrapFinancialHooks();
+    ensureFinTabButtonVisible();
+    if (window.currentUser && !isFinancialEditorUser() && !finSnapshotData && Array.isArray(window.athletes) && window.athletes.length > 0) {
+      captureLoginFinancialSnapshot(true);
     }
-  }
+    if (bootTicks >= 40) clearInterval(bootTimer);
+  }, 250);
 
-  document.addEventListener('DOMContentLoaded', bootShieldAndFinancial);
-  window.addEventListener('load', bootShieldAndFinancial);
-  bootTimer = setInterval(bootShieldAndFinancial, 400);
+  document.addEventListener('click', function(ev) {
+    var btn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-financial') : null;
+    if (btn && window.currentUser) {
+      wrapFinancialHooks();
+      if (!isFinancialEditorUser()) {
+        setTimeout(function() { renderFastReadOnlyFinancial(false); }, 10);
+      }
+    }
+  }, true);
 })();
 </script>
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_END -->
