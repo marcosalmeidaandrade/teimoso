@@ -2689,7 +2689,7 @@
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
         // [BLINDAGEM PRESENÇA INDIVIDUAL] Gravação atômica por célula via updateDoc
-                window.syncSpecificData = async function(payload) {
+                    window.syncSpecificData = async function(payload) {
       if (!isCloudReady || !navigator.onLine) return;
       if (typeof window.isViewingArchivedSeason === 'function' && window.isViewingArchivedSeason()) {
         if (typeof window.showToast === 'function') window.showToast('Modo Histórico: mude para o ano atual para alterar.', 'error');
@@ -2780,6 +2780,8 @@
       }
       await window.syncSpecificData(payload);
     };
+
+    
 
     
 
@@ -6528,6 +6530,11 @@
     };
 
     window.renderFinancial = function() {
+      /* [BLINDAGEM PERFORMANCE] Corta renderização pesada de edição para atletas comuns e quando aba Financeiro está oculta */
+      if (window.currentUser && !window.isAdmin && !window.canEditFinancial) { return; }
+      const __finTabSec = document.getElementById('tab-financial');
+      if (__finTabSec && __finTabSec.classList.contains('hidden')) { return; }
+      window.__teimosoLastAdminFinRenderAt = Date.now();
       window.syncConsecutiveAbsencePenalties();
       const container = document.getElementById('financialAccordionContainer');
       if (!container) return;
@@ -8950,6 +8957,7 @@ try {
 
 
 
+
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
 <style>
   /* Quando atleta comum abre o Financeiro, oculta a árvore pesada de edição e exibe o modo ultra-leve */
@@ -9075,6 +9083,7 @@ try {
 
       var totalPaid = 0;
       var pendingInstallments = 0;
+      var overdueInstallments = 0;
       var hasOverdue = false;
       var monthsInfo = [];
 
@@ -9088,7 +9097,10 @@ try {
         var effSusp = Boolean(ath.isSuspended || isExempt);
         var dueDate = new Date(seasonYear, m, 15, 23, 59, 59);
         var isOverdue = !isPaid && !effSusp && (now > dueDate);
-        if (isOverdue) hasOverdue = true;
+        if (isOverdue) {
+          hasOverdue = true;
+          overdueInstallments += baseFee;
+        }
         if (!isPaid && !effSusp) pendingInstallments += baseFee;
 
         monthsInfo.push({
@@ -9113,10 +9125,20 @@ try {
         isUpToDate: isUpToDate,
         totalPaid: totalPaid,
         pendingInstallments: pendingInstallments,
+        overdueInstallments: overdueInstallments,
         unpaidFinesTotal: unpaidFinesTotal,
         months: monthsInfo
       };
     });
+
+    var totals = { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, upToDateCount: 0, overdueCount: 0 };
+    for (var t = 0; t < list.length; t++) {
+      totals.totalPaid += list[t].totalPaid;
+      totals.totalPending += list[t].pendingInstallments;
+      totals.totalOverdue += list[t].overdueInstallments;
+      totals.totalFines += list[t].unpaidFinesTotal;
+      if (list[t].isUpToDate) totals.upToDateCount++; else totals.overdueCount++;
+    }
 
     // Próprio atleta logado SEMPRE em 1º lugar; demais em ordem alfabética (A-Z)
     list.sort(function(a, b) {
@@ -9132,6 +9154,7 @@ try {
     finSnapshotData = {
       loggedId: loggedId,
       capturedAt: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      totals: totals,
       items: list
     };
     return finSnapshotData;
@@ -9174,7 +9197,39 @@ try {
     }
 
     var searchNorm = normFinName(finSnapshotSearchTerm);
+    var tot = snap.totals || { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, upToDateCount: 0, overdueCount: 0 };
+    var totalOverdueAndFines = (tot.totalOverdue || 0) + (tot.totalFines || 0);
     var parts = [];
+
+    // CARDS DE TOTALIZADORES VISÍVEIS PARA TODOS OS ATLETAS
+    parts.push(
+      '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">' +
+        '<div class="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-sm">' +
+          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-emerald-700"><span>Total Arrecadado</span><i class="fa-solid fa-sack-dollar text-emerald-500"></i></div>' +
+          '<div class="text-base sm:text-xl font-black text-emerald-600 mt-1">' + fmtFinBRL(tot.totalPaid) + '</div>' +
+          '<div class="text-[10px] text-slate-400 font-semibold mt-0.5">Quitado na temporada</div>' +
+        '</div>' +
+        '<div class="bg-white border border-sky-200 rounded-2xl p-3.5 shadow-sm">' +
+          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-sky-700"><span>Parcelas a Receber</span><i class="fa-solid fa-calendar-days text-sky-500"></i></div>' +
+          '<div class="text-base sm:text-xl font-black text-slate-800 mt-1">' + fmtFinBRL(tot.totalPending) + '</div>' +
+          '<div class="text-[10px] text-slate-400 font-semibold mt-0.5">Saldo anual em aberto</div>' +
+        '</div>' +
+        '<div class="bg-white border border-rose-200 rounded-2xl p-3.5 shadow-sm">' +
+          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-rose-700"><span>Em Atraso + Multas</span><i class="fa-solid fa-triangle-exclamation text-rose-500"></i></div>' +
+          '<div class="text-base sm:text-xl font-black text-rose-600 mt-1">' + fmtFinBRL(totalOverdueAndFines) + '</div>' +
+          '<div class="text-[10px] text-slate-400 font-semibold mt-0.5">Vencidas + multas abertas</div>' +
+        '</div>' +
+        '<div class="bg-white border border-amber-200 rounded-2xl p-3.5 shadow-sm">' +
+          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-amber-700"><span>Situação Geral</span><i class="fa-solid fa-users text-amber-500"></i></div>' +
+          '<div class="flex items-center gap-2 mt-1.5 flex-wrap">' +
+            '<span class="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black">' + tot.upToDateCount + ' Em Dia</span>' +
+            '<span class="px-2 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black">' + tot.overdueCount + ' Atraso</span>' +
+          '</div>' +
+          '<div class="text-[10px] text-slate-400 font-semibold mt-1">Total: ' + snap.items.length + ' atletas</div>' +
+        '</div>' +
+      '</div>'
+    );
+
     parts.push(
       '<div class="bg-sky-50 border border-sky-200 text-sky-900 rounded-2xl px-4 py-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
         '<div class="font-bold flex items-center gap-2"><i class="fa-solid fa-eye text-sky-600 shrink-0"></i><span>Somente visualização (posição do login às ' + snap.capturedAt + '). Seu perfil aparece primeiro; demais em ordem alfabética.</span></div>' +
@@ -9182,10 +9237,10 @@ try {
       '</div>'
     );
 
-    parts.push('<div class="space-y-2">');
+    parts.push('<div id="teimosoFastFinList" class="space-y-2">');
     for (var i = 0; i < snap.items.length; i++) {
       var it = snap.items[i];
-      if (searchNorm && it.normName.indexOf(searchNorm) === -1) continue;
+      var hideCard = Boolean(searchNorm && it.normName.indexOf(searchNorm) === -1);
       var isSelf = (snap.loggedId !== null && it.id === snap.loggedId);
       var isOpen = Boolean(finSnapshotExpandedIds[it.id]);
       var dotCls = it.isUpToDate ? 'bg-emerald-500' : 'bg-rose-500';
@@ -9194,7 +9249,7 @@ try {
       var cardBorder = isSelf ? 'border-emerald-400 ring-2 ring-emerald-400/50' : 'border-slate-200';
 
       parts.push(
-        '<div class="bg-white border ' + cardBorder + ' rounded-2xl overflow-hidden shadow-sm">' +
+        '<div data-fast-fin-name="' + escapeFinHtml(it.normName) + '" class="bg-white border ' + cardBorder + ' rounded-2xl overflow-hidden shadow-sm' + (hideCard ? ' hidden' : '') + '">' +
           '<button type="button" onclick="window.__teimosoToggleFastFinCard(' + it.id + ')" class="w-full p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left hover:bg-slate-50 transition-colors cursor-pointer">' +
             '<div class="flex items-center gap-2.5 flex-wrap">' +
               '<span class="w-2.5 h-2.5 rounded-full ' + dotCls + ' shrink-0"></span>' +
@@ -9206,10 +9261,10 @@ try {
             '<div class="flex items-center justify-between sm:justify-end gap-3 text-[11px] font-bold">' +
               '<div class="flex flex-col text-slate-500"><span class="text-[9px] uppercase">Pago</span><span class="text-emerald-600 text-xs sm:text-sm font-black">' + fmtFinBRL(it.totalPaid) + '</span></div>' +
               '<div class="flex flex-col text-slate-500 border-l border-slate-200 pl-3"><span class="text-[9px] uppercase">Parcelas</span><span class="text-slate-700 text-xs sm:text-sm font-black">' + fmtFinBRL(it.pendingInstallments) + '</span></div>' +
-              '<i class="fa-solid fa-chevron-' + (isOpen ? 'up' : 'down') + ' text-slate-400 text-xs ml-1"></i>' +
+              '<i id="teimosoFastFinChev_' + it.id + '" class="fa-solid fa-chevron-' + (isOpen ? 'up' : 'down') + ' text-slate-400 text-xs ml-1"></i>' +
             '</div>' +
           '</button>' +
-          (isOpen ? buildMonthsDetailHtml(it) : '') +
+          '<div id="teimosoFastFinDetail_' + it.id + '" data-built="' + (isOpen ? '1' : '0') + '" class="' + (isOpen ? '' : 'hidden') + '">' + (isOpen ? buildMonthsDetailHtml(it) : '') + '</div>' +
         '</div>'
       );
     }
@@ -9218,15 +9273,41 @@ try {
   }
 
   window.__teimosoToggleFastFinCard = function(athId) {
-    finSnapshotExpandedIds[athId] = !finSnapshotExpandedIds[athId];
+    var willOpen = !finSnapshotExpandedIds[athId];
+    finSnapshotExpandedIds[athId] = willOpen;
+    var detailBox = document.getElementById('teimosoFastFinDetail_' + athId);
+    var chev = document.getElementById('teimosoFastFinChev_' + athId);
+    if (detailBox && finSnapshotData) {
+      if (willOpen) {
+        if (detailBox.getAttribute('data-built') !== '1') {
+          var found = finSnapshotData.items.find(function(x) { return x.id === athId; });
+          if (found) detailBox.innerHTML = buildMonthsDetailHtml(found);
+          detailBox.setAttribute('data-built', '1');
+        }
+        detailBox.classList.remove('hidden');
+      } else {
+        detailBox.classList.add('hidden');
+      }
+      if (chev) chev.className = 'fa-solid fa-chevron-' + (willOpen ? 'up' : 'down') + ' text-slate-400 text-xs ml-1';
+      return;
+    }
     renderFastReadOnlyFinancial(false);
   };
 
   window.__teimosoFilterFastFin = function(val) {
     finSnapshotSearchTerm = String(val || '');
+    var searchNorm = normFinName(finSnapshotSearchTerm);
+    var listEl = document.getElementById('teimosoFastFinList');
+    if (listEl) {
+      var cards = listEl.children;
+      for (var i = 0; i < cards.length; i++) {
+        var nm = cards[i].getAttribute('data-fast-fin-name') || '';
+        if (!searchNorm || nm.indexOf(searchNorm) !== -1) cards[i].classList.remove('hidden');
+        else cards[i].classList.add('hidden');
+      }
+      return;
+    }
     renderFastReadOnlyFinancial(false);
-    var inp = document.getElementById('teimosoFastFinSearch');
-    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
   };
 
   function wrapFinancialHooks() {
@@ -9280,7 +9361,12 @@ try {
             if (!canEdit) {
               renderFastReadOnlyFinancial(false);
             } else if (typeof window.renderFinancial === 'function') {
-              try { window.renderFinancial(true); } catch (e) {}
+              var alreadyRan = (Date.now() - (window.__teimosoLastAdminFinRenderAt || 0)) < 250;
+              if (!alreadyRan) {
+                requestAnimationFrame(function() {
+                  try { window.renderFinancial(true); } catch (e) {}
+                });
+              }
             }
           }
           return res;
