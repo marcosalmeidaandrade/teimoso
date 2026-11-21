@@ -8962,6 +8962,7 @@ try {
 
 
 
+
 <!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
 <style>
   /* Quando atleta comum abre o Financeiro, oculta a árvore pesada de edição e exibe o modo ultra-leve */
@@ -8995,7 +8996,7 @@ try {
 
   function fmtFinBRL(val) {
     var n = Number(val) || 0;
-    return 'R$ ' + n.toFixed(2).replace('.', ',');
+    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function isFinancialEditorUser() {
@@ -9097,15 +9098,15 @@ try {
         totalOverdueAll: totalOverdueAll,
         totalGeneralNov: totalGeneralNov
       };
-    });
-
-    var totals = { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
+    var totals = { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, totalOverdueAll: 0, totalGeneralNovAll: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
     for (var t = 0; t < list.length; t++) {
       totals.totalPaid += list[t].totalPaid;
       totals.totalPending += list[t].pendingInstallments;
       totals.totalOverdue += list[t].overdueInstallments;
       totals.totalInterest += list[t].totalInterest;
       totals.totalFines += list[t].unpaidFinesTotal;
+      totals.totalOverdueAll += list[t].totalOverdueAll;
+      totals.totalGeneralNovAll += list[t].totalGeneralNov;
       if (list[t].isExempt) totals.exemptCount++;
       if (list[t].isUpToDate) totals.upToDateCount++; else totals.overdueCount++;
     }
@@ -9166,38 +9167,38 @@ try {
     if (!container) {
       container = document.createElement('div');
       container.id = 'teimosoFastFinView';
-      container.className = 'space-y-3';
-      finSec.insertBefore(container, finSec.firstChild);
-    }
-
-    var tot = snap.totals || { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
-    var totalOverdueAndFines = (tot.totalOverdue || 0) + (tot.totalInterest || 0) + (tot.totalFines || 0);
+    var tot = snap.totals || { totalPaid: 0, totalPending: 0, totalOverdue: 0, totalFines: 0, totalInterest: 0, totalOverdueAll: 0, totalGeneralNovAll: 0, upToDateCount: 0, overdueCount: 0, exemptCount: 0 };
     var parts = [];
 
     parts.push(
-      '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">' +
-        '<div class="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-sm">' +
-          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-emerald-700"><span>Total Arrecadado</span><i class="fa-solid fa-sack-dollar text-emerald-500"></i></div>' +
-          '<div class="text-base sm:text-xl font-black text-emerald-600 mt-1">' + fmtFinBRL(tot.totalPaid) + '</div>' +
-          '<div class="text-[10px] text-slate-400 font-semibold mt-0.5">Quitado na temporada</div>' +
-        '</div>' +
-        '<div class="bg-white border border-sky-200 rounded-2xl p-3.5 shadow-sm">' +
-          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-sky-700"><span>Parcelas a Receber</span><i class="fa-solid fa-calendar-days text-sky-500"></i></div>' +
-          '<div class="text-base sm:text-xl font-black text-slate-800 mt-1">' + fmtFinBRL(tot.totalPending) + '</div>' +
-          '<div class="text-[10px] text-slate-400 font-semibold mt-0.5">Saldo anual em aberto</div>' +
-        '</div>' +
-        '<div class="bg-white border border-rose-200 rounded-2xl p-3.5 shadow-sm">' +
-          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-rose-700"><span>Em Atraso + Multas</span><i class="fa-solid fa-triangle-exclamation text-rose-500"></i></div>' +
-          '<div class="text-base sm:text-xl font-black text-rose-600 mt-1">' + fmtFinBRL(totalOverdueAndFines) + '</div>' +
-          '<div class="text-[10px] text-slate-400 font-semibold mt-0.5">Vencidas + multas abertas</div>' +
-        '</div>' +
-        '<div class="bg-white border border-amber-200 rounded-2xl p-3.5 shadow-sm">' +
-          '<div class="flex items-center justify-between text-[10px] font-black uppercase text-amber-700"><span>Situação Geral</span><i class="fa-solid fa-users text-amber-500"></i></div>' +
-          '<div class="flex items-center gap-2 mt-1.5 flex-wrap">' +
-            '<span class="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black">' + tot.upToDateCount + ' Em Dia</span>' +
-            '<span class="px-2 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black">' + tot.overdueCount + ' Atraso</span>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">' +
+        '<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">' +
+          '<div>' +
+            '<div class="text-[11px] font-black uppercase tracking-wide text-slate-500">Total Geral Pago</div>' +
+            '<div class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">' + fmtFinBRL(tot.totalPaid) + '</div>' +
           '</div>' +
-          '<div class="text-[10px] text-slate-400 font-semibold mt-1">Total: ' + snap.items.length + ' atletas</div>' +
+          '<div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-circle-check text-lg"></i></div>' +
+        '</div>' +
+        '<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">' +
+          '<div>' +
+            '<div class="text-[11px] font-black uppercase tracking-wide text-slate-500">Total de Juros Devidos</div>' +
+            '<div class="text-xl sm:text-2xl font-black text-amber-600 mt-1">' + fmtFinBRL(tot.totalInterest) + '</div>' +
+          '</div>' +
+          '<div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-clock text-lg"></i></div>' +
+        '</div>' +
+        '<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">' +
+          '<div>' +
+            '<div class="text-[11px] font-black uppercase tracking-wide text-rose-600">Total em Atraso</div>' +
+            '<div class="text-xl sm:text-2xl font-black text-rose-600 mt-1">' + fmtFinBRL(tot.totalOverdueAll) + '</div>' +
+          '</div>' +
+          '<div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>' +
+        '</div>' +
+        '<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">' +
+          '<div>' +
+            '<div class="text-[11px] font-black uppercase tracking-wide text-purple-700 leading-snug">Total Geral a Receber até Novembro</div>' +
+            '<div class="text-xl sm:text-2xl font-black text-purple-600 mt-1">' + fmtFinBRL(tot.totalGeneralNovAll) + '</div>' +
+          '</div>' +
+          '<div class="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-calendar-check text-lg"></i></div>' +
         '</div>' +
       '</div>'
     );
