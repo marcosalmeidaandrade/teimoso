@@ -2356,7 +2356,7 @@
           window._liveActiveSeasonCache = null;
 
           window.recordUserInteraction(window.currentUser?.name || 'Admin', `Realizou a virada de temporada de ${currentYear} para ${nextYear}`);
-          await window.saveData();
+          await window.saveDataWithPresences();
           window.populateSeasonSelector();
           window.populateDateSelect();
           window.renderAthletesList();
@@ -2644,7 +2644,7 @@
         await setDoc(dbPhotosDocRef, {
           peladaPhotos: window.peladaPhotos || {},
           updatedAt: new Date().toISOString()
-        }, { merge: true });
+        });
         return true;
       } catch (error) {
         console.error("Erro ao salvar fotos no Firestore:", error);
@@ -2691,6 +2691,12 @@
        [BLINDAGEM DEFINITIVA] Wrapper obrigatório { merge: true } para setDoc
        Impede que a omissão de 'presences' no saveData() apague o campo na nuvem.
        ========================================================================= */
+    
+    window.saveDataWithPresences = async function() {
+      if (!isCloudReady || !navigator.onLine) return;
+      await window.saveData();
+      await __teimosoSafeSetDoc(dbDocRef, { presences: window.presences || {}, __allowFullPresencesRestore: true, updatedAt: new Date().toISOString() }, { merge: true });
+    };
     async function __teimosoSafeSetDoc(ref, data, options) {
       if (typeof isCloudReady !== 'undefined' && !isCloudReady) return;
       if (!navigator.onLine) {
@@ -2702,7 +2708,7 @@
       if (safeData.presences && typeof safeData.presences === 'object') {
         const dKeys = Object.keys(safeData.presences);
         const isSingleAthletePatch = Boolean(
-          safeData.__allowSinglePresenceMerge ||
+          safeData.__allowSinglePresenceMerge || safeData.__allowFullPresencesRestore ||
           (dKeys.length === 1 &&
             safeData.presences[dKeys[0]] &&
             typeof safeData.presences[dKeys[0]] === 'object' &&
@@ -2713,6 +2719,7 @@
         }
       }
       delete safeData.__allowSinglePresenceMerge;
+      delete safeData.__allowFullPresencesRestore;
       return setDoc(ref, safeData, safeOptions);
     };
     // Sincronização Cirúrgica Nível Máximo: grava APENAS a célula individual alterada no Firestore
@@ -2785,6 +2792,9 @@
         }
         if (payload && payload.partyRaffleState) {
           dotUpdates.partyRaffleState = payload.partyRaffleState;
+        }
+        if (payload && payload.athletesOnly) {
+          dotUpdates.athletes = window.athletes;
         }
         await updateDoc(dbDocRef, dotUpdates);
       } catch (err) {
@@ -3442,14 +3452,13 @@
         updateActivityBadge();
         updateMarcaoAnimationButtonUI();
         window.populateDateSelect();
-        window.syncConsecutiveAbsencePenalties();
-        window.renderAthletesList();
-        window.renderBirthdaysList();
-        window.renderFinancial();
-        window.renderReports();
-        if (typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
-        if (typeof window.renderConsecutiveAbsencesTab === 'function') window.renderConsecutiveAbsencesTab();
-        if (typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
+        if (activeTab === 'presence') window.renderAthletesList();
+        else if (activeTab === 'birthdays') window.renderBirthdaysList();
+        else if (activeTab === 'financial' && (window.isAdmin || window.canEditFinancial)) window.renderFinancial();
+        else if (activeTab === 'reports') window.renderReports();
+        else if (activeTab === 'stats' && typeof window.renderStatsAndPollTab === 'function') window.renderStatsAndPollTab();
+        else if (activeTab === 'consecutive' && typeof window.renderConsecutiveAbsencesTab === 'function') { window.syncConsecutiveAbsencePenalties(); window.renderConsecutiveAbsencesTab(); }
+        else if (activeTab === 'photos' && typeof window.renderPhotosTab === 'function') window.renderPhotosTab();
         window.checkDeadlinePassed();
       }, (error) => {
         console.error("Falha ao sincronizar com Firestore:", error);
@@ -5155,7 +5164,8 @@
         const birthMonth = parseInt(document.getElementById('athleteBirthMonthSelect')?.value) || null;
         const pinInput = (document.getElementById('athletePinInput')?.value || '').trim();
         const position = document.getElementById('athletePositionSelect')?.value || 'Meia';
-        const monthlyFee = parseFloat(document.getElementById('athleteMonthlyFeeInput')?.value) || 110;
+        const __rawFee = parseFloat(document.getElementById('athleteMonthlyFeeInput')?.value);
+        const monthlyFee = isNaN(__rawFee) ? 110 : __rawFee;
         const isSuspended = document.getElementById('athleteSuspendedCheckbox')?.checked || false;
 
         const adminWifeName = document.getElementById('adminWifeName')?.value.trim();
@@ -6577,11 +6587,6 @@
       }
       try {
 
-      /* [BLINDAGEM PERFORMANCE] Corta renderização pesada de edição para atletas comuns e quando aba Financeiro está oculta */
-      if (window.currentUser && !window.isAdmin && !window.canEditFinancial) { return; }
-      const __finTabSec = document.getElementById('tab-financial');
-      if (__finTabSec && __finTabSec.classList.contains('hidden')) { return; }
-      window.__teimosoLastAdminFinRenderAt = Date.now();
       window.syncConsecutiveAbsencePenalties();
       const container = document.getElementById('financialAccordionContainer');
       if (!container) return;
@@ -7065,7 +7070,7 @@
             if (parsed.absenceFines) window.absenceFines = parsed.absenceFines;
             if (parsed.peladaGoals) window.peladaGoals = parsed.peladaGoals;
             if (parsed.peladaPolls) window.peladaPolls = parsed.peladaPolls;
-            await window.saveData();
+            await window.saveDataWithPresences();
             window.closeBackupModal();
             window.showToast("Backup restaurado!", "success");
           });
@@ -7186,1016 +7191,44 @@
   </script>
 
 
-<!-- PARTY_TAB_FORCE_VISIBLE_START -->
-<style id="forceFestaTabStyle">
-  #tabBtn-roulette,
-  button[onclick*="switchTab('roulette')"],
-  button[onclick*="switchTab(\"roulette\")"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-</style>
-
-<!-- PARTY_TAB_FORCE_VISIBLE_END -->
-
-<!-- TEIMOSO_FESTA_SAFE_PATCH_START -->
-
-<script type="module">
-  import { getApps, initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-  try {
-    const fbApp = getApps().length > 0 ? getApps()[0] : initializeApp({
-      apiKey: 'AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ',
-      authDomain: 'teimosoweb.firebaseapp.com',
-      projectId: 'teimosoweb',
-      storageBucket: 'teimosoweb.firebasestorage.app',
-      messagingSenderId: '90879285758',
-      appId: '1:90879285758:web:ef602bfe90c131e0f808af'
-    });
-    const fbDb = getFirestore(fbApp);
-    const festaDocRef = doc(fbDb, 'teimoso_config', 'festa_sorteio');
-    const mainDocRef = doc(fbDb, 'teimoso_config', 'dados_gerais');
-    let lastAppliedTs = 0;
-    let localWriteQueue = Promise.resolve();
-    window.__recentLocalMutations = window.__recentLocalMutations || {};
-    window.__markLocalMutation = function(pathKey) {
-      if (!pathKey) return;
-      window.__recentLocalMutations[pathKey] = Date.now() + 2500;
-    };
-    window.__isProtectedByRecentLocalWrite = function(pathKey) {
-      const exp = window.__recentLocalMutations && window.__recentLocalMutations[pathKey];
-      return Boolean(exp && exp > Date.now());
-    };
-    window.__enqueueAtomicDotPatch = function(dotMap, fallbackMergeObj) {
-      if (!dotMap || Object.keys(dotMap).length === 0) return Promise.resolve();
-      dotMap.updatedAt = new Date().toISOString();
-      localWriteQueue = localWriteQueue.then(async function() {
-        try {
-          await updateDoc(mainDocRef, dotMap);
-        } catch (errDot) {
-          if (fallbackMergeObj && typeof fallbackMergeObj === 'object') {
-            fallbackMergeObj.updatedAt = dotMap.updatedAt;
-            await setDoc(mainDocRef, fallbackMergeObj, { merge: true });
-          }
-        }
-      }).catch(function(e) {
-        console.warn('[Patch Festa Atomic Queue]', e);
-      });
-      return localWriteQueue;
-    };
-    function applyIncomingRaffleState(rawState) {
-      if (!rawState || typeof rawState !== 'object') return;
-      if (window.__isProtectedByRecentLocalWrite('partyRaffleState')) return;
-      const ts = rawState.updatedAt ? Date.parse(rawState.updatedAt) || 0 : 0;
-      if (ts > 0 && ts < lastAppliedTs) return;
-      if (ts > 0) lastAppliedTs = ts;
-      const rawHistory = Array.isArray(rawState.drawnHistory) ? rawState.drawnHistory : (Array.isArray(rawState.drawn) ? rawState.drawn : []);
-      window.partyRaffleState = {
-        enabled: Boolean(rawState.enabled),
-        roundId: rawState.roundId || (rawState.enabled ? 'active_round' : null),
-        drawnIds: Array.isArray(rawState.drawnIds) ? rawState.drawnIds : rawHistory.map(function(h, idx) { return h.id || h.key || ('d_' + idx); }),
-        drawnHistory: rawHistory,
-        updatedAt: rawState.updatedAt || null
-      };
-      if (typeof window.__onFestaCloudUpdate === 'function') {
-        window.__onFestaCloudUpdate();
-      }
-    }
-    window.__saveFestaRaffleCloud = async function(stateObj) {
-      const payload = {
-        enabled: Boolean(stateObj.enabled),
-        roundId: stateObj.roundId || null,
-        drawnIds: Array.isArray(stateObj.drawnIds) ? stateObj.drawnIds : [],
-        drawnHistory: Array.isArray(stateObj.drawnHistory) ? stateObj.drawnHistory : [],
-        updatedAt: new Date().toISOString()
-      };
-      window.__markLocalMutation('partyRaffleState');
-      lastAppliedTs = Date.parse(payload.updatedAt) || Date.now();
-      await Promise.allSettled([
-        updateDoc(mainDocRef, { partyRaffleState: payload, updatedAt: payload.updatedAt }).catch(function() {
-          return setDoc(mainDocRef, { partyRaffleState: payload, updatedAt: payload.updatedAt }, { merge: true });
-        }),
-        setDoc(festaDocRef, payload, { merge: true }).catch(function(e) { console.warn('[Patch Festa] festa_sorteio:', e); })
-      ]);
-    };
-    onSnapshot(mainDocRef, function(snap) {
-      if (snap && snap.exists()) {
-        const d = snap.data() || {};
-        if (d.partyRaffleState) applyIncomingRaffleState(d.partyRaffleState);
-      }
-    }, function(err) { console.warn('[Patch Festa] onSnapshot dados_gerais:', err); });
-    onSnapshot(festaDocRef, function(snap) {
-      if (snap && snap.exists()) {
-        applyIncomingRaffleState(snap.data());
-      }
-    }, function(err) { console.warn('[Patch Festa] onSnapshot festa_sorteio:', err); });
-    getDoc(mainDocRef).then(function(snap) {
-      if (snap && snap.exists() && snap.data() && snap.data().partyRaffleState) {
-        applyIncomingRaffleState(snap.data().partyRaffleState);
-      }
-    }).catch(function() {});
-  } catch (e) {
-    console.warn('[Patch Festa Cloud] Fallback local:', e);
-  }
-</script>
-<script>
-(function() {
-  try {
-    if (typeof window.syncSpecificData === 'function' && !window.syncSpecificData._teimosoAtomicWrapped) {
-      var origSyncSpecific = window.syncSpecificData;
-      var wrappedSyncSpecific = function(payloadOrKey, maybeVal) {
-        if (typeof window.__enqueueAtomicDotPatch === 'function') {
-          var obj = (typeof payloadOrKey === 'string') ? (function() { var o = {}; o[payloadOrKey] = maybeVal; return o; })() : (payloadOrKey || {});
-          var dotMap = {};
-          var hasDot = false;
-          if (obj.presences && typeof obj.presences === 'object') {
-            Object.keys(obj.presences).forEach(function(dKey) {
-              var aMap = obj.presences[dKey];
-              if (aMap && typeof aMap === 'object') {
-                Object.keys(aMap).forEach(function(aId) {
-                  dotMap['presences.' + dKey + '.' + aId] = aMap[aId];
-                  if (window.__markLocalMutation) window.__markLocalMutation('presence_' + dKey + '_' + aId);
-                  hasDot = true;
-                });
-              }
-            });
-          }
-          if (obj.absenceFines && typeof obj.absenceFines === 'object') {
-            Object.keys(obj.absenceFines).forEach(function(aId) {
-              dotMap['absenceFines.' + aId] = obj.absenceFines[aId];
-              hasDot = true;
-            });
-          }
-          if (obj.financialPayments && typeof obj.financialPayments === 'object') {
-            Object.keys(obj.financialPayments).forEach(function(aId) {
-              var mMap = obj.financialPayments[aId];
-              if (mMap && typeof mMap === 'object') {
-                Object.keys(mMap).forEach(function(mKey) {
-                  dotMap['financialPayments.' + aId + '.' + mKey] = mMap[mKey];
-                  if (window.__markLocalMutation) window.__markLocalMutation('fin_' + aId + '_' + mKey);
-                  hasDot = true;
-                });
-              }
-            });
-          }
-          if (obj.alwaysUpToDateMap && typeof obj.alwaysUpToDateMap === 'object') {
-            Object.keys(obj.alwaysUpToDateMap).forEach(function(aId) {
-              dotMap['alwaysUpToDateMap.' + aId] = obj.alwaysUpToDateMap[aId];
-              hasDot = true;
-            });
-          }
-          if (obj.peladaGoals && typeof obj.peladaGoals === 'object') {
-            Object.keys(obj.peladaGoals).forEach(function(dKey) {
-              var gMap = obj.peladaGoals[dKey];
-              if (gMap && typeof gMap === 'object') {
-                Object.keys(gMap).forEach(function(aId) {
-                  dotMap['peladaGoals.' + dKey + '.' + aId] = gMap[aId];
-                  hasDot = true;
-                });
-              }
-            });
-          }
-          if (obj.peladaPolls && typeof obj.peladaPolls === 'object') {
-            Object.keys(obj.peladaPolls).forEach(function(dKey) {
-              var pObj = obj.peladaPolls[dKey];
-              if (pObj && pObj.votes && typeof pObj.votes === 'object') {
-                Object.keys(pObj.votes).forEach(function(vId) {
-                  dotMap['peladaPolls.' + dKey + '.votes.' + vId] = pObj.votes[vId];
-                  hasDot = true;
-                });
-              }
-            });
-          }
-          if (obj.partyRaffleState) {
-            dotMap.partyRaffleState = obj.partyRaffleState;
-            hasDot = true;
-          }
-          if (hasDot) {
-            return window.__enqueueAtomicDotPatch(dotMap, obj);
-          }
-        }
-        return origSyncSpecific.apply(this, arguments);
-      };
-      wrappedSyncSpecific._teimosoAtomicWrapped = true;
-      window.syncSpecificData = wrappedSyncSpecific;
-    }
-    function normStr(val) {
-      return String(val || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    }
-    function escHtml(str) {
-      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-    function isLoggedIn() {
-      var loginOv = document.getElementById('globalLoginOverlay');
-      var overlayHidden = !loginOv || loginOv.classList.contains('hidden') || loginOv.style.display === 'none';
-      return Boolean(window.currentUser && overlayHidden);
-    }
-    function isUserAdmin() {
-      return (window.isAdmin === true || (window.currentUser && (window.currentUser.isAdmin === true || window.currentUser.role === 'admin')));
-    }
-    function getLoggedAthlete() {
-      if (!window.currentUser || !Array.isArray(window.athletes)) return null;
-      var ath = null;
-      if (window.currentUser.id !== undefined && window.currentUser.id !== null) {
-        ath = window.athletes.find(function(a) { return Number(a.id) === Number(window.currentUser.id); });
-      }
-      if (!ath && window.currentUser.name) {
-        var target = normStr(window.currentUser.name);
-        ath = window.athletes.find(function(a) { return normStr(a.name) === target; });
-      }
-      return ath || null;
-    }
-    function isMyFamilyMember(entry) {
-      if (!window.currentUser || !entry) return false;
-      if (window.currentUser.id !== undefined && window.currentUser.id !== null && Number(window.currentUser.id) !== 0) {
-        if (Number(entry.athleteId) === Number(window.currentUser.id)) return true;
-      }
-      if (window.currentUser.name && normStr(entry.athleteName) === normStr(window.currentUser.name)) return true;
-      var ath = getLoggedAthlete();
-      if (ath && Number(entry.athleteId) === Number(ath.id)) return true;
-      return false;
-    }
-    function getAllFamilyParticipants() {
-      var list = [];
-      var athletes = Array.isArray(window.athletes) ? window.athletes : [];
-      athletes.forEach(function(a) {
-        if (!a || !a.family) return;
-        if (a.family.wife && a.family.wife.name && String(a.family.wife.name).trim()) {
-          var wName = String(a.family.wife.name).trim();
-          list.push({
-            id: a.id + '_wife_' + normStr(wName),
-            name: wName,
-            relation: 'Esposa',
-            athleteId: a.id,
-            athleteName: a.name || 'Atleta'
-          });
-        }
-        if (Array.isArray(a.family.children)) {
-          a.family.children.forEach(function(c, idx) {
-            if (c && c.name && String(c.name).trim()) {
-              var cName = String(c.name).trim();
-              list.push({
-                id: a.id + '_child_' + idx + '_' + normStr(cName),
-                name: cName,
-                relation: 'Filho(a)',
-                athleteId: a.id,
-                athleteName: a.name || 'Atleta'
-              });
-            }
-          });
-        }
-      });
-      return list;
-    }
-    function getNormalizedRaffleState() {
-      var raw = window.partyRaffleState;
-      if (!raw || typeof raw !== 'object') {
-        window.partyRaffleState = { enabled: false, roundId: null, drawnIds: [], drawnHistory: [] };
-        return window.partyRaffleState;
-      }
-      if (typeof raw.enabled !== 'boolean') raw.enabled = Boolean(raw.enabled);
-      if (raw.roundId === undefined) raw.roundId = raw.enabled ? 'active_round' : null;
-      if (!Array.isArray(raw.drawnHistory)) {
-        if (Array.isArray(raw.drawn)) {
-          raw.drawnHistory = raw.drawn.map(function(item, idx) {
-            return {
-              id: item.id || item.key || ('legacy_' + idx),
-              name: item.name || '',
-              relation: item.relation || '',
-              athleteId: item.athleteId,
-              athleteName: item.athleteName || 'Atleta',
-              order: item.order || (idx + 1),
-              time: item.time || ''
-            };
-          });
-        } else {
-          raw.drawnHistory = [];
-        }
-      }
-      if (!Array.isArray(raw.drawnIds)) {
-        raw.drawnIds = raw.drawnHistory.map(function(h) { return h.id || h.key; });
-      }
-      return raw;
-    }
-    function syncRaffleStateToCloud(stateObj) {
-      try {
-        if (typeof window.__saveFestaRaffleCloud === 'function') {
-          window.__saveFestaRaffleCloud(stateObj);
-          return;
-        }
-        if (typeof window.syncSpecificData === 'function') {
-          if (window.syncSpecificData.length >= 2) {
-            window.syncSpecificData('partyRaffleState', stateObj);
-          } else {
-            window.syncSpecificData({ partyRaffleState: stateObj });
-          }
-        }
-      } catch (err) {
-        console.warn('[Patch Festa] Falha ao sincronizar partyRaffleState:', err);
-      }
-    }
-    function showAppFeedback(msg, type) {
-      try {
-        if (typeof window.showToast === 'function') {
-          window.showToast(msg, type || 'info');
-          return;
-        }
-      } catch (e) {}
-      showRedirectBanner(msg);
-    }
-    var redirectToastTimer = null;
-    function showRedirectBanner(messageText) {
-      var toast = document.getElementById('teimosoRaffleRedirectToast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'teimosoRaffleRedirectToast';
-        toast.className = 'bg-slate-900 border-2 border-emerald-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-md w-[92vw] text-xs sm:text-sm font-bold';
-        document.body.appendChild(toast);
-      }
-      toast.innerHTML = '<i class="fa-solid fa-gift text-emerald-400 text-lg shrink-0"></i><span>' + escHtml(messageText) + '</span>';
-      toast.classList.add('show');
-      if (redirectToastTimer) clearTimeout(redirectToastTimer);
-      redirectToastTimer = setTimeout(function() { toast.classList.remove('show'); }, 4500);
-    }
-    function ensureFestaSectionLayout() {
-      var sec = document.getElementById('tab-roulette');
-      if (!sec || sec.dataset.teimosoFestaLayoutV3 === '1') return;
-      sec.dataset.teimosoFestaLayoutV3 = '1';
-      sec.classList.remove('space-y-6');
-      sec.classList.add('teimoso-festa-grid');
-      sec.innerHTML = [
-        '<div id="partyDrawnCard" class="bg-white border-2 border-amber-300 rounded-3xl p-5 shadow-md">',
-        '  <div class="flex items-center justify-between gap-2 mb-3">',
-        '    <h4 class="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-2">',
-        '      <i class="fa-solid fa-trophy text-amber-500 text-sm"></i> Já Sorteados na Rodada (<span id="rouletteDrawnCount">0</span>)',
-        '    </h4>',
-        '    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">',
-        '      <i class="fa-solid fa-bolt text-amber-600"></i> Ao Vivo • Último no Topo',
-        '    </span>',
-        '  </div>',
-        '  <div id="rouletteDrawnList" class="space-y-2 max-h-64 overflow-y-auto pr-1">',
-        '    <div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>',
-        '  </div>',
-        '</div>',
-        '<div id="partyHeaderCard" class="bg-white border-2 border-sky-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">',
-        '  <div>',
-        '    <div class="flex items-center gap-2.5 flex-wrap">',
-        '      <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">',
-        '        <i class="fa-solid fa-gift text-sky-500 text-2xl"></i> Roleta de Sorteio da Festa',
-        '      </h3>',
-        '      <span id="partyRaffleStatusBadge" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300">',
-        '        <i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado',
-        '      </span>',
-        '    </div>',
-        '    <p class="text-xs text-slate-500 mt-1">Sorteio exclusivo para <strong>familiares (esposas e filhos)</strong> cadastrados. Quem já foi sorteado sai da urna até o encerramento.</p>',
-        '  </div>',
-        '  <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">',
-        '    <button type="button" onclick="openMyFamilyEditorFromParty()" id="btnEditMyFamilyParty" class="px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2">',
-        '      <i class="fa-solid fa-people-roof"></i> EDITAR FAMÍLIA',
-        '    </button>',
-        '    <button type="button" onclick="togglePartyRaffleSession()" id="btnTogglePartyRaffleAdmin" class="hidden px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 items-center gap-2">',
-        '      <i class="fa-solid fa-power-off"></i> <span id="labelTogglePartyRaffleAdmin">Habilitar Sorteio</span>',
-        '    </button>',
-        '    <button type="button" onclick="startPartyRoulette()" id="btnStartRoulette" disabled class="hidden px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest items-center gap-2">',
-        '      <i class="fa-solid fa-rotate"></i> Girar a Roleta',
-        '    </button>',
-        '  </div>',
-        '</div>',
-        '<div id="partyRouletteStage" class="bg-slate-900 border-4 border-slate-800 rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[300px] sm:min-h-[340px]">',
-        '  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-900/40 via-slate-900 to-slate-900 pointer-events-none"></div>',
-        '  <h2 class="text-sky-400 font-black tracking-widest uppercase text-sm mb-6 sm:mb-8 z-10">Sorteio de Brindes</h2>',
-        '  <div class="w-full max-w-2xl bg-white rounded-3xl border-8 border-slate-300 shadow-inner relative z-10 p-4">',
-        '    <div id="rouletteDisplayBox" class="bg-slate-50 rounded-xl h-24 sm:h-32 flex items-center justify-center overflow-hidden relative shadow-inner border border-slate-200">',
-        '      <div id="rouletteTrack" class="flex flex-col w-full text-center absolute top-0 left-0 transition-transform">',
-        '        <div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full">',
-        '          <span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span>',
-        '        </div>',
-        '      </div>',
-        '    </div>',
-        '    <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 text-sky-500 text-4xl drop-shadow-md"><i class="fa-solid fa-caret-right"></i></div>',
-        '    <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 text-sky-500 text-4xl drop-shadow-md"><i class="fa-solid fa-caret-left"></i></div>',
-        '  </div>',
-        '  <div id="rouletteResultInfo" class="mt-6 sm:mt-8 text-center z-10 opacity-0 transition-opacity duration-500 transform scale-95">',
-        '    <div class="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 px-6 py-2 rounded-full text-sm font-black uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.3)]">',
-        '      <i class="fa-solid fa-trophy"></i> Vencedor Sorteado!',
-        '    </div>',
-        '    <p id="rouletteFamilyTie" class="text-slate-400 text-xs mt-3 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>',
-        '  </div>',
-        '  <div id="confettiContainer" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>',
-        '</div>',
-        '<div id="partyAvailableCard" class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">',
-        '  <h4 class="text-xs font-black uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">',
-        '    <span class="flex items-center gap-2"><i class="fa-solid fa-users text-sky-600"></i> Disponíveis na Urna (<span id="rouletteParticipantCount">0</span>)</span>',
-        '    <span class="text-[10px] font-bold text-slate-400">Restantes p/ sortear</span>',
-        '  </h4>',
-        '  <div id="rouletteParticipantsGrid" class="flex flex-wrap gap-2 max-h-60 overflow-y-auto pr-2">',
-        '    <span class="text-xs text-slate-400 font-bold">Carregando participantes...</span>',
-        '  </div>',
-        '</div>'
-      ].join('\n');
-    }
-    var isRouletteSpinning = false;
-    function renderPartyRaffleSafe() {
-      ensureFestaSectionLayout();
-      syncFestaTabVisibility();
-      var state = getNormalizedRaffleState();
-      var enabled = Boolean(state.enabled);
-      var drawnHistory = Array.isArray(state.drawnHistory) ? state.drawnHistory : [];
-      var drawnIdSet = new Set(state.drawnIds || drawnHistory.map(function(h) { return h.id || h.key; }));
-      var isAdm = isUserAdmin();
-      var allParticipants = getAllFamilyParticipants();
-      var available = allParticipants.filter(function(item) { return !drawnIdSet.has(item.id); });
-      available.sort(function(a, b) {
-        var aMine = isMyFamilyMember(a) ? 0 : 1;
-        var bMine = isMyFamilyMember(b) ? 0 : 1;
-        if (aMine !== bMine) return aMine - bMine;
-        return String(a.athleteName).localeCompare(String(b.athleteName)) || String(a.name).localeCompare(String(b.name));
-      });
-      var statusBadge = document.getElementById('partyRaffleStatusBadge');
-      if (statusBadge) {
-        if (enabled) {
-          statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
-          statusBadge.innerHTML = '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado';
-        } else {
-          statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
-          statusBadge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
-        }
-      }
-      var btnEditFam = document.getElementById('btnEditMyFamilyParty');
-      if (btnEditFam) {
-        if (enabled) {
-          btnEditFam.disabled = true;
-          btnEditFam.className = 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2';
-          btnEditFam.title = 'Edição bloqueada durante sorteio em andamento';
-        } else {
-          btnEditFam.disabled = false;
-          btnEditFam.className = 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2';
-          btnEditFam.title = 'Editar ou incluir familiares';
-        }
-      }
-      var btnToggle = document.getElementById('btnTogglePartyRaffleAdmin');
-      var lblToggle = document.getElementById('labelTogglePartyRaffleAdmin');
-      var btnSpin = document.getElementById('btnStartRoulette');
-      if (btnToggle) {
-        if (isAdm) {
-          btnToggle.classList.remove('hidden');
-          btnToggle.style.display = 'inline-flex';
-          if (enabled) {
-            btnToggle.className = 'px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2';
-            if (lblToggle) lblToggle.textContent = 'Encerrar / Desabilitar Sorteio';
-          } else {
-            btnToggle.className = 'px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2';
-            if (lblToggle) lblToggle.textContent = 'Habilitar Sorteio';
-          }
-        } else {
-          btnToggle.classList.add('hidden');
-          btnToggle.style.display = 'none';
-        }
-      }
-      if (btnSpin) {
-        if (isAdm) {
-          btnSpin.classList.remove('hidden');
-          btnSpin.style.display = 'inline-flex';
-          if (enabled && available.length > 0 && !isRouletteSpinning) {
-            btnSpin.disabled = false;
-            btnSpin.className = 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2';
-          } else {
-            btnSpin.disabled = true;
-            btnSpin.className = 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
-          }
-        } else {
-          btnSpin.classList.add('hidden');
-          btnSpin.style.display = 'none';
-        }
-      }
-      var countEl = document.getElementById('rouletteParticipantCount');
-      if (countEl) countEl.textContent = String(available.length);
-      var gridEl = document.getElementById('rouletteParticipantsGrid');
-      if (gridEl) {
-        if (available.length === 0) {
-          gridEl.innerHTML = '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>';
-        } else {
-          gridEl.innerHTML = available.map(function(p) {
-            if (isMyFamilyMember(p)) {
-              return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + escHtml(p.name) + '</span><span class="text-[10px] font-bold text-emerald-800">(' + escHtml(p.relation) + ' &bull; ' + escHtml(p.athleteName) + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>';
-            }
-            return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + escHtml(p.name) + '</span><span class="text-[10px] text-slate-400">(' + escHtml(p.relation) + ' &bull; ' + escHtml(p.athleteName) + ')</span></div>';
-          }).join('');
-        }
-      }
-      var drawnCountEl = document.getElementById('rouletteDrawnCount');
-      if (drawnCountEl) drawnCountEl.textContent = String(drawnHistory.length);
-      var drawnListEl = document.getElementById('rouletteDrawnList');
-      if (drawnListEl) {
-        if (drawnHistory.length === 0) {
-          drawnListEl.innerHTML = '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>';
-        } else {
-          var orderedDesc = drawnHistory.map(function(w, idx) {
-            return { data: w, orderNum: w.order || (idx + 1) };
-          }).reverse();
-          drawnListEl.innerHTML = orderedDesc.map(function(item, revIdx) {
-            var w = item.data;
-            var isLatest = (revIdx === 0);
-            var rowStyle = isLatest ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200';
-            var badgeStyle = isLatest ? 'bg-emerald-600' : 'bg-amber-500';
-            var latestTag = isLatest ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '';
-            return '<div class="flex items-center justify-between ' + rowStyle + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + badgeStyle + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + item.orderNum + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + escHtml(w.name) + latestTag + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + escHtml(w.relation) + ' de ' + escHtml(w.athleteName) + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + escHtml(w.time || '') + '</span></div>';
-          }).join('');
-          drawnListEl.scrollTop = 0;
-        }
-      }
-    }
-    function togglePartyRaffleSessionSafe() {
-      if (!isUserAdmin()) {
-        showAppFeedback('Apenas administradores podem controlar o sorteio.', 'error');
-        return;
-      }
-      if (isRouletteSpinning) return;
-      var currentState = getNormalizedRaffleState();
-      var willEnable = !currentState.enabled;
-      window.partyRaffleState = {
-        enabled: willEnable,
-        roundId: willEnable ? ('round_' + Date.now()) : null,
-        drawnIds: [],
-        drawnHistory: [],
-        updatedAt: new Date().toISOString()
-      };
-      var track = document.getElementById('rouletteTrack');
-      var resInfo = document.getElementById('rouletteResultInfo');
-      if (resInfo) {
-        resInfo.classList.add('opacity-0', 'scale-95');
-        resInfo.classList.remove('opacity-100', 'scale-100');
-      }
-      if (track) {
-        track.style.transition = 'none';
-        track.style.transform = 'translateY(0px)';
-        track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">' + (willEnable ? 'PRONTO PARA GIRAR!' : 'AGUARDANDO HABILITAR...') + '</span></div>';
-      }
-      syncRaffleStateToCloud(window.partyRaffleState);
-      renderPartyRaffleSafe();
-      showAppFeedback(willEnable ? 'Sorteio habilitado! Clique em Girar a Roleta.' : 'Sorteio encerrado! Todos os nomes voltaram para a urna.', 'success');
-    }
-    function startPartyRouletteSafe() {
-      if (!isUserAdmin()) {
-        showAppFeedback('Apenas administradores podem girar a roleta.', 'error');
-        return;
-      }
-      if (isRouletteSpinning) return;
-      var state = getNormalizedRaffleState();
-      if (!state.enabled) {
-        showAppFeedback('Habilite o sorteio primeiro.', 'error');
-        return;
-      }
-      var drawnSet = new Set(state.drawnIds || []);
-      var available = getAllFamilyParticipants().filter(function(item) { return !drawnSet.has(item.id); });
-      if (available.length === 0) {
-        showAppFeedback('Todos os familiares já foram sorteados! Encerre o sorteio para iniciar uma nova rodada.', 'info');
-        return;
-      }
-      isRouletteSpinning = true;
-      renderPartyRaffleSafe();
-      var winner = available[Math.floor(Math.random() * available.length)];
-      var track = document.getElementById('rouletteTrack');
-      var displayBox = document.getElementById('rouletteDisplayBox');
-      var resInfo = document.getElementById('rouletteResultInfo');
-      var athNameEl = document.getElementById('rouletteAthleteName');
-      if (resInfo) {
-        resInfo.classList.add('opacity-0', 'scale-95');
-        resInfo.classList.remove('opacity-100', 'scale-100');
-      }
-      var spinItems = [];
-      for (var i = 0; i < 27; i++) {
-        spinItems.push(available[Math.floor(Math.random() * available.length)]);
-      }
-      spinItems.push(winner);
-      var slotHeight = displayBox ? displayBox.clientHeight : 112;
-      if (track) {
-        track.style.transition = 'none';
-        track.style.transform = 'translateY(0px)';
-        track.innerHTML = spinItems.map(function(item, idx) {
-          var isFinal = (idx === spinItems.length - 1);
-          var txtColor = isFinal ? 'text-emerald-600' : 'text-slate-700';
-          return '<div style="height:' + slotHeight + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + txtColor + ' font-black text-xl sm:text-3xl uppercase tracking-wide truncate max-w-full">' + escHtml(item.name) + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + escHtml(item.relation) + ' de ' + escHtml(item.athleteName) + '</span></div>';
-        }).join('');
-        void track.offsetHeight;
-        track.style.transition = 'transform 3.0s cubic-bezier(0.12, 0.85, 0.18, 1)';
-        track.style.transform = 'translateY(-' + ((spinItems.length - 1) * slotHeight) + 'px)';
-      }
-      setTimeout(function() {
-        isRouletteSpinning = false;
-        var nowStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        var cur = getNormalizedRaffleState();
-        cur.drawnIds.push(winner.id);
-        cur.drawnHistory.push({
-          id: winner.id,
-          name: winner.name,
-          relation: winner.relation,
-          athleteId: winner.athleteId,
-          athleteName: winner.athleteName,
-          order: cur.drawnHistory.length + 1,
-          time: nowStr
-        });
-        cur.updatedAt = new Date().toISOString();
-        if (athNameEl) athNameEl.textContent = winner.athleteName + ' (' + winner.relation + ')';
-        if (resInfo) {
-          resInfo.classList.remove('opacity-0', 'scale-95');
-          resInfo.classList.add('opacity-100', 'scale-100');
-        }
-        var conf = document.getElementById('confettiContainer');
-        if (conf) {
-          conf.innerHTML = '';
-          var colors = ['#10b981', '#0ea5e9', '#f59e0b', '#ec4899', '#a855f7'];
-          for (var cIdx = 0; cIdx < 32; cIdx++) {
-            var piece = document.createElement('div');
-            piece.style.position = 'absolute';
-            piece.style.width = '8px';
-            piece.style.height = '12px';
-            piece.style.background = colors[cIdx % colors.length];
-            piece.style.left = (Math.random() * 100) + '%';
-            piece.style.top = '-12px';
-            piece.style.animation = 'teimosoConfettiDrop ' + (1.6 + Math.random() * 1.4) + 's linear forwards';
-            conf.appendChild(piece);
-          }
-        }
-        if (typeof window.playAppSound === 'function') window.playAppSound('confirm');
-        syncRaffleStateToCloud(cur);
-        renderPartyRaffleSafe();
-      }, 3100);
-    }
-    function openEditFamilyFromFestaSafe() {
-      var state = getNormalizedRaffleState();
-      if (state.enabled) {
-        showAppFeedback('Edição de família bloqueada durante o sorteio em andamento.', 'error');
-        return;
-      }
-      var athlete = getLoggedAthlete();
-      var modal = document.getElementById('familyDataModal');
-      var content = document.getElementById('familyDataContent');
-      if (!modal) return;
-      var wName = document.getElementById('promptWifeName');
-      var wDay = document.getElementById('promptWifeDay');
-      var wMonth = document.getElementById('promptWifeMonth');
-      var cCont = document.getElementById('promptChildrenContainer');
-      if (wName) wName.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.name) ? athlete.family.wife.name : '';
-      if (wDay) wDay.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.birthDay) ? athlete.family.wife.birthDay : '';
-      if (wMonth) wMonth.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.birthMonth) ? athlete.family.wife.birthMonth : '';
-      if (cCont) {
-        cCont.innerHTML = '';
-        var kids = (athlete && athlete.family && Array.isArray(athlete.family.children)) ? athlete.family.children : [];
-        if (kids.length > 0 && typeof window.addPromptChildRow === 'function') {
-          kids.forEach(function(k) {
-            window.addPromptChildRow();
-            var lastRow = cCont.lastElementChild;
-            if (lastRow) {
-              var inputs = lastRow.querySelectorAll('input');
-              var sel = lastRow.querySelector('select');
-              if (inputs[0]) inputs[0].value = k.name || '';
-              if (inputs[1]) inputs[1].value = k.birthDay || '';
-              if (sel) sel.value = k.birthMonth || '';
-            }
-          });
-        } else if (typeof window.addPromptChildRow === 'function') {
-          window.addPromptChildRow();
-        }
-      }
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      setTimeout(function() {
-        modal.classList.remove('opacity-0');
-        modal.classList.add('opacity-100');
-        if (content) {
-          content.classList.remove('scale-95');
-          content.classList.add('scale-100');
-        }
-      }, 20);
-    }
-    function syncFestaTabVisibility() {
-      if (!isLoggedIn()) {
-        document.body.classList.remove('teimoso-festa-unlocked');
-        return;
-      }
-      document.body.classList.add('teimoso-festa-unlocked');
-      var btn = document.getElementById('tabBtn-roulette');
-      if (btn) {
-        if (btn.classList.contains('hidden')) btn.classList.remove('hidden');
-        if (btn.style.display === 'none') btn.style.display = 'flex';
-      }
-    }
-    var festaTabObserver = new MutationObserver(function() {
-      if (isLoggedIn()) syncFestaTabVisibility();
-    });
-    function observeFestaTabButton() {
-      var btn = document.getElementById('tabBtn-roulette');
-      if (btn && !btn.dataset.festaSafeObserved) {
-        btn.dataset.festaSafeObserved = '1';
-        festaTabObserver.observe(btn, { attributes: true, attributeFilter: ['class', 'style'] });
-      }
-    }
-    var loginSessionCounter = 0;
-    var lastWasLoggedIn = false;
-    var lastRedirectSignature = null;
-    var lastKnownEnabled = false;
-    var lastKnownRoundId = null;
-    var loginRedirectLockUntil = 0;
-    function isFestaTabCurrentlyActive() {
-      var sec = document.getElementById('tab-roulette');
-      return Boolean(sec && !sec.classList.contains('hidden') && sec.style.display !== 'none');
-    }
-    function dismissBlockingPopupsForRaffle() {
-      ['quickPresenceModal', 'familyDataModal', 'pollVotingModal'].forEach(function(modalId) {
-        var m = document.getElementById(modalId);
-        if (m && !m.classList.contains('hidden')) {
-          m.classList.add('hidden');
-          m.classList.remove('flex', 'opacity-100');
-        }
-      });
-    }
-    function highlightFestaNavButton() {
-      var navBtns = document.querySelectorAll('.nav-tab-btn');
-      navBtns.forEach(function(b) {
-        if (b.id === 'tabBtn-roulette') {
-          b.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
-          b.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
-        } else {
-          b.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-500');
-          b.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
-        }
-      });
-    }
-    function navigateToFestaTabNow() {
-      syncFestaTabVisibility();
-      dismissBlockingPopupsForRaffle();
-      try {
-        if (typeof window.switchTab === 'function') {
-          window.switchTab('roulette');
-        }
-      } catch (err) {}
-      var sections = document.querySelectorAll('section[id^="tab-"]');
-      sections.forEach(function(s) {
-        if (s.id === 'tab-roulette') {
-          s.classList.remove('hidden');
-          s.style.display = '';
-        } else {
-          s.classList.add('hidden');
-        }
-      });
-      highlightFestaNavButton();
-      renderPartyRaffleSafe();
-      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
-    }
-    function enforcePostLoginFestaRedirect() {
-      [80, 350, 850, 1600].forEach(function(delayMs) {
-        setTimeout(function() {
-          var st = getNormalizedRaffleState();
-          if (isLoggedIn() && st.enabled && Date.now() <= loginRedirectLockUntil) {
-            if (!isFestaTabCurrentlyActive()) {
-              navigateToFestaTabNow();
-            } else {
-              dismissBlockingPopupsForRaffle();
-              renderPartyRaffleSafe();
-            }
-          }
-        }, delayMs);
-      });
-    }
-    function checkAutoRedirectForActiveRaffle() {
-      var loggedNow = isLoggedIn();
-      var justLoggedIn = (loggedNow && !lastWasLoggedIn);
-      if (justLoggedIn) {
-        loginSessionCounter++;
-        lastRedirectSignature = null;
-      }
-      if (!loggedNow) {
-        lastWasLoggedIn = false;
-        lastRedirectSignature = null;
-        lastKnownEnabled = false;
-        lastKnownRoundId = null;
-        loginRedirectLockUntil = 0;
-        return;
-      }
-      lastWasLoggedIn = true;
-      var state = getNormalizedRaffleState();
-      var enabledNow = Boolean(state.enabled);
-      var roundKey = String(state.roundId || 'active');
-      var redirectSignature = 'login_' + loginSessionCounter + '_round_' + roundKey;
-      var justEnabledRealtime = (!lastKnownEnabled && enabledNow);
-      var roundChangedRealtime = (enabledNow && lastKnownRoundId !== null && lastKnownRoundId !== roundKey);
-      if (enabledNow && (justLoggedIn || lastRedirectSignature !== redirectSignature || justEnabledRealtime || roundChangedRealtime)) {
-        lastRedirectSignature = redirectSignature;
-        loginRedirectLockUntil = Date.now() + 2200;
-        var alreadyOnFesta = isFestaTabCurrentlyActive();
-        navigateToFestaTabNow();
-        enforcePostLoginFestaRedirect();
-        if (!alreadyOnFesta || justLoggedIn || justEnabledRealtime) {
-          showRedirectBanner('🎉 Sorteio em andamento! Você foi direcionado para a aba FESTA.');
-        }
-      }
-      if (!enabledNow) {
-        lastRedirectSignature = null;
-        loginRedirectLockUntil = 0;
-      }
-      lastKnownEnabled = enabledNow;
-      lastKnownRoundId = enabledNow ? roundKey : null;
-    }
-    function installSafeOverrides() {
-      window.renderPartyRaffleUI = renderPartyRaffleSafe;
-      window.togglePartyRaffleSession = togglePartyRaffleSessionSafe;
-      window.startPartyRoulette = startPartyRouletteSafe;
-      window.openMyFamilyEditorFromParty = openEditFamilyFromFestaSafe;
-      if (typeof window.switchTab === 'function' && !window.switchTab._teimosoFestaWrapped) {
-        var originalSwitchTab = window.switchTab;
-        var wrappedSwitchTab = function(tabName) {
-          var stNow = getNormalizedRaffleState();
-          if (tabName !== 'roulette' && stNow.enabled && Date.now() <= loginRedirectLockUntil) {
-            tabName = 'roulette';
-          }
-          var res = originalSwitchTab.apply(this, [tabName]);
-          if (tabName === 'roulette') {
-            var allSecs = document.querySelectorAll('section[id^="tab-"]');
-            allSecs.forEach(function(s) {
-              if (s.id === 'tab-roulette') { s.classList.remove('hidden'); s.style.display = ''; }
-              else s.classList.add('hidden');
-            });
-            highlightFestaNavButton();
-            renderPartyRaffleSafe();
-          }
-          return res;
-        };
-        wrappedSwitchTab._teimosoFestaWrapped = true;
-        window.switchTab = wrappedSwitchTab;
-      }
-    }
-    window.__onFestaCloudUpdate = function() {
-      installSafeOverrides();
-      renderPartyRaffleSafe();
-      checkAutoRedirectForActiveRaffle();
-    };
-    window.__forceTestFestaRedirect = function() {
-      lastWasLoggedIn = false;
-      lastRedirectSignature = null;
-      lastKnownEnabled = false;
-      checkAutoRedirectForActiveRaffle();
-    };
-    function bootstrapFestaPatch() {
-      ensureFestaSectionLayout();
-      installSafeOverrides();
-      observeFestaTabButton();
-      syncFestaTabVisibility();
-      renderPartyRaffleSafe();
-      checkAutoRedirectForActiveRaffle();
-    }
-    document.addEventListener('click', function(ev) {
-      var btn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, #familyDataModal button') : null;
-      if (btn) {
-        setTimeout(function() { installSafeOverrides(); renderPartyRaffleSafe(); }, 180);
-      }
-    }, true);
-    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', bootstrapFestaPatch); }
-    else { bootstrapFestaPatch(); }
-    window.addEventListener('load', bootstrapFestaPatch);
-    var lastRenderedHash = '';
-    setInterval(function() {
-      syncFestaTabVisibility();
-      if (!isLoggedIn()) { checkAutoRedirectForActiveRaffle(); return; }
-      if (window.renderPartyRaffleUI !== renderPartyRaffleSafe) { installSafeOverrides(); }
-      checkAutoRedirectForActiveRaffle();
-      var st = getNormalizedRaffleState();
-      var currentHash = String(st.enabled) + '|' + String(st.roundId) + '|' + String(st.drawnHistory.length) + '|' + (Array.isArray(window.athletes) ? window.athletes.length : 0);
-      if (currentHash !== lastRenderedHash && !isRouletteSpinning) {
-        lastRenderedHash = currentHash;
-        renderPartyRaffleSafe();
-      }
-    }, 1200);
-  } catch (e) {
-    console.error('[Teimoso Patch Festa]', e);
-  }
-})();
-</script>
-
-<!-- TEIMOSO_FESTA_SAFE_PATCH_END -->
-
-
-
-
-
-<!-- TEIMOSO_SAFE_PATCH_V6_START -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V1_START -->
 <style>
-  /* Abas FESTA e FINANCEIRO visíveis após login */
-  body.teimoso-festa-unlocked #tabBtn-roulette,
-  body.teimoso-festa-unlocked #tabBtn-financial {
-    display: flex !important;
-    visibility: visible !important;
-  }
-
-  /* Banner discreto de redirecionamento em sorteio ativo */
-  #teimosoRaffleBanner {
-    position: fixed;
-    top: 14px;
-    left: 50%;
-    transform: translate(-50%, -150%);
-    z-index: 9999;
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
-    opacity: 0;
-    pointer-events: none;
-  }
-  #teimosoRaffleBanner.show {
-    transform: translate(-50%, 0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* Layout da Aba Festa: no Smartphone (< 1024px), Já Sorteados aparece no TOPO */
-  #tab-roulette.teimoso-festa-grid:not(.hidden) {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.25rem;
-  }
+  body.teimoso-logged-in #tabBtn-roulette,
+  body.teimoso-logged-in #tabBtn-financial { display: flex !important; visibility: visible !important; }
+  #teimosoRaffleBanner { position: fixed; top: 14px; left: 50%; transform: translate(-50%, -150%); z-index: 9999; transition: transform .35s ease, opacity .35s ease; opacity: 0; pointer-events: none; }
+  #teimosoRaffleBanner.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+  #tab-roulette.teimoso-festa-grid:not(.hidden) { display: grid !important; grid-template-columns: minmax(0,1fr); gap: 1.25rem; }
   #tab-roulette.teimoso-festa-grid #partyDrawnCard { order: 1; }
   #tab-roulette.teimoso-festa-grid #partyHeaderCard { order: 2; }
   #tab-roulette.teimoso-festa-grid #partyRouletteStage { order: 3; }
   #tab-roulette.teimoso-festa-grid #partyAvailableCard { order: 4; }
   @media (min-width: 1024px) {
-    #tab-roulette.teimoso-festa-grid:not(.hidden) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.5rem;
-    }
+    #tab-roulette.teimoso-festa-grid:not(.hidden) { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.5rem; }
     #tab-roulette.teimoso-festa-grid #partyHeaderCard { order: 1; grid-column: span 2 / span 2; }
     #tab-roulette.teimoso-festa-grid #partyRouletteStage { order: 2; grid-column: span 2 / span 2; }
     #tab-roulette.teimoso-festa-grid #partyAvailableCard { order: 3; grid-column: span 1 / span 1; }
     #tab-roulette.teimoso-festa-grid #partyDrawnCard { order: 4; grid-column: span 1 / span 1; }
   }
-
-  /* =====================================================================
-     VISÃO ALTERNATIVA: VERDE ESCURO
-     Mantém Branco Claro como padrão. Preserva 100% os botões de presença
-     e corrige o :hover no Financeiro.
-     ===================================================================== */
-  html.teimoso-vision-forest,
-  body.teimoso-vision-forest {
-    background-color: #0b1914 !important;
-    color: #e6f4ee !important;
-  }
-  body.teimoso-vision-forest header,
-  body.teimoso-vision-forest footer,
-  body.teimoso-vision-forest .bg-white,
-  body.teimoso-vision-forest .bg-slate-50,
-  body.teimoso-vision-forest .bg-slate-50\/60,
-  body.teimoso-vision-forest .bg-slate-50\/95 {
-    background-color: #11261e !important;
-    color: #e6f4ee !important;
-  }
-  body.teimoso-vision-forest .bg-slate-100 {
-    background-color: #0e2019 !important;
-    color: #dceee6 !important;
-  }
-  body.teimoso-vision-forest .hover\:bg-white:hover,
-  body.teimoso-vision-forest .hover\:bg-slate-50:hover,
-  body.teimoso-vision-forest .hover\:bg-slate-100:hover,
-  body.teimoso-vision-forest tr:hover,
-  body.teimoso-vision-forest #tab-financial button[onclick*='toggleFinancialAccordion']:hover {
-    background-color: #163529 !important;
-    color: #f0fdf8 !important;
-  }
-  body.teimoso-vision-forest #tab-financial button[onclick*='toggleFinancialAccordion']:hover span {
-    color: inherit;
-  }
-  body.teimoso-vision-forest .border-slate-100,
-  body.teimoso-vision-forest .border-slate-200,
-  body.teimoso-vision-forest .border-slate-200\/80,
-  body.teimoso-vision-forest .border-slate-300 {
-    border-color: #1e4234 !important;
-  }
-  body.teimoso-vision-forest .text-slate-800,
-  body.teimoso-vision-forest .text-slate-900 {
-    color: #f0fdf8 !important;
-  }
-  body.teimoso-vision-forest .text-slate-700,
-  body.teimoso-vision-forest .text-slate-600 {
-    color: #c5e3d6 !important;
-  }
-  body.teimoso-vision-forest .text-slate-500,
-  body.teimoso-vision-forest .text-slate-400 {
-    color: #8ab3a2 !important;
-  }
-  body.teimoso-vision-forest input:not([type='checkbox']):not([type='radio']),
-  body.teimoso-vision-forest select,
-  body.teimoso-vision-forest textarea {
-    background-color: #0b1c15 !important;
-    color: #ecfdf5 !important;
-    border-color: #254f3e !important;
-  }
-  body.teimoso-vision-forest #rouletteDisplayBox {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-  }
+  #tab-financial.teimoso-fin-readonly input:not([type='search']):not([id*='search']):not([id*='Search']):not([id*='filter']):not([id*='Filter']),
+  #tab-financial.teimoso-fin-readonly select:not([id*='filter']):not([id*='Filter']),
+  #tab-financial.teimoso-fin-readonly textarea { pointer-events: none !important; opacity: 0.85; }
+  #tab-financial.teimoso-fin-readonly .teimoso-fin-admin-only-hidden { display: none !important; }
+  html.teimoso-vision-forest, body.teimoso-vision-forest { background-color: #0b1914 !important; color: #e6f4ee !important; }
+  body.teimoso-vision-forest header, body.teimoso-vision-forest footer, body.teimoso-vision-forest .bg-white, body.teimoso-vision-forest .bg-slate-50, body.teimoso-vision-forest .bg-slate-50\/60, body.teimoso-vision-forest .bg-slate-50\/95 { background-color: #11261e !important; color: #e6f4ee !important; }
+  body.teimoso-vision-forest .bg-slate-100 { background-color: #0e2019 !important; color: #dceee6 !important; }
+  body.teimoso-vision-forest .hover\:bg-white:hover, body.teimoso-vision-forest .hover\:bg-slate-50:hover, body.teimoso-vision-forest .hover\:bg-slate-100:hover, body.teimoso-vision-forest tr:hover, body.teimoso-vision-forest #tab-financial button[onclick*='toggleFinancialAccordion']:hover { background-color: #163529 !important; color: #f0fdf8 !important; }
+  body.teimoso-vision-forest .border-slate-100, body.teimoso-vision-forest .border-slate-200, body.teimoso-vision-forest .border-slate-200\/80, body.teimoso-vision-forest .border-slate-300 { border-color: #1e4234 !important; }
+  body.teimoso-vision-forest .text-slate-800, body.teimoso-vision-forest .text-slate-900 { color: #f0fdf8 !important; }
+  body.teimoso-vision-forest .text-slate-700, body.teimoso-vision-forest .text-slate-600 { color: #c5e3d6 !important; }
+  body.teimoso-vision-forest .text-slate-500, body.teimoso-vision-forest .text-slate-400 { color: #8ab3a2 !important; }
+  body.teimoso-vision-forest input:not([type='checkbox']):not([type='radio']), body.teimoso-vision-forest select, body.teimoso-vision-forest textarea { background-color: #0b1c15 !important; color: #ecfdf5 !important; border-color: #254f3e !important; }
+  body.teimoso-vision-forest #rouletteDisplayBox { background-color: #ffffff !important; color: #0f172a !important; }
 </style>
 <script type="module">
-import { initializeApp as teimosoInitPartyApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore as teimosoGetPartyDb, initializeFirestore as teimosoInitPartyDb, doc as teimosoPartyDoc, setDoc as teimosoPartySetDoc, onSnapshot as teimosoPartyOnSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { initializeApp as __tInitApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getFirestore as __tGetDb, initializeFirestore as __tInitDb, doc as __tDoc, setDoc as __tSetDoc, onSnapshot as __tOnSnap } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 try {
-  const __partyCfg = {
+  const __cfg = {
       apiKey: "AIzaSyDlC5iCJ-Ru3Ve5OzrvlNWZCiwKo9ziXjQ",
       authDomain: "teimosoweb.firebaseapp.com",
       projectId: "teimosoweb",
@@ -8204,1082 +7237,397 @@ try {
       appId: "1:90879285758:web:ef602bfe90c131e0f808af",
       measurementId: "G-3ESB69D4WQ"
     };
-  const __partyApp = teimosoInitPartyApp(__partyCfg, "teimoso_party_live");
-  let __partyDb;
-  try {
-    __partyDb = teimosoInitPartyDb(__partyApp, { experimentalForceLongPolling: true });
-  } catch (eDb) {
-    __partyDb = teimosoGetPartyDb(__partyApp);
-  }
-  const __partyDocRef = teimosoPartyDoc(__partyDb, "teimoso_config", "sorteio_festa");
-
-  window.__teimosoSavePartyRaffleLive = async function(stateObj) {
+  const __pApp = __tInitApp(__cfg, "teimoso_party_unified");
+  let __pDb; try { __pDb = __tInitDb(__pApp, { experimentalForceLongPolling: true }); } catch (e) { __pDb = __tGetDb(__pApp); }
+  const __pRef = __tDoc(__pDb, "teimoso_config", "sorteio_festa");
+  window.__teimosoSavePartyRaffleLive = async function(st) {
     try {
-      await teimosoPartySetDoc(__partyDocRef, {
-        enabled: Boolean(stateObj && stateObj.enabled),
-        spinning: Boolean(stateObj && stateObj.spinning),
-        currentWinner: (stateObj && stateObj.currentWinner) || null,
-        drawn: Array.isArray(stateObj && stateObj.drawn) ? stateObj.drawn : [],
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-    } catch (err) {
-      console.warn('Falha ao gravar sorteio em tempo real:', err);
-    }
+      await __tSetDoc(__pRef, { enabled: Boolean(st && st.enabled), spinning: Boolean(st && st.spinning), currentWinner: (st && st.currentWinner) || null, drawn: Array.isArray(st && st.drawn) ? st.drawn : [], updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (e) { console.warn('Festa sync:', e); }
   };
-
-  teimosoPartyOnSnapshot(__partyDocRef, function(snap) {
+  __tOnSnap(__pRef, function(snap) {
     if (!snap || !snap.exists()) return;
-    const remote = snap.data() || {};
-    window.partyRaffleState = {
-      enabled: Boolean(remote.enabled),
-      spinning: Boolean(remote.spinning),
-      currentWinner: remote.currentWinner || null,
-      drawn: Array.isArray(remote.drawn) ? remote.drawn : [],
-      updatedAt: remote.updatedAt || ''
-    };
-    if (typeof window.__teimosoOnRemotePartyUpdate === 'function') {
-      window.__teimosoOnRemotePartyUpdate(window.partyRaffleState);
-    }
-  }, function(err) {
-    console.warn('Listener tempo real do sorteio:', err);
-  });
-} catch (eInit) {
-  console.warn('Canal tempo real do sorteio indisponível:', eInit);
-}
+    const r = snap.data() || {};
+    window.partyRaffleState = { enabled: Boolean(r.enabled), spinning: Boolean(r.spinning), currentWinner: r.currentWinner || null, drawn: Array.isArray(r.drawn) ? r.drawn : [], updatedAt: r.updatedAt || '' };
+    if (typeof window.__teimosoOnRemotePartyUpdate === 'function') window.__teimosoOnRemotePartyUpdate(window.partyRaffleState);
+  }, function() {});
+} catch (e) {}
 </script>
 <script>
 (function() {
   'use strict';
-
   var VISION_KEY = 'teimoso_app_vision_mode';
-  var MONTHS_JAN_NOV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov'];
+  var MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov'];
   var localSpinLock = false;
   var lastTrustedHumanMs = 0;
-  var isReorderingFinDom = false;
 
-  function normStr(s) {
-    return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  ['pointerdown','touchstart','mousedown','click','keydown'].forEach(function(ev) {
+    document.addEventListener(ev, function(e) { if (e && e.isTrusted) lastTrustedHumanMs = Date.now(); }, true);
+  });
+
+  function normStr(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+  function isFinEditor() { return Boolean(window.isAdmin || window.canEditFinancial); }
+  function getLoggedAth() {
+    if (!window.currentUser || !Array.isArray(window.athletes)) return null;
+    var a = window.athletes.find(function(x) { return Number(x.id) === Number(window.currentUser.id); });
+    if (!a && window.currentUser.name) { var t = normStr(window.currentUser.name); a = window.athletes.find(function(x) { return normStr(x.name) === t; }); }
+    return a || null;
   }
 
-  // ===========================================================================
-  // 1. CONTROLE DE VISÃO (BRANCO CLARO PADRÃO <-> VERDE ESCURO ALTERNATIVA)
-  // ===========================================================================
-  function getSavedVision() {
-    try { return localStorage.getItem(VISION_KEY) === 'forest' ? 'forest' : 'light'; } catch (e) { return 'light'; }
+  /* 1. VISÃO BRANCO CLARO / VERDE ESCURO (ÍCONE NO CANTO DO LOGIN + BOTÃO NO HEADER) */
+  function getVision() { try { return localStorage.getItem(VISION_KEY) === 'forest' ? 'forest' : 'light'; } catch (e) { return 'light'; } }
+  function applyVision(mode, persist) {
+    var f = (mode === 'forest');
+    if (document.documentElement) document.documentElement.classList.toggle('teimoso-vision-forest', f);
+    if (document.body) document.body.classList.toggle('teimoso-vision-forest', f);
+    if (persist) { try { localStorage.setItem(VISION_KEY, f ? 'forest' : 'light'); } catch (e) {} }
+    var cI = document.getElementById('teimosoLoginCornerIcon'); if (cI) cI.className = f ? 'fa-solid fa-sun text-amber-300 text-sm' : 'fa-solid fa-leaf text-emerald-600 text-sm';
+    var hI = document.getElementById('teimosoHeaderVisionIcon'); if (hI) hI.className = f ? 'fa-solid fa-sun text-amber-300' : 'fa-solid fa-leaf text-emerald-600';
+    var hL = document.getElementById('teimosoHeaderVisionLabel'); if (hL) hL.textContent = f ? 'Verde Escuro' : 'Branco Claro';
   }
-
-  function applyVisionMode(mode, persist) {
-    var isForest = (mode === 'forest');
-    if (document.documentElement) document.documentElement.classList.toggle('teimoso-vision-forest', isForest);
-    if (document.body) document.body.classList.toggle('teimoso-vision-forest', isForest);
-    if (persist) {
-      try { localStorage.setItem(VISION_KEY, isForest ? 'forest' : 'light'); } catch (e) {}
+  window.toggleTeimosoVisionMode = function(ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } applyVision(getVision() === 'forest' ? 'light' : 'forest', true); };
+  function mountVisionButtons() {
+    var loginOv = document.getElementById('globalLoginOverlay');
+    if (loginOv && !document.getElementById('teimosoLoginCornerBtn')) {
+      var b = document.createElement('button'); b.type = 'button'; b.id = 'teimosoLoginCornerBtn'; b.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+      b.setAttribute('onclick', 'toggleTeimosoVisionMode(event)');
+      b.className = 'fixed top-4 right-4 z-[130] w-11 h-11 rounded-2xl bg-white border border-slate-200 shadow-lg flex items-center justify-center cursor-pointer active:scale-95';
+      b.innerHTML = '<i id="teimosoLoginCornerIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
+      loginOv.appendChild(b);
     }
-    var lbl = document.getElementById('teimosoLoginVisionLabel');
-    if (lbl) lbl.textContent = isForest ? 'Visão: Verde Escuro (Alternativa)' : 'Visão: Branco Claro (Padrão)';
-    var cIcon = document.getElementById('teimosoLoginCornerIcon');
-    if (cIcon) cIcon.className = isForest ? 'fa-solid fa-sun text-amber-300 text-sm' : 'fa-solid fa-leaf text-emerald-600 text-sm';
-    var hLbl = document.getElementById('teimosoHeaderVisionLabel');
-    if (hLbl) hLbl.textContent = isForest ? 'Verde Escuro' : 'Branco Claro';
-    var hIcon = document.getElementById('teimosoHeaderVisionIcon');
-    if (hIcon) hIcon.className = isForest ? 'fa-solid fa-sun text-amber-300' : 'fa-solid fa-leaf text-emerald-600';
+    if (!document.getElementById('teimosoHeaderVisionBtn')) {
+      var h = document.querySelector('header');
+      var logoutBtn = h ? h.querySelector('button[onclick*="logout"]') : null;
+      if (logoutBtn && logoutBtn.parentElement) {
+        var hb = document.createElement('button'); hb.type = 'button'; hb.id = 'teimosoHeaderVisionBtn'; hb.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
+        hb.setAttribute('onclick', 'toggleTeimosoVisionMode(event)');
+        hb.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0';
+        hb.innerHTML = '<i id="teimosoHeaderVisionIcon" class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoHeaderVisionLabel" class="hidden sm:inline text-[10px] uppercase">Branco Claro</span>';
+        logoutBtn.parentElement.insertBefore(hb, logoutBtn);
+      }
+    }
+    applyVision(getVision(), false);
   }
 
-  window.toggleTeimosoVisionMode = function(ev) {
-    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-    var next = (getSavedVision() === 'forest') ? 'light' : 'forest';
-    applyVisionMode(next, true);
+  /* 2. FINANCEIRO OFICIAL (SOMENTE VISUALIZAÇÃO PARA ATLETAS + LOGADO EM 1º + A-Z) */
+  function lockFinancialDom(finSec) {
+    finSec.classList.add('teimoso-fin-readonly');
+    finSec.querySelectorAll('input, select, textarea').forEach(function(el) {
+      var k = (String(el.id || '') + ' ' + String(el.placeholder || '')).toLowerCase();
+      if (!/(search|filter|buscar|pesquisar|filtrar)/.test(k)) { el.disabled = true; el.readOnly = true; }
+    });
+    finSec.querySelectorAll('button').forEach(function(btn) {
+      var oc = String(btn.getAttribute('onclick') || '');
+      if (oc.indexOf('toggleFinancialAccordion') !== -1 || oc.indexOf('setFinancialFilter') !== -1) return;
+      var txt = normStr(btn.textContent || '');
+      if (/(COBRAR|INADIMPLENT|WHATSAPP|QUITAR|ESTORNAR|ISENTAR|MULTA|EXCLUIR|BAIXAR|DESFAZER)/.test(txt) || /(settle|delete|toggleAlways|Whatsapp|openEdit)/i.test(oc)) {
+        btn.classList.add('teimoso-fin-admin-only-hidden'); btn.disabled = true;
+      }
+    });
+  }
+  function reorderFinancialCards(finSec) {
+    if (!window.currentUser) return;
+    var ath = getLoggedAth(); var loggedId = ath ? Number(ath.id) : (window.currentUser.id ? Number(window.currentUser.id) : null);
+    var accBtns = finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]');
+    if (!accBtns || accBtns.length < 2) return;
+    var items = [], parent = null;
+    for (var i = 0; i < accBtns.length; i++) {
+      var m = String(accBtns[i].getAttribute('onclick') || '').match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
+      var id = m ? parseInt(m[1], 10) : null; var card = accBtns[i].parentElement;
+      if (!card || !card.parentElement) continue;
+      if (!parent) parent = card.parentElement; if (card.parentElement !== parent) continue;
+      var obj = (id !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === id; }) : null;
+      items.push({ card: card, id: id, name: obj ? String(obj.name || '') : String(accBtns[i].textContent || '').trim() });
+    }
+    if (!parent || items.length < 2) return;
+    var sorted = items.slice().sort(function(a, b) {
+      var aS = (loggedId !== null && a.id === loggedId) ? 0 : 1, bS = (loggedId !== null && b.id === loggedId) ? 0 : 1;
+      return aS !== bS ? aS - bS : a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+    });
+    var frag = document.createDocumentFragment();
+    sorted.forEach(function(it) {
+      if (loggedId !== null && it.id === loggedId) it.card.classList.add('border-2', 'border-emerald-400', 'shadow-md');
+      else it.card.classList.remove('border-emerald-400');
+      frag.appendChild(it.card);
+    });
+    parent.appendChild(frag);
+  }
+  window.__teimosoPostRenderFinancial = function(isReg) {
+    var finSec = document.getElementById('tab-financial'); if (!finSec) return;
+    if (isReg) { lockFinancialDom(finSec); reorderFinancialCards(finSec); }
+    else { finSec.classList.remove('teimoso-fin-readonly'); }
   };
 
-  function ensureVisionSwitchers() {
-    var loginOv = document.getElementById('globalLoginOverlay');
-    if (loginOv) {
-      var loginCard = loginOv.querySelector('div');
-      if (loginCard) {
-        Array.prototype.slice.call(loginCard.children).forEach(function(ch) {
-          var txt = normStr(ch.textContent || '');
-          if (txt.indexOf('TIPO DE VISAO DO APLICATIVO') !== -1 || ch.id === 'teimosoSingleLoginVisionBox') {
-            ch.remove();
-          }
-        });
-      }
-      if (!document.getElementById('teimosoLoginCornerBtn')) {
-        var cBtn = document.createElement('button');
-        cBtn.type = 'button';
-        cBtn.id = 'teimosoLoginCornerBtn';
-        cBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
-        cBtn.setAttribute('onclick', 'toggleTeimosoVisionMode(event)');
-        cBtn.className = 'fixed top-4 right-4 z-[130] w-11 h-11 rounded-2xl bg-white border border-slate-200 shadow-lg flex items-center justify-center cursor-pointer active:scale-95';
-        cBtn.innerHTML = '<i id="teimosoLoginCornerIcon" class="fa-solid fa-leaf text-emerald-600 text-sm"></i>';
-        loginOv.appendChild(cBtn);
-      }
-    }
-
-    if (!document.getElementById('teimosoHeaderVisionBtn')) {
-      var headerEl = document.querySelector('header');
-      if (headerEl) {
-        var logoutBtn = headerEl.querySelector('button[onclick*="logout"]') || headerEl.querySelector('button[onclick*="Sound"]');
-        var targetParent = logoutBtn ? logoutBtn.parentElement : null;
-        if (targetParent) {
-          var hBtn = document.createElement('button');
-          hBtn.type = 'button';
-          hBtn.id = 'teimosoHeaderVisionBtn';
-          hBtn.title = 'Alternar Visão (Branco Claro / Verde Escuro)';
-          hBtn.setAttribute('onclick', 'toggleTeimosoVisionMode(event)');
-          hBtn.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 text-xs font-black flex items-center gap-1.5 cursor-pointer shrink-0';
-          hBtn.innerHTML = '<i id="teimosoHeaderVisionIcon" class="fa-solid fa-leaf text-emerald-600"></i><span id="teimosoHeaderVisionLabel" class="hidden sm:inline text-[10px] uppercase">Branco Claro</span>';
-          targetParent.insertBefore(hBtn, logoutBtn);
-        }
-      }
-    }
-    applyVisionMode(getSavedVision(), false);
+  /* 3. ABA FESTA UNIFICADA EM TEMPO REAL */
+  function isMyFam(item) {
+    if (!window.currentUser) return false;
+    if (window.currentUser.id && Number(item.athleteId) === Number(window.currentUser.id)) return true;
+    return Boolean(window.currentUser.name && normStr(item.athleteName) === normStr(window.currentUser.name));
   }
-
-  // ===========================================================================
-  // 2. ABA FESTA + ABA FINANCEIRO ABERTA (SOMENTE VISUALIZAÇÃO + LOGADO NO TOPO)
-  // ===========================================================================
-  function showRaffleBanner(text) {
+  function getFamilyEntries() {
+    var list = [];
+    (Array.isArray(window.athletes) ? window.athletes : []).forEach(function(a) {
+      if (!a || !a.family) return;
+      if (a.family.wife && a.family.wife.name && String(a.family.wife.name).trim()) {
+        var wn = String(a.family.wife.name).trim();
+        list.push({ key: a.id + '_w_' + normStr(wn), name: wn, relation: 'Esposa', athleteId: a.id, athleteName: a.name || 'Atleta' });
+      }
+      if (Array.isArray(a.family.children)) a.family.children.forEach(function(c, idx) {
+        if (c && c.name && String(c.name).trim()) {
+          var cn = String(c.name).trim();
+          list.push({ key: a.id + '_c_' + idx + '_' + normStr(cn), name: cn, relation: 'Filho(a)', athleteId: a.id, athleteName: a.name || 'Atleta' });
+        }
+      });
+    });
+    return list;
+  }
+  function showRaffleBanner(txt) {
     var b = document.getElementById('teimosoRaffleBanner');
     if (!b) {
-      b = document.createElement('div');
-      b.id = 'teimosoRaffleBanner';
+      b = document.createElement('div'); b.id = 'teimosoRaffleBanner';
       b.className = 'bg-slate-900 border-2 border-emerald-400 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 max-w-md w-[92vw] text-xs font-bold';
       b.innerHTML = '<i class="fa-solid fa-gift text-emerald-400 text-base shrink-0"></i><span id="teimosoRaffleBannerTxt"></span>';
       document.body.appendChild(b);
     }
-    var t = document.getElementById('teimosoRaffleBannerTxt');
-    if (t) t.textContent = text;
-    b.classList.add('show');
-    clearTimeout(showRaffleBanner._t);
+    var t = document.getElementById('teimosoRaffleBannerTxt'); if (t) t.textContent = txt;
+    b.classList.add('show'); clearTimeout(showRaffleBanner._t);
     showRaffleBanner._t = setTimeout(function() { b.classList.remove('show'); }, 4200);
   }
-
-  function isRaffleActive() {
-    return Boolean(window.partyRaffleState && window.partyRaffleState.enabled);
-  }
-
-  function enforceTabsAndRedirect(notifyUser) {
+  function syncLoggedInStateAndPartyRedirect() {
     var logged = Boolean(window.currentUser);
-    if (document.body) document.body.classList.toggle('teimoso-festa-unlocked', logged);
-    var festaBtn = document.getElementById('tabBtn-roulette');
-    if (festaBtn && logged) { festaBtn.classList.remove('hidden'); festaBtn.style.display = 'flex'; }
-    var finBtn = document.getElementById('tabBtn-financial');
-    if (finBtn && logged) { finBtn.classList.remove('hidden'); finBtn.style.display = 'flex'; }
-
-    if (!logged || !isRaffleActive()) return;
-    var sec = document.getElementById('tab-roulette');
-    if (sec && sec.classList.contains('hidden') && !window.isAdmin && typeof window.switchTab === 'function') {
-      window.switchTab('roulette');
-      if (notifyUser) showRaffleBanner('Sorteio em andamento! Você foi direcionado para a aba FESTA.');
-    }
-  }
-
-  function enforceFinancialReadOnlyForAthletes() {
-    if (!window.currentUser) return;
-    var finBtn = document.getElementById('tabBtn-financial');
-    if (finBtn) {
-      finBtn.classList.remove('hidden');
-      finBtn.style.display = 'flex';
-      finBtn.style.visibility = 'visible';
-    }
-    var canEdit = Boolean(window.isAdmin || window.canEditFinancial);
-    if (canEdit) return;
-    var finSec = document.getElementById('tab-financial');
-    if (!finSec) return;
-    finSec.querySelectorAll('input, select, textarea').forEach(function(el) {
-      var idLow = String(el.id || '').toLowerCase();
-      var phLow = String(el.placeholder || '').toLowerCase();
-      var isSearchOrFilter = (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
-      if (!isSearchOrFilter) {
-        el.disabled = true;
-        el.readOnly = true;
-        el.classList.add('opacity-75', 'cursor-not-allowed');
-      }
-    });
-    finSec.querySelectorAll('button').forEach(function(b) {
-      var oc = String(b.getAttribute('onclick') || '');
-      var isAllowed = (oc.indexOf('toggleFinancialAccordion') !== -1 || oc.indexOf('filterFinancial') !== -1 || oc.indexOf('setFinancialFilter') !== -1 || oc.indexOf('export') !== -1);
-      if (!isAllowed && oc && /(pay|save|delete|remove|fine|exempt|update|quitar|estornar|toggleAlways|mark|settle|add|edit)/i.test(oc)) {
-        b.style.display = 'none';
-        b.disabled = true;
-      }
-    });
-  }
-
-  function prioritizeAndOrderFinancialCards(autoExpandLogged) {
-    if (isReorderingFinDom || !window.currentUser) return;
-    var finSec = document.getElementById('tab-financial');
-    if (!finSec) return;
-    var loggedAth = getLoggedAthleteObj();
-    var loggedId = loggedAth ? Number(loggedAth.id) : (window.currentUser && window.currentUser.id ? Number(window.currentUser.id) : null);
-
-    if (autoExpandLogged && loggedId && !isNaN(loggedId)) {
-      if (window.expandedFinCards && typeof window.expandedFinCards.add === 'function' && !window.expandedFinCards.has(loggedId)) {
-        if (typeof window.toggleFinancialAccordion === 'function') {
-          isReorderingFinDom = true;
-          try { window.toggleFinancialAccordion(loggedId); } catch (eExp) {}
-          isReorderingFinDom = false;
-        } else {
-          window.expandedFinCards.add(loggedId);
-          if (typeof window.renderFinancial === 'function') {
-            try { window.renderFinancial(); } catch (eRen) {}
-          }
-        }
+    if (document.body) document.body.classList.toggle('teimoso-logged-in', logged);
+    if (logged && window.partyRaffleState && window.partyRaffleState.enabled && !window.isAdmin) {
+      var sec = document.getElementById('tab-roulette');
+      if (sec && sec.classList.contains('hidden') && typeof window.switchTab === 'function') {
+        window.switchTab('roulette');
+        showRaffleBanner('Sorteio em andamento! Você foi direcionado para a aba FESTA.');
       }
     }
-
-    var accBtns = Array.prototype.slice.call(finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]'));
-    if (accBtns.length < 2) return;
-
-    var items = [];
-    var listParent = null;
-    accBtns.forEach(function(btn) {
-      var oc = String(btn.getAttribute('onclick') || '');
-      var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
-      var athId = m ? parseInt(m[1], 10) : null;
-      var card = btn.parentElement;
-      if (!card || !card.parentElement) return;
-      if (!listParent) listParent = card.parentElement;
-      if (card.parentElement !== listParent) return;
-      var athObj = (athId !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === athId; }) : null;
-      var athName = athObj && athObj.name ? String(athObj.name) : String(btn.textContent || '').trim();
-      items.push({ card: card, athId: athId, name: athName });
-    });
-    if (!listParent || items.length < 2) return;
-
-    var sorted = items.slice().sort(function(a, b) {
-      var aIsSelf = (loggedId !== null && a.athId === loggedId) ? 0 : 1;
-      var bIsSelf = (loggedId !== null && b.athId === loggedId) ? 0 : 1;
-      if (aIsSelf !== bIsSelf) return aIsSelf - bIsSelf;
-      return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
-    });
-
-    var orderChanged = false;
-    for (var idx = 0; idx < sorted.length; idx++) {
-      if (sorted[idx].card !== items[idx].card) { orderChanged = true; break; }
-    }
-
-    isReorderingFinDom = true;
-    try {
-      if (orderChanged) {
-        sorted.forEach(function(it) { listParent.appendChild(it.card); });
-      }
-      sorted.forEach(function(it) {
-        if (loggedId !== null && it.athId === loggedId) {
-          it.card.classList.add('ring-2', 'ring-emerald-400/70');
-        } else {
-          it.card.classList.remove('ring-2', 'ring-emerald-400/70');
-        }
-      });
-    } finally {
-      isReorderingFinDom = false;
-    }
   }
-
-  function installFinancialViewHooks() {
-    if (typeof window.renderFinancial === 'function' && !window.renderFinancial.__teimosoFinWrapped) {
-      var origRenderFin = window.renderFinancial;
-      window.renderFinancial = function() {
-        var res = origRenderFin.apply(this, arguments);
-        setTimeout(function() {
-          prioritizeAndOrderFinancialCards(false);
-          enforceFinancialReadOnlyForAthletes();
-        }, 15);
-        return res;
-      };
-      window.renderFinancial.__teimosoFinWrapped = true;
-    }
-
-    if (typeof window.switchTab === 'function' && !window.switchTab.__teimosoFinTabWrapped) {
-      var origSwitchTab = window.switchTab;
-      window.switchTab = function(tab) {
-        var res = origSwitchTab.apply(this, arguments);
-        if (tab === 'financial' && window.currentUser) {
-          var finSec = document.getElementById('tab-financial');
-          if (finSec && finSec.classList.contains('hidden')) {
-            document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
-            finSec.classList.remove('hidden');
-            if (typeof window.renderFinancial === 'function') {
-              try { window.renderFinancial(); } catch (eRf) {}
-            }
-          }
-          setTimeout(function() {
-            prioritizeAndOrderFinancialCards(true);
-            enforceFinancialReadOnlyForAthletes();
-          }, 40);
-        }
-        return res;
-      };
-      window.switchTab.__teimosoFinTabWrapped = true;
-    }
-  }
-
-  // ===========================================================================
-  // 3. MOTOR DA ROLETA DA FESTA EM TEMPO REAL
-  // ===========================================================================
-  function getLoggedAthleteObj() {
-    if (!window.currentUser || !Array.isArray(window.athletes)) return null;
-    var ath = window.athletes.find(function(a) { return Number(a.id) === Number(window.currentUser.id); });
-    if (!ath && window.currentUser.name) {
-      var uNorm = normStr(window.currentUser.name);
-      ath = window.athletes.find(function(a) { return normStr(a.name) === uNorm; });
-    }
-    return ath || null;
-  }
-
-  function isMyFamily(item) {
-    if (!window.currentUser) return false;
-    if (window.currentUser.id && Number(item.athleteId) === Number(window.currentUser.id)) return true;
-    if (window.currentUser.name && normStr(item.athleteName) === normStr(window.currentUser.name)) return true;
-    return false;
-  }
-
-  function getAllFamilyEntries() {
-    var list = [];
-    var athletes = Array.isArray(window.athletes) ? window.athletes : [];
-    athletes.forEach(function(a) {
-      if (!a || !a.family) return;
-      if (a.family.wife && a.family.wife.name && String(a.family.wife.name).trim()) {
-        var wName = String(a.family.wife.name).trim();
-        list.push({ key: a.id + '_wife_' + normStr(wName), name: wName, relation: 'Esposa', athleteId: a.id, athleteName: a.name || 'Atleta' });
-      }
-      if (Array.isArray(a.family.children)) {
-        a.family.children.forEach(function(c, idx) {
-          if (c && c.name && String(c.name).trim()) {
-            var cName = String(c.name).trim();
-            list.push({ key: a.id + '_child_' + idx + '_' + normStr(cName), name: cName, relation: 'Filho(a)', athleteId: a.id, athleteName: a.name || 'Atleta' });
-          }
-        });
-      }
-    });
-    return list;
-  }
-
-  function syncRouletteStageFromRemote(remote) {
-    if (localSpinLock) return;
-    var track = document.getElementById('rouletteTrack');
-    var resInfo = document.getElementById('rouletteResultInfo');
-    var athNameEl = document.getElementById('rouletteAthleteName');
-    if (!track) return;
-    track.style.transition = 'none';
-    track.style.transform = 'translateY(0px)';
-    if (!remote || !remote.enabled) {
-      if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
-      track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>';
-      return;
-    }
-    if (remote.spinning) {
-      if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
-      track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>';
-      return;
-    }
-    if (remote.currentWinner && remote.currentWinner.name) {
-      track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full px-3"><span class="text-emerald-600 font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + remote.currentWinner.name + '</span><span class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">' + remote.currentWinner.relation + ' de ' + remote.currentWinner.athleteName + '</span></div>';
-      if (athNameEl) athNameEl.textContent = remote.currentWinner.athleteName + ' (' + remote.currentWinner.relation + ')';
-      if (resInfo) { resInfo.classList.remove('opacity-0', 'scale-95'); resInfo.classList.add('opacity-100', 'scale-100'); }
-      return;
-    }
-    if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
-    track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR!</span></div>';
-  }
-
-  function renderPartyRaffleUnified() {
-    enforceTabsAndRedirect(false);
-    if (!window.partyRaffleState || typeof window.partyRaffleState !== 'object') {
-      window.partyRaffleState = { enabled: false, spinning: false, currentWinner: null, drawn: [] };
-    }
+  function renderPartyUnified() {
+    if (document.body) document.body.classList.toggle('teimoso-logged-in', Boolean(window.currentUser));
+    if (!window.partyRaffleState || typeof window.partyRaffleState !== 'object') window.partyRaffleState = { enabled: false, spinning: false, currentWinner: null, drawn: [] };
     if (!Array.isArray(window.partyRaffleState.drawn)) window.partyRaffleState.drawn = [];
-
-    var enabled = Boolean(window.partyRaffleState.enabled);
-    var spinning = Boolean(window.partyRaffleState.spinning || localSpinLock);
-    var drawn = window.partyRaffleState.drawn;
-    var isAdm = Boolean(window.isAdmin);
-
-    var allEntries = getAllFamilyEntries();
-    var drawnKeys = new Set(drawn.map(function(d) { return d.key; }));
-    var available = allEntries.filter(function(item) { return !drawnKeys.has(item.key); });
-
-    available.sort(function(a, b) {
-      var aMine = isMyFamily(a) ? 0 : 1;
-      var bMine = isMyFamily(b) ? 0 : 1;
-      if (aMine !== bMine) return aMine - bMine;
-      return String(a.athleteName).localeCompare(String(b.athleteName)) || String(a.name).localeCompare(String(b.name));
+    var st = window.partyRaffleState, en = Boolean(st.enabled), sp = Boolean(st.spinning || localSpinLock), drawn = st.drawn, isAdm = Boolean(window.isAdmin);
+    var dKeys = new Set(drawn.map(function(d) { return d.key; }));
+    var avail = getFamilyEntries().filter(function(i) { return !dKeys.has(i.key); }).sort(function(a, b) {
+      var am = isMyFam(a) ? 0 : 1, bm = isMyFam(b) ? 0 : 1;
+      return am !== bm ? am - bm : String(a.athleteName).localeCompare(String(b.athleteName)) || String(a.name).localeCompare(String(b.name));
     });
-
-    var statusBadge = document.getElementById('partyRaffleStatusBadge');
-    if (statusBadge) {
-      if (enabled) {
-        statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
-        statusBadge.innerHTML = '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado';
-      } else {
-        statusBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
-        statusBadge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
+    var badge = document.getElementById('partyRaffleStatusBadge');
+    if (badge) {
+      badge.className = en ? 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300' : 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
+      badge.innerHTML = en ? '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado' : '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
+    }
+    var bFam = document.getElementById('btnEditMyFamilyParty');
+    if (bFam) { bFam.disabled = en; bFam.className = en ? 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2' : 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2 cursor-pointer'; }
+    var bTog = document.getElementById('btnTogglePartyRaffleAdmin'), lTog = document.getElementById('labelTogglePartyRaffleAdmin'), bSpin = document.getElementById('btnStartRoulette');
+    if (bTog) {
+      bTog.style.display = isAdm ? 'inline-flex' : 'none'; bTog.classList.toggle('hidden', !isAdm);
+      if (isAdm) { bTog.className = en ? 'px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer' : 'px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer'; if (lTog) lTog.textContent = en ? 'Encerrar / Desabilitar Sorteio' : 'Habilitar Sorteio'; }
+    }
+    if (bSpin) {
+      bSpin.style.display = isAdm ? 'inline-flex' : 'none'; bSpin.classList.toggle('hidden', !isAdm);
+      var canSpin = isAdm && en && avail.length > 0 && !sp; bSpin.disabled = !canSpin;
+      bSpin.className = canSpin ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2 cursor-pointer' : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
+    }
+    var cEl = document.getElementById('rouletteParticipantCount'); if (cEl) cEl.textContent = String(avail.length);
+    var gEl = document.getElementById('rouletteParticipantsGrid');
+    if (gEl) gEl.innerHTML = avail.length === 0 ? '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>' : avail.map(function(p) {
+      return isMyFam(p) ? '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + p.name + '</span><span class="text-[10px] font-bold text-emerald-800">(' + p.relation + ' &bull; ' + p.athleteName + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>' : '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + p.name + '</span><span class="text-[10px] text-slate-400">(' + p.relation + ' &bull; ' + p.athleteName + ')</span></div>';
+    }).join('');
+    var dCEl = document.getElementById('rouletteDrawnCount'); if (dCEl) dCEl.textContent = String(drawn.length);
+    var dLEl = document.getElementById('rouletteDrawnList');
+    if (dLEl) {
+      dLEl.innerHTML = drawn.length === 0 ? '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>' : drawn.map(function(w, i) { return { w: w, n: i + 1 }; }).reverse().map(function(it, rIdx) {
+        var isL = rIdx === 0; return '<div class="flex items-center justify-between ' + (isL ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200') + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + (isL ? 'bg-emerald-600' : 'bg-amber-500') + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + it.n + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + it.w.name + (isL ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '') + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + it.w.relation + ' de ' + it.w.athleteName + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + (it.w.time || '') + '</span></div>';
+      }).join('');
+      dLEl.scrollTop = 0;
+    }
+    if (!localSpinLock) {
+      var tr = document.getElementById('rouletteTrack'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName');
+      if (tr) {
+        tr.style.transition = 'none'; tr.style.transform = 'translateY(0px)';
+        if (!en) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>'; }
+        else if (st.spinning) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>'; }
+        else if (st.currentWinner && st.currentWinner.name) { tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full px-3"><span class="text-emerald-600 font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + st.currentWinner.name + '</span><span class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">' + st.currentWinner.relation + ' de ' + st.currentWinner.athleteName + '</span></div>'; if (an) an.textContent = st.currentWinner.athleteName + ' (' + st.currentWinner.relation + ')'; if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); } }
+        else { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR!</span></div>'; }
       }
     }
-
-    var btnEditFam = document.getElementById('btnEditMyFamilyParty');
-    if (btnEditFam) {
-      btnEditFam.disabled = enabled;
-      btnEditFam.className = enabled
-        ? 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2'
-        : 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2 cursor-pointer';
-    }
-
-    var btnToggle = document.getElementById('btnTogglePartyRaffleAdmin');
-    var lblToggle = document.getElementById('labelTogglePartyRaffleAdmin');
-    var btnSpin = document.getElementById('btnStartRoulette');
-
-    if (btnToggle) {
-      if (isAdm) {
-        btnToggle.classList.remove('hidden');
-        btnToggle.style.display = 'inline-flex';
-        btnToggle.className = enabled
-          ? 'px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer'
-          : 'px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer';
-        if (lblToggle) lblToggle.textContent = enabled ? 'Encerrar / Desabilitar Sorteio' : 'Habilitar Sorteio';
-      } else {
-        btnToggle.classList.add('hidden');
-        btnToggle.style.display = 'none';
-      }
-    }
-
-    if (btnSpin) {
-      if (isAdm) {
-        btnSpin.classList.remove('hidden');
-        btnSpin.style.display = 'inline-flex';
-        var canSpin = enabled && available.length > 0 && !spinning;
-        btnSpin.disabled = !canSpin;
-        btnSpin.className = canSpin
-          ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2 cursor-pointer'
-          : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
-      } else {
-        btnSpin.classList.add('hidden');
-        btnSpin.style.display = 'none';
-      }
-    }
-
-    var countEl = document.getElementById('rouletteParticipantCount');
-    if (countEl) countEl.textContent = String(available.length);
-
-    var gridEl = document.getElementById('rouletteParticipantsGrid');
-    if (gridEl) {
-      if (available.length === 0) {
-        gridEl.innerHTML = '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>';
-      } else {
-        gridEl.innerHTML = available.map(function(p) {
-          if (isMyFamily(p)) {
-            return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + p.name + '</span><span class="text-[10px] font-bold text-emerald-800">(' + p.relation + ' &bull; ' + p.athleteName + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>';
-          }
-          return '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + p.name + '</span><span class="text-[10px] text-slate-400">(' + p.relation + ' &bull; ' + p.athleteName + ')</span></div>';
-        }).join('');
-      }
-    }
-
-    var drawnCountEl = document.getElementById('rouletteDrawnCount');
-    if (drawnCountEl) drawnCountEl.textContent = String(drawn.length);
-
-    var drawnListEl = document.getElementById('rouletteDrawnList');
-    if (drawnListEl) {
-      if (drawn.length === 0) {
-        drawnListEl.innerHTML = '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>';
-      } else {
-        var orderedDesc = drawn.map(function(w, idx) { return { data: w, orderNum: idx + 1 }; }).reverse();
-        drawnListEl.innerHTML = orderedDesc.map(function(item, revIdx) {
-          var w = item.data;
-          var isLatest = (revIdx === 0);
-          var rowStyle = isLatest ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200';
-          var badgeStyle = isLatest ? 'bg-emerald-600' : 'bg-amber-500';
-          var latestTag = isLatest ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '';
-          return '<div class="flex items-center justify-between ' + rowStyle + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + badgeStyle + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + item.orderNum + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + w.name + latestTag + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + w.relation + ' de ' + w.athleteName + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + (w.time || '') + '</span></div>';
-        }).join('');
-        drawnListEl.scrollTop = 0;
-      }
-    }
-    syncRouletteStageFromRemote(window.partyRaffleState);
   }
-
-  window.__teimosoOnRemotePartyUpdate = function(remote) {
-    enforceTabsAndRedirect(true);
-    renderPartyRaffleUnified();
+  window.__teimosoOnRemotePartyUpdate = function() {
+    syncLoggedInStateAndPartyRedirect();
+    renderPartyUnified();
   };
-
-  function saveRaffleStateCloud() {
-    if (typeof window.__teimosoSavePartyRaffleLive === 'function') {
-      window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
-    }
-  }
-
-  function togglePartyRaffleUnified() {
-    if (!window.isAdmin) {
-      if (typeof window.showToast === 'function') window.showToast('Apenas administradores podem controlar o sorteio.', 'error');
-      return;
-    }
-    if (localSpinLock) return;
+  window.renderPartyRaffleUI = renderPartyUnified;
+  window.togglePartyRaffleSession = function() {
+    if (!window.isAdmin || localSpinLock) return;
     var willEnable = !(window.partyRaffleState && window.partyRaffleState.enabled);
     window.partyRaffleState = { enabled: willEnable, spinning: false, currentWinner: null, drawn: [] };
-    saveRaffleStateCloud();
-    renderPartyRaffleUnified();
-    if (typeof window.showToast === 'function') {
-      window.showToast(willEnable ? 'Sorteio habilitado em tempo real!' : 'Sorteio encerrado! Todos os nomes voltaram para a urna.', 'success');
-    }
-  }
-
-  function startPartyRouletteUnified() {
-    if (!window.isAdmin || localSpinLock) return;
-    if (!window.partyRaffleState || !window.partyRaffleState.enabled) {
-      if (typeof window.showToast === 'function') window.showToast('Habilite o sorteio primeiro.', 'error');
-      return;
-    }
+    if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
+    renderPartyUnified();
+    if (typeof window.showToast === 'function') window.showToast(willEnable ? 'Sorteio habilitado em tempo real!' : 'Sorteio encerrado! Urna reiniciada.', 'success');
+  };
+  window.startPartyRoulette = function() {
+    if (!window.isAdmin || localSpinLock || !window.partyRaffleState || !window.partyRaffleState.enabled) return;
     var drawn = Array.isArray(window.partyRaffleState.drawn) ? window.partyRaffleState.drawn : [];
-    var drawnKeys = new Set(drawn.map(function(d) { return d.key; }));
-    var available = getAllFamilyEntries().filter(function(item) { return !drawnKeys.has(item.key); });
-    if (available.length === 0) {
-      if (typeof window.showToast === 'function') window.showToast('Todos os familiares já foram sorteados nesta rodada!', 'info');
-      return;
+    var dKeys = new Set(drawn.map(function(d) { return d.key; }));
+    var avail = getFamilyEntries().filter(function(i) { return !dKeys.has(i.key); });
+    if (avail.length === 0) { if (typeof window.showToast === 'function') window.showToast('Todos os familiares já foram sorteados!', 'success'); return; }
+    localSpinLock = true; window.partyRaffleState.spinning = true;
+    if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
+    renderPartyUnified();
+    var winner = avail[Math.floor(Math.random() * avail.length)];
+    var tr = document.getElementById('rouletteTrack'), box = document.getElementById('rouletteDisplayBox'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName');
+    if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); }
+    var items = []; for (var i = 0; i < 24; i++) items.push(avail[Math.floor(Math.random() * avail.length)]); items.push(winner);
+    var h = box ? box.clientHeight : 112;
+    if (tr) {
+      tr.style.transition = 'none'; tr.style.transform = 'translateY(0px)';
+      tr.innerHTML = items.map(function(it, idx) { return '<div style="height:' + h + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + (idx === items.length - 1 ? 'text-emerald-600' : 'text-slate-700') + ' font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + it.name + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + it.relation + ' de ' + it.athleteName + '</span></div>'; }).join('');
+      void tr.offsetHeight; tr.style.transition = 'transform 2.6s cubic-bezier(0.12, 0.85, 0.18, 1)'; tr.style.transform = 'translateY(-' + ((items.length - 1) * h) + 'px)';
     }
-
-    localSpinLock = true;
-    window.partyRaffleState.spinning = true;
-    saveRaffleStateCloud();
-    renderPartyRaffleUnified();
-
-    var winner = available[Math.floor(Math.random() * available.length)];
-    var track = document.getElementById('rouletteTrack');
-    var displayBox = document.getElementById('rouletteDisplayBox');
-    var resInfo = document.getElementById('rouletteResultInfo');
-    var athNameEl = document.getElementById('rouletteAthleteName');
-    if (resInfo) { resInfo.classList.add('opacity-0', 'scale-95'); resInfo.classList.remove('opacity-100', 'scale-100'); }
-
-    var spinItems = [];
-    for (var i = 0; i < 24; i++) spinItems.push(available[Math.floor(Math.random() * available.length)]);
-    spinItems.push(winner);
-
-    var slotHeight = displayBox ? displayBox.clientHeight : 112;
-    if (track) {
-      track.style.transition = 'none';
-      track.style.transform = 'translateY(0px)';
-      track.innerHTML = spinItems.map(function(item, idx) {
-        var txtColor = (idx === spinItems.length - 1) ? 'text-emerald-600' : 'text-slate-700';
-        return '<div style="height:' + slotHeight + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + txtColor + ' font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + item.name + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + item.relation + ' de ' + item.athleteName + '</span></div>';
-      }).join('');
-      void track.offsetHeight;
-      track.style.transition = 'transform 2.6s cubic-bezier(0.12, 0.85, 0.18, 1)';
-      track.style.transform = 'translateY(-' + ((spinItems.length - 1) * slotHeight) + 'px)';
-    }
-
     setTimeout(function() {
       localSpinLock = false;
-      var nowStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      var winnerObj = { key: winner.key, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, time: nowStr };
-      window.partyRaffleState.spinning = false;
-      window.partyRaffleState.currentWinner = winnerObj;
-      window.partyRaffleState.drawn.push(winnerObj);
-      if (athNameEl) athNameEl.textContent = winner.athleteName + ' (' + winner.relation + ')';
-      if (resInfo) { resInfo.classList.remove('opacity-0', 'scale-95'); resInfo.classList.add('opacity-100', 'scale-100'); }
+      var wObj = { key: winner.key, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
+      window.partyRaffleState.spinning = false; window.partyRaffleState.currentWinner = wObj; window.partyRaffleState.drawn.push(wObj);
+      if (an) an.textContent = winner.athleteName + ' (' + winner.relation + ')';
+      if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); }
       if (typeof window.playAppSound === 'function') window.playAppSound('confirm');
-      saveRaffleStateCloud();
-      renderPartyRaffleUnified();
+      if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
+      renderPartyUnified();
     }, 2700);
-  }
-
-  function openMyFamilyEditorUnified() {
-    if (isRaffleActive()) {
-      if (typeof window.showToast === 'function') window.showToast('Edição bloqueada durante o sorteio em andamento.', 'error');
-      return;
-    }
-    var athlete = getLoggedAthleteObj();
-    var modal = document.getElementById('familyDataModal');
-    var content = document.getElementById('familyDataContent');
-    if (!modal) return;
-    var wName = document.getElementById('promptWifeName');
-    var wDay = document.getElementById('promptWifeDay');
-    var wMonth = document.getElementById('promptWifeMonth');
-    var cCont = document.getElementById('promptChildrenContainer');
-    if (wName) wName.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.name) ? athlete.family.wife.name : '';
-    if (wDay) wDay.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.birthDay) ? athlete.family.wife.birthDay : '';
-    if (wMonth) wMonth.value = (athlete && athlete.family && athlete.family.wife && athlete.family.wife.birthMonth) ? athlete.family.wife.birthMonth : '';
-    if (cCont) {
-      cCont.innerHTML = '';
-      var kids = (athlete && athlete.family && Array.isArray(athlete.family.children)) ? athlete.family.children : [];
-      if (kids.length > 0 && typeof window.addPromptChildRow === 'function') {
-        kids.forEach(function(k) {
-          window.addPromptChildRow();
-          var lastRow = cCont.lastElementChild;
-          if (lastRow) {
-            var inputs = lastRow.querySelectorAll('input');
-            var sel = lastRow.querySelector('select');
-            if (inputs[0]) inputs[0].value = k.name || '';
-            if (inputs[1]) inputs[1].value = k.birthDay || '';
-            if (sel) sel.value = k.birthMonth || '';
-          }
-        });
-      } else if (typeof window.addPromptChildRow === 'function') {
-        window.addPromptChildRow();
-      }
-    }
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(function() {
-      modal.classList.remove('opacity-0');
-      modal.classList.add('opacity-100');
-      if (content) { content.classList.remove('scale-95'); content.classList.add('scale-100'); }
-    }, 20);
-  }
-
-  // ===========================================================================
-  // 4. ISENÇÃO DE MENSALIDADES ISOLADA POR ATLETA (JAN A NOV = R$ 0,00)
-  // ===========================================================================
-  window.toggleAthleteExemptMonthlyUI = function(isChecked) {
-    var feeInput = document.getElementById('athleteMonthlyFeeInput');
-    if (!feeInput) return;
-    if (isChecked) {
-      feeInput.value = 0;
-      feeInput.disabled = true;
-      feeInput.classList.add('opacity-50', 'bg-slate-100');
-    } else {
-      feeInput.value = 110;
-      feeInput.disabled = false;
-      feeInput.classList.remove('opacity-50', 'bg-slate-100');
-    }
+  };
+  window.openMyFamilyEditorFromParty = function() {
+    if (window.partyRaffleState && window.partyRaffleState.enabled) { if (typeof window.showToast === 'function') window.showToast('Edição bloqueada durante sorteio em andamento.', 'error'); return; }
+    var ath = getLoggedAth(); if (ath && typeof window.openFamilyDataPromptModal === 'function') window.openFamilyDataPromptModal(ath);
   };
 
-  function installExemptIsolation() {
-    var feeInput = document.getElementById('athleteMonthlyFeeInput');
-    if (feeInput && !document.getElementById('athleteExemptMonthlyCheckbox')) {
-      var gridParent = feeInput.closest('.grid') || feeInput.parentElement;
-      if (gridParent && gridParent.parentElement) {
-        var wrap = document.createElement('div');
-        wrap.className = 'bg-emerald-50/80 border border-emerald-300 rounded-2xl p-3 flex items-start gap-2.5 mt-2';
-        wrap.innerHTML = '<input type="checkbox" id="athleteExemptMonthlyCheckbox" onchange="toggleAthleteExemptMonthlyUI(this.checked)" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-0 cursor-pointer">' +
-          '<label for="athleteExemptMonthlyCheckbox" class="cursor-pointer flex-1">' +
-            '<span class="block text-xs font-black uppercase text-emerald-800"><i class="fa-solid fa-shield-heart text-emerald-600 mr-1"></i> Isento de Mensalidades (Jan a Nov = R$ 0,00)</span>' +
-            '<span class="block text-[10px] text-emerald-700 font-medium leading-snug mt-0.5">Zera mensalidade e parcelas de Jan a Nov apenas deste atleta, mantendo os demais intactos.</span>' +
-          '</label>';
-        gridParent.parentElement.insertBefore(wrap, gridParent.nextSibling);
-      }
-    }
+  /* 4. ISENÇÃO DE MENSALIDADES (NOVO ATLETA + EDIÇÃO, SEM SAVE DUPLICADO) */
+  window.toggleAthleteExemptMonthlyUI = function(isChecked) {
+    var fi = document.getElementById('athleteMonthlyFeeInput'); if (!fi) return;
+    fi.disabled = Boolean(isChecked);
+    fi.classList.toggle('opacity-50', Boolean(isChecked));
+    if (isChecked) fi.value = 0; else if (Number(fi.value) === 0) fi.value = 110;
+  };
 
-    if (typeof window.openNewAthleteModal === 'function' && !window.openNewAthleteModal.__teimosoWrapped) {
-      var origOpenNew = window.openNewAthleteModal;
+  /* 5. INSTALAÇÃO ÚNICA DOS HOOKS (ZERO setInterval CONTÍNUO) */
+  function installUnifiedHooks() {
+    mountVisionButtons();
+    if (typeof window.performLogin === 'function' && !window.performLogin.__v1Hook) {
+      var origLogin = window.performLogin;
+      window.performLogin = function() {
+        var r = origLogin.apply(this, arguments);
+        setTimeout(syncLoggedInStateAndPartyRedirect, 60);
+        return r;
+      };
+      window.performLogin.__v1Hook = true;
+    }
+    if (typeof window.logout === 'function' && !window.logout.__v1Hook) {
+      var origLogout = window.logout;
+      window.logout = function() {
+        var r = origLogout.apply(this, arguments);
+        if (document.body) document.body.classList.remove('teimoso-logged-in');
+        return r;
+      };
+      window.logout.__v1Hook = true;
+    }
+    if (typeof window.setPresenceStatus === 'function' && !window.setPresenceStatus.__v1Shield) {
+      var origSetPres = window.setPresenceStatus;
+      window.setPresenceStatus = function(athleteId, newStatus) {
+        if (!navigator.onLine) { if (typeof window.showToast === 'function') window.showToast('Sem internet! Confirmação bloqueada.', 'error'); return; }
+        if (Date.now() - lastTrustedHumanMs > 4000) { console.warn('[Blindagem] Bloqueado disparo automático em setPresenceStatus:', athleteId, newStatus); return; }
+        return origSetPres.apply(this, arguments);
+      };
+      window.setPresenceStatus.__v1Shield = true;
+    }
+    if (typeof window.openNewAthleteModal === 'function' && !window.openNewAthleteModal.__v1Ex) {
+      var origNew = window.openNewAthleteModal;
       window.openNewAthleteModal = function() {
-        var res = origOpenNew.apply(this, arguments);
-        setTimeout(function() {
-          var chk = document.getElementById('athleteExemptMonthlyCheckbox');
-          if (chk) chk.checked = false;
-          window.toggleAthleteExemptMonthlyUI(false);
-        }, 20);
-        return res;
+        var r = origNew.apply(this, arguments);
+        var chk = document.getElementById('athleteExemptMonthlyCheckbox'); if (chk) chk.checked = false;
+        window.toggleAthleteExemptMonthlyUI(false); return r;
       };
-      window.openNewAthleteModal.__teimosoWrapped = true;
+      window.openNewAthleteModal.__v1Ex = true;
     }
-
-    if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal.__teimosoWrapped) {
-      var origOpenEdit = window.openEditAthleteModal;
+    if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal.__v1Ex) {
+      var origEdit = window.openEditAthleteModal;
       window.openEditAthleteModal = function(id) {
-        var res = origOpenEdit.apply(this, arguments);
-        setTimeout(function() {
-          var ath = Array.isArray(window.athletes) ? window.athletes.find(function(a) { return Number(a.id) === Number(id); }) : null;
-          var isEx = Boolean(ath && (ath.isExemptMonthlyFee || (window.alwaysUpToDateMap && window.alwaysUpToDateMap[ath.id]) || Number(ath.monthlyFee) === 0));
-          var chk = document.getElementById('athleteExemptMonthlyCheckbox');
-          if (chk) chk.checked = isEx;
-          window.toggleAthleteExemptMonthlyUI(isEx);
-          var fi = document.getElementById('athleteMonthlyFeeInput');
-          if (fi && !isEx && ath) fi.value = (ath.monthlyFee != null ? ath.monthlyFee : 110);
-        }, 30);
-        return res;
+        var r = origEdit.apply(this, arguments);
+        var ath = Array.isArray(window.athletes) ? window.athletes.find(function(a) { return Number(a.id) === Number(id); }) : null;
+        var isEx = Boolean(ath && (ath.isExemptMonthlyFee || (window.alwaysUpToDateMap && window.alwaysUpToDateMap[ath.id]) || Number(ath.monthlyFee) === 0));
+        var chk = document.getElementById('athleteExemptMonthlyCheckbox'); if (chk) chk.checked = isEx;
+        window.toggleAthleteExemptMonthlyUI(isEx);
+        var fi = document.getElementById('athleteMonthlyFeeInput'); if (fi && !isEx && ath) fi.value = (ath.monthlyFee != null ? ath.monthlyFee : 110);
+        return r;
       };
-      window.openEditAthleteModal.__teimosoWrapped = true;
+      window.openEditAthleteModal.__v1Ex = true;
     }
-
-    if (typeof window.saveAthlete === 'function' && !window.saveAthlete.__teimosoWrapped) {
-      var origSaveAth = window.saveAthlete;
+    if (typeof window.saveAthlete === 'function' && !window.saveAthlete.__v1Ex) {
+      var origSave = window.saveAthlete;
       window.saveAthlete = function() {
         var editIdEl = document.getElementById('editAthleteId');
         var targetId = editIdEl && editIdEl.value ? parseInt(editIdEl.value, 10) : null;
         var chk = document.getElementById('athleteExemptMonthlyCheckbox');
         var isEx = Boolean(chk && chk.checked);
-        var res = origSaveAth.apply(this, arguments);
-        try {
-          if (!targetId && Array.isArray(window.athletes) && window.athletes.length > 0) {
-            targetId = window.athletes[window.athletes.length - 1].id;
-          }
-          if (targetId && Array.isArray(window.athletes)) {
-            var ath = window.athletes.find(function(a) { return Number(a.id) === Number(targetId); });
-            if (ath) {
-              ath.isExemptMonthlyFee = isEx;
-              if (isEx) ath.monthlyFee = 0;
-            }
-            if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {};
-            window.alwaysUpToDateMap[targetId] = isEx;
-            if (isEx) {
-              if (!window.financialPayments) window.financialPayments = {};
-              if (!window.financialPayments[targetId]) window.financialPayments[targetId] = {};
-              MONTHS_JAN_NOV.forEach(function(mKey) {
-                window.financialPayments[targetId][mKey] = { paid: false, amount: 0, settledAt: null };
-              });
-            }
-            if (typeof window.saveData === 'function') window.saveData();
-          }
-        } catch (eEx) {}
-        return res;
-      };
-      window.saveAthlete.__teimosoWrapped = true;
-    }
-  }
-
-  // ===========================================================================
-  // 5. BLINDAGEM CONTRA PRESENÇAS FANTASMAS (CLIQUE HUMANO REAL)
-  // ===========================================================================
-  ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
-    document.addEventListener(evtName, function(e) {
-      if (e && e.isTrusted) lastTrustedHumanMs = Date.now();
-    }, true);
-  });
-
-  function installGhostPresenceShield() {
-    ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence'].forEach(function(fnName) {
-      if (typeof window[fnName] === 'function' && !window[fnName].__ghostShielded) {
-        var origFn = window[fnName];
-        window[fnName] = function(athleteId, newStatus) {
-          var elapsed = Date.now() - lastTrustedHumanMs;
-          if (newStatus === 'CONFIRMADO' && elapsed > 2500) {
-            console.warn('Bloqueada tentativa automática de presença fantasma para atleta:', athleteId);
-            return;
-          }
-          var res = origFn.apply(this, arguments);
-          try {
-            if (window.presences && window.currentDate && window.presences[window.currentDate] && window.presences[window.currentDate][athleteId]) {
-              var rec = window.presences[window.currentDate][athleteId];
-              rec.verifiedHuman = true;
-              rec.actorId = window.currentUser ? window.currentUser.id : null;
-              rec.actorName = window.currentUser ? window.currentUser.name : 'Sistema';
-              rec.verifiedAt = new Date().toISOString();
-            }
-          } catch (eSh) {}
-          return res;
-        };
-        window[fnName].__ghostShielded = true;
-      }
-    });
-  }
-
-  // ===========================================================================
-  // 6. INSTALAÇÃO E VIGILÂNCIA CONTÍNUA
-  // ===========================================================================
-  function installAllRuntimePatches() {
-    window.renderPartyRaffleUI = renderPartyRaffleUnified;
-    window.togglePartyRaffleSession = togglePartyRaffleUnified;
-    window.startPartyRoulette = startPartyRouletteUnified;
-    window.openMyFamilyEditorFromParty = openMyFamilyEditorUnified;
-    installExemptIsolation();
-    installGhostPresenceShield();
-    installFinancialViewHooks();
-    ensureVisionSwitchers();
-    enforceTabsAndRedirect(false);
-    enforceFinancialReadOnlyForAthletes();
-  }
-
-  document.addEventListener('click', function(ev) {
-    var target = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, #tabBtn-financial, #btnTogglePartyRaffleAdmin, #btnStartRoulette, #btnEditMyFamilyParty') : null;
-    if (target) {
-      installAllRuntimePatches();
-      if (target.id === 'tabBtn-roulette') setTimeout(renderPartyRaffleUnified, 60);
-      if (target.id === 'tabBtn-financial') {
-        setTimeout(function() {
-          prioritizeAndOrderFinancialCards(true);
-          enforceFinancialReadOnlyForAthletes();
-        }, 80);
-      }
-    }
-    var famBtn = ev.target && ev.target.closest ? ev.target.closest('#familyDataModal button') : null;
-    if (famBtn) setTimeout(renderPartyRaffleUnified, 350);
-  }, true);
-
-  document.addEventListener('DOMContentLoaded', function() {
-    installAllRuntimePatches();
-    renderPartyRaffleUnified();
-  });
-  window.addEventListener('load', function() {
-    installAllRuntimePatches();
-    renderPartyRaffleUnified();
-  });
-
-  setInterval(function() {
-    ensureVisionSwitchers();
-    enforceTabsAndRedirect(false);
-    enforceFinancialReadOnlyForAthletes();
-    installFinancialViewHooks();
-    installExemptIsolation();
-    installGhostPresenceShield();
-  }, 1000);
-})();
-</script>
-<!-- TEIMOSO_SAFE_PATCH_V6_END -->
-
-
-
-
-
-
-
-
-<!-- TEIMOSO_PRESENCE_SHIELD_V2_START -->
-<style>
-  /* Modo somente visualização no Financeiro para atletas comuns (valores 100% iguais aos admins) */
-  #tab-financial.teimoso-fin-readonly input:not([type='search']):not([id*='search']):not([id*='Search']):not([id*='filter']):not([id*='Filter']),
-  #tab-financial.teimoso-fin-readonly select:not([id*='filter']):not([id*='Filter']),
-  #tab-financial.teimoso-fin-readonly textarea {
-    pointer-events: none !important;
-    opacity: 0.85;
-  }
-  #tab-financial.teimoso-fin-readonly .teimoso-fin-admin-only-hidden {
-    display: none !important;
-  }
-</style>
-<script>
-(function() {
-  'use strict';
-  var lastTrustedHumanActionMs = 0;
-
-  ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function(evtName) {
-    document.addEventListener(evtName, function(e) {
-      if (e && e.isTrusted) lastTrustedHumanActionMs = Date.now();
-    }, true);
-  });
-
-  function normFinName(str) {
-    return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-  }
-
-  function isFinancialEditorUser() {
-    return Boolean(window.isAdmin || window.canEditFinancial);
-  }
-
-  function getLoggedFinAthleteId() {
-    if (!window.currentUser) return null;
-    if (window.currentUser.id && !isNaN(Number(window.currentUser.id))) return Number(window.currentUser.id);
-    if (window.currentUser.name && Array.isArray(window.athletes)) {
-      var target = normFinName(window.currentUser.name);
-      var found = window.athletes.find(function(a) { return a && normFinName(a.name) === target; });
-      if (found) return Number(found.id);
-    }
-    return null;
-  }
-
-  function ensureFinTabButtonVisible() {
-    if (!window.currentUser) return;
-    var finBtn = document.getElementById('tabBtn-financial');
-    if (finBtn) {
-      finBtn.classList.remove('hidden');
-      finBtn.style.display = 'flex';
-      finBtn.style.visibility = 'visible';
-    }
-  }
-
-  function lockFinancialReadOnlyDom(finSec) {
-    if (!finSec) return;
-    finSec.classList.add('teimoso-fin-readonly');
-
-    var inputs = finSec.querySelectorAll('input, select, textarea');
-    for (var i = 0; i < inputs.length; i++) {
-      var el = inputs[i];
-      var idLow = String(el.id || '').toLowerCase();
-      var phLow = String(el.placeholder || '').toLowerCase();
-      var isSearchOrFilter = (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
-      if (!isSearchOrFilter) {
-        el.disabled = true;
-        el.readOnly = true;
-      }
-    }
-
-    var buttons = finSec.querySelectorAll('button');
-    for (var b = 0; b < buttons.length; b++) {
-      var btn = buttons[b];
-      var oc = String(btn.getAttribute('onclick') || '');
-      var txt = normFinName(btn.textContent || '');
-      var isAccordion = oc.indexOf('toggleFinancialAccordion') !== -1;
-      var isFilter = (oc.indexOf('filterFinancial') !== -1 || oc.indexOf('setFinancialFilter') !== -1);
-      if (isAccordion || isFilter) continue;
-      var isAdminAction = /(cobrar|inadimplent|whatsapp|quitar|estornar|isentar|multa|salvar|excluir|remover|adicionar|editar|lancar)/i.test(txt) ||
-        /(pay|save|delete|remove|fine|exempt|update|quitar|estornar|toggleAlways|mark|settle|add|edit|cobr|whatsapp|notify|send|openEdit)/i.test(oc);
-      if (isAdminAction) {
-        btn.classList.add('teimoso-fin-admin-only-hidden');
-        btn.disabled = true;
-      }
-    }
-  }
-
-  function reorderFinancialCardsFast(finSec) {
-    if (!finSec || !window.currentUser) return;
-    var loggedId = getLoggedFinAthleteId();
-    var accBtns = finSec.querySelectorAll('button[onclick*="toggleFinancialAccordion("]');
-    if (!accBtns || accBtns.length < 2) return;
-
-    var items = [];
-    var listParent = null;
-    for (var i = 0; i < accBtns.length; i++) {
-      var btn = accBtns[i];
-      var oc = String(btn.getAttribute('onclick') || '');
-      var m = oc.match(/toggleFinancialAccordion\(\s*(\d+)\s*\)/);
-      var athId = m ? parseInt(m[1], 10) : null;
-      var card = btn.parentElement;
-      if (!card || !card.parentElement) continue;
-      if (!listParent) listParent = card.parentElement;
-      if (card.parentElement !== listParent) continue;
-      var athObj = (athId !== null && Array.isArray(window.athletes)) ? window.athletes.find(function(a) { return Number(a.id) === athId; }) : null;
-      var athName = athObj && athObj.name ? String(athObj.name) : String(btn.textContent || '').trim();
-      items.push({ card: card, athId: athId, name: athName });
-    }
-    if (!listParent || items.length < 2) return;
-
-    var sorted = items.slice().sort(function(a, b) {
-      var aSelf = (loggedId !== null && a.athId === loggedId) ? 0 : 1;
-      var bSelf = (loggedId !== null && b.athId === loggedId) ? 0 : 1;
-      if (aSelf !== bSelf) return aSelf - bSelf;
-      return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
-    });
-
-    var changed = false;
-    for (var k = 0; k < sorted.length; k++) {
-      if (sorted[k].card !== items[k].card) { changed = true; break; }
-    }
-    if (changed) {
-      var frag = document.createDocumentFragment();
-      for (var s = 0; s < sorted.length; s++) {
-        frag.appendChild(sorted[s].card);
-      }
-      listParent.appendChild(frag);
-    }
-
-    for (var h = 0; h < sorted.length; h++) {
-      if (loggedId !== null && sorted[h].athId === loggedId) {
-        sorted[h].card.classList.add('border-2', 'border-emerald-400', 'shadow-md');
-      } else {
-        sorted[h].card.classList.remove('border-emerald-400');
-      }
-    }
-  }
-
-  window.__teimosoPostRenderFinancial = function(isRegularAthlete) {
-    var finSec = document.getElementById('tab-financial');
-    if (!finSec) return;
-    if (isRegularAthlete) {
-      lockFinancialReadOnlyDom(finSec);
-      reorderFinancialCardsFast(finSec);
-    } else {
-      finSec.classList.remove('teimoso-fin-readonly');
-    }
-  };
-
-  function wrapPresenceFunctions() {
-    ['setPresence', 'setAthletePresence', 'updatePresence', 'markPresence'].forEach(function(fnName) {
-      if (typeof window[fnName] === 'function' && !window[fnName].__blindadoShield) {
-        var orig = window[fnName];
-        window[fnName] = function(athleteId, newStatus) {
-          if (!navigator.onLine) {
-            if (typeof window.showToast === 'function') window.showToast('Sem internet! Confirmação bloqueada para evitar sobrescrita.', 'error');
-            return;
-          }
-          var elapsed = Date.now() - lastTrustedHumanActionMs;
-          if (elapsed > 3500) {
-            console.warn('[Blindagem] Bloqueado disparo automático sem toque humano em', fnName, athleteId, newStatus);
-            return;
-          }
-          return orig.apply(this, arguments);
-        };
-        window[fnName].__blindadoShield = true;
-      }
-    });
-  }
-
-  function wrapFinancialHooks() {
-    if (typeof window.switchTab === 'function' && !window.switchTab.__blindadoFinTab) {
-      var origSwitch = window.switchTab;
-      window.switchTab = function(tab) {
-        var res = origSwitch.apply(this, arguments);
-        ensureFinTabButtonVisible();
-        if (tab === 'financial' && window.currentUser) {
-          var finSec = document.getElementById('tab-financial');
-          if (finSec && finSec.classList.contains('hidden')) {
-            document.querySelectorAll('main section[id^="tab-"]').forEach(function(s) { s.classList.add('hidden'); });
-            finSec.classList.remove('hidden');
-          }
-          var curUserKey = String(getLoggedFinAthleteId() || window.currentUser.name || '');
-          if (window.__teimosoFinRenderedUserKey !== curUserKey) {
-            window.__teimosoFinRenderedUserKey = curUserKey;
-            window.__teimosoFinRenderedOnce = false;
-          }
-          var lastAt = window.__teimosoLastAdminFinRenderAt || 0;
-          if (typeof window.renderFinancial === 'function') {
-            if (isFinancialEditorUser()) {
-              if ((Date.now() - lastAt) > 200) {
-                try { window.renderFinancial(); } catch (eRf1) {}
-              }
-            } else if (!window.__teimosoFinRenderedOnce) {
-              try { window.renderFinancial(); } catch (eRf2) {}
+        var prevLen = Array.isArray(window.athletes) ? window.athletes.length : 0;
+        if (targetId && Array.isArray(window.athletes)) {
+          var ath = window.athletes.find(function(a) { return Number(a.id) === Number(targetId); });
+          if (ath) { ath.isExemptMonthlyFee = isEx; if (isEx) ath.monthlyFee = 0; }
+          if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {}; window.alwaysUpToDateMap[targetId] = isEx;
+          if (isEx) { if (!window.financialPayments) window.financialPayments = {}; if (!window.financialPayments[targetId]) window.financialPayments[targetId] = {}; MONTHS.forEach(function(m) { window.financialPayments[targetId][m] = { paid: false, amount: 0, settledAt: null }; }); }
+        }
+        var res = origSave.apply(this, arguments);
+        if (!targetId && isEx && Array.isArray(window.athletes) && window.athletes.length > prevLen) {
+          var newAth = window.athletes[window.athletes.length - 1];
+          if (newAth) {
+            newAth.isExemptMonthlyFee = true; newAth.monthlyFee = 0;
+            if (!window.alwaysUpToDateMap) window.alwaysUpToDateMap = {}; window.alwaysUpToDateMap[newAth.id] = true;
+            if (!window.financialPayments) window.financialPayments = {}; window.financialPayments[newAth.id] = {};
+            MONTHS.forEach(function(m) { window.financialPayments[newAth.id][m] = { paid: false, amount: 0, settledAt: null }; });
+            if (typeof window.syncSpecificData === 'function') {
+              window.syncSpecificData({ athletesOnly: true, alwaysUpToDateMap: { [newAth.id]: true }, financialPayments: { [newAth.id]: window.financialPayments[newAth.id] } });
             }
           }
         }
         return res;
       };
-      window.switchTab.__blindadoFinTab = true;
+      window.saveAthlete.__v1Ex = true;
+    }
+    if (typeof window.switchTab === 'function' && !window.switchTab.__v1Hook) {
+      var origSw = window.switchTab;
+      window.switchTab = function(tab) {
+        var r = origSw.apply(this, arguments);
+        if (document.body) document.body.classList.toggle('teimoso-logged-in', Boolean(window.currentUser));
+        if (tab === 'roulette') renderPartyUnified();
+        return r;
+      };
+      window.switchTab.__v1Hook = true;
     }
   }
 
-  var bootTicks = 0;
-  var bootTimer = setInterval(function() {
-    bootTicks++;
-    wrapPresenceFunctions();
-    wrapFinancialHooks();
-    ensureFinTabButtonVisible();
-    if (bootTicks >= 40) clearInterval(bootTimer);
-  }, 250);
-
-  /* Permite apenas abrir/fechar cards e filtros no Financeiro para atletas comuns; bloqueia qualquer edição */
+  /* Permite apenas abrir/fechar cards e filtros no Financeiro para atletas comuns */
   document.addEventListener('click', function(ev) {
-    var finTabBtn = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-financial') : null;
-    if (finTabBtn && window.currentUser) {
-      wrapFinancialHooks();
-      return;
-    }
     var finSec = document.getElementById('tab-financial');
-    if (!finSec || !finSec.contains(ev.target) || isFinancialEditorUser()) return;
-
-    var accBtn = ev.target && ev.target.closest ? ev.target.closest('button[onclick*="toggleFinancialAccordion"]') : null;
-    if (accBtn) {
-      window.__teimosoAllowFinRefreshOnce = true;
-      return;
-    }
-    var clickedBtn = ev.target && ev.target.closest ? ev.target.closest('button') : null;
-    if (clickedBtn) {
-      var oc = String(clickedBtn.getAttribute('onclick') || '');
-      if (oc.indexOf('filterFinancial') !== -1 || oc.indexOf('setFinancialFilter') !== -1) {
-        window.__teimosoAllowFinRefreshOnce = true;
-        return;
-      }
-      ev.preventDefault();
-      ev.stopPropagation();
+    if (!finSec || !finSec.contains(ev.target) || isFinEditor()) return;
+    var acc = ev.target.closest ? ev.target.closest('button[onclick*="toggleFinancialAccordion"]') : null;
+    if (acc) { window.__teimosoAllowFinRefreshOnce = true; return; }
+    var btn = ev.target.closest ? ev.target.closest('button') : null;
+    if (btn) {
+      var oc = String(btn.getAttribute('onclick') || '');
+      if (oc.indexOf('setFinancialFilter') !== -1) { window.__teimosoAllowFinRefreshOnce = true; return; }
+      ev.preventDefault(); ev.stopPropagation();
     }
   }, true);
 
-  ['change', 'input'].forEach(function(evtName) {
-    document.addEventListener(evtName, function(ev) {
-      var finSec = document.getElementById('tab-financial');
-      if (!finSec || !finSec.contains(ev.target) || isFinancialEditorUser()) return;
-      var el = ev.target;
-      var idLow = String(el.id || '').toLowerCase();
-      var phLow = String(el.placeholder || '').toLowerCase();
-      var isSearchOrFilter = (idLow.indexOf('search') !== -1 || idLow.indexOf('filter') !== -1 || phLow.indexOf('buscar') !== -1 || phLow.indexOf('pesquisar') !== -1 || phLow.indexOf('filtrar') !== -1);
-      if (isSearchOrFilter) {
-        window.__teimosoAllowFinRefreshOnce = true;
-        return;
-      }
-      ev.preventDefault();
-      ev.stopPropagation();
-    }, true);
-  });
+  var tries = 0;
+  var boot = setInterval(function() {
+    tries++; installUnifiedHooks();
+    if (typeof window.setPresenceStatus === 'function' && window.setPresenceStatus.__v1Shield && tries >= 4) clearInterval(boot);
+    if (tries >= 30) clearInterval(boot);
+  }, 200);
 })();
 </script>
-<!-- TEIMOSO_PRESENCE_SHIELD_V2_END -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V1_END -->
 </body>
 </html>
