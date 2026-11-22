@@ -6791,7 +6791,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -6983,7 +6983,7 @@
   </script>
 
 
-<!-- TEIMOSO_UNIFIED_CLEAN_V2_START -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V3_START -->
 <style>
   body.teimoso-logged-in #tabBtn-roulette,
   body.teimoso-logged-in #tabBtn-financial { display: flex !important; visibility: visible !important; }
@@ -7001,6 +7001,16 @@
     #tab-roulette.teimoso-festa-grid #partyAvailableCard { order: 3; grid-column: span 1 / span 1; }
     #tab-roulette.teimoso-festa-grid #partyDrawnCard { order: 4; grid-column: span 1 / span 1; }
   }
+  /* Palco Show Interativo da Festa */
+  @keyframes teimosoSpotlightPulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.08); } }
+  @keyframes teimosoEmojiFloat { 0% { transform: translateY(0) scale(0.7) rotate(-8deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-290px) scale(1.35) rotate(12deg); opacity: 0; } }
+  @keyframes teimosoConfettiDrop { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(460px) rotate(720deg); opacity: 0; } }
+  @keyframes teimosoWinnerPop { 0% { transform: scale(0.82); opacity: 0; } 65% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  #partyRouletteStage.teimoso-stage-fullscreen { position: fixed !important; inset: 0 !important; z-index: 9990 !important; border-radius: 0 !important; width: 100vw !important; height: 100vh !important; max-width: none !important; margin: 0 !important; overflow-y: auto !important; }
+  .teimoso-drum-shell { position: relative; background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 0 0 2px rgba(56,189,248,0.35), 0 24px 55px rgba(0,0,0,0.6), inset 0 0 25px rgba(56,189,248,0.18); }
+  .teimoso-drum-shell.is-winner { box-shadow: 0 0 0 3px rgba(16,185,129,0.85), 0 0 45px rgba(16,185,129,0.45), 0 24px 55px rgba(0,0,0,0.65); }
+  .teimoso-drum-mask { background: linear-gradient(180deg, rgba(248,250,252,0.92) 0%, rgba(248,250,252,0) 24%, rgba(248,250,252,0) 76%, rgba(248,250,252,0.92) 100%); pointer-events: none; }
+  .teimoso-winner-pop { animation: teimosoWinnerPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
   #tab-financial.teimoso-fin-readonly input:not([type='search']):not([id*='search']):not([id*='Search']):not([id*='filter']):not([id*='Filter']),
   #tab-financial.teimoso-fin-readonly select:not([id*='filter']):not([id*='Filter']),
   #tab-financial.teimoso-fin-readonly textarea { pointer-events: none !important; opacity: 0.85; }
@@ -7034,13 +7044,13 @@ try {
   const __pRef = __tDoc(__pDb, "teimoso_config", "sorteio_festa");
   window.__teimosoSavePartyRaffleLive = async function(st) {
     try {
-      await __tSetDoc(__pRef, { enabled: Boolean(st && st.enabled), spinning: Boolean(st && st.spinning), currentWinner: (st && st.currentWinner) || null, drawn: Array.isArray(st && st.drawn) ? st.drawn : [], updatedAt: new Date().toISOString() }, { merge: true });
+      await __tSetDoc(__pRef, { enabled: Boolean(st && st.enabled), spinning: Boolean(st && st.spinning), currentPrize: (st && st.currentPrize) || '', currentWinner: (st && st.currentWinner) || null, drawn: Array.isArray(st && st.drawn) ? st.drawn : [], updatedAt: new Date().toISOString() }, { merge: true });
     } catch (e) { console.warn('Festa sync:', e); }
   };
   __tOnSnap(__pRef, function(snap) {
     if (!snap || !snap.exists()) return;
     const r = snap.data() || {};
-    window.partyRaffleState = { enabled: Boolean(r.enabled), spinning: Boolean(r.spinning), currentWinner: r.currentWinner || null, drawn: Array.isArray(r.drawn) ? r.drawn : [], updatedAt: r.updatedAt || '' };
+    window.partyRaffleState = { enabled: Boolean(r.enabled), spinning: Boolean(r.spinning), currentPrize: r.currentPrize || '', currentWinner: r.currentWinner || null, drawn: Array.isArray(r.drawn) ? r.drawn : [], updatedAt: r.updatedAt || '' };
     if (typeof window.__teimosoOnRemotePartyUpdate === 'function') window.__teimosoOnRemotePartyUpdate(window.partyRaffleState);
   }, function() {});
 } catch (e) {}
@@ -7052,18 +7062,195 @@ try {
   var MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov'];
   var localSpinLock = false;
   var lastTrustedHumanMs = 0;
+  var partyAudioEnabled = true;
+  var partyAudioCtx = null;
+  var lastCelebratedWinnerKey = '';
 
   ['pointerdown','touchstart','mousedown','click','keydown'].forEach(function(ev) {
     document.addEventListener(ev, function(e) { if (e && e.isTrusted) lastTrustedHumanMs = Date.now(); }, true);
   });
 
   function normStr(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+  function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function isFinEditor() { return Boolean(window.isAdmin || window.canEditFinancial); }
   function getLoggedAth() {
     if (!window.currentUser || !Array.isArray(window.athletes)) return null;
     var a = window.athletes.find(function(x) { return Number(x.id) === Number(window.currentUser.id); });
     if (!a && window.currentUser.name) { var t = normStr(window.currentUser.name); a = window.athletes.find(function(x) { return normStr(x.name) === t; }); }
     return a || null;
+  }
+
+  /* Áudio Sintetizado para a Roleta (Ticks de Suspense + Fanfarra de Vitória) */
+  function getPartyAudioCtx() {
+    if (!partyAudioEnabled) return null;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!partyAudioCtx) partyAudioCtx = new AC();
+      if (partyAudioCtx.state === 'suspended') partyAudioCtx.resume();
+      return partyAudioCtx;
+    } catch (e) { return null; }
+  }
+  function playRouletteTick(freq) {
+    var ctx = getPartyAudioCtx(); if (!ctx) return;
+    try {
+      var now = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(freq || 780, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.035);
+      g.gain.setValueAtTime(0.09, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.connect(g); g.connect(ctx.destination); osc.start(now); osc.stop(now + 0.042);
+    } catch (e) {}
+  }
+  function playVictoryFanfare() {
+    var ctx = getPartyAudioCtx(); if (!ctx) return;
+    try {
+      var now = ctx.currentTime, notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50];
+      var delays = [0, 0.09, 0.18, 0.28, 0.42, 0.52];
+      notes.forEach(function(f, idx) {
+        var osc = ctx.createOscillator(), g = ctx.createGain(), t0 = now + delays[idx];
+        osc.type = idx === notes.length - 1 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(f, t0);
+        var dur = idx === notes.length - 1 ? 0.55 : 0.16;
+        g.gain.setValueAtTime(0.14, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(g); g.connect(ctx.destination); osc.start(t0); osc.stop(t0 + dur + 0.02);
+      });
+    } catch (e) {}
+  }
+  function launchPartyConfetti(qty) {
+    var conf = document.getElementById('confettiContainer'); if (!conf) return;
+    conf.innerHTML = '';
+    var colors = ['#10b981','#38bdf8','#f59e0b','#ec4899','#a855f7','#facc15','#ffffff'];
+    var total = qty || 56;
+    for (var i = 0; i < total; i++) {
+      var p = document.createElement('div');
+      p.style.position = 'absolute';
+      p.style.width = (6 + Math.random() * 6) + 'px';
+      p.style.height = (8 + Math.random() * 9) + 'px';
+      p.style.borderRadius = Math.random() > 0.5 ? '9999px' : '2px';
+      p.style.background = colors[i % colors.length];
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.top = '-18px';
+      p.style.animation = 'teimosoConfettiDrop ' + (1.7 + Math.random() * 1.9) + 's linear ' + (Math.random() * 0.45) + 's forwards';
+      conf.appendChild(p);
+    }
+  }
+  window.triggerPartyReaction = function(emoji) {
+    var layer = document.getElementById('partyReactionsLayer'); if (!layer) return;
+    for (var i = 0; i < 6; i++) {
+      var el = document.createElement('span');
+      el.textContent = emoji;
+      el.style.position = 'absolute';
+      el.style.bottom = '12px';
+      el.style.left = (12 + Math.random() * 76) + '%';
+      el.style.fontSize = (22 + Math.random() * 16) + 'px';
+      el.style.pointerEvents = 'none';
+      el.style.animation = 'teimosoEmojiFloat ' + (1.4 + Math.random() * 0.9) + 's ease-out ' + (i * 0.07) + 's forwards';
+      layer.appendChild(el);
+      (function(node) { setTimeout(function() { if (node.parentNode) node.parentNode.removeChild(node); }, 2500); })(el);
+    }
+    playRouletteTick(920);
+  };
+  window.togglePartyStageAudio = function() {
+    partyAudioEnabled = !partyAudioEnabled;
+    var ic = document.getElementById('stageAudioIcon'), lb = document.getElementById('stageAudioLabel');
+    if (ic) ic.className = partyAudioEnabled ? 'fa-solid fa-volume-high text-emerald-400' : 'fa-solid fa-volume-xmark text-slate-400';
+    if (lb) lb.textContent = partyAudioEnabled ? 'Som: ON' : 'Som: OFF';
+    if (partyAudioEnabled) playRouletteTick(880);
+  };
+  window.togglePartyStageFullscreen = function() {
+    var stg = document.getElementById('partyRouletteStage'); if (!stg) return;
+    var isCssFs = stg.classList.contains('teimoso-stage-fullscreen');
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(function() {});
+      stg.classList.remove('teimoso-stage-fullscreen');
+    } else if (isCssFs) {
+      stg.classList.remove('teimoso-stage-fullscreen');
+    } else {
+      stg.classList.add('teimoso-stage-fullscreen');
+      if (stg.requestFullscreen) stg.requestFullscreen().catch(function() {});
+    }
+    var ic = document.getElementById('stageFsIcon'), lb = document.getElementById('stageFsLabel');
+    var nowFs = stg.classList.contains('teimoso-stage-fullscreen');
+    if (ic) ic.className = nowFs ? 'fa-solid fa-compress text-amber-300' : 'fa-solid fa-expand text-sky-300';
+    if (lb) lb.textContent = nowFs ? 'Sair Tela Cheia' : 'Modo TV';
+  };
+  document.addEventListener('fullscreenchange', function() {
+    var stg = document.getElementById('partyRouletteStage');
+    if (stg && !document.fullscreenElement) {
+      stg.classList.remove('teimoso-stage-fullscreen');
+      var ic = document.getElementById('stageFsIcon'), lb = document.getElementById('stageFsLabel');
+      if (ic) ic.className = 'fa-solid fa-expand text-sky-300';
+      if (lb) lb.textContent = 'Modo TV';
+    }
+  });
+  window.onStagePrizeChange = function(val) {
+    if (!window.partyRaffleState) window.partyRaffleState = { enabled: false, spinning: false, currentPrize: '', currentWinner: null, drawn: [] };
+    window.partyRaffleState.currentPrize = String(val || '').trim();
+    var pb = document.getElementById('stagePrizeLiveBadge');
+    if (pb) {
+      if (window.partyRaffleState.currentPrize) { pb.classList.remove('hidden'); pb.classList.add('inline-flex'); pb.innerHTML = '<i class="fa-solid fa-gift text-amber-300"></i> Prêmio da Rodada: <strong class="text-white">' + escHtml(window.partyRaffleState.currentPrize) + '</strong>'; }
+      else { pb.classList.add('hidden'); pb.classList.remove('inline-flex'); }
+    }
+  };
+
+  function upgradePartyStageDom() {
+    var stg = document.getElementById('partyRouletteStage');
+    if (!stg || stg.dataset.showModeV3 === '1') return;
+    stg.dataset.showModeV3 = '1';
+    stg.className = 'bg-slate-950 border-4 border-slate-800 rounded-[2rem] p-4 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col items-center justify-between gap-5 min-h-[410px] sm:min-h-[450px]';
+    stg.innerHTML = [
+      '<div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" style="animation:teimosoSpotlightPulse 5s ease-in-out infinite"></div>',
+      '<div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-sky-500/20 blur-3xl pointer-events-none" style="animation:teimosoSpotlightPulse 6s ease-in-out infinite 1.5s"></div>',
+      '<div id="confettiContainer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>',
+      '<div id="partyReactionsLayer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>',
+      '<div class="w-full flex flex-wrap items-center justify-between gap-2 z-10">',
+        '<div class="flex items-center gap-2 flex-wrap">',
+          '<span id="stageLivePill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Aguardando</span>',
+          '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-sky-300 text-[10px] font-black uppercase"><i class="fa-solid fa-ticket"></i> Urna: <strong id="stageAvailCounter" class="text-white">0</strong></span>',
+          '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-amber-300 text-[10px] font-black uppercase"><i class="fa-solid fa-trophy"></i> Sorteados: <strong id="stageDrawnCounter" class="text-white">0</strong></span>',
+        '</div>',
+        '<div class="flex items-center gap-1.5">',
+          '<button type="button" onclick="togglePartyStageAudio()" class="px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all"><i id="stageAudioIcon" class="fa-solid fa-volume-high text-emerald-400"></i><span id="stageAudioLabel" class="hidden sm:inline">Som: ON</span></button>',
+          '<button type="button" onclick="togglePartyStageFullscreen()" class="px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all"><i id="stageFsIcon" class="fa-solid fa-expand text-sky-300"></i><span id="stageFsLabel" class="hidden sm:inline">Modo TV</span></button>',
+        '</div>',
+      '</div>',
+      '<div class="w-full flex flex-col items-center gap-3 z-10 my-auto">',
+        '<div class="text-center space-y-1.5">',
+          '<h2 class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-sky-300 to-amber-300 font-black tracking-[0.22em] uppercase text-xs sm:text-sm">⚽ Sorteio de Brindes ao Vivo — Teimoso F.C.C. 🎁</h2>',
+          '<div id="stagePrizeLiveBadge" class="hidden items-center gap-1.5 px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-bold"></div>',
+        '</div>',
+        '<div id="stageDrumShell" class="teimoso-drum-shell w-full max-w-2xl rounded-[1.75rem] p-3 sm:p-4 transition-all duration-300">',
+          '<div class="absolute -left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-xs"><i class="fa-solid fa-caret-right"></i></div>',
+          '<div class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-xs"><i class="fa-solid fa-caret-left"></i></div>',
+          '<div id="rouletteDisplayBox" class="bg-white rounded-2xl h-28 sm:h-36 flex items-center justify-center overflow-hidden relative shadow-inner border-2 border-slate-200">',
+            '<div class="teimoso-drum-mask absolute inset-0 z-10"></div>',
+            '<div id="rouletteTrack" class="flex flex-col w-full text-center absolute top-0 left-0 transition-transform">',
+              '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>',
+            '</div>',
+          '</div>',
+        '</div>',
+        '<div id="rouletteResultInfo" class="text-center z-10 opacity-0 transition-all duration-500 transform scale-95 min-h-[60px]">',
+          '<div class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/25 to-amber-500/25 border border-emerald-400/60 text-emerald-300 px-6 py-2 rounded-full text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-trophy text-amber-300"></i> <span id="rouletteWinnerBadgeText">Vencedor Sorteado!</span></div>',
+          '<p id="rouletteFamilyTie" class="text-slate-300 text-xs mt-2 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>',
+        '</div>',
+      '</div>',
+      '<div class="w-full flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800/90 z-10">',
+        '<div id="stageAdminControlBar" class="hidden flex-wrap items-center gap-2 w-full sm:w-auto flex-1">',
+          '<div class="relative flex-1 min-w-[180px] max-w-xs">',
+            '<i class="fa-solid fa-gift text-amber-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>',
+            '<input type="text" id="stagePrizeInput" oninput="onStagePrizeChange(this.value)" placeholder="Prêmio da rodada (opcional)..." class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl pl-8 pr-3 py-2.5 text-xs font-bold text-white placeholder-slate-400 outline-none" />',
+          '</div>',
+          '<button type="button" id="btnStageSpinNow" onclick="startPartyRoulette()" disabled class="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-400 cursor-not-allowed text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95"><i class="fa-solid fa-rotate"></i> <span>Girar Agora</span> <span class="hidden md:inline text-[9px] opacity-70 bg-black/25 px-1.5 py-0.5 rounded">ESPAÇO</span></button>',
+        '</div>',
+        '<div class="flex items-center gap-1.5 ml-auto">',
+          '<span class="text-[10px] font-bold text-slate-400 uppercase mr-1 hidden sm:inline">Torcida:</span>',
+          '<button type="button" onclick="triggerPartyReaction(\'👏\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Aplaudir">👏</button>',
+          '<button type="button" onclick="triggerPartyReaction(\'🎉\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Comemorar">🎉</button>',
+          '<button type="button" onclick="triggerPartyReaction(\'🔥\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Fogo">🔥</button>',
+          '<button type="button" onclick="triggerPartyReaction(\'🍻\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Resenha">🍻</button>',
+        '</div>',
+      '</div>'
+    ].join('');
   }
 
   /* 1. VISÃO BRANCO CLARO / VERDE ESCURO */
@@ -7197,8 +7384,9 @@ try {
     }
   }
   function renderPartyUnified() {
+    upgradePartyStageDom();
     if (document.body) document.body.classList.toggle('teimoso-logged-in', Boolean(window.currentUser));
-    if (!window.partyRaffleState || typeof window.partyRaffleState !== 'object') window.partyRaffleState = { enabled: false, spinning: false, currentWinner: null, drawn: [] };
+    if (!window.partyRaffleState || typeof window.partyRaffleState !== 'object') window.partyRaffleState = { enabled: false, spinning: false, currentPrize: '', currentWinner: null, drawn: [] };
     if (!Array.isArray(window.partyRaffleState.drawn)) window.partyRaffleState.drawn = [];
     var st = window.partyRaffleState, en = Boolean(st.enabled), sp = Boolean(st.spinning || localSpinLock), drawn = st.drawn, isAdm = Boolean(window.isAdmin);
     var dKeys = new Set(drawn.map(function(d) { return d.key; }));
@@ -7211,41 +7399,75 @@ try {
       badge.className = en ? 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300' : 'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300';
       badge.innerHTML = en ? '<i class="fa-solid fa-unlock mr-1"></i> Sorteio Habilitado' : '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
     }
+    var livePill = document.getElementById('stageLivePill');
+    if (livePill) {
+      if (sp) { livePill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/60 text-sky-300 text-[10px] font-black uppercase tracking-widest'; livePill.innerHTML = '<span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span> Girando...'; }
+      else if (en) { livePill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 text-[10px] font-black uppercase tracking-widest'; livePill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Ao Vivo'; }
+      else { livePill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest'; livePill.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> Aguardando'; }
+    }
+    var sAv = document.getElementById('stageAvailCounter'); if (sAv) sAv.textContent = String(avail.length);
+    var sDr = document.getElementById('stageDrawnCounter'); if (sDr) sDr.textContent = String(drawn.length);
+    var admBar = document.getElementById('stageAdminControlBar');
+    if (admBar) { admBar.classList.toggle('hidden', !isAdm); admBar.classList.toggle('flex', isAdm); }
+    var prizeInp = document.getElementById('stagePrizeInput');
+    if (prizeInp && document.activeElement !== prizeInp && st.currentPrize !== undefined) prizeInp.value = st.currentPrize || '';
+    var pb = document.getElementById('stagePrizeLiveBadge');
+    var showPrize = (st.currentWinner && st.currentWinner.prize) || st.currentPrize || '';
+    if (pb) {
+      if (showPrize) { pb.classList.remove('hidden'); pb.classList.add('inline-flex'); pb.innerHTML = '<i class="fa-solid fa-gift text-amber-300"></i> Prêmio: <strong class="text-white">' + escHtml(showPrize) + '</strong>'; }
+      else { pb.classList.add('hidden'); pb.classList.remove('inline-flex'); }
+    }
     var bFam = document.getElementById('btnEditMyFamilyParty');
     if (bFam) { bFam.disabled = en; bFam.className = en ? 'px-4 py-3.5 bg-slate-200 text-slate-400 cursor-not-allowed rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2' : 'px-4 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2 cursor-pointer'; }
-    var bTog = document.getElementById('btnTogglePartyRaffleAdmin'), lTog = document.getElementById('labelTogglePartyRaffleAdmin'), bSpin = document.getElementById('btnStartRoulette');
+    var bTog = document.getElementById('btnTogglePartyRaffleAdmin'), lTog = document.getElementById('labelTogglePartyRaffleAdmin'), bSpin = document.getElementById('btnStartRoulette'), bStageSpin = document.getElementById('btnStageSpinNow');
     if (bTog) {
       bTog.style.display = isAdm ? 'inline-flex' : 'none'; bTog.classList.toggle('hidden', !isAdm);
       if (isAdm) { bTog.className = en ? 'px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer' : 'px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 inline-flex items-center gap-2 cursor-pointer'; if (lTog) lTog.textContent = en ? 'Encerrar / Desabilitar Sorteio' : 'Habilitar Sorteio'; }
     }
+    var canSpin = isAdm && en && avail.length > 0 && !sp;
     if (bSpin) {
       bSpin.style.display = isAdm ? 'inline-flex' : 'none'; bSpin.classList.toggle('hidden', !isAdm);
       if (isAdm) {
-        var canSpin = en && avail.length > 0 && !sp; bSpin.disabled = !canSpin;
+        bSpin.disabled = !canSpin;
         bSpin.className = canSpin ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2 cursor-pointer' : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
       }
+    }
+    if (bStageSpin) {
+      bStageSpin.disabled = !canSpin;
+      bStageSpin.className = canSpin ? 'px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white shadow-lg shadow-emerald-500/30 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95 cursor-pointer' : 'px-5 py-2.5 rounded-xl bg-slate-800 text-slate-500 cursor-not-allowed text-xs font-black uppercase tracking-wider flex items-center gap-2';
     }
     var cEl = document.getElementById('rouletteParticipantCount'); if (cEl) cEl.textContent = String(avail.length);
     var gEl = document.getElementById('rouletteParticipantsGrid');
     if (gEl) gEl.innerHTML = avail.length === 0 ? '<span class="text-xs text-slate-400 font-bold">Nenhum familiar restante na urna.</span>' : avail.map(function(p) {
-      return isMyFam(p) ? '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + p.name + '</span><span class="text-[10px] font-bold text-emerald-800">(' + p.relation + ' &bull; ' + p.athleteName + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>' : '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + p.name + '</span><span class="text-[10px] text-slate-400">(' + p.relation + ' &bull; ' + p.athleteName + ')</span></div>';
+      return isMyFam(p) ? '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border-2 border-emerald-500 text-emerald-950 text-xs font-black shadow-sm"><i class="fa-solid fa-star text-emerald-600"></i><span>' + escHtml(p.name) + '</span><span class="text-[10px] font-bold text-emerald-800">(' + escHtml(p.relation) + ' &bull; ' + escHtml(p.athleteName) + ')</span><span class="ml-1 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-black uppercase">SEU FAMILIAR</span></div>' : '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold"><i class="fa-solid fa-ticket text-slate-400"></i><span>' + escHtml(p.name) + '</span><span class="text-[10px] text-slate-400">(' + escHtml(p.relation) + ' &bull; ' + escHtml(p.athleteName) + ')</span></div>';
     }).join('');
     var dCEl = document.getElementById('rouletteDrawnCount'); if (dCEl) dCEl.textContent = String(drawn.length);
     var dLEl = document.getElementById('rouletteDrawnList');
     if (dLEl) {
       dLEl.innerHTML = drawn.length === 0 ? '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum sorteio realizado nesta rodada.</div>' : drawn.map(function(w, i) { return { w: w, n: i + 1 }; }).reverse().map(function(it, rIdx) {
-        var isL = rIdx === 0; return '<div class="flex items-center justify-between ' + (isL ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200') + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + (isL ? 'bg-emerald-600' : 'bg-amber-500') + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + it.n + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + it.w.name + (isL ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '') + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + it.w.relation + ' de ' + it.w.athleteName + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + (it.w.time || '') + '</span></div>';
+        var isL = rIdx === 0;
+        var pTag = it.w.prize ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black">🎁 ' + escHtml(it.w.prize) + '</span>' : '';
+        return '<div class="flex items-center justify-between ' + (isL ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm' : 'bg-amber-50/70 border border-amber-200') + ' rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5 min-w-0"><span class="w-6 h-6 rounded-full ' + (isL ? 'bg-emerald-600' : 'bg-amber-500') + ' text-white font-black text-[11px] flex items-center justify-center shrink-0">' + it.n + 'º</span><div class="min-w-0"><div class="font-black text-slate-800 truncate">' + escHtml(it.w.name) + (isL ? '<span class="ml-1.5 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] font-black uppercase">ÚLTIMO</span>' : '') + pTag + '</div><div class="text-[10px] text-slate-500 font-semibold truncate">' + escHtml(it.w.relation) + ' de ' + escHtml(it.w.athleteName) + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg shrink-0 ml-2">' + escHtml(it.w.time || '') + '</span></div>';
       }).join('');
       dLEl.scrollTop = 0;
     }
     if (!localSpinLock) {
-      var tr = document.getElementById('rouletteTrack'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName');
+      var tr = document.getElementById('rouletteTrack'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName'), shell = document.getElementById('stageDrumShell'), wBadgeTxt = document.getElementById('rouletteWinnerBadgeText');
       if (tr) {
         tr.style.transition = 'none'; tr.style.transform = 'translateY(0px)';
-        if (!en) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>'; }
-        else if (st.spinning) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>'; }
-        else if (st.currentWinner && st.currentWinner.name) { tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full px-3"><span class="text-emerald-600 font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + st.currentWinner.name + '</span><span class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">' + st.currentWinner.relation + ' de ' + st.currentWinner.athleteName + '</span></div>'; if (an) an.textContent = st.currentWinner.athleteName + ' (' + st.currentWinner.relation + ')'; if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); } }
-        else { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR!</span></div>'; }
+        if (shell) shell.classList.remove('is-winner');
+        if (!en) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>'; }
+        else if (st.spinning) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>'; }
+        else if (st.currentWinner && st.currentWinner.name) {
+          if (shell) shell.classList.add('is-winner');
+          tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full px-4 teimoso-winner-pop"><span class="text-emerald-600 font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + escHtml(st.currentWinner.name) + '</span><span class="text-[11px] sm:text-xs font-bold text-slate-500 uppercase mt-1">' + escHtml(st.currentWinner.relation) + ' de ' + escHtml(st.currentWinner.athleteName) + '</span></div>';
+          if (an) an.textContent = st.currentWinner.athleteName + ' (' + st.currentWinner.relation + ')';
+          if (wBadgeTxt) wBadgeTxt.textContent = st.currentWinner.prize ? ('Ganhou: ' + st.currentWinner.prize + '!') : 'Vencedor Sorteado!';
+          if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); }
+          var wKeySig = String(st.currentWinner.key || '') + '|' + String(st.updatedAt || '');
+          if (wKeySig && wKeySig !== lastCelebratedWinnerKey) { lastCelebratedWinnerKey = wKeySig; launchPartyConfetti(52); playVictoryFanfare(); }
+        }
+        else { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR! 🎲</span></div>'; }
       }
     }
   }
@@ -7256,10 +7478,11 @@ try {
   function togglePartyUnified() {
     if (!window.isAdmin || localSpinLock) return;
     var willEnable = !(window.partyRaffleState && window.partyRaffleState.enabled);
-    window.partyRaffleState = { enabled: willEnable, spinning: false, currentWinner: null, drawn: [] };
+    lastCelebratedWinnerKey = '';
+    window.partyRaffleState = { enabled: willEnable, spinning: false, currentPrize: '', currentWinner: null, drawn: [] };
     if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
     renderPartyUnified();
-    if (typeof window.showToast === 'function') window.showToast(willEnable ? 'Sorteio habilitado! Clique em Girar a Roleta.' : 'Sorteio encerrado! Urna reiniciada.', 'success');
+    if (typeof window.showToast === 'function') window.showToast(willEnable ? 'Sorteio habilitado! Clique em Girar a Roleta ou aperte ESPAÇO.' : 'Sorteio encerrado! Urna reiniciada.', 'success');
   }
   function startPartyRouletteUnified() {
     if (!window.isAdmin || localSpinLock || !window.partyRaffleState || !window.partyRaffleState.enabled) return;
@@ -7267,30 +7490,52 @@ try {
     var dKeys = new Set(drawn.map(function(d) { return d.key; }));
     var avail = getFamilyEntries().filter(function(i) { return !dKeys.has(i.key); });
     if (avail.length === 0) { if (typeof window.showToast === 'function') window.showToast('Todos os familiares já foram sorteados!', 'success'); return; }
-    localSpinLock = true; window.partyRaffleState.spinning = true;
+    var prizeInp = document.getElementById('stagePrizeInput');
+    var prizeTxt = prizeInp ? String(prizeInp.value || '').trim() : (window.partyRaffleState.currentPrize || '');
+    localSpinLock = true; window.partyRaffleState.spinning = true; window.partyRaffleState.currentPrize = prizeTxt;
     if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
     renderPartyUnified();
     var winner = avail[Math.floor(Math.random() * avail.length)];
-    var tr = document.getElementById('rouletteTrack'), box = document.getElementById('rouletteDisplayBox'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName');
+    var tr = document.getElementById('rouletteTrack'), box = document.getElementById('rouletteDisplayBox'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName'), shell = document.getElementById('stageDrumShell');
+    if (shell) shell.classList.remove('is-winner');
     if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); }
-    var items = []; for (var i = 0; i < 24; i++) items.push(avail[Math.floor(Math.random() * avail.length)]); items.push(winner);
-    var h = box ? box.clientHeight : 112;
+    var items = []; for (var i = 0; i < 30; i++) items.push(avail[Math.floor(Math.random() * avail.length)]); items.push(winner);
+    var h = box ? box.clientHeight : 128;
     if (tr) {
       tr.style.transition = 'none'; tr.style.transform = 'translateY(0px)';
-      tr.innerHTML = items.map(function(it, idx) { return '<div style="height:' + h + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + (idx === items.length - 1 ? 'text-emerald-600' : 'text-slate-700') + ' font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + it.name + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + it.relation + ' de ' + it.athleteName + '</span></div>'; }).join('');
-      void tr.offsetHeight; tr.style.transition = 'transform 2.6s cubic-bezier(0.12, 0.85, 0.18, 1)'; tr.style.transform = 'translateY(-' + ((items.length - 1) * h) + 'px)';
+      tr.innerHTML = items.map(function(it, idx) { return '<div style="height:' + h + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + (idx === items.length - 1 ? 'text-emerald-600' : 'text-slate-700') + ' font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + escHtml(it.name) + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + escHtml(it.relation) + ' de ' + escHtml(it.athleteName) + '</span></div>'; }).join('');
+      void tr.offsetHeight; tr.style.transition = 'transform 3.4s cubic-bezier(0.08, 0.88, 0.14, 1)'; tr.style.transform = 'translateY(-' + ((items.length - 1) * h) + 'px)';
     }
+    /* Ticks sonoros desacelerando durante o giro */
+    var tickSchedule = [80,160,245,335,430,530,640,760,890,1040,1210,1400,1620,1880,2180,2540,2950];
+    tickSchedule.forEach(function(ms, idx) { setTimeout(function() { if (localSpinLock) playRouletteTick(640 + (idx % 3) * 90); }, ms); });
     setTimeout(function() {
       localSpinLock = false;
-      var wObj = { key: winner.key, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
+      var wObj = { key: winner.key, name: winner.name, relation: winner.relation, athleteId: winner.athleteId, athleteName: winner.athleteName, prize: prizeTxt, time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
       window.partyRaffleState.spinning = false; window.partyRaffleState.currentWinner = wObj; window.partyRaffleState.drawn.push(wObj);
+      lastCelebratedWinnerKey = String(wObj.key) + '|local_' + Date.now();
+      if (shell) shell.classList.add('is-winner');
       if (an) an.textContent = winner.athleteName + ' (' + winner.relation + ')';
+      var wBadgeTxt = document.getElementById('rouletteWinnerBadgeText');
+      if (wBadgeTxt) wBadgeTxt.textContent = prizeTxt ? ('Ganhou: ' + prizeTxt + '!') : 'Vencedor Sorteado!';
       if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); }
-      if (typeof window.playAppSound === 'function') window.playAppSound('confirm');
+      launchPartyConfetti(68);
+      playVictoryFanfare();
       if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
       renderPartyUnified();
-    }, 2700);
+    }, 3550);
   }
+  /* Atalho Barra de Espaço para o apresentador girar a roleta rapidamente */
+  document.addEventListener('keydown', function(ev) {
+    if (ev.code !== 'Space' || !window.isAdmin || localSpinLock) return;
+    var tag = ev.target && ev.target.tagName ? ev.target.tagName.toUpperCase() : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    var sec = document.getElementById('tab-roulette');
+    if (sec && !sec.classList.contains('hidden') && window.partyRaffleState && window.partyRaffleState.enabled) {
+      ev.preventDefault();
+      startPartyRouletteUnified();
+    }
+  });
   function openMyFamilyEditorUnified() {
     if (window.partyRaffleState && window.partyRaffleState.enabled) { if (typeof window.showToast === 'function') window.showToast('Edição bloqueada durante sorteio em andamento.', 'error'); return; }
     var ath = getLoggedAth(); if (ath && typeof window.openFamilyDataPromptModal === 'function') window.openFamilyDataPromptModal(ath);
@@ -7433,6 +7678,6 @@ try {
   }, 200);
 })();
 </script>
-<!-- TEIMOSO_UNIFIED_CLEAN_V2_END -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V3_END -->
 </body>
 </html>
