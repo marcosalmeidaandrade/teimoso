@@ -5919,54 +5919,34 @@
     window.exportListToWhatsapp = function() {
       if (!window.isAdmin) return;
       const dayPresences = window.presences[window.currentDate] || {};
-      
-      const getConfirmTime = (id) => {
-        const p = dayPresences[id];
-        return p && p.status === 'CONFIRMADO' && p.confirmedAt ? new Date(p.confirmedAt).getTime() : 0;
-      };
+      const sortAlpha = (a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' });
 
-      const formatTimeForMsg = (id) => {
-        const p = dayPresences[id];
-        if (p && p.status === 'CONFIRMADO' && p.confirmedAt) {
-          const d = new Date(p.confirmedAt);
-          const hs = String(d.getHours()).padStart(2, '0');
-          const ms = String(d.getMinutes()).padStart(2, '0');
-          return hs + ':' + ms;
-        }
-        return '--:--';
-      };
+      const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort(sortAlpha);
+      const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort(sortAlpha);
 
-      const sortByConfirmTime = (a, b) => {
-        const timeA = getConfirmTime(a.id);
-        const timeB = getConfirmTime(b.id);
-        if (timeA > 0 && timeB > 0) return timeA - timeB;
-        return (a.name || '').localeCompare(b.name || '');
-      };
-
-      const activeAthletes = window.athletes.filter(a => !a.isSuspended && a.position !== 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-      const extraAthletes = window.athletes.filter(a => !a.isSuspended && a.position === 'EXTRA').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-      const confirmedKeepers = activeAthletes.filter(a => (a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
-      const confirmedOutfield = activeAthletes.filter(a => !(a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
-      const confirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
-      
+      const confirmedKeepers = activeAthletes.filter(a => (a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortAlpha);
+      const confirmedOutfield = activeAthletes.filter(a => !(a.isKeeper || a.position === 'Goleiro') && dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortAlpha);
+      const confirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortAlpha);
       const unconfirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status !== 'CONFIRMADO');
-      const extraKeepers = [];
-      const mainKeepers = confirmedKeepers;
 
       const absentAthletes = activeAthletes.filter(a => {
         const st = dayPresences[a.id]?.status;
         return st !== 'CONFIRMADO' && st !== 'FALTA';
-      }).concat(extraKeepers).concat(unconfirmedExtras);
+      }).concat(unconfirmedExtras).sort((a, b) => {
+        const aJust = dayPresences[a.id]?.status === 'JUSTIFICADO' ? 0 : 1;
+        const bJust = dayPresences[b.id]?.status === 'JUSTIFICADO' ? 0 : 1;
+        if (aJust !== bJust) return aJust - bJust;
+        return sortAlpha(a, b);
+      });
 
-      const faltasAthletes = activeAthletes.filter(a => dayPresences[a.id]?.status === 'FALTA');
+      const faltasAthletes = activeAthletes.filter(a => dayPresences[a.id]?.status === 'FALTA').sort(sortAlpha);
 
       let text = `⚽ *LISTA OFICIAL - TEIMOSO F.C.C.* ⚽\n📅 *Data:* ${formatDateDisplay(window.currentDate)}\n\n`;
-      text += `🧤 *GOLEIROS CONFIRMADOS:*\n`;
-      if (mainKeepers.length === 0) text += `1. _Vaga aberta_\n2. _Vaga aberta_\n`;
+      text += `🧤 *GOLEIROS CONFIRMADOS (${confirmedKeepers.length}):*\n`;
+      if (confirmedKeepers.length === 0) text += `1. _Vaga aberta_\n2. _Vaga aberta_\n`;
       else {
-        mainKeepers.forEach((k, i) => { text += `${i + 1}. ${k.name} ✅\n`; });
-        if (mainKeepers.length === 1) text += `2. _Vaga aberta_\n`;
+        confirmedKeepers.forEach((k, i) => { text += `${i + 1}. ${k.name} ✅\n`; });
+        if (confirmedKeepers.length === 1) text += `2. _Vaga aberta_\n`;
       }
 
       text += `\n🏃 *JOGADORES DE LINHA (${confirmedOutfield.length}):*\n`;
@@ -5985,7 +5965,7 @@
         const st = dayPresences[x.id]?.status;
         const reason = dayPresences[x.id]?.reason ? ` (${dayPresences[x.id].reason})` : '';
         const isExtraLabel = x.position === 'EXTRA' ? ' [EXTRA]' : '';
-        text += `${i + 1}. ${x.name}${isExtraLabel} ❌ ${st === 'JUSTIFICADO' ? '⚠️' + reason : ''}\n`;
+        text += `${i + 1}. ${x.name}${isExtraLabel} ${st === 'JUSTIFICADO' ? '⚠️ Justificado' + reason : '❌'}\n`;
       });
 
       if (faltasAthletes.length > 0) {
@@ -6791,7 +6771,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
