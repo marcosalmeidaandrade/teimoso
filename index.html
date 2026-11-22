@@ -2695,7 +2695,7 @@
     window.saveDataWithPresences = async function() {
       if (!isCloudReady || !navigator.onLine) return;
       await window.saveData();
-      await __teimosoSafeSetDoc(dbDocRef, { presences: window.presences || {}, __allowFullPresencesRestore: true, updatedAt: new Date().toISOString() }, { merge: true });
+      await updateDoc(dbDocRef, { presences: window.presences || {}, updatedAt: new Date().toISOString() });
     };
     async function __teimosoSafeSetDoc(ref, data, options) {
       if (typeof isCloudReady !== 'undefined' && !isCloudReady) return;
@@ -2937,6 +2937,8 @@
     };
 
     function completeLoginFlow() {
+      if (typeof window.notifyNewTabActive === 'function') window.notifyNewTabActive();
+      if (typeof window.registerCloudDeviceSession === 'function' && window.currentUser) window.registerCloudDeviceSession(window.currentUser);
       window.resetAllSessionFilters();
 
       document.getElementById('globalLoginOverlay').classList.add('hidden');
@@ -3049,6 +3051,7 @@
 
       // 1º: Verificar se a Enquete Craque & Bagre (08:00 às 10:00) está aberta e pendente de voto
       setTimeout(() => {
+        if (window.partyRaffleState && window.partyRaffleState.enabled) return;
         const redirectedToPoll = window.checkAndAutoRedirectToPoll();
         if (redirectedToPoll) return;
 
@@ -3383,10 +3386,7 @@
         if (docSnap.exists()) {
           const data = docSnap.data();
         window.activeSessions = data.activeSessions || {};
-        if (data.partyRaffleState) {
-          window.partyRaffleState = data.partyRaffleState;
-          if (typeof window.renderPartyRaffleUI === 'function' && activeTab === 'roulette') window.renderPartyRaffleUI();
-        }
+        /* [BLINDAGEM FESTA] partyRaffleState sincronizado exclusivamente via teimoso_config/sorteio_festa */
         if (typeof window.checkRemoteSessionKick === 'function' && window.checkRemoteSessionKick(data)) return;
           if (data.currentActiveClubYear) window.currentActiveClubYear = parseInt(data.currentActiveClubYear) || 2026;
           if (Array.isArray(data.availableSeasons)) window.availableSeasons = data.availableSeasons;
@@ -3472,7 +3472,7 @@
       const mainEl = document.querySelector('main');
       if (!navWrapper || !navContainer) return;
 
-      const visibleCols = window.isAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-10' : 'grid-cols-4 sm:grid-cols-8';
+      const visibleCols = window.isAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-10' : 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-9';
 
       navWrapper.className = "mobile-cards-collapsible bg-slate-50/95 border-t border-slate-200/80 px-2 sm:px-4 py-2 transition-all";
       navContainer.className = `max-w-7xl mx-auto grid ${visibleCols} gap-1.5 sm:gap-2`;
@@ -3905,8 +3905,7 @@
       if (tab === 'consecutive') renderConsecutiveAbsencesTab();
       if (tab === 'photos') renderPhotosTab();
       if (tab === 'roulette' && typeof window.renderPartyRaffleUI === 'function') window.renderPartyRaffleUI();
-      if (tab === 'roulette') buildRouletteParticipants();
-    };
+      };
 
     window.filterRulesCards = function(query) {
       const q = (query || '').toLowerCase().trim();
@@ -4540,6 +4539,7 @@
       window.recordUserInteraction(athlete.name, "Atualizou o cadastro familiar para a Festa de Fim de Ano");
       window.syncSpecificData({ athletesOnly: true });
       window.closeFamilyDataPromptModal();
+      if (typeof window.renderPartyRaffleUI === 'function') window.renderPartyRaffleUI();
       window.showToast("Dados familiares salvos com sucesso! 🎁", "success");
     };
 
@@ -4577,7 +4577,7 @@
         const paymentData = payments[mKey];
         const isPaid = paymentData && (paymentData.paid || safeNum(paymentData.amount) > 0);
         
-        let effectivelySuspended = athlete.isSuspended;
+        let effectivelySuspended = athlete.isSuspended || Boolean(athlete.isExemptMonthlyFee) || safeNum(athlete.monthlyFee, 110) === 0;
         if (seasonYear === 2026 && athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
             effectivelySuspended = false;
         }
@@ -6622,7 +6622,7 @@
           let paidAmount = safeNum(monthData.amount, 0);
           if (isPaid) athleteTotalPaid += paidAmount;
 
-          let effectivelySuspended = athlete.isSuspended;
+          let effectivelySuspended = athlete.isSuspended || Boolean(athlete.isExemptMonthlyFee) || safeNum(athlete.monthlyFee, 110) === 0;
           if (seasonYear === 2026 && athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
             effectivelySuspended = false;
           }
@@ -6890,7 +6890,7 @@
       let amountToSet = 0;
       if (isChecked) {
         const mIndex = months.indexOf(mKey);
-        const firstDayAfterDue = new Date(2026, mIndex, 16);
+        const firstDayAfterDue = new Date(window.getSelectedYearInt(), mIndex, 16);
         const now = new Date();
         let interest = now >= firstDayAfterDue ? Math.max(0, Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
         amountToSet = fee + interest;
@@ -6905,7 +6905,7 @@
       const athlete = window.athletes.find(a => a.id === athleteId);
       const fee = (athlete && athlete.monthlyFee) ? athlete.monthlyFee : 110;
       const mIndex = months.indexOf(mKey);
-      const firstDayAfterDue = new Date(2026, mIndex, 16);
+      const firstDayAfterDue = new Date(window.getSelectedYearInt(), mIndex, 16);
       const now = new Date();
       let interest = now >= firstDayAfterDue ? Math.max(0, Math.floor((now - firstDayAfterDue) / (1000 * 60 * 60 * 24)) + 1) * 1.00 : 0;
       const totalAmount = fee + interest;
@@ -6945,12 +6945,12 @@
         let pendingMonthsText = '';
 
         months.forEach((mKey, mIndex) => {
-          const dueDate = new Date(2026, mIndex, 15);
-          const firstDayAfterDue = new Date(2026, mIndex, 16);
+          const dueDate = new Date(window.getSelectedYearInt(), mIndex, 15);
+          const firstDayAfterDue = new Date(window.getSelectedYearInt(), mIndex, 16);
           let monthData = payments[mKey] || { paid: false, amount: 0 };
           let isPaid = monthData.paid === true || safeNum(monthData.amount) > 0;
 
-          let effectivelySuspended = athlete.isSuspended;
+          let effectivelySuspended = athlete.isSuspended || Boolean(athlete.isExemptMonthlyFee) || safeNum(athlete.monthlyFee, 110) === 0;
           if (athlete.name && normalizeName(athlete.name).includes('ANDINHO') && mKey === 'nov') {
             effectivelySuspended = false;
           }
@@ -6968,7 +6968,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= '2026-11-01') {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -7397,6 +7397,9 @@ try {
     var logged = Boolean(window.currentUser);
     if (document.body) document.body.classList.toggle('teimoso-logged-in', logged);
     if (logged && window.partyRaffleState && window.partyRaffleState.enabled && !window.isAdmin) {
+      ['quickPresenceModal', 'customConfirmModal', 'familyDataModal'].forEach(function(mid) {
+        var mEl = document.getElementById(mid); if (mEl) { mEl.classList.add('hidden'); mEl.classList.remove('flex', 'opacity-100'); }
+      });
       var sec = document.getElementById('tab-roulette');
       if (sec && sec.classList.contains('hidden') && typeof window.switchTab === 'function') {
         window.switchTab('roulette');
@@ -7612,10 +7615,10 @@ try {
     if (!finSec || !finSec.contains(ev.target) || isFinEditor()) return;
     var acc = ev.target.closest ? ev.target.closest('button[onclick*="toggleFinancialAccordion"]') : null;
     if (acc) { window.__teimosoAllowFinRefreshOnce = true; return; }
+    var filterEl = ev.target.closest ? ev.target.closest('[onclick*="setFinancialFilter"]') : null;
+    if (filterEl) { window.__teimosoAllowFinRefreshOnce = true; return; }
     var btn = ev.target.closest ? ev.target.closest('button') : null;
     if (btn) {
-      var oc = String(btn.getAttribute('onclick') || '');
-      if (oc.indexOf('setFinancialFilter') !== -1) { window.__teimosoAllowFinRefreshOnce = true; return; }
       ev.preventDefault(); ev.stopPropagation();
     }
   }, true);
