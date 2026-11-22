@@ -6771,7 +6771,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -6990,6 +6990,11 @@
   /* Painel dos 2 últimos vencedores: visível exclusivamente no Modo TV (Tela Cheia) */
   #stageTvRecentWinners { display: none; }
   #partyRouletteStage.teimoso-stage-fullscreen #stageTvRecentWinners { display: flex; }
+  /* Foto do atleta vinculado ao sorteado: grande e em destaque no Modo TV */
+  #stageWinnerPhotoBox { width: 84px; height: 84px; transition: width .3s ease, height .3s ease, box-shadow .3s ease; }
+  @media (min-width: 640px) { #stageWinnerPhotoBox { width: 98px; height: 98px; } }
+  #partyRouletteStage.teimoso-stage-fullscreen #stageWinnerPhotoBox { width: 170px; height: 170px; box-shadow: 0 0 42px rgba(16,185,129,0.55), 0 18px 40px rgba(0,0,0,0.65); }
+  @media (min-width: 1024px) { #partyRouletteStage.teimoso-stage-fullscreen #stageWinnerPhotoBox { width: 215px; height: 215px; } }
   .teimoso-drum-shell { position: relative; background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 0 0 2px rgba(56,189,248,0.35), 0 24px 55px rgba(0,0,0,0.6), inset 0 0 25px rgba(56,189,248,0.18); }
   .teimoso-drum-shell.is-winner { box-shadow: 0 0 0 3px rgba(16,185,129,0.85), 0 0 45px rgba(16,185,129,0.45), 0 24px 55px rgba(0,0,0,0.65); }
   .teimoso-drum-mask { background: linear-gradient(180deg, rgba(248,250,252,0.92) 0%, rgba(248,250,252,0) 24%, rgba(248,250,252,0) 76%, rgba(248,250,252,0.92) 100%); pointer-events: none; }
@@ -7061,6 +7066,50 @@ try {
     var a = window.athletes.find(function(x) { return Number(x.id) === Number(window.currentUser.id); });
     if (!a && window.currentUser.name) { var t = normStr(window.currentUser.name); a = window.athletes.find(function(x) { return normStr(x.name) === t; }); }
     return a || null;
+  }
+  function findLinkedAthleteForWinner(winnerObj) {
+    if (!winnerObj || !Array.isArray(window.athletes)) return null;
+    var ath = null;
+    if (winnerObj.athleteId !== undefined && winnerObj.athleteId !== null) {
+      ath = window.athletes.find(function(x) { return x && Number(x.id) === Number(winnerObj.athleteId); });
+    }
+    if (!ath && winnerObj.athleteName) {
+      var target = normStr(winnerObj.athleteName);
+      ath = window.athletes.find(function(x) { return x && normStr(x.name) === target; });
+    }
+    return ath || null;
+  }
+  function getWinnerAthleteAvatarUrl(winnerObj, sizePx) {
+    var ath = findLinkedAthleteForWinner(winnerObj);
+    var fallbackObj = ath || { name: (winnerObj && winnerObj.athleteName) || 'TFCC', photoUrl: '' };
+    if (typeof window.getAthleteAvatarUrl === 'function') {
+      return window.getAthleteAvatarUrl(fallbackObj, '064e3b', '34d399', sizePx || 512);
+    }
+    if (fallbackObj.photoUrl) return fallbackObj.photoUrl;
+    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fallbackObj.name || 'TFCC') + '&background=064e3b&color=34d399&bold=true&size=' + (sizePx || 512);
+  }
+  function updateStageWinnerPhoto(winnerObj) {
+    var wrap = document.getElementById('stageWinnerPhotoWrap');
+    var img = document.getElementById('stageWinnerPhotoImg');
+    if (!wrap || !img) return;
+    if (!winnerObj || !winnerObj.name) {
+      wrap.classList.add('hidden');
+      return;
+    }
+    var ath = findLinkedAthleteForWinner(winnerObj);
+    var rawPhoto = (ath && ath.photoUrl) ? String(ath.photoUrl) : '';
+    var fallbackName = encodeURIComponent((ath && ath.name) || winnerObj.athleteName || 'TFCC');
+    img.dataset.triedProxy = '0';
+    img.onerror = function() {
+      if (typeof window.handleAvatarErrorWithProxy === 'function') {
+        window.handleAvatarErrorWithProxy(this, rawPhoto, fallbackName, '064e3b', '34d399', 512);
+      } else {
+        this.onerror = null;
+        this.src = 'https://ui-avatars.com/api/?name=' + fallbackName + '&background=064e3b&color=34d399&bold=true&size=512';
+      }
+    };
+    img.src = getWinnerAthleteAvatarUrl(winnerObj, 512);
+    wrap.classList.remove('hidden');
   }
 
   /* Áudio Sintetizado para a Roleta (Ticks de Suspense + Fanfarra de Vitória) */
@@ -7204,17 +7253,17 @@ try {
         '</div>',
         '<div id="stageDrumShell" class="teimoso-drum-shell w-full max-w-2xl rounded-[1.75rem] p-3 sm:p-4 transition-all duration-300">',
           '<div class="absolute -left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-xs"><i class="fa-solid fa-caret-right"></i></div>',
-          '<div class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-xs"><i class="fa-solid fa-caret-left"></i></div>',
-          '<div id="rouletteDisplayBox" class="bg-white rounded-2xl h-28 sm:h-36 flex items-center justify-center overflow-hidden relative shadow-inner border-2 border-slate-200">',
-            '<div class="teimoso-drum-mask absolute inset-0 z-10"></div>',
-            '<div id="rouletteTrack" class="flex flex-col w-full text-center absolute top-0 left-0 transition-transform">',
-              '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>',
+        '<div id="rouletteResultInfo" class="text-center z-10 opacity-0 transition-all duration-500 transform scale-95 min-h-[60px] flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-1">',
+          '<div id="stageWinnerPhotoWrap" class="hidden relative shrink-0 teimoso-winner-pop">',
+            '<div id="stageWinnerPhotoBox" class="rounded-full border-4 border-emerald-400 overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center">',
+              '<img id="stageWinnerPhotoImg" src="" alt="Atleta vinculado" class="w-full h-full object-cover" />',
             '</div>',
+            '<div class="absolute -bottom-1 -right-1 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-400 text-slate-950 border-2 border-slate-950 flex items-center justify-center shadow-lg text-sm sm:text-base"><i class="fa-solid fa-trophy"></i></div>',
           '</div>',
-        '</div>',
-        '<div id="rouletteResultInfo" class="text-center z-10 opacity-0 transition-all duration-500 transform scale-95 min-h-[60px]">',
-          '<div class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/25 to-amber-500/25 border border-emerald-400/60 text-emerald-300 px-6 py-2 rounded-full text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-trophy text-amber-300"></i> <span id="rouletteWinnerBadgeText">Vencedor Sorteado!</span></div>',
-          '<p id="rouletteFamilyTie" class="text-slate-300 text-xs mt-2 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>',
+          '<div class="flex flex-col items-center sm:items-start text-center sm:text-left">',
+            '<div class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/25 to-amber-500/25 border border-emerald-400/60 text-emerald-300 px-6 py-2 rounded-full text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-trophy text-amber-300"></i> <span id="rouletteWinnerBadgeText">Vencedor Sorteado!</span></div>',
+            '<p id="rouletteFamilyTie" class="text-slate-300 text-xs sm:text-sm mt-2 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>',
+          '</div>',
         '</div>',
         '<div id="stageTvRecentWinners" class="w-full max-w-3xl flex-col items-center gap-2.5 pt-2 z-10">',
           '<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-[10px] font-black uppercase tracking-[0.18em] text-amber-300"><i class="fa-solid fa-trophy text-amber-400"></i> 2 Últimos Vencedores</div>',
@@ -7451,7 +7500,8 @@ try {
           var numCls = isFirst ? 'bg-emerald-500 text-slate-950' : 'bg-amber-400 text-slate-950';
           var tagHtml = isFirst ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 text-[9px] font-black uppercase tracking-wider">ÚLTIMO</span>' : '<span class="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-black uppercase tracking-wider">ANTERIOR</span>';
           var prizeHtml = it.w.prize ? '<div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-400/15 border border-amber-400/40 text-amber-200 text-[10px] font-bold"><i class="fa-solid fa-gift text-amber-300"></i> ' + escHtml(it.w.prize) + '</div>' : '';
-          return '<div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ' + cardCls + '"><div class="flex items-center gap-3 min-w-0"><span class="w-8 h-8 rounded-full ' + numCls + ' font-black text-xs flex items-center justify-center shrink-0 shadow">' + it.n + 'º</span><div class="min-w-0 text-left"><div class="flex items-center gap-2 flex-wrap"><span class="text-sm sm:text-base font-black text-white uppercase truncate">' + escHtml(it.w.name) + '</span>' + tagHtml + '</div><div class="text-[11px] text-slate-300 font-semibold truncate">' + escHtml(it.w.relation) + ' de ' + escHtml(it.w.athleteName) + '</div>' + prizeHtml + '</div></div><span class="text-[11px] font-black text-amber-300 bg-slate-950/60 border border-slate-700 px-2.5 py-1 rounded-xl shrink-0">' + escHtml(it.w.time || '') + '</span></div>';
+          var miniAvatarUrl = getWinnerAthleteAvatarUrl(it.w, 128);
+          return '<div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ' + cardCls + '"><div class="flex items-center gap-3 min-w-0"><div class="relative shrink-0"><img src="' + escHtml(miniAvatarUrl) + '" alt="Atleta" class="w-11 h-11 rounded-full object-cover border-2 ' + (isFirst ? 'border-emerald-400' : 'border-amber-400/70') + ' bg-slate-800" /><span class="absolute -top-1 -left-1 w-5 h-5 rounded-full ' + numCls + ' font-black text-[9px] flex items-center justify-center shadow">' + it.n + 'º</span></div><div class="min-w-0 text-left"><div class="flex items-center gap-2 flex-wrap"><span class="text-sm sm:text-base font-black text-white uppercase truncate">' + escHtml(it.w.name) + '</span>' + tagHtml + '</div><div class="text-[11px] text-slate-300 font-semibold truncate">' + escHtml(it.w.relation) + ' de ' + escHtml(it.w.athleteName) + '</div>' + prizeHtml + '</div></div><span class="text-[11px] font-black text-amber-300 bg-slate-950/60 border border-slate-700 px-2.5 py-1 rounded-xl shrink-0">' + escHtml(it.w.time || '') + '</span></div>';
         }).join('');
       }
     }
@@ -7460,18 +7510,19 @@ try {
       if (tr) {
         tr.style.transition = 'none'; tr.style.transform = 'translateY(0px)';
         if (shell) shell.classList.remove('is-winner');
-        if (!en) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>'; }
-        else if (st.spinning) { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>'; }
+        if (!en) { updateStageWinnerPhoto(null); if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>'; }
+        else if (st.spinning) { updateStageWinnerPhoto(null); if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-sky-600 font-black text-lg sm:text-2xl uppercase animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-2"></i>SORTEANDO AO VIVO...</span></div>'; }
         else if (st.currentWinner && st.currentWinner.name) {
           if (shell) shell.classList.add('is-winner');
           tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full px-4 teimoso-winner-pop"><span class="text-emerald-600 font-black text-xl sm:text-3xl uppercase truncate max-w-full">' + escHtml(st.currentWinner.name) + '</span><span class="text-[11px] sm:text-xs font-bold text-slate-500 uppercase mt-1">' + escHtml(st.currentWinner.relation) + ' de ' + escHtml(st.currentWinner.athleteName) + '</span></div>';
+          updateStageWinnerPhoto(st.currentWinner);
           if (an) an.textContent = st.currentWinner.athleteName + ' (' + st.currentWinner.relation + ')';
           if (wBadgeTxt) wBadgeTxt.textContent = st.currentWinner.prize ? ('Ganhou: ' + st.currentWinner.prize + '!') : 'Vencedor Sorteado!';
           if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); }
           var wKeySig = String(st.currentWinner.key || '') + '|' + String(st.updatedAt || '');
           if (wKeySig && wKeySig !== lastCelebratedWinnerKey) { lastCelebratedWinnerKey = wKeySig; launchPartyConfetti(52); playVictoryFanfare(); }
         }
-        else { if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR! 🎲</span></div>'; }
+        else { updateStageWinnerPhoto(null); if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR! 🎲</span></div>'; }
       }
     }
   }
@@ -7501,6 +7552,7 @@ try {
     renderPartyUnified();
     var winner = avail[Math.floor(Math.random() * avail.length)];
     var tr = document.getElementById('rouletteTrack'), box = document.getElementById('rouletteDisplayBox'), ri = document.getElementById('rouletteResultInfo'), an = document.getElementById('rouletteAthleteName'), shell = document.getElementById('stageDrumShell');
+    updateStageWinnerPhoto(null);
     if (shell) shell.classList.remove('is-winner');
     if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); }
     var items = []; for (var i = 0; i < 30; i++) items.push(avail[Math.floor(Math.random() * avail.length)]); items.push(winner);
@@ -7519,6 +7571,7 @@ try {
       window.partyRaffleState.spinning = false; window.partyRaffleState.currentWinner = wObj; window.partyRaffleState.drawn.push(wObj);
       lastCelebratedWinnerKey = String(wObj.key) + '|local_' + Date.now();
       if (shell) shell.classList.add('is-winner');
+      updateStageWinnerPhoto(wObj);
       if (an) an.textContent = winner.athleteName + ' (' + winner.relation + ')';
       var wBadgeTxt = document.getElementById('rouletteWinnerBadgeText');
       if (wBadgeTxt) wBadgeTxt.textContent = prizeTxt ? ('Ganhou: ' + prizeTxt + '!') : 'Vencedor Sorteado!';
