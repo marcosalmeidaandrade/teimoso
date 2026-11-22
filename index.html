@@ -6771,7 +6771,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -6963,7 +6963,7 @@
   </script>
 
 
-<!-- TEIMOSO_UNIFIED_CLEAN_V4_START -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V5_START -->
 <style>
   body.teimoso-logged-in #tabBtn-roulette,
   body.teimoso-logged-in #tabBtn-financial { display: flex !important; visibility: visible !important; }
@@ -6981,22 +6981,59 @@
     #tab-roulette.teimoso-festa-grid #partyAvailableCard { order: 3; grid-column: span 1 / span 1; }
     #tab-roulette.teimoso-festa-grid #partyDrawnCard { order: 4; grid-column: span 1 / span 1; }
   }
-  /* Palco Show Interativo da Festa */
-  @keyframes teimosoSpotlightPulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.08); } }
-  @keyframes teimosoEmojiFloat { 0% { transform: translateY(0) scale(0.7) rotate(-8deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-290px) scale(1.35) rotate(12deg); opacity: 0; } }
-  @keyframes teimosoConfettiDrop { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(460px) rotate(720deg); opacity: 0; } }
+  /* Palco Show Interativo e Modo TV Festivo da Festa */
+  @keyframes teimosoSpotlightPulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.12); } }
+  @keyframes teimosoEmojiFloat { 0% { transform: translateY(0) scale(0.7) rotate(-8deg); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-340px) scale(1.4) rotate(12deg); opacity: 0; } }
+  @keyframes teimosoConfettiDrop { 0% { transform: translateY(-24px) rotate(0deg); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(115vh) rotate(760deg); opacity: 0; } }
   @keyframes teimosoWinnerPop { 0% { transform: scale(0.82); opacity: 0; } 65% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-  #partyRouletteStage.teimoso-stage-fullscreen { position: fixed !important; inset: 0 !important; z-index: 9990 !important; border-radius: 0 !important; width: 100vw !important; height: 100vh !important; max-width: none !important; margin: 0 !important; overflow-y: auto !important; }
+  @keyframes teimosoBulbBlinkA { 0%, 100% { opacity: 1; transform: scale(1.15); filter: brightness(1.3); } 50% { opacity: 0.35; transform: scale(0.88); filter: brightness(0.8); } }
+  @keyframes teimosoBulbBlinkB { 0%, 100% { opacity: 0.35; transform: scale(0.88); filter: brightness(0.8); } 50% { opacity: 1; transform: scale(1.15); filter: brightness(1.3); } }
+  @keyframes teimosoStarTwinkle { 0%, 100% { opacity: 0.15; transform: translateY(0) scale(0.75); } 50% { opacity: 0.95; transform: translateY(-16px) scale(1.2); } }
+  #stageFestiveLights { display: none; }
+  #stageFestiveStars { display: none; }
+  #partyRouletteStage.teimoso-stage-fullscreen,
+  #partyRouletteStage:fullscreen,
+  #partyRouletteStage:-webkit-full-screen {
+    position: fixed !important; inset: 0 !important; z-index: 9990 !important;
+    border-radius: 0 !important; border: none !important; width: 100vw !important; height: 100vh !important;
+    max-width: none !important; margin: 0 !important; padding: 2.25rem 2rem 1.5rem !important; overflow-y: auto !important;
+    background: radial-gradient(circle at 18% 20%, rgba(16,185,129,0.38), transparent 44%),
+                radial-gradient(circle at 82% 18%, rgba(251,191,36,0.34), transparent 46%),
+                radial-gradient(circle at 50% 85%, rgba(14,165,233,0.36), transparent 52%),
+                radial-gradient(circle at 85% 80%, rgba(236,72,153,0.24), transparent 45%),
+                linear-gradient(135deg, #04131c 0%, #071e17 48%, #100b29 100%) !important;
+  }
+  #partyRouletteStage.teimoso-stage-fullscreen #stageFestiveLights,
+  #partyRouletteStage:fullscreen #stageFestiveLights,
+  #partyRouletteStage:-webkit-full-screen #stageFestiveLights { display: flex !important; }
+  #partyRouletteStage.teimoso-stage-fullscreen #stageFestiveStars,
+  #partyRouletteStage:fullscreen #stageFestiveStars,
+  #partyRouletteStage:-webkit-full-screen #stageFestiveStars { display: block !important; }
+  .teimoso-festive-bulb { width: 13px; height: 13px; border-radius: 9999px; box-shadow: 0 0 14px currentColor, 0 0 26px currentColor; }
+  .teimoso-festive-bulb.blink-a { animation: teimosoBulbBlinkA 1.1s ease-in-out infinite; }
+  .teimoso-festive-bulb.blink-b { animation: teimosoBulbBlinkB 1.1s ease-in-out infinite; }
   /* Painel dos 2 últimos vencedores: visível exclusivamente no Modo TV (Tela Cheia) */
   #stageTvRecentWinners { display: none; }
-  #partyRouletteStage.teimoso-stage-fullscreen #stageTvRecentWinners { display: flex; }
+  #partyRouletteStage.teimoso-stage-fullscreen #stageTvRecentWinners,
+  #partyRouletteStage:fullscreen #stageTvRecentWinners,
+  #partyRouletteStage:-webkit-full-screen #stageTvRecentWinners { display: flex !important; }
+  /* Tambor maior e mais vistoso no Modo TV */
+  #partyRouletteStage.teimoso-stage-fullscreen #stageDrumShell,
+  #partyRouletteStage:fullscreen #stageDrumShell,
+  #partyRouletteStage:-webkit-full-screen #stageDrumShell { max-width: 56rem !important; }
   /* Foto do atleta vinculado ao sorteado: grande e em destaque no Modo TV */
   #stageWinnerPhotoBox { width: 84px; height: 84px; transition: width .3s ease, height .3s ease, box-shadow .3s ease; }
   @media (min-width: 640px) { #stageWinnerPhotoBox { width: 98px; height: 98px; } }
-  #partyRouletteStage.teimoso-stage-fullscreen #stageWinnerPhotoBox { width: 170px; height: 170px; box-shadow: 0 0 42px rgba(16,185,129,0.55), 0 18px 40px rgba(0,0,0,0.65); }
-  @media (min-width: 1024px) { #partyRouletteStage.teimoso-stage-fullscreen #stageWinnerPhotoBox { width: 215px; height: 215px; } }
-  .teimoso-drum-shell { position: relative; background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 0 0 2px rgba(56,189,248,0.35), 0 24px 55px rgba(0,0,0,0.6), inset 0 0 25px rgba(56,189,248,0.18); }
-  .teimoso-drum-shell.is-winner { box-shadow: 0 0 0 3px rgba(16,185,129,0.85), 0 0 45px rgba(16,185,129,0.45), 0 24px 55px rgba(0,0,0,0.65); }
+  #partyRouletteStage.teimoso-stage-fullscreen #stageWinnerPhotoBox,
+  #partyRouletteStage:fullscreen #stageWinnerPhotoBox,
+  #partyRouletteStage:-webkit-full-screen #stageWinnerPhotoBox { width: 170px; height: 170px; box-shadow: 0 0 42px rgba(251,191,36,0.55), 0 0 65px rgba(16,185,129,0.5), 0 18px 40px rgba(0,0,0,0.65); }
+  @media (min-width: 1024px) {
+    #partyRouletteStage.teimoso-stage-fullscreen #stageWinnerPhotoBox,
+    #partyRouletteStage:fullscreen #stageWinnerPhotoBox,
+    #partyRouletteStage:-webkit-full-screen #stageWinnerPhotoBox { width: 215px; height: 215px; }
+  }
+  .teimoso-drum-shell { position: relative; background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); box-shadow: 0 0 0 2px rgba(56,189,248,0.45), 0 24px 55px rgba(0,0,0,0.6), inset 0 0 25px rgba(56,189,248,0.18); }
+  .teimoso-drum-shell.is-winner { box-shadow: 0 0 0 3px rgba(251,191,36,0.9), 0 0 48px rgba(16,185,129,0.55), 0 24px 55px rgba(0,0,0,0.65); }
   .teimoso-drum-mask { background: linear-gradient(180deg, rgba(248,250,252,0.92) 0%, rgba(248,250,252,0) 24%, rgba(248,250,252,0) 76%, rgba(248,250,252,0.92) 100%); pointer-events: none; }
   .teimoso-winner-pop { animation: teimosoWinnerPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
   #tab-financial.teimoso-fin-readonly input:not([type='search']):not([id*='search']):not([id*='Search']):not([id*='filter']):not([id*='Filter']),
@@ -7151,34 +7188,39 @@ try {
   function launchPartyConfetti(qty) {
     var conf = document.getElementById('confettiContainer'); if (!conf) return;
     conf.innerHTML = '';
-    var colors = ['#10b981','#38bdf8','#f59e0b','#ec4899','#a855f7','#facc15','#ffffff'];
-    var total = qty || 56;
+    var colors = ['#10b981','#38bdf8','#f59e0b','#ec4899','#a855f7','#facc15','#ffffff','#fb7185'];
+    var total = qty || 75;
     for (var i = 0; i < total; i++) {
       var p = document.createElement('div');
       p.style.position = 'absolute';
-      p.style.width = (6 + Math.random() * 6) + 'px';
-      p.style.height = (8 + Math.random() * 9) + 'px';
-      p.style.borderRadius = Math.random() > 0.5 ? '9999px' : '2px';
+      var isStreamer = (i % 4 === 0);
+      p.style.width = isStreamer ? '6px' : (7 + Math.random() * 7) + 'px';
+      p.style.height = isStreamer ? (18 + Math.random() * 10) + 'px' : (7 + Math.random() * 7) + 'px';
+      p.style.borderRadius = isStreamer ? '3px' : (Math.random() > 0.5 ? '9999px' : '2px');
       p.style.background = colors[i % colors.length];
       p.style.left = (Math.random() * 100) + '%';
-      p.style.top = '-18px';
-      p.style.animation = 'teimosoConfettiDrop ' + (1.7 + Math.random() * 1.9) + 's linear ' + (Math.random() * 0.45) + 's forwards';
+      p.style.top = '-22px';
+      p.style.animation = 'teimosoConfettiDrop ' + (2.1 + Math.random() * 2.2) + 's linear ' + (Math.random() * 0.6) + 's forwards';
       conf.appendChild(p);
     }
   }
+  window.triggerPartyConfettiBurst = function() {
+    launchPartyConfetti(90);
+    playRouletteTick(980);
+  };
   window.triggerPartyReaction = function(emoji) {
     var layer = document.getElementById('partyReactionsLayer'); if (!layer) return;
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 7; i++) {
       var el = document.createElement('span');
       el.textContent = emoji;
       el.style.position = 'absolute';
-      el.style.bottom = '12px';
-      el.style.left = (12 + Math.random() * 76) + '%';
-      el.style.fontSize = (22 + Math.random() * 16) + 'px';
+      el.style.bottom = '14px';
+      el.style.left = (10 + Math.random() * 80) + '%';
+      el.style.fontSize = (24 + Math.random() * 18) + 'px';
       el.style.pointerEvents = 'none';
-      el.style.animation = 'teimosoEmojiFloat ' + (1.4 + Math.random() * 0.9) + 's ease-out ' + (i * 0.07) + 's forwards';
+      el.style.animation = 'teimosoEmojiFloat ' + (1.5 + Math.random() * 0.9) + 's ease-out ' + (i * 0.07) + 's forwards';
       layer.appendChild(el);
-      (function(node) { setTimeout(function() { if (node.parentNode) node.parentNode.removeChild(node); }, 2500); })(el);
+      (function(node) { setTimeout(function() { if (node.parentNode) node.parentNode.removeChild(node); }, 2700); })(el);
     }
     playRouletteTick(920);
   };
@@ -7200,6 +7242,8 @@ try {
     } else {
       stg.classList.add('teimoso-stage-fullscreen');
       if (stg.requestFullscreen) stg.requestFullscreen().catch(function() {});
+      launchPartyConfetti(85);
+      playRouletteTick(960);
     }
     var ic = document.getElementById('stageFsIcon'), lb = document.getElementById('stageFsLabel');
     var nowFs = stg.classList.contains('teimoso-stage-fullscreen');
@@ -7225,16 +7269,41 @@ try {
     }
   };
 
+  function buildFestiveLightsHtml() {
+    var bulbColors = ['#facc15','#34d399','#38bdf8','#f472b6','#fb923c','#a78bfa'];
+    var bulbs = [];
+    for (var i = 0; i < 18; i++) {
+      var col = bulbColors[i % bulbColors.length];
+      var cls = (i % 2 === 0) ? 'blink-a' : 'blink-b';
+      bulbs.push('<span class="teimoso-festive-bulb ' + cls + '" style="background:' + col + ';color:' + col + ';animation-delay:' + ((i % 4) * 0.18).toFixed(2) + 's"></span>');
+    }
+    return '<div id="stageFestiveLights" class="absolute top-0 left-0 right-0 px-4 py-2 items-center justify-between gap-2 pointer-events-none z-20 border-b border-amber-400/20 bg-gradient-to-b from-amber-500/15 to-transparent">' + bulbs.join('') + '</div>';
+  }
+  function buildFestiveStarsHtml() {
+    var stars = [];
+    var glyphs = ['✦','★','✨','✧'];
+    for (var i = 0; i < 16; i++) {
+      var leftPct = ((i * 6.3 + 3) % 94).toFixed(1);
+      var topPct = ((i * 19 + 11) % 82).toFixed(1);
+      var sz = 12 + (i % 4) * 5;
+      var col = (i % 3 === 0) ? '#fde047' : ((i % 3 === 1) ? '#6ee7b7' : '#7dd3fc');
+      stars.push('<span style="position:absolute;left:' + leftPct + '%;top:' + topPct + '%;font-size:' + sz + 'px;color:' + col + ';animation:teimosoStarTwinkle ' + (2.4 + (i % 5) * 0.5).toFixed(1) + 's ease-in-out ' + ((i % 6) * 0.35).toFixed(2) + 's infinite;">' + glyphs[i % glyphs.length] + '</span>');
+    }
+    return '<div id="stageFestiveStars" class="absolute inset-0 pointer-events-none z-0 overflow-hidden">' + stars.join('') + '</div>';
+  }
+
   function upgradePartyStageDom() {
     var stg = document.getElementById('partyRouletteStage');
-    if (!stg || stg.dataset.showModeV4 === '1') return;
-    stg.dataset.showModeV4 = '1';
+    if (!stg || stg.dataset.showModeV5 === '1') return;
+    stg.dataset.showModeV5 = '1';
     stg.className = 'bg-slate-950 border-4 border-slate-800 rounded-[2rem] p-4 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col items-center justify-between gap-5 min-h-[410px] sm:min-h-[450px]';
     stg.innerHTML = [
+      buildFestiveLightsHtml(),
+      buildFestiveStarsHtml(),
       '<div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" style="animation:teimosoSpotlightPulse 5s ease-in-out infinite"></div>',
       '<div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-sky-500/20 blur-3xl pointer-events-none" style="animation:teimosoSpotlightPulse 6s ease-in-out infinite 1.5s"></div>',
-      '<div id="confettiContainer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>',
-      '<div id="partyReactionsLayer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>',
+      '<div id="confettiContainer" class="absolute inset-0 pointer-events-none z-30 overflow-hidden"></div>',
+      '<div id="partyReactionsLayer" class="absolute inset-0 pointer-events-none z-30 overflow-hidden"></div>',
       '<div class="w-full flex flex-wrap items-center justify-between gap-2 z-10">',
         '<div class="flex items-center gap-2 flex-wrap">',
           '<span id="stageLivePill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Aguardando</span>',
@@ -7246,23 +7315,31 @@ try {
           '<button type="button" onclick="togglePartyStageFullscreen()" class="px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer transition-all"><i id="stageFsIcon" class="fa-solid fa-expand text-sky-300"></i><span id="stageFsLabel" class="hidden sm:inline">Modo TV</span></button>',
         '</div>',
       '</div>',
-      '<div class="w-full flex flex-col items-center gap-3 z-10 my-auto">',
+      '<div class="w-full flex flex-col items-center gap-4 z-10 my-auto">',
         '<div class="text-center space-y-1.5">',
-          '<h2 class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-sky-300 to-amber-300 font-black tracking-[0.22em] uppercase text-xs sm:text-sm">⚽ Sorteio de Brindes ao Vivo — Teimoso F.C.C. 🎁</h2>',
-          '<div id="stagePrizeLiveBadge" class="hidden items-center gap-1.5 px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-bold"></div>',
+          '<h2 class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-amber-200 to-sky-300 font-black tracking-[0.22em] uppercase text-xs sm:text-base">🎉 Sorteio de Brindes ao Vivo — Teimoso F.C.C. 🎁</h2>',
+          '<div id="stagePrizeLiveBadge" class="hidden items-center gap-1.5 px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs sm:text-sm font-bold"></div>',
         '</div>',
         '<div id="stageDrumShell" class="teimoso-drum-shell w-full max-w-2xl rounded-[1.75rem] p-3 sm:p-4 transition-all duration-300">',
-          '<div class="absolute -left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-xs"><i class="fa-solid fa-caret-right"></i></div>',
+          '<div class="absolute -left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-sm"><i class="fa-solid fa-caret-right"></i></div>',
+          '<div class="absolute -right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg z-20 text-sm"><i class="fa-solid fa-caret-left"></i></div>',
+          '<div id="rouletteDisplayBox" class="bg-white rounded-2xl h-28 sm:h-36 flex items-center justify-center overflow-hidden relative shadow-inner border-2 border-slate-200">',
+            '<div class="teimoso-drum-mask absolute inset-0 z-10"></div>',
+            '<div id="rouletteTrack" class="flex flex-col w-full text-center absolute top-0 left-0 transition-transform">',
+              '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-lg sm:text-2xl uppercase tracking-widest">AGUARDANDO HABILITAR...</span></div>',
+            '</div>',
+          '</div>',
+        '</div>',
         '<div id="rouletteResultInfo" class="text-center z-10 opacity-0 transition-all duration-500 transform scale-95 min-h-[60px] flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-1">',
           '<div id="stageWinnerPhotoWrap" class="hidden relative shrink-0 teimoso-winner-pop">',
-            '<div id="stageWinnerPhotoBox" class="rounded-full border-4 border-emerald-400 overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center">',
+            '<div id="stageWinnerPhotoBox" class="rounded-full border-4 border-amber-300 overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center">',
               '<img id="stageWinnerPhotoImg" src="" alt="Atleta vinculado" class="w-full h-full object-cover" />',
             '</div>',
             '<div class="absolute -bottom-1 -right-1 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-400 text-slate-950 border-2 border-slate-950 flex items-center justify-center shadow-lg text-sm sm:text-base"><i class="fa-solid fa-trophy"></i></div>',
           '</div>',
           '<div class="flex flex-col items-center sm:items-start text-center sm:text-left">',
             '<div class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/25 to-amber-500/25 border border-emerald-400/60 text-emerald-300 px-6 py-2 rounded-full text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-trophy text-amber-300"></i> <span id="rouletteWinnerBadgeText">Vencedor Sorteado!</span></div>',
-            '<p id="rouletteFamilyTie" class="text-slate-300 text-xs sm:text-sm mt-2 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>',
+            '<p id="rouletteFamilyTie" class="text-slate-200 text-xs sm:text-sm mt-2 font-bold uppercase tracking-wider">Dependente de: <strong class="text-white" id="rouletteAthleteName">Atleta</strong></p>',
           '</div>',
         '</div>',
         '<div id="stageTvRecentWinners" class="w-full max-w-3xl flex-col items-center gap-2.5 pt-2 z-10">',
@@ -7279,7 +7356,8 @@ try {
           '<button type="button" id="btnStageSpinNow" onclick="startPartyRoulette()" disabled class="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-400 cursor-not-allowed text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95"><i class="fa-solid fa-rotate"></i> <span>Girar Agora</span> <span class="hidden md:inline text-[9px] opacity-70 bg-black/25 px-1.5 py-0.5 rounded">ESPAÇO</span></button>',
         '</div>',
         '<div class="flex items-center gap-1.5 ml-auto">',
-          '<span class="text-[10px] font-bold text-slate-400 uppercase mr-1 hidden sm:inline">Torcida:</span>',
+          '<span class="text-[10px] font-bold text-slate-300 uppercase mr-1 hidden sm:inline">Festa:</span>',
+          '<button type="button" onclick="triggerPartyConfettiBurst()" class="w-9 h-9 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-400/50 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Chuva de Confetes">🎊</button>',
           '<button type="button" onclick="triggerPartyReaction(\'👏\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Aplaudir">👏</button>',
           '<button type="button" onclick="triggerPartyReaction(\'🎉\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Comemorar">🎉</button>',
           '<button type="button" onclick="triggerPartyReaction(\'🔥\')" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-base flex items-center justify-center active:scale-90 transition-transform cursor-pointer" title="Fogo">🔥</button>',
@@ -7492,16 +7570,16 @@ try {
     if (tvGrid) {
       var lastTwo = drawn.map(function(w, i) { return { w: w, n: i + 1 }; }).slice(-2).reverse();
       if (lastTwo.length === 0) {
-        tvGrid.innerHTML = '<div class="sm:col-span-2 text-center py-3 px-4 rounded-2xl bg-slate-900/70 border border-slate-800 text-slate-400 text-xs font-bold">Os 2 últimos vencedores da rodada aparecerão aqui em destaque.</div>';
+        tvGrid.innerHTML = '<div class="sm:col-span-2 text-center py-3 px-4 rounded-2xl bg-slate-900/70 border border-slate-800 text-slate-300 text-xs font-bold">Os 2 últimos vencedores da rodada aparecerão aqui em destaque.</div>';
       } else {
         tvGrid.innerHTML = lastTwo.map(function(it, idx) {
           var isFirst = (idx === 0);
-          var cardCls = isFirst ? 'bg-emerald-500/15 border-2 border-emerald-400/70 shadow-lg shadow-emerald-500/10' : 'bg-slate-900/85 border border-amber-400/40';
+          var cardCls = isFirst ? 'bg-emerald-500/20 border-2 border-emerald-400/80 shadow-lg shadow-emerald-500/15' : 'bg-slate-900/85 border border-amber-400/50';
           var numCls = isFirst ? 'bg-emerald-500 text-slate-950' : 'bg-amber-400 text-slate-950';
           var tagHtml = isFirst ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 text-[9px] font-black uppercase tracking-wider">ÚLTIMO</span>' : '<span class="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-black uppercase tracking-wider">ANTERIOR</span>';
           var prizeHtml = it.w.prize ? '<div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-400/15 border border-amber-400/40 text-amber-200 text-[10px] font-bold"><i class="fa-solid fa-gift text-amber-300"></i> ' + escHtml(it.w.prize) + '</div>' : '';
           var miniAvatarUrl = getWinnerAthleteAvatarUrl(it.w, 128);
-          return '<div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ' + cardCls + '"><div class="flex items-center gap-3 min-w-0"><div class="relative shrink-0"><img src="' + escHtml(miniAvatarUrl) + '" alt="Atleta" class="w-11 h-11 rounded-full object-cover border-2 ' + (isFirst ? 'border-emerald-400' : 'border-amber-400/70') + ' bg-slate-800" /><span class="absolute -top-1 -left-1 w-5 h-5 rounded-full ' + numCls + ' font-black text-[9px] flex items-center justify-center shadow">' + it.n + 'º</span></div><div class="min-w-0 text-left"><div class="flex items-center gap-2 flex-wrap"><span class="text-sm sm:text-base font-black text-white uppercase truncate">' + escHtml(it.w.name) + '</span>' + tagHtml + '</div><div class="text-[11px] text-slate-300 font-semibold truncate">' + escHtml(it.w.relation) + ' de ' + escHtml(it.w.athleteName) + '</div>' + prizeHtml + '</div></div><span class="text-[11px] font-black text-amber-300 bg-slate-950/60 border border-slate-700 px-2.5 py-1 rounded-xl shrink-0">' + escHtml(it.w.time || '') + '</span></div>';
+          return '<div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ' + cardCls + '"><div class="flex items-center gap-3 min-w-0"><div class="relative shrink-0"><img src="' + escHtml(miniAvatarUrl) + '" alt="Atleta" class="w-11 h-11 rounded-full object-cover border-2 ' + (isFirst ? 'border-emerald-400' : 'border-amber-400/70') + ' bg-slate-800" /><span class="absolute -top-1 -left-1 w-5 h-5 rounded-full ' + numCls + ' font-black text-[9px] flex items-center justify-center shadow">' + it.n + 'º</span></div><div class="min-w-0 text-left"><div class="flex items-center gap-2 flex-wrap"><span class="text-sm sm:text-base font-black text-white uppercase truncate">' + escHtml(it.w.name) + '</span>' + tagHtml + '</div><div class="text-[11px] text-slate-200 font-semibold truncate">' + escHtml(it.w.relation) + ' de ' + escHtml(it.w.athleteName) + '</div>' + prizeHtml + '</div></div><span class="text-[11px] font-black text-amber-300 bg-slate-950/60 border border-slate-700 px-2.5 py-1 rounded-xl shrink-0">' + escHtml(it.w.time || '') + '</span></div>';
         }).join('');
       }
     }
@@ -7520,7 +7598,7 @@ try {
           if (wBadgeTxt) wBadgeTxt.textContent = st.currentWinner.prize ? ('Ganhou: ' + st.currentWinner.prize + '!') : 'Vencedor Sorteado!';
           if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); }
           var wKeySig = String(st.currentWinner.key || '') + '|' + String(st.updatedAt || '');
-          if (wKeySig && wKeySig !== lastCelebratedWinnerKey) { lastCelebratedWinnerKey = wKeySig; launchPartyConfetti(52); playVictoryFanfare(); }
+          if (wKeySig && wKeySig !== lastCelebratedWinnerKey) { lastCelebratedWinnerKey = wKeySig; launchPartyConfetti(80); playVictoryFanfare(); }
         }
         else { updateStageWinnerPhoto(null); if (ri) { ri.classList.add('opacity-0','scale-95'); ri.classList.remove('opacity-100','scale-100'); } tr.innerHTML = '<div class="h-28 sm:h-36 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-lg sm:text-2xl uppercase tracking-widest">PRONTO PARA GIRAR! 🎲</span></div>'; }
       }
@@ -7576,7 +7654,7 @@ try {
       var wBadgeTxt = document.getElementById('rouletteWinnerBadgeText');
       if (wBadgeTxt) wBadgeTxt.textContent = prizeTxt ? ('Ganhou: ' + prizeTxt + '!') : 'Vencedor Sorteado!';
       if (ri) { ri.classList.remove('opacity-0','scale-95'); ri.classList.add('opacity-100','scale-100'); }
-      launchPartyConfetti(68);
+      launchPartyConfetti(95);
       playVictoryFanfare();
       if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
       renderPartyUnified();
@@ -7735,6 +7813,6 @@ try {
   }, 200);
 })();
 </script>
-<!-- TEIMOSO_UNIFIED_CLEAN_V4_END -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V5_END -->
 </body>
 </html>
