@@ -5951,8 +5951,8 @@
       const confirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status === 'CONFIRMADO').sort(sortByConfirmTime);
       
       const unconfirmedExtras = extraAthletes.filter(a => dayPresences[a.id]?.status !== 'CONFIRMADO');
-      const extraKeepers = confirmedKeepers.slice(2);
-      const mainKeepers = confirmedKeepers.slice(0, 2);
+      const extraKeepers = [];
+      const mainKeepers = confirmedKeepers;
 
       const absentAthletes = activeAthletes.filter(a => {
         const st = dayPresences[a.id]?.status;
@@ -5965,19 +5965,19 @@
       text += `🧤 *GOLEIROS CONFIRMADOS:*\n`;
       if (mainKeepers.length === 0) text += `1. _Vaga aberta_\n2. _Vaga aberta_\n`;
       else {
-        mainKeepers.forEach((k, i) => { text += `${i + 1}. ${k.name} ✅ _(${formatTimeForMsg(k.id)})_\n`; });
+        mainKeepers.forEach((k, i) => { text += `${i + 1}. ${k.name} ✅\n`; });
         if (mainKeepers.length === 1) text += `2. _Vaga aberta_\n`;
       }
 
       text += `\n🏃 *JOGADORES DE LINHA (${confirmedOutfield.length}):*\n`;
       if (confirmedOutfield.length === 0) text += `_Nenhum confirmado ainda_\n`;
       else {
-        confirmedOutfield.forEach((p, i) => { text += `${i + 1}. ${p.name} ✅ _(${formatTimeForMsg(p.id)})_\n`; });
+        confirmedOutfield.forEach((p, i) => { text += `${i + 1}. ${p.name} ✅\n`; });
       }
 
       if (confirmedExtras.length > 0) {
         text += `\n🍺 *EXTRAS (SOMENTE RESENHA - CONFIRMADOS):*\n`;
-        confirmedExtras.forEach((ex, i) => { text += `${i + 1}. ${ex.name} ✅ (Resenha) _(${formatTimeForMsg(ex.id)})_\n`; });
+        confirmedExtras.forEach((ex, i) => { text += `${i + 1}. ${ex.name} ✅ (Resenha)\n`; });
       }
 
       text += `\n❌ *OUTROS / FORA DA PELADA (${absentAthletes.length}):*\n`;
@@ -6791,7 +6791,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
