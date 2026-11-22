@@ -3693,188 +3693,11 @@
       return list;
     }
 
-    window.renderPartyRaffleUI = function() {
-      const state = window.partyRaffleState || { enabled: false, drawnWinners: [] };
-      const allEligible = getAllEligibleFamilyParticipants();
-      const drawnUids = new Set((state.drawnWinners || []).map(w => w.uid));
-      const remainingPool = allEligible.filter(p => !drawnUids.has(p.uid));
-      rouletteParticipants = remainingPool;
+    /* [CLEAN] renderPartyRaffleUI movido para o motor unificado da aba FESTA */;
 
-      const btnAdminToggle = document.getElementById("btnTogglePartyRaffleAdmin");
-      const lblAdminToggle = document.getElementById("labelTogglePartyRaffleAdmin");
-      const statusBadge = document.getElementById("partyRaffleStatusBadge");
-      const btnSpin = document.getElementById("btnStartRoulette");
+    /* [CLEAN] togglePartyRaffleSession movido para o motor unificado da aba FESTA */;
 
-      if (btnAdminToggle) {
-        if (window.isAdmin) {
-          btnAdminToggle.classList.remove("hidden");
-          btnAdminToggle.classList.add("flex");
-          if (state.enabled) {
-            btnAdminToggle.className = "px-4 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2";
-            if (lblAdminToggle) lblAdminToggle.innerText = "Fechar / Desabilitar Sorteio";
-          } else {
-            btnAdminToggle.className = "px-4 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black transition-all shadow-md uppercase tracking-wider active:scale-95 flex items-center gap-2";
-            if (lblAdminToggle) lblAdminToggle.innerText = "Habilitar Sorteio";
-          }
-        } else {
-          btnAdminToggle.classList.add("hidden");
-          btnAdminToggle.classList.remove("flex");
-        }
-      }
-
-      if (statusBadge) {
-        if (state.enabled) {
-          statusBadge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300";
-          statusBadge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> Sorteio Habilitado';
-        } else {
-          statusBadge.className = "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-300";
-          statusBadge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Sorteio Desabilitado';
-        }
-      }
-
-      if (btnSpin) {
-        const canSpin = window.isAdmin && state.enabled && remainingPool.length > 0 && !isSpinning;
-        btnSpin.disabled = !canSpin;
-        if (canSpin) {
-          btnSpin.className = "px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 flex items-center gap-2 cursor-pointer";
-        } else {
-          btnSpin.className = "px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest flex items-center gap-2";
-        }
-      }
-
-      const countEl = document.getElementById("rouletteParticipantCount");
-      const gridEl = document.getElementById("rouletteParticipantsGrid");
-      if (countEl) countEl.innerText = remainingPool.length;
-      if (gridEl) {
-        if (remainingPool.length === 0) {
-          const emptyMsg = allEligible.length > 0 ? "Todos os participantes já foram sorteados nesta rodada!" : "Nenhum familiar cadastrado ainda.";
-          gridEl.innerHTML = '<span class="text-xs text-slate-400 font-bold py-2">' + emptyMsg + '</span>';
-        } else {
-          gridEl.innerHTML = remainingPool.map(p => {
-            return '<span class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 text-[11px] font-bold flex items-center gap-1.5"><i class="fa-solid fa-ticket text-sky-500"></i> ' + p.name + ' <span class="text-[9px] text-slate-500 font-semibold">(' + p.relation + ' • ' + p.athleteName + ')</span></span>';
-          }).join("");
-        }
-      }
-
-      const drawnCountEl = document.getElementById("rouletteDrawnCount");
-      const drawnListEl = document.getElementById("rouletteDrawnWinnersList");
-      const winners = state.drawnWinners || [];
-      if (drawnCountEl) drawnCountEl.innerText = winners.length;
-      if (drawnListEl) {
-        if (winners.length === 0) {
-          drawnListEl.innerHTML = '<span class="text-xs text-slate-400 font-bold py-2 block">Nenhum sorteio realizado ainda.</span>';
-        } else {
-          drawnListEl.innerHTML = winners.map((w, idx) => {
-            return '<div class="flex items-center justify-between bg-amber-50/80 border border-amber-200 rounded-2xl px-3.5 py-2.5 text-xs"><div class="flex items-center gap-2.5"><span class="w-6 h-6 rounded-full bg-amber-500 text-white font-black text-[11px] flex items-center justify-center shrink-0">' + (idx + 1) + 'º</span><div><div class="font-black text-slate-800">' + w.name + '</div><div class="text-[10px] text-slate-500 font-semibold">' + w.relation + ' de ' + w.athleteName + '</div></div></div><span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">' + (w.time || "") + '</span></div>';
-          }).join("");
-        }
-      }
-    };
-
-    window.togglePartyRaffleSession = function() {
-      if (!window.isAdmin) return window.showToast("Apenas administradores podem controlar o sorteio.", "error");
-      const currentlyEnabled = Boolean(window.partyRaffleState && window.partyRaffleState.enabled);
-
-      if (!currentlyEnabled) {
-        window.partyRaffleState = { enabled: true, drawnWinners: [] };
-        const track = document.getElementById("rouletteTrack");
-        if (track) {
-          track.style.transition = "none";
-          track.style.transform = "translateY(0px)";
-          track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-emerald-600 font-black text-xl sm:text-2xl uppercase tracking-widest">URNA PRONTA! GIRE A ROLETA</span></div>';
-        }
-        const resInfo = document.getElementById("rouletteResultInfo");
-        if (resInfo) resInfo.classList.add("opacity-0");
-
-        window.recordUserInteraction(window.currentUser?.name || "Admin", "Habilitou o Sorteio da Festa (todos os nomes carregados)");
-        window.syncSpecificData({ partyRaffleState: window.partyRaffleState });
-        window.renderPartyRaffleUI();
-        window.showToast("Sorteio habilitado com todos os familiares na urna!", "success");
-      } else {
-        window.partyRaffleState = { enabled: false, drawnWinners: [] };
-        const track = document.getElementById("rouletteTrack");
-        if (track) {
-          track.style.transition = "none";
-          track.style.transform = "translateY(0px)";
-          track.innerHTML = '<div class="h-24 sm:h-32 flex flex-col items-center justify-center w-full"><span class="text-slate-400 font-black text-xl sm:text-2xl uppercase tracking-widest">SORTEIO ENCERRADO</span></div>';
-        }
-        const resInfo = document.getElementById("rouletteResultInfo");
-        if (resInfo) resInfo.classList.add("opacity-0");
-
-        window.recordUserInteraction(window.currentUser?.name || "Admin", "Encerrou/Desabilitou o Sorteio da Festa (urna reiniciada)");
-        window.syncSpecificData({ partyRaffleState: window.partyRaffleState });
-        window.renderPartyRaffleUI();
-        window.showToast("Sorteio encerrado! Ao habilitar novamente, todos os nomes estarão disponíveis.", "success");
-      }
-    };
-
-    window.startPartyRoulette = function() {
-      if (!window.isAdmin) return window.showToast("Apenas administradores podem girar a roleta.", "error");
-      if (!window.partyRaffleState || !window.partyRaffleState.enabled) return window.showToast("Habilite o sorteio primeiro!", "error");
-      if (isSpinning) return;
-
-      window.renderPartyRaffleUI();
-      if (!rouletteParticipants || rouletteParticipants.length === 0) {
-        return window.showToast("Não há mais participantes disponíveis na urna!", "error");
-      }
-
-      isSpinning = true;
-      window.renderPartyRaffleUI();
-
-      const resInfo = document.getElementById("rouletteResultInfo");
-      if (resInfo) resInfo.classList.add("opacity-0");
-
-      const pool = [...rouletteParticipants];
-      const winnerIndex = Math.floor(Math.random() * pool.length);
-      const winner = pool[winnerIndex];
-
-      const spinItems = [];
-      const totalSlots = 32;
-      for (let i = 0; i < totalSlots - 1; i++) {
-        spinItems.push(pool[i % pool.length]);
-      }
-      spinItems.push(winner);
-
-      const box = document.getElementById("rouletteDisplayBox");
-      const track = document.getElementById("rouletteTrack");
-      const itemHeight = box ? box.clientHeight : 112;
-
-      track.style.transition = "none";
-      track.style.transform = "translateY(0px)";
-      track.innerHTML = spinItems.map((item, idx) => {
-        const colorCls = idx === spinItems.length - 1 ? "text-emerald-600" : "text-slate-700";
-        return '<div style="height: ' + itemHeight + 'px" class="flex flex-col items-center justify-center w-full px-4 shrink-0"><span class="' + colorCls + ' font-black text-xl sm:text-3xl uppercase tracking-wider truncate max-w-full">' + item.name + '</span><span class="text-[11px] font-bold text-slate-400 uppercase mt-0.5">' + item.relation + ' • ' + item.athleteName + '</span></div>';
-      }).join("");
-
-      void track.offsetHeight;
-      window.playAppSound("click");
-
-      const finalOffset = (spinItems.length - 1) * itemHeight;
-      track.style.transition = "transform 4.2s cubic-bezier(0.12, 0.85, 0.22, 1)";
-      track.style.transform = "translateY(-" + finalOffset + "px)";
-
-      setTimeout(() => {
-        isSpinning = false;
-        window.playAppSound("confirm");
-
-        const athNameEl = document.getElementById("rouletteAthleteName");
-        if (athNameEl) athNameEl.innerText = winner.athleteName + " (" + winner.relation + ")";
-        if (resInfo) resInfo.classList.remove("opacity-0");
-
-        if (!window.partyRaffleState.drawnWinners) window.partyRaffleState.drawnWinners = [];
-        window.partyRaffleState.drawnWinners.push({
-          uid: winner.uid,
-          name: winner.name,
-          relation: winner.relation,
-          athleteName: winner.athleteName,
-          time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-        });
-
-        window.recordUserInteraction(window.currentUser?.name || "Admin", "Sorteou na Festa: " + winner.name + " (" + winner.relation + " de " + winner.athleteName + ")");
-        window.syncSpecificData({ partyRaffleState: window.partyRaffleState });
-        window.renderPartyRaffleUI();
-      }, 4350);
-    };
+    /* [CLEAN] startPartyRoulette movido para o motor unificado da aba FESTA */;
 
     window.switchTab = function(tab) {
       if ((tab === 'draw' ) && !window.isAdmin) {
@@ -6968,7 +6791,7 @@
           : Object.values(window.absenceFines[athleteId] || {});
         let finesText = '';
         athleteFines.forEach(fine => {
-          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01')) {
+          if (fine && !fine.paid && fine.date >= (window.getSelectedYearInt() === 2026 ? (window.getSelectedYearInt() === 2026 ? '2026-11-01' : window.getSelectedYearInt() + '-01-01') : window.getSelectedYearInt() + '-01-01')) {
             const fineDate = new Date(fine.date + 'T00:00:00');
             let daysPassed = Math.floor((now - fineDate) / (1000 * 60 * 60 * 24));
             if (daysPassed < 0 || isNaN(daysPassed)) daysPassed = 0;
@@ -7137,38 +6960,7 @@
       }
     };
 
-    window.startPartyRoulette = function() {
-      if (isSpinningRoulette || rouletteParticipants.length === 0) return;
-      isSpinningRoulette = true;
-      const track = document.getElementById('rouletteTrack');
-      const resultInfo = document.getElementById('rouletteResultInfo');
-      const btn = document.getElementById('btnStartRoulette');
-      btn.disabled = true;
-      resultInfo.classList.remove('opacity-100', 'scale-100');
-      resultInfo.classList.add('opacity-0', 'scale-95');
-
-      const spins = 40;
-      const sequence = Array.from({ length: spins }, () => rouletteParticipants[Math.floor(Math.random() * rouletteParticipants.length)]);
-      track.style.transition = 'none';
-      track.style.transform = 'translateY(0)';
-      track.innerHTML = sequence.map(p => `<div class="h-20 sm:h-28 flex flex-col items-center justify-center w-full shrink-0"><span class="text-slate-800 font-black text-xl sm:text-3xl uppercase tracking-widest px-4 truncate w-full">${p.name}</span><span class="text-[10px] sm:text-xs text-sky-600 font-black uppercase tracking-wider">${p.type} DE ${p.athleteName.split(' ')[0]}</span></div>`).join('');
-      void track.offsetWidth;
-      const itemHeight = track.children[0].offsetHeight;
-      const winner = sequence[sequence.length - 1];
-      track.style.transition = 'transform 4.5s cubic-bezier(0.1, 0.7, 0.1, 1)';
-      track.style.transform = `translateY(-${(spins - 1) * itemHeight}px)`;
-
-      setTimeout(() => {
-        isSpinningRoulette = false;
-        btn.disabled = false;
-        document.getElementById('rouletteFamilyTie').innerHTML = `Dependente de: <strong class="text-white">${winner.athleteName}</strong>`;
-        resultInfo.classList.remove('opacity-0', 'scale-95');
-        resultInfo.classList.add('opacity-100', 'scale-100');
-        window.playAppSound('confirm');
-        createConfetti();
-        window.recordUserInteraction(window.currentUser?.name || 'Admin', `Sorteou prêmio na festa para: ${winner.name} (${winner.type})`);
-      }, 4600);
-    };
+    /* [CLEAN] startPartyRoulette movido para o motor unificado da aba FESTA */;
 
     function createConfetti() {
       const container = document.getElementById('confettiContainer');
@@ -7191,7 +6983,7 @@
   </script>
 
 
-<!-- TEIMOSO_UNIFIED_CLEAN_V1_START -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V2_START -->
 <style>
   body.teimoso-logged-in #tabBtn-roulette,
   body.teimoso-logged-in #tabBtn-financial { display: flex !important; visibility: visible !important; }
@@ -7274,7 +7066,7 @@ try {
     return a || null;
   }
 
-  /* 1. VISÃO BRANCO CLARO / VERDE ESCURO (ÍCONE NO CANTO DO LOGIN + BOTÃO NO HEADER) */
+  /* 1. VISÃO BRANCO CLARO / VERDE ESCURO */
   function getVision() { try { return localStorage.getItem(VISION_KEY) === 'forest' ? 'forest' : 'light'; } catch (e) { return 'light'; } }
   function applyVision(mode, persist) {
     var f = (mode === 'forest');
@@ -7397,9 +7189,6 @@ try {
     var logged = Boolean(window.currentUser);
     if (document.body) document.body.classList.toggle('teimoso-logged-in', logged);
     if (logged && window.partyRaffleState && window.partyRaffleState.enabled && !window.isAdmin) {
-      ['quickPresenceModal', 'customConfirmModal', 'familyDataModal'].forEach(function(mid) {
-        var mEl = document.getElementById(mid); if (mEl) { mEl.classList.add('hidden'); mEl.classList.remove('flex', 'opacity-100'); }
-      });
       var sec = document.getElementById('tab-roulette');
       if (sec && sec.classList.contains('hidden') && typeof window.switchTab === 'function') {
         window.switchTab('roulette');
@@ -7431,8 +7220,10 @@ try {
     }
     if (bSpin) {
       bSpin.style.display = isAdm ? 'inline-flex' : 'none'; bSpin.classList.toggle('hidden', !isAdm);
-      var canSpin = isAdm && en && avail.length > 0 && !sp; bSpin.disabled = !canSpin;
-      bSpin.className = canSpin ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2 cursor-pointer' : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
+      if (isAdm) {
+        var canSpin = en && avail.length > 0 && !sp; bSpin.disabled = !canSpin;
+        bSpin.className = canSpin ? 'px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl text-sm font-black transition-all shadow-lg shadow-sky-600/30 uppercase tracking-widest active:scale-95 inline-flex items-center gap-2 cursor-pointer' : 'px-6 py-3.5 bg-slate-300 text-slate-500 cursor-not-allowed rounded-2xl text-sm font-black transition-all uppercase tracking-widest inline-flex items-center gap-2';
+      }
     }
     var cEl = document.getElementById('rouletteParticipantCount'); if (cEl) cEl.textContent = String(avail.length);
     var gEl = document.getElementById('rouletteParticipantsGrid');
@@ -7462,16 +7253,15 @@ try {
     syncLoggedInStateAndPartyRedirect();
     renderPartyUnified();
   };
-  window.renderPartyRaffleUI = renderPartyUnified;
-  window.togglePartyRaffleSession = function() {
+  function togglePartyUnified() {
     if (!window.isAdmin || localSpinLock) return;
     var willEnable = !(window.partyRaffleState && window.partyRaffleState.enabled);
     window.partyRaffleState = { enabled: willEnable, spinning: false, currentWinner: null, drawn: [] };
     if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
     renderPartyUnified();
-    if (typeof window.showToast === 'function') window.showToast(willEnable ? 'Sorteio habilitado em tempo real!' : 'Sorteio encerrado! Urna reiniciada.', 'success');
-  };
-  window.startPartyRoulette = function() {
+    if (typeof window.showToast === 'function') window.showToast(willEnable ? 'Sorteio habilitado! Clique em Girar a Roleta.' : 'Sorteio encerrado! Urna reiniciada.', 'success');
+  }
+  function startPartyRouletteUnified() {
     if (!window.isAdmin || localSpinLock || !window.partyRaffleState || !window.partyRaffleState.enabled) return;
     var drawn = Array.isArray(window.partyRaffleState.drawn) ? window.partyRaffleState.drawn : [];
     var dKeys = new Set(drawn.map(function(d) { return d.key; }));
@@ -7500,13 +7290,20 @@ try {
       if (typeof window.__teimosoSavePartyRaffleLive === 'function') window.__teimosoSavePartyRaffleLive(window.partyRaffleState);
       renderPartyUnified();
     }, 2700);
-  };
-  window.openMyFamilyEditorFromParty = function() {
+  }
+  function openMyFamilyEditorUnified() {
     if (window.partyRaffleState && window.partyRaffleState.enabled) { if (typeof window.showToast === 'function') window.showToast('Edição bloqueada durante sorteio em andamento.', 'error'); return; }
     var ath = getLoggedAth(); if (ath && typeof window.openFamilyDataPromptModal === 'function') window.openFamilyDataPromptModal(ath);
-  };
+  }
+  function bindPartyUnifiedFunctions() {
+    window.renderPartyRaffleUI = renderPartyUnified;
+    window.togglePartyRaffleSession = togglePartyUnified;
+    window.startPartyRoulette = startPartyRouletteUnified;
+    window.openMyFamilyEditorFromParty = openMyFamilyEditorUnified;
+  }
+  bindPartyUnifiedFunctions();
 
-  /* 4. ISENÇÃO DE MENSALIDADES (NOVO ATLETA + EDIÇÃO, SEM SAVE DUPLICADO) */
+  /* 4. ISENÇÃO DE MENSALIDADES */
   window.toggleAthleteExemptMonthlyUI = function(isChecked) {
     var fi = document.getElementById('athleteMonthlyFeeInput'); if (!fi) return;
     fi.disabled = Boolean(isChecked);
@@ -7514,46 +7311,47 @@ try {
     if (isChecked) fi.value = 0; else if (Number(fi.value) === 0) fi.value = 110;
   };
 
-  /* 5. INSTALAÇÃO ÚNICA DOS HOOKS (ZERO setInterval CONTÍNUO) */
+  /* 5. INSTALAÇÃO DOS HOOKS (ZERO setInterval CONTÍNUO) */
   function installUnifiedHooks() {
     mountVisionButtons();
-    if (typeof window.performLogin === 'function' && !window.performLogin.__v1Hook) {
+    bindPartyUnifiedFunctions();
+    if (typeof window.performLogin === 'function' && !window.performLogin.__v2Hook) {
       var origLogin = window.performLogin;
       window.performLogin = function() {
         var r = origLogin.apply(this, arguments);
         setTimeout(syncLoggedInStateAndPartyRedirect, 60);
         return r;
       };
-      window.performLogin.__v1Hook = true;
+      window.performLogin.__v2Hook = true;
     }
-    if (typeof window.logout === 'function' && !window.logout.__v1Hook) {
+    if (typeof window.logout === 'function' && !window.logout.__v2Hook) {
       var origLogout = window.logout;
       window.logout = function() {
         var r = origLogout.apply(this, arguments);
         if (document.body) document.body.classList.remove('teimoso-logged-in');
         return r;
       };
-      window.logout.__v1Hook = true;
+      window.logout.__v2Hook = true;
     }
-    if (typeof window.setPresenceStatus === 'function' && !window.setPresenceStatus.__v1Shield) {
+    if (typeof window.setPresenceStatus === 'function' && !window.setPresenceStatus.__v2Shield) {
       var origSetPres = window.setPresenceStatus;
       window.setPresenceStatus = function(athleteId, newStatus) {
         if (!navigator.onLine) { if (typeof window.showToast === 'function') window.showToast('Sem internet! Confirmação bloqueada.', 'error'); return; }
         if (Date.now() - lastTrustedHumanMs > 4000) { console.warn('[Blindagem] Bloqueado disparo automático em setPresenceStatus:', athleteId, newStatus); return; }
         return origSetPres.apply(this, arguments);
       };
-      window.setPresenceStatus.__v1Shield = true;
+      window.setPresenceStatus.__v2Shield = true;
     }
-    if (typeof window.openNewAthleteModal === 'function' && !window.openNewAthleteModal.__v1Ex) {
+    if (typeof window.openNewAthleteModal === 'function' && !window.openNewAthleteModal.__v2Ex) {
       var origNew = window.openNewAthleteModal;
       window.openNewAthleteModal = function() {
         var r = origNew.apply(this, arguments);
         var chk = document.getElementById('athleteExemptMonthlyCheckbox'); if (chk) chk.checked = false;
         window.toggleAthleteExemptMonthlyUI(false); return r;
       };
-      window.openNewAthleteModal.__v1Ex = true;
+      window.openNewAthleteModal.__v2Ex = true;
     }
-    if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal.__v1Ex) {
+    if (typeof window.openEditAthleteModal === 'function' && !window.openEditAthleteModal.__v2Ex) {
       var origEdit = window.openEditAthleteModal;
       window.openEditAthleteModal = function(id) {
         var r = origEdit.apply(this, arguments);
@@ -7564,9 +7362,9 @@ try {
         var fi = document.getElementById('athleteMonthlyFeeInput'); if (fi && !isEx && ath) fi.value = (ath.monthlyFee != null ? ath.monthlyFee : 110);
         return r;
       };
-      window.openEditAthleteModal.__v1Ex = true;
+      window.openEditAthleteModal.__v2Ex = true;
     }
-    if (typeof window.saveAthlete === 'function' && !window.saveAthlete.__v1Ex) {
+    if (typeof window.saveAthlete === 'function' && !window.saveAthlete.__v2Ex) {
       var origSave = window.saveAthlete;
       window.saveAthlete = function() {
         var editIdEl = document.getElementById('editAthleteId');
@@ -7595,42 +7393,46 @@ try {
         }
         return res;
       };
-      window.saveAthlete.__v1Ex = true;
+      window.saveAthlete.__v2Ex = true;
     }
-    if (typeof window.switchTab === 'function' && !window.switchTab.__v1Hook) {
+    if (typeof window.switchTab === 'function' && !window.switchTab.__v2Hook) {
       var origSw = window.switchTab;
       window.switchTab = function(tab) {
+        bindPartyUnifiedFunctions();
         var r = origSw.apply(this, arguments);
         if (document.body) document.body.classList.toggle('teimoso-logged-in', Boolean(window.currentUser));
         if (tab === 'roulette') renderPartyUnified();
         return r;
       };
-      window.switchTab.__v1Hook = true;
+      window.switchTab.__v2Hook = true;
     }
   }
 
-  /* Permite apenas abrir/fechar cards e filtros no Financeiro para atletas comuns */
+  /* Permite abrir/fechar cards e clicar nos 4 cards de filtro do Financeiro para atletas comuns */
   document.addEventListener('click', function(ev) {
+    var partyEl = ev.target && ev.target.closest ? ev.target.closest('#tabBtn-roulette, #btnTogglePartyRaffleAdmin, #btnStartRoulette, #btnEditMyFamilyParty') : null;
+    if (partyEl) { bindPartyUnifiedFunctions(); }
     var finSec = document.getElementById('tab-financial');
     if (!finSec || !finSec.contains(ev.target) || isFinEditor()) return;
+    var filterCard = ev.target.closest ? ev.target.closest('[onclick*="setFinancialFilter"]') : null;
+    if (filterCard) { window.__teimosoAllowFinRefreshOnce = true; return; }
     var acc = ev.target.closest ? ev.target.closest('button[onclick*="toggleFinancialAccordion"]') : null;
     if (acc) { window.__teimosoAllowFinRefreshOnce = true; return; }
-    var filterEl = ev.target.closest ? ev.target.closest('[onclick*="setFinancialFilter"]') : null;
-    if (filterEl) { window.__teimosoAllowFinRefreshOnce = true; return; }
     var btn = ev.target.closest ? ev.target.closest('button') : null;
     if (btn) {
       ev.preventDefault(); ev.stopPropagation();
     }
   }, true);
 
+  document.addEventListener('DOMContentLoaded', installUnifiedHooks);
+  window.addEventListener('load', function() { installUnifiedHooks(); if (document.getElementById('tab-roulette') && !document.getElementById('tab-roulette').classList.contains('hidden')) renderPartyUnified(); });
   var tries = 0;
   var boot = setInterval(function() {
     tries++; installUnifiedHooks();
-    if (typeof window.setPresenceStatus === 'function' && window.setPresenceStatus.__v1Shield && tries >= 4) clearInterval(boot);
     if (tries >= 30) clearInterval(boot);
   }, 200);
 })();
 </script>
-<!-- TEIMOSO_UNIFIED_CLEAN_V1_END -->
+<!-- TEIMOSO_UNIFIED_CLEAN_V2_END -->
 </body>
 </html>
