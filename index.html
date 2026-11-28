@@ -877,19 +877,32 @@
         </div>
       </div>
 
-      <!-- OS FINALIZADAS FALTANDO ENVIO DO PROTOCOLO AO CLIENTE -->
-      <div class="bg-white rounded-xl shadow-sm p-5 border border-amber-300/70 space-y-3">
+      <!-- OSs PENDENTES DE ENVIO DE COBRANÇA AO CLIENTE (ADMINISTRADORES) -->
+      <div data-admin-only="true" class="bg-white rounded-xl shadow-sm p-5 border border-conecta-green/50 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 class="font-bold text-slate-800 text-base">OSs Finalizadas — Pendentes de Envio do Protocolo ao Cliente</h2>
-            <p class="text-xs text-slate-500">Serviços concluídos aguardando envio do protocolo/laudo em PDF ou WhatsApp.</p>
+            <h2 class="font-bold text-slate-800 text-base">OSs Pendentes de Envio de Cobrança ao Cliente</h2>
+            <p class="text-xs text-slate-500">Ordens de serviço com valor pendente de cobrança/lançamento financeiro para envio ao cliente.</p>
           </div>
-          <div class="text-right">
-            <span id="painel-protocolo-qtd" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">0 pendente(s)</span>
-            <p id="painel-protocolo-total" class="text-sm font-extrabold text-conecta-emerald mt-1">R$ 0,00</p>
-          </div>
+          <span id="painel-cobranca-total-badge" class="text-xs px-3 py-1 rounded-full font-extrabold bg-emerald-500/15 text-conecta-green border border-conecta-green/30">
+            0 OS • R$ 0,00
+          </span>
         </div>
-        <div id="painel-protocolo-lista" class="space-y-2.5 text-sm text-slate-500"></div>
+        <div id="painel-os-cobranca-pendente" class="space-y-2.5 text-sm text-slate-500"></div>
+      </div>
+
+      <!-- OSs FINALIZADAS PENDENTES DE ENVIO DO PROTOCOLO AO CLIENTE -->
+      <div class="bg-white rounded-xl shadow-sm p-5 border border-amber-400/50 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-bold text-slate-800 text-base">OSs Finalizadas — Pendentes de Envio de Protocolo ao Cliente</h2>
+            <p class="text-xs text-slate-500">Ordens de serviço concluídas que ainda não tiveram o protocolo enviado ao cliente, com valores.</p>
+          </div>
+          <span id="painel-protocolo-total-badge" class="text-xs px-3 py-1 rounded-full font-extrabold bg-amber-500/15 text-amber-500 border border-amber-500/30">
+            0 OS • R$ 0,00
+          </span>
+        </div>
+        <div id="painel-os-protocolo-pendente" class="space-y-2.5 text-sm text-slate-500"></div>
       </div>
 
       <!-- GRÁFICOS VISUAIS (CHART.JS) -->
@@ -2794,38 +2807,216 @@
         ? baixo.map(p => `<div class="p-2 bg-red-50 text-red-700 rounded border border-red-200"><strong>${p.nome}:</strong> ${p.estoqueAtual} un. (mínimo: ${p.estoqueMinimo})</div>`).join('')
         : '<p class="text-slate-400">Estoque dentro dos níveis normais.</p>';
 
-      const pendentesProtocolo = state.os.filter(o => {
-        if (o.status !== 'concluida') return false;
-        if (o.protocoloEnviado) return false;
-        if (ehTecnico) return (o.tecnico || '').toUpperCase() === nomeLogado.toUpperCase();
-        return true;
-      });
-      const totalPendenteProtocolo = pendentesProtocolo.reduce((acc, o) => acc + Number(o.valorTotal || 0), 0);
-      const elProtQtd = document.getElementById('painel-protocolo-qtd');
-      const elProtTotal = document.getElementById('painel-protocolo-total');
-      const elProtLista = document.getElementById('painel-protocolo-lista');
-      if (elProtQtd) elProtQtd.textContent = `${pendentesProtocolo.length} pendente(s)`;
-      if (elProtTotal) elProtTotal.textContent = formatBRL(totalPendenteProtocolo);
-      if (elProtLista) {
-        elProtLista.innerHTML = pendentesProtocolo.length
-          ? pendentesProtocolo.map(o => `
-              <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <div>
-                  <span class="font-bold text-conecta-emerald">${o.numero}</span> • <span class="font-semibold text-slate-800">${o.clienteNome}</span>
-                  <span class="ml-2 text-xs font-extrabold text-conecta-green">${formatBRL(o.valorTotal)}</span>
-                  <p class="text-xs text-slate-500">Concluída: <strong>${formatarDataBR(o.concluidaEm || o.dataAgendamento)}</strong> • Técnico: <strong>${o.tecnico || 'Não atribuído'}</strong></p>
-                </div>
-                <div class="flex flex-wrap gap-1.5">
-                  <button onclick="enviarProtocoloOSWhatsApp('${o.id}')" class="text-xs bg-conecta-green hover:bg-conecta-emerald text-white px-3 py-1.5 rounded-lg font-semibold">Enviar WhatsApp</button>
-                  <button onclick="gerarProtocoloPDF('${o.id}', true)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold">Protocolo PDF</button>
-                </div>
-              </div>`).join('')
-          : '<p class="text-xs text-slate-400">Nenhuma OS finalizada aguardando envio de protocolo.</p>';
-      }
-
+      renderOSCobrancaPendente();
+      renderOSProtocoloPendente();
       renderGraficosPainel();
       renderEstatisticasTecnicos();
     }
+
+    function renderOSProtocoloPendente() {
+      const box = document.getElementById('painel-os-protocolo-pendente');
+      const badge = document.getElementById('painel-protocolo-total-badge');
+      if (!box || !badge) return;
+
+      const nomeLogado = state.usuarioAtual ? (state.usuarioAtual.nome || '').toUpperCase() : '';
+      const ehTecnico = state.perfil !== 'admin';
+
+      const pendentesProtocolo = state.os.filter(o => {
+        if (o.status !== 'concluida') return false;
+        if (o.protocoloEnviado) return false;
+        if (ehTecnico && (o.tecnico || '').toUpperCase() !== nomeLogado) return false;
+        return true;
+      }).sort((a, b) => (b.concluidaEm || b.dataAgendamento || '').localeCompare(a.concluidaEm || a.dataAgendamento || ''));
+
+      const somaValores = pendentesProtocolo.reduce((acc, o) => acc + Number(o.valorTotal || 0), 0);
+      badge.textContent = `${pendentesProtocolo.length} OS • ${formatBRL(somaValores)}`;
+
+      if (!pendentesProtocolo.length) {
+        box.innerHTML = '<p class="text-xs text-slate-400">Todas as OSs finalizadas já tiveram o protocolo enviado ao cliente.</p>';
+        return;
+      }
+
+      box.innerHTML = pendentesProtocolo.map(o => {
+        const clienteObj = state.clientes.find(c => c.id === o.clienteId);
+        const tel = (o.clienteTelefone || clienteObj?.telefone || '').replace(/\D/g, '');
+        const nomeEsc = (o.clienteNome || 'Cliente').replace(/'/g, "\\'");
+        return `
+          <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="space-y-0.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-conecta-emerald">${o.numero}</span>
+                <span class="font-semibold text-slate-800">${o.clienteNome}</span>
+                <span class="text-xs font-extrabold text-conecta-green bg-emerald-500/15 px-2 py-0.5 rounded-md">${formatBRL(o.valorTotal || 0)}</span>
+              </div>
+              <p class="text-xs text-slate-500">
+                Finalizada em: <strong>${o.concluidaEm ? formatarDataHoraBR(o.concluidaEm) : formatarDataBR(o.dataAgendamento)}</strong>
+                • Técnico: <strong>${o.tecnico || 'Não atribuído'}</strong>
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="enviarProtocoloOSWhatsApp('${o.id}')" class="text-xs bg-conecta-green hover:bg-conecta-emerald text-white px-2.5 py-1.5 rounded-lg font-semibold">WhatsApp Protocolo</button>
+              <button type="button" onclick="imprimirOS('${o.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-semibold">PDF</button>
+              <button type="button" onclick="marcarProtocoloEnviado('${o.id}', '${o.numero}', '${nomeEsc}')" class="text-xs bg-conecta-dark text-conecta-lime border border-conecta-green/40 px-2.5 py-1.5 rounded-lg font-semibold">✓ Protocolo Enviado</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    window.marcarProtocoloEnviado = async (osId, numeroOS = '', clienteNome = '') => {
+      if (!garantirOnlineParaEscrita()) return;
+      const o = state.os.find(x => x.id === osId);
+      const numLabel = numeroOS || o?.numero || 'OS';
+      const cliLabel = clienteNome || o?.clienteNome || 'Cliente';
+      const ok = await confirmarAcao({
+        titulo: 'Confirmar Envio de Protocolo',
+        mensagem: `Marcar o protocolo da ${numLabel} (${cliLabel}) como enviado ao cliente?`,
+        textoConfirmar: 'Marcar como Enviado'
+      });
+      if (!ok) return;
+      try {
+        await salvarDocumento('ordens_servico', osId, {
+          protocoloEnviado: true,
+          protocoloEnviadoEm: new Date().toISOString(),
+          protocoloEnviadoPor: state.usuarioAtual?.nome || ''
+        });
+        showToast(`Protocolo da ${numLabel} marcado como enviado!`, 'success');
+        if (document.getElementById('tab-painel')?.classList.contains('active')) {
+          carregarPainelSobDemanda();
+        }
+      } catch (err) {
+        if (err.message !== 'OFFLINE_BLOCKED') showToast('Erro ao atualizar protocolo.', 'error');
+      }
+    };
+
+    window.enviarProtocoloOSWhatsApp = async (osId) => {
+      const o = state.os.find(x => x.id === osId);
+      if (!o) return;
+      const clienteObj = state.clientes.find(c => c.id === o.clienteId);
+      const tel = (o.clienteTelefone || clienteObj?.telefone || '').replace(/\D/g, '');
+      const texto = `Olá ${o.clienteNome}, segue o protocolo de conclusão da ${o.numero} da ${state.config.nome} no valor de ${formatBRL(o.valorTotal || 0)}. Garantia até: ${formatarDataBR(o.garantiaAte)}.`;
+      if (tel) {
+        window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+      }
+      if (navigator.onLine) {
+        try {
+          await salvarDocumento('ordens_servico', o.id, {
+            protocoloEnviado: true,
+            protocoloEnviadoEm: new Date().toISOString(),
+            protocoloEnviadoPor: state.usuarioAtual?.nome || ''
+          });
+          if (document.getElementById('tab-painel')?.classList.contains('active')) {
+            carregarPainelSobDemanda();
+          }
+        } catch (err) {}
+      }
+    };
+
+    function renderOSCobrancaPendente() {
+      const box = document.getElementById('painel-os-cobranca-pendente');
+      const badge = document.getElementById('painel-cobranca-total-badge');
+      if (!box || !badge) return;
+
+      if (state.perfil !== 'admin') {
+        box.innerHTML = '';
+        return;
+      }
+
+      const pendentesCobranca = state.os.filter(o => {
+        if (Number(o.valorTotal || 0) <= 0) return false;
+        if (o.cobrancaEnviada) return false;
+        if (o.lancadoFinanceiro) return false;
+        return true;
+      }).sort((a, b) => (b.concluidaEm || b.dataAgendamento || '').localeCompare(a.concluidaEm || a.dataAgendamento || ''));
+
+      const somaValores = pendentesCobranca.reduce((acc, o) => acc + Number(o.valorTotal || 0), 0);
+      badge.textContent = `${pendentesCobranca.length} OS • ${formatBRL(somaValores)}`;
+
+      if (!pendentesCobranca.length) {
+        box.innerHTML = '<p class="text-xs text-slate-400">Nenhuma OS pendente de envio de cobrança ao cliente.</p>';
+        return;
+      }
+
+      box.innerHTML = pendentesCobranca.map(o => {
+        const clienteObj = state.clientes.find(c => c.id === o.clienteId);
+        const tel = (o.clienteTelefone || clienteObj?.telefone || '').replace(/\D/g, '');
+        const nomeEsc = (o.clienteNome || 'Cliente').replace(/'/g, "\\'");
+        const statusTxt = (o.status || 'agendada').replace('_', ' ').toUpperCase();
+        return `
+          <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="space-y-0.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-conecta-emerald">${o.numero}</span>
+                <span class="font-semibold text-slate-800">${o.clienteNome}</span>
+                <span class="text-xs font-extrabold text-conecta-green bg-emerald-500/15 px-2 py-0.5 rounded-md">${formatBRL(o.valorTotal || 0)}</span>
+                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-200 text-slate-700">${statusTxt}</span>
+              </div>
+              <p class="text-xs text-slate-500">
+                Data: <strong>${formatarDataBR(o.dataAgendamento)}</strong>
+                • Técnico: <strong>${o.tecnico || 'Não atribuído'}</strong>
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="enviarCobrancaOSWhatsApp('${o.id}')" class="text-xs bg-conecta-green hover:bg-conecta-emerald text-white px-2.5 py-1.5 rounded-lg font-semibold">WhatsApp Cobrança</button>
+              <button type="button" onclick="lancarOSNoFinanceiro('${o.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-semibold">Lançar Financeiro</button>
+              <button type="button" onclick="marcarCobrancaOSEnviada('${o.id}', '${o.numero}', '${nomeEsc}')" class="text-xs bg-conecta-dark text-conecta-lime border border-conecta-green/40 px-2.5 py-1.5 rounded-lg font-semibold">✓ Cobrança Enviada</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    window.enviarCobrancaOSWhatsApp = async (osId) => {
+      const o = state.os.find(x => x.id === osId);
+      if (!o) return;
+      const clienteObj = state.clientes.find(c => c.id === o.clienteId);
+      const tel = (o.clienteTelefone || clienteObj?.telefone || '').replace(/\D/g, '');
+      const pixInfo = state.config.pix ? `\nChave PIX: ${state.config.pix}` : '';
+      const texto = `Olá ${o.clienteNome}, aqui é da ${state.config.nome}.\n\nSegue a cobrança referente à ${o.numero} no valor de ${formatBRL(o.valorTotal || 0)}.${pixInfo}`;
+      if (tel) {
+        window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+      }
+      if (navigator.onLine) {
+        try {
+          await salvarDocumento('ordens_servico', o.id, {
+            cobrancaEnviada: true,
+            cobrancaEnviadaEm: new Date().toISOString(),
+            cobrancaEnviadaPor: state.usuarioAtual?.nome || ''
+          });
+          if (document.getElementById('tab-painel')?.classList.contains('active')) {
+            carregarPainelSobDemanda();
+          }
+        } catch (err) {}
+      }
+    };
+
+    window.marcarCobrancaOSEnviada = async (osId, numeroOS = '', clienteNome = '') => {
+      if (!garantirOnlineParaEscrita()) return;
+      const o = state.os.find(x => x.id === osId);
+      const numLabel = numeroOS || o?.numero || 'OS';
+      const cliLabel = clienteNome || o?.clienteNome || 'Cliente';
+      const ok = await confirmarAcao({
+        titulo: 'Confirmar Envio de Cobrança',
+        mensagem: `Marcar a cobrança da ${numLabel} (${cliLabel}) como enviada ao cliente?`,
+        textoConfirmar: 'Marcar como Enviada'
+      });
+      if (!ok) return;
+      try {
+        await salvarDocumento('ordens_servico', osId, {
+          cobrancaEnviada: true,
+          cobrancaEnviadaEm: new Date().toISOString(),
+          cobrancaEnviadaPor: state.usuarioAtual?.nome || ''
+        });
+        showToast(`Cobrança da ${numLabel} marcada como enviada!`, 'success');
+        if (document.getElementById('tab-painel')?.classList.contains('active')) {
+          carregarPainelSobDemanda();
+        }
+      } catch (err) {
+        if (err.message !== 'OFFLINE_BLOCKED') showToast('Erro ao atualizar cobrança.', 'error');
+      }
+    };
 
     function renderEstatisticasTecnicos() {
       const concluidas = state.os.filter(o => o.status === 'concluida');
@@ -3705,6 +3896,12 @@
           relato: document.getElementById('os-relato').value.trim(), laudo: document.getElementById('os-laudo').value.trim(),
           checklist, fotosAntes: state.fotosOSAntes, fotosDepois: state.fotosOSDepois, assinatura: assinaturaFinal,
           lancadoFinanceiro: antiga ? !!antiga.lancadoFinanceiro : false,
+          cobrancaEnviada: antiga ? !!antiga.cobrancaEnviada : false,
+          cobrancaEnviadaEm: antiga?.cobrancaEnviadaEm || null,
+          cobrancaEnviadaPor: antiga?.cobrancaEnviadaPor || '',
+          protocoloEnviado: antiga ? !!antiga.protocoloEnviado : false,
+          protocoloEnviadoEm: antiga?.protocoloEnviadoEm || null,
+          protocoloEnviadoPor: antiga?.protocoloEnviadoPor || '',
           estoqueBaixado,
           criadoPor: antiga?.criadoPor || (state.usuarioAtual?.nome || ''),
           atualizadoPor: state.usuarioAtual?.nome || '',
@@ -3742,6 +3939,9 @@
         }
         await salvarDocumento('ordens_servico', o.id, { lancadoFinanceiro: true });
         showToast(`${parcelas} parcela(s) lançada(s) no Financeiro!`, 'success');
+        if (document.getElementById('tab-painel')?.classList.contains('active')) {
+          carregarPainelSobDemanda();
+        }
       } catch (err) { if (err.message !== 'OFFLINE_BLOCKED') showToast('Erro ao lançar no financeiro.', 'error'); }
     };
 
@@ -3852,99 +4052,6 @@
         showToast(`${o.numero}.pdf gerado!`, 'success');
       } catch (err) { showToast("Erro ao gerar PDF da OS: " + err.message, 'error'); }
       finally { setLoading(false); }
-    };
-
-    async function gerarProtocoloOSBlob(o) {
-      const fotosBloco = (titulo, lista) => (lista && lista.length) ? `
-        <div style="margin-top: 12px;">
-          <p style="font-weight: 700; font-size: 11px; color: #006837; margin-bottom: 6px;">${titulo}</p>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: start;">
-            ${lista.map(f => `<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; background: #f8fafc; page-break-inside: avoid; text-align: center;"><img src="${f}" crossorigin="anonymous" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain; margin: 0 auto; display: block; border-radius: 4px;" /></div>`).join('')}
-          </div>
-        </div>` : '';
-
-      const container = document.createElement('div');
-      container.innerHTML = `
-        <div style="font-family: Inter, Arial, sans-serif; color: #0f172a; background: #ffffff; padding: 8px; box-sizing: border-box;">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00A859; padding-bottom: 10px; margin-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <img src="./somentelogo.png" crossorigin="anonymous" style="height: 48px; width: 48px; object-fit: contain; background: #000; padding: 4px; border-radius: 8px;" />
-              <div>
-                <h1 style="font-size: 17px; font-weight: 800; color: #006837; margin: 0;">PROTOCOLO DE SERVIÇO CONCLUÍDO</h1>
-                <p style="font-size: 11px; color: #475569; margin: 2px 0 0 0;">${state.config.nome} ${state.config.tel ? '• ' + state.config.tel : ''} • ${state.config.cidade || ''}</p>
-              </div>
-            </div>
-            <div style="text-align: right;">
-              <p style="font-weight: 800; font-size: 15px; margin: 0;">${o.numero}</p>
-              <p style="font-size: 11px; color: #475569; margin: 2px 0 0 0;">Conclusão: ${formatarDataBR(o.concluidaEm || o.dataAgendamento)}</p>
-            </div>
-          </div>
-          <div style="font-size: 12px; margin-bottom: 10px;"><strong>Cliente:</strong> ${o.clienteNome} &nbsp;|&nbsp; <strong>Técnico:</strong> ${o.tecnico || '-'} &nbsp;|&nbsp; <strong>Garantia até:</strong> ${formatarDataBR(o.garantiaAte)}</div>
-          <div style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; white-space: pre-line; margin-bottom: 10px;"><strong>Serviço Executado / Relato:</strong><br/>${o.relato || '-'}</div>
-          <div style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; white-space: pre-line; margin-bottom: 12px;"><strong>Laudo Técnico:</strong><br/>${o.laudo || '-'}</div>
-          <p style="text-align: right; font-size: 16px; font-weight: 800; color: #006837; margin: 8px 0;">Valor do Serviço: ${formatBRL(o.valorTotal)}</p>
-          ${fotosBloco('FOTOS ANTES', o.fotosAntes)}
-          ${fotosBloco('FOTOS DEPOIS', o.fotosDepois)}
-        </div>`;
-      return await html2pdf().set({
-        margin: 10, filename: `PROTOCOLO_${o.numero}.pdf`, image: { type: 'jpeg', quality: 0.92 },
-        html2canvas: { scale: 2, useCORS: true, logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(container).outputPdf('blob');
-    }
-
-    window.gerarProtocoloPDF = async (id, marcarEnviado = false) => {
-      const o = state.os.find(x => x.id === id);
-      if (!o) return;
-      setLoading(true, `Gerando PROTOCOLO_${o.numero}.pdf...`);
-      try {
-        const blob = await gerarProtocoloOSBlob(o);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `PROTOCOLO_${o.numero}.pdf`; a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        if (marcarEnviado && navigator.onLine) {
-          await salvarDocumento('ordens_servico', o.id, {
-            protocoloEnviado: true,
-            protocoloEnviadoEm: new Date().toISOString(),
-            protocoloEnviadoPor: state.usuarioAtual?.nome || ''
-          });
-          if (document.getElementById('tab-painel').classList.contains('active')) carregarPainelSobDemanda();
-        }
-        showToast(`PROTOCOLO_${o.numero}.pdf gerado!`, 'success');
-      } catch (err) { showToast("Erro ao gerar protocolo PDF: " + err.message, 'error'); }
-      finally { setLoading(false); }
-    };
-
-    window.enviarProtocoloOSWhatsApp = async (id) => {
-      const o = state.os.find(x => x.id === id);
-      if (!o) return;
-      const tel = (state.clientes.find(c => c.id === o.clienteId)?.telefone || '').replace(/\D/g, '');
-      const texto = `Olá ${o.clienteNome}, segue o protocolo da ${o.numero} concluída pela ${state.config.nome} no valor de ${formatBRL(o.valorTotal)}. Garantia até: ${formatarDataBR(o.garantiaAte)}.`;
-      setLoading(true, `Preparando PROTOCOLO_${o.numero}.pdf...`);
-      try {
-        const blob = await gerarProtocoloOSBlob(o);
-        const file = new File([blob], `PROTOCOLO_${o.numero}.pdf`, { type: 'application/pdf' });
-        if (navigator.onLine) {
-          await salvarDocumento('ordens_servico', o.id, {
-            protocoloEnviado: true,
-            protocoloEnviadoEm: new Date().toISOString(),
-            protocoloEnviadoPor: state.usuarioAtual?.nome || ''
-          });
-        }
-        setLoading(false);
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: `Protocolo ${o.numero}`, text: texto });
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = `PROTOCOLO_${o.numero}.pdf`; a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 5000);
-          window.open(`https://wa.me/${tel ? '55' + tel : ''}?text=${encodeURIComponent(texto)}`, '_blank');
-        }
-        showToast(`Protocolo da ${o.numero} marcado como enviado!`, 'success');
-        if (document.getElementById('tab-painel').classList.contains('active')) carregarPainelSobDemanda();
-      } catch (err) {
-        setLoading(false);
-        if (err.name !== 'AbortError') showToast("Erro ao enviar protocolo: " + err.message, 'error');
-      }
     };
 
     // =========================================================================
