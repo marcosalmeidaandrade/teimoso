@@ -1060,9 +1060,6 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-xl font-bold text-slate-800">Fluxo de Caixa (Pagar / Receber)</h2>
         <div class="flex flex-wrap gap-2">
-          <button onclick="gerarMensalidadesLote()" class="bg-conecta-dark text-conecta-lime border border-conecta-green/40 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-black shadow-sm transition">
-            Gerar Mensalidades do Mês
-          </button>
           <button onclick="abrirModalFinanceiro()" class="bg-gradient-to-r from-conecta-green to-conecta-emerald hover:brightness-110 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-conecta-green/20 transition">
             + Novo Lançamento
           </button>
@@ -1409,21 +1406,38 @@
           </div>
         </div>
 
-        <div class="border rounded-xl p-3 bg-emerald-50/60 space-y-2">
-          <label class="flex items-center gap-2 font-semibold text-conecta-emerald">
-            <input type="checkbox" id="cli-monit-ativo" class="rounded" />
-            Possui Contrato de Monitoramento Mensal
-          </label>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-slate-600">Valor Mensal (R$)</label>
-              <input id="cli-monit-valor" type="number" step="0.01" value="0" class="w-full border bg-white rounded-lg px-3 py-1.5" />
+        <div class="border rounded-xl p-3.5 bg-emerald-50/60 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label class="flex items-center gap-2 font-semibold text-conecta-emerald cursor-pointer">
+              <input type="checkbox" id="cli-monit-ativo" onchange="atualizarResumoContratoCliente()" class="rounded h-4 w-4" />
+              Plano de Serviços / Contrato de Manutenção Mensal (Provisionamento Total)
+            </label>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-xs text-slate-600">Descrição do Plano / Serviço Contratado</label>
+              <input id="cli-monit-plano" type="text" placeholder="Ex: Manutenção Preventiva CFTV + Climatização" oninput="atualizarResumoContratoCliente()" class="w-full border bg-white rounded-lg px-3 py-1.5" />
             </div>
             <div>
-              <label class="block text-xs text-slate-600">Dia de Vencimento</label>
-              <input id="cli-monit-dia" type="number" min="1" max="28" value="10" class="w-full border bg-white rounded-lg px-3 py-1.5" />
+              <label class="block text-xs text-slate-600">Valor Mensal Fixo (R$)</label>
+              <input id="cli-monit-valor" type="number" step="0.01" min="0" value="0" oninput="atualizarResumoContratoCliente()" class="w-full border bg-white rounded-lg px-3 py-1.5" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-600">Dia de Vencimento (1 a 28)</label>
+              <input id="cli-monit-dia" type="number" min="1" max="28" value="10" oninput="atualizarResumoContratoCliente()" class="w-full border bg-white rounded-lg px-3 py-1.5" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-600">Início do Contrato (1ª Parcela)</label>
+              <input id="cli-monit-inicio" type="date" onchange="atualizarResumoContratoCliente()" class="w-full border bg-white rounded-lg px-3 py-1.5" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-600">Duração do Contrato (Meses)</label>
+              <input id="cli-monit-meses" type="number" min="1" max="60" value="12" oninput="atualizarResumoContratoCliente()" class="w-full border bg-white rounded-lg px-3 py-1.5" />
             </div>
           </div>
+          <p id="cli-monit-resumo-provisionamento" class="text-[11px] font-semibold text-conecta-emerald bg-white/70 border border-conecta-green/30 rounded-lg px-3 py-2">
+            Ative o plano acima para provisionar automaticamente todas as parcelas do contrato no Financeiro (Receitas Previstas).
+          </p>
         </div>
 
         <div class="border rounded-xl p-3 bg-slate-50 space-y-2">
@@ -3048,9 +3062,92 @@
     // =========================================================================
     // 9. MÓDULO CLIENTES (CEP/VIACEP + HISTÓRICO COMPLETO + EXCLUIR)
     // =========================================================================
+    window.atualizarResumoContratoCliente = () => {
+      const ativo = document.getElementById('cli-monit-ativo')?.checked;
+      const valor = Number(document.getElementById('cli-monit-valor')?.value || 0);
+      const meses = Math.max(1, Math.min(60, Number(document.getElementById('cli-monit-meses')?.value || 12)));
+      const inicio = document.getElementById('cli-monit-inicio')?.value;
+      const dia = Math.max(1, Math.min(28, Number(document.getElementById('cli-monit-dia')?.value || 10)));
+      const el = document.getElementById('cli-monit-resumo-provisionamento');
+      if (!el) return;
+      if (!ativo || valor <= 0) {
+        el.textContent = 'Ative o plano acima e informe o valor mensal fixo para provisionar automaticamente todo o período do contrato no Financeiro.';
+        return;
+      }
+      const totalContrato = valor * meses;
+      const dataIniTxt = inicio ? formatarDataBR(inicio) : 'mês atual';
+      el.textContent = `Provisionamento automático: ${meses} parcela(s) de ${formatBRL(valor)} (todo dia ${String(dia).padStart(2, '0')}, a partir de ${dataIniTxt}) • Total Provisionado: ${formatBRL(totalContrato)}.`;
+    };
+
+    function calcularVencimentoParcelaContrato(inicioISO, offsetMeses, diaVenc) {
+      const baseParts = (inicioISO || new Date().toISOString().split('T')[0]).split('-');
+      const anoBase = Number(baseParts[0]);
+      const mesBase = Number(baseParts[1]) - 1;
+      const dt = new Date(anoBase, mesBase + offsetMeses, 1);
+      const ano = dt.getFullYear();
+      const mes = String(dt.getMonth() + 1).padStart(2, '0');
+      const dia = String(Math.max(1, Math.min(28, Number(diaVenc || 10)))).padStart(2, '0');
+      return { vencimento: `${ano}-${mes}-${dia}`, mesRef: `${ano}-${mes}` };
+    }
+
+    async function provisionarContratoClienteNoFinanceiro({ clienteId, clienteNome, clienteTelefone, planoDescricao, ativo, valorMensal, diaVenc, inicioISO, duracaoMeses }) {
+      const finExistentes = await carregarColecao('financeiro');
+      const parcelasContrato = finExistentes.filter(f => f.contratoClienteId === clienteId || (f.id && f.id.startsWith(`cont_${clienteId}_`)));
+
+      if (!ativo || valorMensal <= 0) {
+        for (const p of parcelasContrato) {
+          if (p.status !== 'pago') {
+            await excluirDocumento('financeiro', p.id);
+          }
+        }
+        return 0;
+      }
+
+      const idsDesejados = new Set();
+      const nomePlano = planoDescricao || 'Contrato de Manutenção';
+      const totalParcelas = Math.max(1, Math.min(60, Number(duracaoMeses || 12)));
+
+      for (let i = 0; i < totalParcelas; i++) {
+        const { vencimento, mesRef } = calcularVencimentoParcelaContrato(inicioISO, i, diaVenc);
+        const docId = `cont_${clienteId}_${String(i + 1).padStart(2, '0')}`;
+        idsDesejados.add(docId);
+        const existente = parcelasContrato.find(p => p.id === docId);
+
+        if (existente && existente.status === 'pago') {
+          continue;
+        }
+
+        await salvarDocumento('financeiro', docId, {
+          descricao: `${nomePlano} (${i + 1}/${totalParcelas}) - ${clienteNome}`,
+          tipo: 'receita',
+          valor: Number(valorMensal),
+          vencimento,
+          dataPrevistaPagamento: vencimento,
+          status: 'pendente',
+          origemTipo: 'contrato_manutencao',
+          contratoClienteId: clienteId,
+          parcelaNumero: i + 1,
+          parcelaTotal: totalParcelas,
+          mesReferencia: mesRef,
+          clienteTelefone: clienteTelefone || '',
+          criadoPor: existente?.criadoPor || (state.usuarioAtual?.nome || ''),
+          atualizadoPor: state.usuarioAtual?.nome || ''
+        });
+      }
+
+      for (const p of parcelasContrato) {
+        if (!idsDesejados.has(p.id) && p.status !== 'pago') {
+          await excluirDocumento('financeiro', p.id);
+        }
+      }
+      return totalParcelas;
+    }
+
     window.abrirModalCliente = (id = null) => {
       document.getElementById('form-cliente').reset();
       document.getElementById('cli-id').value = id || '';
+      document.getElementById('cli-monit-inicio').value = new Date().toISOString().split('T')[0];
+      document.getElementById('cli-monit-meses').value = 12;
       if (id) {
         const c = state.clientes.find(x => x.id === id);
         if (c) {
@@ -3064,11 +3161,15 @@
           document.getElementById('cli-ultima-prev').value = c.ultimaPreventiva || '';
           document.getElementById('cli-proxima-prev').value = c.proximaPreventiva || '';
           document.getElementById('cli-monit-ativo').checked = !!c.monitoramentoAtivo;
+          document.getElementById('cli-monit-plano').value = c.monitoramentoPlano || '';
           document.getElementById('cli-monit-valor').value = c.monitoramentoValor || 0;
           document.getElementById('cli-monit-dia').value = c.monitoramentoDia || 10;
+          document.getElementById('cli-monit-inicio').value = c.monitoramentoInicio || new Date().toISOString().split('T')[0];
+          document.getElementById('cli-monit-meses').value = c.monitoramentoMeses || 12;
         }
       }
       atualizarMascaraDocCliente();
+      atualizarResumoContratoCliente();
       abrirModal('modal-cliente');
     };
 
@@ -3076,25 +3177,64 @@
       e.preventDefault();
       const id = document.getElementById('cli-id').value || `cli_${Date.now()}`;
       const tipo = document.getElementById('cli-tipo').value;
+      const nome = document.getElementById('cli-nome').value.trim();
+      const telefone = document.getElementById('cli-tel').value.replace(/\D/g, '').slice(0, 11);
+      const monitoramentoAtivo = document.getElementById('cli-monit-ativo').checked;
+      const monitoramentoPlano = document.getElementById('cli-monit-plano').value.trim() || 'Contrato de Manutenção';
+      const monitoramentoValor = Number(document.getElementById('cli-monit-valor').value || 0);
+      const monitoramentoDia = Math.max(1, Math.min(28, Number(document.getElementById('cli-monit-dia').value || 10)));
+      const monitoramentoInicio = document.getElementById('cli-monit-inicio').value || new Date().toISOString().split('T')[0];
+      const monitoramentoMeses = Math.max(1, Math.min(60, Number(document.getElementById('cli-monit-meses').value || 12)));
+
+      if (monitoramentoAtivo && monitoramentoValor <= 0) {
+        showToast('Informe o valor mensal fixo do plano de manutenção.', 'warning');
+        return;
+      }
+
+      setLoading(true, monitoramentoAtivo ? 'Salvando cliente e provisionando contrato...' : 'Salvando cliente...');
       try {
         await salvarDocumento('clientes', id, {
-          tipo, nome: document.getElementById('cli-nome').value.trim(),
+          tipo, nome,
           documento: document.getElementById('cli-doc').value.replace(/\D/g, ''),
-          telefone: document.getElementById('cli-tel').value.replace(/\D/g, '').slice(0, 11),
+          telefone,
           cep: document.getElementById('cli-cep').value.replace(/\D/g, '').slice(0, 8),
           endereco: document.getElementById('cli-endereco').value.trim(),
           equipamentos: document.getElementById('cli-equipamentos').value.trim(),
           ultimaPreventiva: document.getElementById('cli-ultima-prev').value,
           proximaPreventiva: document.getElementById('cli-proxima-prev').value,
-          monitoramentoAtivo: document.getElementById('cli-monit-ativo').checked,
-          monitoramentoValor: Number(document.getElementById('cli-monit-valor').value || 0),
-          monitoramentoDia: Number(document.getElementById('cli-monit-dia').value || 10),
+          monitoramentoAtivo,
+          monitoramentoPlano,
+          monitoramentoValor,
+          monitoramentoDia,
+          monitoramentoInicio,
+          monitoramentoMeses,
           atualizadoPor: state.usuarioAtual?.nome || '',
           atualizadoEm: new Date().toISOString()
         });
+
+        const qtdProvisionada = await provisionarContratoClienteNoFinanceiro({
+          clienteId: id,
+          clienteNome: nome,
+          clienteTelefone: telefone,
+          planoDescricao: monitoramentoPlano,
+          ativo: monitoramentoAtivo,
+          valorMensal: monitoramentoValor,
+          diaVenc: monitoramentoDia,
+          inicioISO: monitoramentoInicio,
+          duracaoMeses: monitoramentoMeses
+        });
+
         fecharModal('modal-cliente');
-        showToast('Cliente salvo com sucesso!', 'success');
-      } catch (err) { if (err.message !== 'OFFLINE_BLOCKED') showToast('Erro ao salvar cliente.', 'error'); }
+        if (qtdProvisionada > 0) {
+          showToast(`Cliente salvo e ${qtdProvisionada} parcelas (${formatBRL(monitoramentoValor * qtdProvisionada)}) provisionadas no Financeiro!`, 'success');
+        } else {
+          showToast('Cliente salvo com sucesso!', 'success');
+        }
+      } catch (err) {
+        if (err.message !== 'OFFLINE_BLOCKED') showToast('Erro ao salvar cliente: ' + err.message, 'error');
+      } finally {
+        setLoading(false);
+      }
     };
 
     window.abrirHistoricoCliente = async (cliId) => {
@@ -3170,7 +3310,7 @@
             ${c.documento ? `<p class="text-xs text-slate-500 mt-0.5">${c.tipo === 'PJ' ? 'CNPJ: ' + formatarCNPJ(c.documento) : 'CPF: ' + formatarCPF(c.documento)}</p>` : ''}
             ${c.telefone ? `<p class="text-xs text-slate-500">Tel: ${formatarTelefone(c.telefone)}</p>` : ''}
             <p class="text-xs text-slate-500 mt-1">${c.endereco || 'Endereço não informado'}</p>
-            ${c.monitoramentoAtivo ? `<p class="text-xs text-conecta-green font-semibold mt-1">★ Monitoramento: ${formatBRL(c.monitoramentoValor)}/mês (dia ${c.monitoramentoDia})</p>` : ''}
+            ${c.monitoramentoAtivo ? `<p class="text-xs text-conecta-green font-semibold mt-1">★ ${c.monitoramentoPlano || 'Contrato Manutenção'}: ${formatBRL(c.monitoramentoValor)}/mês • ${c.monitoramentoMeses || 12}x (Total: ${formatBRL(Number(c.monitoramentoValor || 0) * Number(c.monitoramentoMeses || 12))}) • Dia ${c.monitoramentoDia}</p>` : ''}
             ${c.equipamentos ? `<p class="text-xs bg-emerald-50 text-conecta-emerald p-2 rounded mt-2"><strong>Base Instalada:</strong> ${c.equipamentos}</p>` : ''}
             ${c.proximaPreventiva ? `<p class="text-xs text-amber-500 mt-1">Próxima preventiva: <strong>${formatarDataBR(c.proximaPreventiva)}</strong></p>` : ''}
           </div>
@@ -4262,31 +4402,6 @@
         showToast(`${codigoRecibo}.pdf gerado!`, 'success');
       } catch (err) { showToast('Erro ao gerar recibo PDF.', 'error'); }
       finally { setLoading(false); }
-    };
-
-    window.gerarMensalidadesLote = async () => {
-      if (!state.clientes.length) state.clientes = await carregarColecao('clientes');
-      const ativos = state.clientes.filter(c => c.monitoramentoAtivo && c.monitoramentoValor > 0);
-      if (!ativos.length) { showToast("Nenhum cliente com contrato de monitoramento ativo.", 'warning'); return; }
-      const hoje = new Date();
-      const mesRef = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-      const ok = await confirmarAcao({
-        titulo: 'Gerar Mensalidades',
-        mensagem: `Gerar mensalidades de monitoramento (${mesRef}) para ${ativos.length} cliente(s)?`,
-        textoConfirmar: 'Gerar Lote'
-      });
-      if (!ok) return;
-      try {
-        for (const c of ativos) {
-          const dia = String(c.monitoramentoDia || 10).padStart(2, '0');
-          await salvarDocumento('financeiro', `mens_${mesRef}_${c.id}`, {
-            descricao: `Monitoramento ${mesRef} - ${c.nome}`, tipo: 'receita', valor: c.monitoramentoValor,
-            vencimento: `${mesRef}-${dia}`, status: 'pendente', clienteTelefone: c.telefone || '',
-            criadoPor: state.usuarioAtual?.nome || ''
-          });
-        }
-        showToast("Mensalidades geradas com sucesso!", 'success');
-      } catch (err) { if (err.message !== 'OFFLINE_BLOCKED') showToast('Erro ao gerar mensalidades.', 'error'); }
     };
 
     function cardResumoFinanceiroHtml({ titulo, valorFmt, sublinha, corBorda, corValor, ativo = false, onclickStr = '' }) {
